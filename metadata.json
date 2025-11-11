@@ -1,0 +1,5 @@
+{
+  "name": "Discourse Analyzer AI",
+  "description": "An AI-powered tool to collect, analyze, and categorize public statements from individuals. It fact-checks claims, assesses language, and helps generate reports on public discourse.",
+  "requestFramePermissions": []
+}
