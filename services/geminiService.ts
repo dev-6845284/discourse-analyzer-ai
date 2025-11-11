@@ -78,7 +78,7 @@ const extractJson = (text: string): string | null => {
 };
 
 
-export const fetchQuotesForPerson = async (apiKey: string, personName: string, languages: string[], resultCount: number, existingQuotesText: string[]): Promise<Quote[]> => {
+export const fetchQuotesForPerson = async (apiKey: string, personName: string, languages: string[], resultCount: number, existingQuotesText: string[], temperature: number): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Gemini API key is missing.");
   const ai = new GoogleGenAI({ apiKey });
 
@@ -161,6 +161,7 @@ Do not include any other text or markdown formatting outside of the JSON object.
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
+        temperature: temperature,
       },
     });
 

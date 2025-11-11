@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 // FIX: Import AnalysisDetail, UserInfo, and the new ExportData type.
 import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail, UserInfo, ExportData } from './types';
@@ -64,6 +65,7 @@ const App: React.FC = () => {
   const [rawApiResponseError, setRawApiResponseError] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [resultCount, setResultCount] = useState<number>(10);
+  const [temperature, setTemperature] = useState<number>(0.7);
   const [textToExtract, setTextToExtract] = useState<string>('');
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -138,7 +140,7 @@ const App: React.FC = () => {
     setRawApiResponseError(null);
     try {
       const existingQuotesText = quotes.map(q => q.text);
-      const newQuotes = await fetchQuotesForPerson(apiKey, personName, selectedLanguages, resultCount, existingQuotesText);
+      const newQuotes = await fetchQuotesForPerson(apiKey, personName, selectedLanguages, resultCount, existingQuotesText, temperature);
       
       const uniqueNewQuotes = newQuotes.filter(nq => !quotes.some(eq => eq.text === nq.text));
 
@@ -157,7 +159,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, personName, selectedLanguages, resultCount, quotes]);
+  }, [apiKey, personName, selectedLanguages, resultCount, quotes, temperature]);
 
   const handleAnalyzeQuote = useCallback(async (quote: Quote) => {
     if (!apiKey) {
@@ -385,6 +387,21 @@ const App: React.FC = () => {
                         max="50"
                         onChange={(e) => setResultCount(parseInt(e.target.value, 10))}
                         className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="temperature" className="block text-sm font-medium text-gray-300 mb-1">
+                        Search Creativity (Temperature): {temperature.toFixed(1)}
+                      </label>
+                      <input
+                        type="range"
+                        id="temperature"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={temperature}
+                        onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                       />
                     </div>
                     <div className="mt-4">
