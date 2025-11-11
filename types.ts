@@ -1,4 +1,5 @@
 
+
 export enum AnalysisCategory {
   Populism = "Populism",
   FactTwisting = "Fact Twisting",
@@ -25,6 +26,9 @@ export interface Quote {
   text: string;
   source: string;
   title: string;
+  date: string;
+  languageCode: string;
+  languageName: string;
   analysis?: AnalysisResult;
   isAnalyzing?: boolean;
 }

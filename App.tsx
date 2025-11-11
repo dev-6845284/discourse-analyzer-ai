@@ -6,6 +6,7 @@ import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail, UserInfo, Expo
 import { fetchQuotesForPerson, analyzeQuoteText, extractQuotesFromText } from './services/geminiService';
 import QuoteCard from './components/QuoteCard';
 import Spinner from './components/Spinner';
+import AddQuoteModal from './components/AddQuoteModal';
 import { ALL_CATEGORIES, CATEGORY_COLORS, RATING_COLORS, SUPPORTED_LANGUAGES, APPROVED_EMAILS } from './constants';
 
 // FIX: Declare the 'google' global object provided by the Google Identity Services script
@@ -63,7 +64,8 @@ const App: React.FC = () => {
   const [resultCount, setResultCount] = useState<number>(10);
   const [textToExtract, setTextToExtract] = useState<string>('');
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [filterCategory, setFilterCategory] = useState<AnalysisCategory | 'all'>('all');
   const [filterRating, setFilterRating] = useState<AnalysisRating | 'all'>('all');
   const [isFormCollapsed, setIsFormCollapsed] = useState<boolean>(true);
@@ -149,21 +151,21 @@ const App: React.FC = () => {
     }
   }, [apiKey, personName, selectedLanguages, resultCount, quotes]);
 
-  const handleAnalyzeQuote = useCallback(async (quoteId: string, quoteText: string) => {
+  const handleAnalyzeQuote = useCallback(async (quote: Quote) => {
     if (!apiKey) {
       setError("Please enter your Gemini API key to analyze quotes.");
       return;
     }
-    setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, isAnalyzing: true } : q));
+    setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
     setError(null);
     try {
-      const analysis = await analyzeQuoteText(apiKey, quoteText, selectedLanguages);
-      setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, analysis, isAnalyzing: false } : q));
+      const analysis = await analyzeQuoteText(apiKey, quote.text, quote.languageCode, quote.languageName);
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q));
     } catch (e: any) {
       setError(`Analysis failed: ${e.message}`);
-      setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, isAnalyzing: false } : q));
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
     }
-  }, [apiKey, selectedLanguages, quotes]);
+  }, [apiKey, quotes]);
 
   const handleExtractQuotes = useCallback(async () => {
     if (!apiKey) {
@@ -195,6 +197,42 @@ const App: React.FC = () => {
         setIsExtracting(false);
     }
   }, [apiKey, personName, textToExtract, quotes]);
+  
+  const handleAddQuoteManually = (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }) => {
+    if (!textToExtract.trim() || !personName) {
+        setError("Person's name and quote text must be present to add a quote.");
+        setIsAddModalOpen(false);
+        return;
+    };
+
+    const trimmedText = textToExtract.trim();
+
+    // Prevent adding duplicate quotes
+    if (quotes.some(q => q.text === trimmedText)) {
+        setError("This exact quote already exists in the list.");
+        setIsAddModalOpen(false);
+        return;
+    }
+
+    const newQuote: Quote = {
+        id: `quote-manual-${Date.now()}`,
+        text: trimmedText,
+        source: details.source,
+        title: details.title || details.source, // Use source as title if not provided
+        date: details.date,
+        languageCode: details.languageCode,
+        languageName: details.languageName,
+    };
+
+    // Add the new quote to the top of the list and clear the input field
+    setQuotes(prevQuotes => [newQuote, ...prevQuotes]);
+    setTextToExtract('');
+    setIsAddModalOpen(false);
+    setError(null); // Clear previous errors
+
+    // Immediately call the analysis function for the newly added quote
+    handleAnalyzeQuote(newQuote);
+  };
 
   const handleLanguageChange = (langCode: string) => {
     setSelectedLanguages(prev => 
@@ -202,6 +240,15 @@ const App: React.FC = () => {
             ? prev.filter(l => l !== langCode)
             : [...prev, langCode]
     );
+  };
+
+  const handleUpdateQuoteLanguage = (quoteId: string, newLanguageCode: string) => {
+    const newLanguageName = SUPPORTED_LANGUAGES.find(lang => lang.code === newLanguageCode)?.name || '';
+    setQuotes(prevQuotes => prevQuotes.map(q => 
+        q.id === quoteId 
+            ? { ...q, languageCode: newLanguageCode, languageName: newLanguageName }
+            : q
+    ));
   };
   
   const handleClearQuotes = () => setQuotes([]);
@@ -218,8 +265,18 @@ const App: React.FC = () => {
     }
 
     tempQuotes.sort((a, b) => {
-        if (sortOrder === 'asc') return a.text.localeCompare(b.text);
-        return b.text.localeCompare(a.text);
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+  
+      // Handle invalid dates by moving them to the end of the list
+      if (isNaN(dateA.getTime())) return 1;
+      if (isNaN(dateB.getTime())) return -1;
+      
+      if (sortOrder === 'oldest') {
+          return dateA.getTime() - dateB.getTime();
+      }
+      // Default to newest
+      return dateB.getTime() - a.date.localeCompare(b.date);
     });
 
     return tempQuotes;
@@ -334,9 +391,24 @@ const App: React.FC = () => {
                       className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
                       placeholder={`Paste an article or a single quote by ${personName || 'the person'} here...`}
                     ></textarea>
-                     <button onClick={handleExtractQuotes} disabled={!apiKey || isExtracting} title={!apiKey ? "Please enter your Gemini API key" : ""} className="mt-4 w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors">
-                      {isExtracting ? <Spinner /> : 'Extract Quotes'}
-                    </button>
+                    <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                        <button 
+                            onClick={handleExtractQuotes} 
+                            disabled={!apiKey || isExtracting || !textToExtract || !personName} 
+                            title={!apiKey ? "Please enter your Gemini API key" : !personName ? "Please enter a person's name" : !textToExtract ? "Please enter text to extract" : ""} 
+                            className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {isExtracting ? <Spinner /> : 'Extract & Analyze'}
+                        </button>
+                        <button 
+                            onClick={() => setIsAddModalOpen(true)} 
+                            disabled={!apiKey || isExtracting || !textToExtract || !personName} 
+                            title={!apiKey ? "Please enter your Gemini API key" : !personName ? "Please enter a person's name" : !textToExtract ? "Please enter text to add" : ""} 
+                            className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Add as Quote
+                        </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -351,23 +423,55 @@ const App: React.FC = () => {
                 </div>
               )}
               
-              <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center">
-                <div className="flex-grow">
+              <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between">
+                <div>
                   <h2 className="text-2xl font-semibold text-cyan-300 mb-2">Results ({filteredAndSortedQuotes.length})</h2>
                   {personName && <p className="text-gray-400">Showing quotes for: <span className="font-bold text-gray-300">{personName}</span></p>}
                 </div>
-                <button onClick={handleClearQuotes} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">Clear All</button>
+                 <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">Sort by:</span>
+                        <div className="flex rounded-md bg-gray-700">
+                            <button 
+                                onClick={() => setSortOrder('newest')}
+                                className={`px-3 py-1 text-sm font-medium transition-colors rounded-l-md ${sortOrder === 'newest' ? 'bg-cyan-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                            >
+                                Newest
+                            </button>
+                            <button 
+                                onClick={() => setSortOrder('oldest')}
+                                className={`px-3 py-1 text-sm font-medium transition-colors rounded-r-md ${sortOrder === 'oldest' ? 'bg-cyan-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                            >
+                                Oldest
+                            </button>
+                        </div>
+                    </div>
+                    <button onClick={handleClearQuotes} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">Clear All</button>
+                </div>
               </div>
 
               {quotes.length > 0 && (
                 <div className="space-y-4">
                   {filteredAndSortedQuotes.map(quote => (
-                    <QuoteCard key={quote.id} quote={quote} onAnalyze={handleAnalyzeQuote} isApiKeySet={!!apiKey} />
+                    <QuoteCard 
+                      key={quote.id} 
+                      quote={quote} 
+                      onAnalyze={handleAnalyzeQuote} 
+                      onLanguageChange={handleUpdateQuoteLanguage}
+                      isApiKeySet={!!apiKey} 
+                    />
                   ))}
                 </div>
               )}
             </div>
           </main>
+        )}
+        {isAddModalOpen && (
+            <AddQuoteModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSave={handleAddQuoteManually}
+            />
         )}
       </div>
     </div>

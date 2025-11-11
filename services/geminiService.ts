@@ -27,7 +27,7 @@ export const fetchQuotesForPerson = async (apiKey: string, personName: string, l
   try {
     const languageInstruction = languages.length > 0
         ? `Search for texts in the following languages: ${languages.join(', ')}.`
-        : 'Search for texts primarily in English.';
+        : 'Search for texts primarily in English, but identify the language of each quote if it is not English.';
 
     let exclusionInstruction = '';
     if (existingQuotesText && existingQuotesText.length > 0) {
@@ -42,11 +42,11 @@ ${quotesToExclude}
     // FIX: The prompt is updated to explicitly request the source URL and title for each quote.
     // It also now uses the user-defined result count.
     const prompt = `Find and list up to ${resultCount} distinct and significant public quotes by ${personName}. ${languageInstruction} ${exclusionInstruction} Focus on controversial or impactful statements.
-For each quote, you MUST provide the source URL and a title for the source.
+For each quote, you MUST provide the source URL, a title for the source, the date, and the language of the quote.
 Return the response as a single, valid JSON object with a key "quotes". The value of "quotes" should be an array of objects.
-Each object in the array must have three string properties: "text" (the quote itself), "source" (the direct URL to the source), and "title" (the title of the source page).
-If you cannot find a specific source for a quote, use a general, high-quality source about the person's public statements.
-Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title"}] }
+Each object in the array must have six string properties: "text" (the quote), "source" (URL), "title", "date" (YYYY-MM-DD), "languageCode" (e.g., "en", "ru"), and "languageName" (e.g., "English", "Russian").
+If you cannot find a specific date, provide the publication date of the source. If that is also unavailable, provide an estimated date or the year.
+Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title", "date": "2023-10-27", "languageCode": "en", "languageName": "English"}] }
 Do not include any other text or markdown formatting outside of the JSON object.`;
     
     const response: GenerateContentResponse = await ai.models.generateContent({
@@ -71,7 +71,7 @@ Do not include any other text or markdown formatting outside of the JSON object.
         throw new Error("Could not find a valid JSON object in the AI's response.");
     }
     
-    let parsedResponse: { quotes: { text: string; source: string; title: string; }[] };
+    let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
     try {
         parsedResponse = JSON.parse(jsonText);
     } catch (e) {
@@ -88,7 +88,7 @@ Do not include any other text or markdown formatting outside of the JSON object.
     // FIX: Map the new JSON structure to the app's Quote type.
     const quotes: Quote[] = quotesData.map((q, index) => {
         // Add a check for malformed quote objects from the AI
-        if (!q.text || !q.source || !q.title) {
+        if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
             console.warn(`Skipping malformed quote object at index ${index}:`, q);
             return null;
         }
@@ -97,6 +97,9 @@ Do not include any other text or markdown formatting outside of the JSON object.
             text: q.text.trim(),
             source: q.source,
             title: q.title,
+            date: q.date,
+            languageCode: q.languageCode,
+            languageName: q.languageName,
         };
     }).filter((q): q is Quote => q !== null); // Filter out any nulls from malformed objects
 
@@ -119,21 +122,22 @@ Do not include any other text or markdown formatting outside of the JSON object.
 };
 
 
-export const analyzeQuoteText = async (apiKey: string, quoteText: string, languages: string[]): Promise<AnalysisResult> => {
+export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string): Promise<AnalysisResult> => {
     if (!apiKey) throw new Error("Gemini API key is missing.");
     const ai = new GoogleGenAI({ apiKey });
     
     try {
-        const languageContext = languages.length > 0
-            ? ` The original text is expected to be in one of the following languages: ${languages.join(', ')}.`
-            : '';
-        // FIX: The prompt is updated to include the schema description directly,
-        // as responseSchema cannot be used with the googleSearch tool.
-        const prompt = `Perform a detailed analysis of the following text.${languageContext} Fact-check all claims using online search. Provide a structured analysis as a single, valid JSON object (do not wrap it in markdown).
+        const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
+Follow these steps carefully:
+1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using online search.
+2.  **Think step-by-step in English** to determine the rating and justification for each category.
+3.  **Translate your English justification** into high-quality, natural-sounding ${quoteLanguageName}.
+4.  **Construct the final JSON object**. Ensure the 'justification' fields contain the translated text from step 3. The entire response must be a single, valid JSON object (do not wrap it in markdown).
+
 The JSON object must have keys: "Populism", "Fact Twisting", "Lies & False Claims", and "Inflammatory Language".
 Each key must have a value that is an object with two properties:
 1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe".
-2. "justification": A string explaining the rating.
+2. "justification": A string in ${quoteLanguageName} explaining the rating.
 
 Analyze this text: "${quoteText}"`;
 
@@ -141,7 +145,6 @@ Analyze this text: "${quoteText}"`;
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
-                // FIX: Per @google/genai guidelines, responseMimeType and responseSchema are not allowed when using the googleSearch tool.
                 tools: [{ googleSearch: {} }],
             }
         });
@@ -151,7 +154,6 @@ Analyze this text: "${quoteText}"`;
             throw new Error("The model returned no content for analysis.");
         }
 
-        // FIX: Use a robust regex-based method to extract the JSON object.
         const jsonText = extractJson(rawText);
         if (!jsonText) {
             console.error("No valid JSON object found in the AI analysis response:", rawText);
@@ -171,21 +173,22 @@ export const extractQuotesFromText = async (apiKey: string, personName: string, 
   const ai = new GoogleGenAI({ apiKey });
 
   try {
-    // FIX: The prompt is updated to handle cases where the input is a single quote, not just a block of text.
-    // It instructs the AI to check if the text itself is a quote by the person and return it if so.
-    const prompt = `Analyze the following text to extract quotes by "${personName}".
+    const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
 
 The provided text can be one of two things:
 1. A block of text (like an article) containing one or more statements explicitly attributed to "${personName}".
 2. A single, direct quote by "${personName}" itself, without any other context or attribution.
 
 Your task is to identify which case it is and act accordingly.
-- If the text is a block of text (case 1), extract all statements explicitly attributed to "${personName}".
-- If the text appears to be a direct quote by "${personName}" (case 2), return the text itself as the single quote.
+- If the text is a block of text, extract all statements explicitly attributed to "${personName}".
+- If the text appears to be a direct quote by "${personName}", return the text itself as the single quote.
 
-Return the response as a single, valid JSON object with a key "quotes". The value of "quotes" should be an array of strings, where each string is a full quote.
-If you find no quotes by "${personName}" in the text, return an empty array.
+Return the response as a single, valid JSON object with a key "quotes". The value of "quotes" should be an array of objects.
+Each object must have three properties: "text" (the full quote), "languageCode" (e.g., "en", "lt"), and "languageName" (e.g., "English", "Lithuanian").
+If you find no quotes, return an empty array.
 Do not include any other text or markdown formatting outside of the JSON object.
+
+Example: { "quotes": [ { "text": "...", "languageCode": "fr", "languageName": "French" } ] }
 
 Here is the text to analyze:
 ---
@@ -203,14 +206,13 @@ ${textContent}
       throw new Error("The model returned no content. It might have been unable to process the provided text.");
     }
 
-    // FIX: Use a robust regex-based method to extract the JSON object.
     const jsonText = extractJson(rawText);
     if (!jsonText) {
         console.error("No valid JSON object found in the AI response for text extraction:", rawText);
         throw new Error("Could not find a valid JSON object in the AI's response for text extraction.");
     }
     
-    let parsedResponse: { quotes: string[] };
+    let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
     try {
         parsedResponse = JSON.parse(jsonText);
     } catch (e) {
@@ -218,21 +220,34 @@ ${textContent}
         throw new Error("Could not parse the AI's response. The format was unexpected.");
     }
 
-    const quotesText = parsedResponse.quotes;
+    const quotesData = parsedResponse.quotes;
 
-    if (!quotesText || !Array.isArray(quotesText)) {
+    if (!quotesData || !Array.isArray(quotesData)) {
       console.warn("The AI response did not contain a 'quotes' array.");
       return [];
     }
     
-    const quotes: Quote[] = quotesText.map((q, index) => {
+    const quotes: Quote[] = quotesData.map((q, index) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+
+        if (!q.text || !q.languageCode || !q.languageName) {
+            console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
+            return null;
+        }
+
         return {
             id: `quote-text-${Date.now()}-${index}`,
-            text: q.trim(),
+            text: q.text.trim(),
             source: "User-Provided Text",
             title: `Extracted from manual input`,
+            date: `${year}-${month}-${day}`,
+            languageCode: q.languageCode,
+            languageName: q.languageName,
         };
-    });
+    }).filter((q): q is Quote => q !== null);
 
     return quotes;
 
