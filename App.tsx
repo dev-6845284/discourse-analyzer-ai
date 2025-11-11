@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 // FIX: Import AnalysisDetail, UserInfo, and the new ExportData type.
 import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail, UserInfo, ExportData } from './types';
@@ -66,6 +62,7 @@ const App: React.FC = () => {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [resultCount, setResultCount] = useState<number>(10);
   const [temperature, setTemperature] = useState<number>(0.7);
+  const [maxQuoteLength, setMaxQuoteLength] = useState<number>(90);
   const [textToExtract, setTextToExtract] = useState<string>('');
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -140,7 +137,7 @@ const App: React.FC = () => {
     setRawApiResponseError(null);
     try {
       const existingQuotesText = quotes.map(q => q.text);
-      const newQuotes = await fetchQuotesForPerson(apiKey, personName, selectedLanguages, resultCount, existingQuotesText, temperature);
+      const newQuotes = await fetchQuotesForPerson(apiKey, personName, selectedLanguages, resultCount, existingQuotesText, temperature, maxQuoteLength);
       
       const uniqueNewQuotes = newQuotes.filter(nq => !quotes.some(eq => eq.text === nq.text));
 
@@ -159,7 +156,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, personName, selectedLanguages, resultCount, quotes, temperature]);
+  }, [apiKey, personName, selectedLanguages, resultCount, quotes, temperature, maxQuoteLength]);
 
   const handleAnalyzeQuote = useCallback(async (quote: Quote) => {
     if (!apiKey) {
@@ -386,6 +383,18 @@ const App: React.FC = () => {
                         min="1"
                         max="50"
                         onChange={(e) => setResultCount(parseInt(e.target.value, 10))}
+                        className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label htmlFor="maxQuoteLength" className="block text-sm font-medium text-gray-300 mb-1">Max Quote Length (chars)</label>
+                      <input
+                        type="number"
+                        id="maxQuoteLength"
+                        value={maxQuoteLength}
+                        min="50"
+                        max="500"
+                        onChange={(e) => setMaxQuoteLength(parseInt(e.target.value, 10))}
                         className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
                       />
                     </div>

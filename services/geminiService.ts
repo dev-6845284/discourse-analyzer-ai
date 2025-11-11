@@ -78,7 +78,7 @@ const extractJson = (text: string): string | null => {
 };
 
 
-export const fetchQuotesForPerson = async (apiKey: string, personName: string, languages: string[], resultCount: number, existingQuotesText: string[], temperature: number): Promise<Quote[]> => {
+export const fetchQuotesForPerson = async (apiKey: string, personName: string, languages: string[], resultCount: number, existingQuotesText: string[], temperature: number, maxQuoteLength: number): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Gemini API key is missing.");
   const ai = new GoogleGenAI({ apiKey });
 
@@ -97,6 +97,16 @@ Here are the quotes that have already been found:
 ${quotesToExclude}
 `;
     }
+    
+    const quoteExtractionInstruction = `
+### 📜 QUOTE EXTRACTION RULES
+- Locate primary sources with direct quotes by ${personName}.
+- If a source's license is unclear or restrictive, do not extract the quote.
+- For each quote, provide a maximum of ${maxQuoteLength} characters of the most significant part of the statement.
+- If more than ${maxQuoteLength} characters are essential for context, you MUST output the exact text '(long quote—link only)' in the "text" field instead of the truncated quote.
+- Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source or the '(long quote—link only)' placeholder.
+- Always provide the full citation (title, source URL, date).`;
+
 
     const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
@@ -147,6 +157,8 @@ For each interval, perform targeted multilingual searches using all relevant spe
 **Sources:** Google, Yandex, Bing, LRT, Delfi, 15min.lt, Verslo Žinios, government records, think tanks, transcript repositories, and official sites.
 Extract only **direct quotes or verbatim authored text**, no summaries.
 
+---
+${quoteExtractionInstruction}
 ---
 
 ### 📤 OUTPUT FORMAT
