@@ -1,9 +1,10 @@
 
 
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 // FIX: Import AnalysisDetail, UserInfo, and the new ExportData type.
 import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail, UserInfo, ExportData } from './types';
-import { fetchQuotesForPerson, analyzeQuoteText, extractQuotesFromText } from './services/geminiService';
+import { fetchQuotesForPerson, analyzeQuoteText, extractQuotesFromText, JsonParsingError } from './services/geminiService';
 import QuoteCard from './components/QuoteCard';
 import Spinner from './components/Spinner';
 import AddQuoteModal from './components/AddQuoteModal';
@@ -60,6 +61,7 @@ const App: React.FC = () => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [rawApiResponseError, setRawApiResponseError] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [resultCount, setResultCount] = useState<number>(10);
   const [textToExtract, setTextToExtract] = useState<string>('');
@@ -133,6 +135,7 @@ const App: React.FC = () => {
     }
     setIsLoading(true);
     setError(null);
+    setRawApiResponseError(null);
     try {
       const existingQuotesText = quotes.map(q => q.text);
       const newQuotes = await fetchQuotesForPerson(apiKey, personName, selectedLanguages, resultCount, existingQuotesText);
@@ -145,7 +148,12 @@ const App: React.FC = () => {
         setQuotes(prevQuotes => [...prevQuotes, ...uniqueNewQuotes]);
       }
     } catch (e: any) {
-      setError(`Search failed: ${e.message}`);
+      if (e instanceof JsonParsingError) {
+          setError(`Search failed: ${e.message}`);
+          setRawApiResponseError(e.rawResponse);
+      } else {
+          setError(`Search failed: ${e.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -158,11 +166,17 @@ const App: React.FC = () => {
     }
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
     setError(null);
+    setRawApiResponseError(null);
     try {
       const analysis = await analyzeQuoteText(apiKey, quote.text, quote.languageCode, quote.languageName);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q));
     } catch (e: any) {
-      setError(`Analysis failed: ${e.message}`);
+      if (e instanceof JsonParsingError) {
+          setError(`Analysis failed: ${e.message}`);
+          setRawApiResponseError(e.rawResponse);
+      } else {
+          setError(`Analysis failed: ${e.message}`);
+      }
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
     }
   }, [apiKey, quotes]);
@@ -182,6 +196,7 @@ const App: React.FC = () => {
     }
     setIsExtracting(true);
     setError(null);
+    setRawApiResponseError(null);
     try {
         const extractedQuotes = await extractQuotesFromText(apiKey, personName, textToExtract);
         const uniqueNewQuotes = extractedQuotes.filter(nq => !quotes.some(eq => eq.text === nq.text));
@@ -192,7 +207,12 @@ const App: React.FC = () => {
             setTextToExtract('');
         }
     } catch (e: any) {
-        setError(`Extraction failed: ${e.message}`);
+        if (e instanceof JsonParsingError) {
+            setError(`Extraction failed: ${e.message}`);
+            setRawApiResponseError(e.rawResponse);
+        } else {
+            setError(`Extraction failed: ${e.message}`);
+        }
     } finally {
         setIsExtracting(false);
     }
@@ -229,6 +249,7 @@ const App: React.FC = () => {
     setTextToExtract('');
     setIsAddModalOpen(false);
     setError(null); // Clear previous errors
+    setRawApiResponseError(null);
 
     // Immediately call the analysis function for the newly added quote
     handleAnalyzeQuote(newQuote);
@@ -420,6 +441,15 @@ const App: React.FC = () => {
                 <div className="bg-red-600/20 text-red-300 p-4 rounded-lg mb-6 ring-1 ring-inset ring-red-500/30">
                   <p className="font-bold">Error</p>
                   <p>{error}</p>
+                </div>
+              )}
+
+              {rawApiResponseError && (
+                <div className="bg-yellow-600/20 text-yellow-300 p-4 rounded-lg mb-6 ring-1 ring-inset ring-yellow-500/30">
+                    <h3 className="font-bold mb-2">Raw AI Response for Examination</h3>
+                    <pre className="whitespace-pre-wrap break-words text-sm bg-gray-900 p-2 rounded-md">
+                        <code>{rawApiResponseError}</code>
+                    </pre>
                 </div>
               )}
               
