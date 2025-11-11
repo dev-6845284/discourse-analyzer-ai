@@ -40,14 +40,14 @@ function decodeJwt(token: string) {
 }
 
 const App: React.FC = () => {
-  // FIX: Initialize user state with a function. This runs only once on initial render.
-  // It checks the hostname and sets a default user for the AI Studio environment immediately,
-  // preventing the login screen from ever rendering in that context.
+  // FIX: Updated logic to detect AI Studio and local development environments.
+  // The login screen is bypassed for AI Studio (empty hostname), localhost, and 127.0.0.1.
   const [user, setUser] = useState<UserInfo | null>(() => {
-    if (window.location.hostname === 'aistudio.google.com') {
+    const hostname = window.location.hostname;
+    if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
       return {
-        email: 'preview.user@aistudio.google.com',
-        name: 'AI Studio User',
+        email: 'developer@example.com',
+        name: 'Local Developer',
       };
     }
     return null;
@@ -92,13 +92,10 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // FIX: Only initialize Google Sign-In if not in the AI Studio preview environment
-    // and if the user is not already logged in. This prevents the GSI library from
-    // making a call that would fail due to an un-whitelisted origin.
-    if (window.location.hostname !== 'aistudio.google.com' && !user && googleButtonRef.current) {
-      console.info(window.location)
-      console.info(user)
-      console.info(googleButtonRef.current)
+    const hostname = window.location.hostname;
+    // FIX: Updated logic to initialize Google Sign-In only in production-like environments.
+    // It is skipped on localhost, 127.0.0.1, and in sandboxed environments like AI Studio (empty hostname).
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1' && !user && googleButtonRef.current) {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
