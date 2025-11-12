@@ -78,7 +78,16 @@ const extractJson = (text: string): string | null => {
 };
 
 
-export const fetchQuotesForPerson = async (apiKey: string, personName: string, languages: string[], resultCount: number, existingQuotesText: string[], temperature: number, maxQuoteLength: number): Promise<Quote[]> => {
+export const fetchQuotesForPerson = async (
+  apiKey: string, 
+  personName: string, 
+  languages: string[], 
+  resultCount: number, 
+  existingQuotesText: string[], 
+  temperature: number, 
+  maxQuoteLength: number,
+  timePeriod: { description: string; startDate: string; endDate: string }
+): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Gemini API key is missing.");
   const ai = new GoogleGenAI({ apiKey });
 
@@ -104,13 +113,14 @@ ${quotesToExclude}
 - If a source's license is unclear or restrictive, do not extract the quote.
 - For each quote, provide a maximum of ${maxQuoteLength} characters of the most significant part of the statement.
 - If more than ${maxQuoteLength} characters are essential for context, you MUST output the exact text '(long quote—link only)' in the "text" field instead of the truncated quote.
+- In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
 - Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source or the '(long quote—link only)' placeholder.
 - Always provide the full citation (title, source URL, date).`;
 
 
     const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
-Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from the last 30 years. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
+Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
 
 ---
 

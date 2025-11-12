@@ -55,6 +55,8 @@ const App: React.FC = () => {
 
   const [loginError, setLoginError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
+  const [grokApiKey, setGrokApiKey] = useState<string>('');
+  const [selectedAI, setSelectedAI] = useState<'gemini' | 'grok'>('gemini');
   const [personName, setPersonName] = useState<string>('');
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -71,6 +73,10 @@ const App: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<AnalysisCategory | 'all'>('all');
   const [filterRating, setFilterRating] = useState<AnalysisRating | 'all'>('all');
   const [isFormCollapsed, setIsFormCollapsed] = useState<boolean>(true);
+  const [timePeriodType, setTimePeriodType] = useState<'day' | 'week' | 'months' | 'years' | 'custom'>('months');
+  const [timePeriodValue, setTimePeriodValue] = useState<number>(6);
+  const [customDateFrom, setCustomDateFrom] = useState<string>('');
+  const [customDateTo, setCustomDateTo] = useState<string>('');
 
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
@@ -78,6 +84,22 @@ const App: React.FC = () => {
     const savedApiKey = localStorage.getItem('geminiApiKey');
     if (savedApiKey) {
       setApiKey(savedApiKey);
+    }
+    const savedGrokApiKey = localStorage.getItem('grokApiKey');
+    if (savedGrokApiKey) {
+      setGrokApiKey(savedGrokApiKey);
+    }
+    const savedSelectedAI = localStorage.getItem('selectedAI');
+    if (savedSelectedAI === 'gemini' || savedSelectedAI === 'grok') {
+      setSelectedAI(savedSelectedAI);
+    }
+    const savedTimePeriodType = localStorage.getItem('timePeriodType');
+    if (savedTimePeriodType && ['day', 'week', 'months', 'years', 'custom'].includes(savedTimePeriodType)) {
+      setTimePeriodType(savedTimePeriodType as 'day' | 'week' | 'months' | 'years' | 'custom');
+    }
+    const savedTimePeriodValue = localStorage.getItem('timePeriodValue');
+    if (savedTimePeriodValue) {
+      setTimePeriodValue(parseInt(savedTimePeriodValue, 10));
     }
   }, []);
 
@@ -123,10 +145,85 @@ const App: React.FC = () => {
     setApiKey(key);
     localStorage.setItem('geminiApiKey', key);
   }
+
+  const handleGrokApiKeyChange = (key: string) => {
+    setGrokApiKey(key);
+    localStorage.setItem('grokApiKey', key);
+  }
+
+  const handleAISelectionChange = (ai: 'gemini' | 'grok') => {
+    setSelectedAI(ai);
+    localStorage.setItem('selectedAI', ai);
+  }
+
+  const getTimePeriodDescription = useCallback(() => {
+    const today = new Date();
+    let startDate: Date;
+    let endDate = today;
+
+    if (timePeriodType === 'custom') {
+      if (!customDateFrom || !customDateTo) {
+        return { description: 'the last 6 months', startDate: '', endDate: '' };
+      }
+      startDate = new Date(customDateFrom);
+      endDate = new Date(customDateTo);
+      const startStr = startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const endStr = endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      return {
+        description: `from ${startStr} to ${endStr}`,
+        startDate: customDateFrom,
+        endDate: customDateTo
+      };
+    }
+
+    switch (timePeriodType) {
+      case 'day':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 1);
+        return {
+          description: 'the last day',
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today.toISOString().split('T')[0]
+        };
+      case 'week':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+        return {
+          description: 'the last week',
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today.toISOString().split('T')[0]
+        };
+      case 'months':
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - timePeriodValue);
+        return {
+          description: `the last ${timePeriodValue} month${timePeriodValue > 1 ? 's' : ''}`,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today.toISOString().split('T')[0]
+        };
+      case 'years':
+        startDate = new Date(today);
+        startDate.setFullYear(today.getFullYear() - timePeriodValue);
+        return {
+          description: `the last ${timePeriodValue} year${timePeriodValue > 1 ? 's' : ''}`,
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today.toISOString().split('T')[0]
+        };
+      default:
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 6);
+        return {
+          description: 'the last 6 months',
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today.toISOString().split('T')[0]
+        };
+    }
+  }, [timePeriodType, timePeriodValue, customDateFrom, customDateTo]);
   
   const handleSearch = useCallback(async () => {
-    if (!apiKey) {
-      setError("Please enter your Gemini API key in the Settings section.");
+    const currentApiKey = selectedAI === 'gemini' ? apiKey : grokApiKey;
+    if (!currentApiKey) {
+      setError(`Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key in the Settings section.`);
       return;
     }
     if (!personName) {
@@ -138,7 +235,10 @@ const App: React.FC = () => {
     setRawApiResponseError(null);
     try {
       const existingQuotesText = quotes.map(q => q.text);
-      const newQuotes = await fetchQuotesForPerson(apiKey, personName, selectedLanguages, resultCount, existingQuotesText, temperature, maxQuoteLength);
+      const timePeriod = getTimePeriodDescription();
+      const newQuotes = selectedAI === 'gemini' 
+        ? await fetchQuotesForPerson(currentApiKey, personName, selectedLanguages, resultCount, existingQuotesText, temperature, maxQuoteLength, timePeriod)
+        : await fetchQuotesForPersonGrok(currentApiKey, personName, selectedLanguages, resultCount, existingQuotesText, temperature, maxQuoteLength, timePeriod);
       
       const uniqueNewQuotes = newQuotes.filter(nq => !quotes.some(eq => eq.text === nq.text));
 
@@ -148,7 +248,7 @@ const App: React.FC = () => {
         setQuotes(prevQuotes => [...prevQuotes, ...uniqueNewQuotes]);
       }
     } catch (e: any) {
-      if (e instanceof JsonParsingError) {
+      if (e instanceof JsonParsingError || e instanceof JsonParsingErrorGrok) {
           setError(`Search failed: ${e.message}`);
           setRawApiResponseError(e.rawResponse);
       } else {
@@ -157,21 +257,24 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [apiKey, personName, selectedLanguages, resultCount, quotes, temperature, maxQuoteLength]);
+  }, [apiKey, grokApiKey, selectedAI, personName, selectedLanguages, resultCount, quotes, temperature, maxQuoteLength, getTimePeriodDescription]);
 
   const handleAnalyzeQuote = useCallback(async (quote: Quote) => {
-    if (!apiKey) {
-      setError("Please enter your Gemini API key to analyze quotes.");
+    const currentApiKey = selectedAI === 'gemini' ? apiKey : grokApiKey;
+    if (!currentApiKey) {
+      setError(`Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to analyze quotes.`);
       return;
     }
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
     setError(null);
     setRawApiResponseError(null);
     try {
-      const analysis = await analyzeQuoteText(apiKey, quote.text, quote.languageCode, quote.languageName);
+      const analysis = selectedAI === 'gemini'
+        ? await analyzeQuoteText(currentApiKey, quote.text, quote.languageCode, quote.languageName)
+        : await analyzeQuoteTextGrok(currentApiKey, quote.text, quote.languageCode, quote.languageName);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q));
     } catch (e: any) {
-      if (e instanceof JsonParsingError) {
+      if (e instanceof JsonParsingError || e instanceof JsonParsingErrorGrok) {
           setError(`Analysis failed: ${e.message}`);
           setRawApiResponseError(e.rawResponse);
       } else {
@@ -179,11 +282,12 @@ const App: React.FC = () => {
       }
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
     }
-  }, [apiKey, quotes]);
+  }, [apiKey, grokApiKey, selectedAI, quotes]);
 
   const handleExtractQuotes = useCallback(async () => {
-    if (!apiKey) {
-      setError("Please enter your Gemini API key to extract quotes.");
+    const currentApiKey = selectedAI === 'gemini' ? apiKey : grokApiKey;
+    if (!currentApiKey) {
+      setError(`Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to extract quotes.`);
       return;
     }
     if (!personName) {
@@ -198,7 +302,9 @@ const App: React.FC = () => {
     setError(null);
     setRawApiResponseError(null);
     try {
-        const extractedQuotes = await extractQuotesFromText(apiKey, personName, textToExtract);
+        const extractedQuotes = selectedAI === 'gemini'
+          ? await extractQuotesFromText(currentApiKey, personName, textToExtract)
+          : await extractQuotesFromTextGrok(currentApiKey, personName, textToExtract);
         const uniqueNewQuotes = extractedQuotes.filter(nq => !quotes.some(eq => eq.text === nq.text));
         if (uniqueNewQuotes.length === 0) {
             setError("No new, unique quotes were extracted from the text.");
@@ -207,7 +313,7 @@ const App: React.FC = () => {
             setTextToExtract('');
         }
     } catch (e: any) {
-        if (e instanceof JsonParsingError) {
+        if (e instanceof JsonParsingError || e instanceof JsonParsingErrorGrok) {
             setError(`Extraction failed: ${e.message}`);
             setRawApiResponseError(e.rawResponse);
         } else {
@@ -216,7 +322,7 @@ const App: React.FC = () => {
     } finally {
         setIsExtracting(false);
     }
-  }, [apiKey, personName, textToExtract, quotes]);
+  }, [apiKey, grokApiKey, selectedAI, personName, textToExtract, quotes]);
   
   const handleAddQuoteManually = (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }) => {
     if (!textToExtract.trim() || !personName) {
@@ -359,11 +465,45 @@ const App: React.FC = () => {
                         </a>. Your key is stored in your browser's local storage.
                       </p>
                     </div>
+                    <div className="mt-4">
+                      <label htmlFor="grokApiKey" className="block text-sm font-medium text-gray-300 mb-1">Grok API Key</label>
+                      <input
+                        type="password"
+                        id="grokApiKey"
+                        value={grokApiKey}
+                        onChange={(e) => handleGrokApiKeyChange(e.target.value)}
+                        className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+                        placeholder="Enter your Grok API key"
+                      />
+                       <p className="mt-2 text-xs text-gray-400">
+                        Get your key from{' '}
+                        <a href="https://console.x.ai/" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
+                          xAI Console
+                        </a>. Your key is stored in your browser's local storage.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Section 1: Search */}
                   <div className="p-4 bg-gray-800/50 rounded-lg">
                     <h2 className="text-xl font-semibold text-cyan-400 mb-4">Search for Quotes</h2>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">AI Provider</label>
+                      <div className="flex rounded-md bg-gray-700">
+                        <button 
+                          onClick={() => handleAISelectionChange('gemini')}
+                          className={`flex-1 px-4 py-2 text-sm font-medium transition-colors rounded-l-md ${selectedAI === 'gemini' ? 'bg-cyan-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                        >
+                          Gemini
+                        </button>
+                        <button 
+                          onClick={() => handleAISelectionChange('grok')}
+                          className={`flex-1 px-4 py-2 text-sm font-medium transition-colors rounded-r-md ${selectedAI === 'grok' ? 'bg-cyan-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                        >
+                          Grok
+                        </button>
+                      </div>
+                    </div>
                     <div>
                       <label htmlFor="personName" className="block text-sm font-medium text-gray-300 mb-1">Person's Name</label>
                       <input
@@ -375,6 +515,74 @@ const App: React.FC = () => {
                         placeholder="e.g., Albert Einstein"
                       />
                     </div>
+                    
+                    {/* Time Period Selection */}
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Time Period</label>
+                      <div className="space-y-2">
+                        <select
+                          value={timePeriodType}
+                          onChange={(e) => {
+                            const newType = e.target.value as 'day' | 'week' | 'months' | 'years' | 'custom';
+                            setTimePeriodType(newType);
+                            localStorage.setItem('timePeriodType', newType);
+                          }}
+                          className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                        >
+                          <option value="day">Last Day</option>
+                          <option value="week">Last Week</option>
+                          <option value="months">Last Month(s)</option>
+                          <option value="years">Last Year(s)</option>
+                          <option value="custom">Custom Period</option>
+                        </select>
+                        
+                        {(timePeriodType === 'months' || timePeriodType === 'years') && (
+                          <input
+                            type="number"
+                            min="1"
+                            max={timePeriodType === 'months' ? 120 : 30}
+                            value={timePeriodValue}
+                            onChange={(e) => {
+                              const newValue = parseInt(e.target.value, 10) || 1;
+                              setTimePeriodValue(newValue);
+                              localStorage.setItem('timePeriodValue', newValue.toString());
+                            }}
+                            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                            placeholder={`Number of ${timePeriodType}`}
+                          />
+                        )}
+                        
+                        {timePeriodType === 'custom' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label htmlFor="dateFrom" className="block text-xs text-gray-400 mb-1">From</label>
+                              <input
+                                type="date"
+                                id="dateFrom"
+                                value={customDateFrom}
+                                onChange={(e) => setCustomDateFrom(e.target.value)}
+                                className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="dateTo" className="block text-xs text-gray-400 mb-1">To</label>
+                              <input
+                                type="date"
+                                id="dateTo"
+                                value={customDateTo}
+                                onChange={(e) => setCustomDateTo(e.target.value)}
+                                className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        <p className="text-xs text-gray-400 mt-2">
+                          Will search for quotes from {getTimePeriodDescription().description}
+                        </p>
+                      </div>
+                    </div>
+                    
                     <div className="mt-4">
                       <label htmlFor="resultCount" className="block text-sm font-medium text-gray-300 mb-1">Number of Results</label>
                       <input
@@ -424,7 +632,7 @@ const App: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                    <button onClick={handleSearch} disabled={!apiKey || isLoading} title={!apiKey ? "Please enter your Gemini API key" : ""} className="mt-6 w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors">
+                    <button onClick={handleSearch} disabled={!(selectedAI === 'gemini' ? apiKey : grokApiKey) || isLoading} title={!(selectedAI === 'gemini' ? apiKey : grokApiKey) ? `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key` : ""} className="mt-6 w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors">
                       {isLoading ? <Spinner /> : 'Find New Quotes'}
                     </button>
                   </div>
@@ -442,16 +650,16 @@ const App: React.FC = () => {
                     <div className="mt-4 flex flex-col sm:flex-row gap-2">
                         <button 
                             onClick={handleExtractQuotes} 
-                            disabled={!apiKey || isExtracting || !textToExtract || !personName} 
-                            title={!apiKey ? "Please enter your Gemini API key" : !personName ? "Please enter a person's name" : !textToExtract ? "Please enter text to extract" : ""} 
+                            disabled={!(selectedAI === 'gemini' ? apiKey : grokApiKey) || isExtracting || !textToExtract || !personName} 
+                            title={!(selectedAI === 'gemini' ? apiKey : grokApiKey) ? `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key` : !personName ? "Please enter a person's name" : !textToExtract ? "Please enter text to extract" : ""} 
                             className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
                         >
                             {isExtracting ? <Spinner /> : 'Extract & Analyze'}
                         </button>
                         <button 
                             onClick={() => setIsAddModalOpen(true)} 
-                            disabled={!apiKey || isExtracting || !textToExtract || !personName} 
-                            title={!apiKey ? "Please enter your Gemini API key" : !personName ? "Please enter a person's name" : !textToExtract ? "Please enter text to add" : ""} 
+                            disabled={!(selectedAI === 'gemini' ? apiKey : grokApiKey) || isExtracting || !textToExtract || !personName} 
+                            title={!(selectedAI === 'gemini' ? apiKey : grokApiKey) ? `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key` : !personName ? "Please enter a person's name" : !textToExtract ? "Please enter text to add" : ""} 
                             className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
                         >
                             Add as Quote
@@ -515,7 +723,7 @@ const App: React.FC = () => {
                       quote={quote} 
                       onAnalyze={handleAnalyzeQuote} 
                       onLanguageChange={handleUpdateQuoteLanguage}
-                      isApiKeySet={!!apiKey} 
+                      isApiKeySet={!!(selectedAI === 'gemini' ? apiKey : grokApiKey)} 
                     />
                   ))}
                 </div>

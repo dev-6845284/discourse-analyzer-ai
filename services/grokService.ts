@@ -82,7 +82,8 @@ export const fetchQuotesForPerson = async (
   resultCount: number,
   existingQuotesText: string[],
   temperature: number,
-  maxQuoteLength: number
+  maxQuoteLength: number,
+  timePeriod: { description: string; startDate: string; endDate: string }
 ): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
@@ -106,14 +107,13 @@ ${quotesToExclude}
 ### 📜 QUOTE EXTRACTION RULES
 - Locate primary sources with direct quotes by ${personName}.
 - If a source's license is unclear or restrictive, do not extract the quote.
-- For each quote, provide a maximum of ${maxQuoteLength} characters of the most significant part of the statement.
-- If more than ${maxQuoteLength} characters are essential for context, you MUST output the exact text '(long quote—link only)' in the "text" field instead of the truncated quote.
-- Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source or the '(long quote—link only)' placeholder.
+- In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
+- Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source.
 - Always provide the full citation (title, source URL, date).`;
 
     const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
-Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from the last 30 years. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
+Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
 
 ---
 
@@ -151,8 +151,8 @@ If none of the above applies → exclude as **unverifiable**.
 ### ⚙️ WEB SEARCH PLAN (Multilingual)
 ${languageInstruction}
 ${exclusionInstruction}
-**Time segmentation:** 30 years divided into 6-month intervals.
-For each interval, perform targeted multilingual searches using all relevant spellings of the individual's name, including both **Latin** and **Cyrillic** forms where appropriate.
+**Time Period:** Focus your search on quotes from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (${timePeriod.startDate} to ${timePeriod.endDate})` : ''}. Only include quotes that were published or made during this time period.
+For this time period, perform targeted multilingual searches using all relevant spellings of the individual's name, including both **Latin** and **Cyrillic** forms where appropriate.
 **Keywords:**
 - English: "interview", "quote", "speech", "statement", "article", "publication", "op-ed", "press conference"
 - Russian: "интервью", "цитата", "речь", "заявление", "статья", "публикация", "пресс-конференция"
