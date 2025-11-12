@@ -1,5 +1,6 @@
 import { Quote, AnalysisResult } from "../types";
 import { SUPPORTED_LANGUAGES } from '../constants';
+import { resolveUrls } from '../utils/urlResolver';
 
 // Grok API uses OpenAI-compatible endpoints
 const GROK_API_BASE_URL = "https://api.x.ai/v1";
@@ -220,6 +221,14 @@ Do not include any other text or markdown formatting outside of the JSON object.
       console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
     }
 
+    // URL resolution disabled due to CORS issues
+    // const urls = quotes.map(q => q.source);
+    // const resolvedUrls = await resolveUrls(urls);
+    // const quotesWithResolvedUrls = quotes.map((quote, index) => ({
+    //   ...quote,
+    //   source: resolvedUrls[index],
+    // }));
+
     return quotes;
 
   } catch (error) {
@@ -377,33 +386,34 @@ ${textContent}
  */
 export const improveQuote = async (
   apiKey: string,
-  quote: Quote
+  quote: Quote,
+  personName: string
 ): Promise<Quote> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
   try {
-    const prompt = `You are tasked with improving and expanding an existing quote by finding the full context from the original source.
+    const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
 
 **Current Quote Information:**
-- Text: "${quote.text}"
-- Source URL: ${quote.source}
-- Title: ${quote.title}
-- Date: ${quote.date}
+- Person: ${personName}
+- Quote Text: "${quote.text}"
 - Language: ${quote.languageName} (${quote.languageCode})
 
 **Your Task:**
-1. Access the source URL and find the original context of this quote.
-2. If the quote is part of a longer statement, speech, or interview, extract the FULL quote or the complete relevant passage.
-3. If there are related quotes from the same speech/interview/article that provide important context, include them.
-4. Verify and update the metadata (title, date, source) if you find more accurate information.
-5. Maintain the original language of the quote.
+1. Search the web for this exact quote or similar statements by ${personName}.
+2. Find the original source and full context of this quote.
+3. If the quote is part of a longer statement, speech, or interview, extract the FULL quote or the complete relevant passage.
+4. If there are related quotes from the same speech/interview/article that provide important context, include them.
+5. Find and verify the accurate metadata (source URL, title, date).
+6. Maintain the original language of the quote.
 
 **Important Rules:**
-- Extract only verbatim text from the source - no paraphrasing or summarization.
-- If you find multiple related quotes from the same source, join them with ' | ' separator.
-- The expanded quote must be substantive (≥10 words or key factual statement).
-- If the source is not accessible or you cannot find better context, return the original quote unchanged.
-- Ensure the source URL is still valid and points to the correct content.
+- DO NOT use the old source reference - search independently for this quote
+- Extract only verbatim text from the source - no paraphrasing or summarization
+- If you find multiple related quotes from the same source, join them with ' | ' separator
+- The expanded quote must be substantive (≥10 words or key factual statement)
+- If you cannot find the quote or better context, return the original quote unchanged
+- Ensure you provide the most direct, accessible source URL
 
 **Output Format:**
 Return a single, valid JSON object with these properties:
@@ -459,6 +469,9 @@ Do not include any other text or markdown formatting outside of the JSON object.
       console.error("Failed to parse JSON response:", jsonText);
       throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
     }
+
+    // URL resolution disabled due to CORS issues
+    // const resolvedUrl = await resolveUrls([parsedResponse.source]);
 
     // Return the improved quote
     return {

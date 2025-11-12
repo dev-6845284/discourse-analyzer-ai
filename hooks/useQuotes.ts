@@ -252,11 +252,16 @@ export function useQuotes() {
   }, []);
 
   const handleImproveQuote = useCallback(
-    async (quote: Quote, apiKey: string, selectedAI: AIProvider) => {
+    async (quote: Quote, apiKey: string, selectedAI: AIProvider, personName: string) => {
       if (!apiKey) {
         setError(
           `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to improve quotes.`
         );
+        return;
+      }
+
+      if (!personName) {
+        setError("Please enter a person's name to improve quotes.");
         return;
       }
 
@@ -269,8 +274,8 @@ export function useQuotes() {
       try {
         const improvedQuote =
           selectedAI === 'gemini'
-            ? await improveQuoteGemini(apiKey, quote)
-            : await improveQuoteGrok(apiKey, quote);
+            ? await improveQuoteGemini(apiKey, quote, personName)
+            : await improveQuoteGrok(apiKey, quote, personName);
 
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...improvedQuote, isImproving: false } : q))

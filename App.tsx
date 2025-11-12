@@ -102,7 +102,7 @@ const App: React.FC = () => {
   };
 
   const handleImproveQuote = (quote: any) => {
-    improveQuote(quote, getCurrentApiKey(), selectedAI);
+    improveQuote(quote, getCurrentApiKey(), selectedAI, personName);
   };
 
   const handleExtractQuotes = async () => {
