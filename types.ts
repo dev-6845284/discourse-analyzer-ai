@@ -31,6 +31,7 @@ export interface Quote {
   languageName: string;
   analysis?: AnalysisResult;
   isAnalyzing?: boolean;
+  isImproving?: boolean;
 }
 
 // FIX: Update GroundingChunk to match the @google/genai type.

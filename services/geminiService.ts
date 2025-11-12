@@ -112,7 +112,7 @@ ${quotesToExclude}
 - Locate primary sources with direct quotes by ${personName}.
 - If a source's license is unclear or restrictive, do not extract the quote.
 - For each quote, provide a maximum of ${maxQuoteLength} characters of the most significant part of the statement.
-- If more than ${maxQuoteLength} characters are essential for context, you MUST output the exact text '(long quote—link only)' in the "text" field instead of the truncated quote.
+- If more than ${maxQuoteLength} characters are essential for context, output truncated quote and the text '(read article for full quote)'.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
 - Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source or the '(long quote—link only)' placeholder.
 - Always provide the full citation (title, source URL, date).`;
@@ -383,5 +383,120 @@ ${textContent}
         throw error;
     }
     throw new Error("An unknown error occurred while extracting quotes from the text.");
+  }
+};
+
+/**
+ * Improve/expand an existing quote by finding the full context from the original source
+ */
+export const improveQuote = async (
+  apiKey: string,
+  quote: Quote
+): Promise<Quote> => {
+  if (!apiKey) throw new Error("Gemini API key is missing.");
+  const ai = new GoogleGenAI({ apiKey });
+
+  try {
+
+    const prompt = `You are tasked with improving and expanding an existing quote by finding the full context from the original source.
+
+**Current Quote Information:**
+- Text: "${quote.text}"
+- Source URL: ${quote.source}
+- Title: ${quote.title}
+- Date: ${quote.date}
+- Language: ${quote.languageName} (${quote.languageCode})
+
+**Your Task:**
+1. Access the source URL and find the original context of this quote.
+2. If the quote is part of a longer statement, speech, or interview, extract the FULL quote or the complete relevant passage.
+3. If there are related quotes from the same speech/interview/article that provide important context, include them.
+4. Verify and update the metadata (title, date, source) if you find more accurate information.
+5. Maintain the original language of the quote.
+
+**Important Rules:**
+- Extract only verbatim text from the source - no paraphrasing or summarization.
+- If you find multiple related quotes from the same source, join them with ' | ' separator.
+- The expanded quote must be substantive (≥10 words or key factual statement).
+- If the source is not accessible or you cannot find better context, return the original quote unchanged.
+- Ensure the source URL is still valid and points to the correct content.
+
+**Output Format:**
+Return a single, valid JSON object with these properties:
+- "text": The improved/expanded quote text (verbatim from source)
+- "source": The verified source URL (update if you found a better/more direct link)
+- "title": The verified title of the source
+- "date": The verified date in YYYY-MM-DD format
+- "languageCode": The language code (e.g., "en", "lt", "ru")
+- "languageName": The language name (e.g., "English", "Lithuanian", "Russian")
+- "improved": A boolean indicating whether you successfully improved the quote (true) or returned it unchanged (false)
+- "improvementNote": A brief explanation of what was improved or why it couldn't be improved
+
+Example:
+{
+  "text": "The full expanded quote text here...",
+  "source": "https://example.com/article",
+  "title": "Article Title",
+  "date": "2023-10-27",
+  "languageCode": "en",
+  "languageName": "English",
+  "improved": true,
+  "improvementNote": "Expanded from partial quote to full statement from the speech"
+}
+
+Do not include any other text or markdown formatting outside of the JSON object.`;
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      }
+    });
+
+    const responseText = getValidatedResponseText(response, "improving quote");
+
+    const jsonText = extractJson(responseText);
+    if (!jsonText) {
+      console.error("No valid JSON object found in the Gemini API response:", responseText);
+      throw new Error("Could not find a valid JSON object in the AI's response.");
+    }
+
+    let parsedResponse: {
+      text: string;
+      source: string;
+      title: string;
+      date: string;
+      languageCode: string;
+      languageName: string;
+      improved: boolean;
+      improvementNote: string;
+    };
+
+    try {
+      parsedResponse = JSON.parse(jsonText);
+    } catch (e) {
+      console.error("Failed to parse JSON response:", jsonText);
+      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
+    }
+
+    // Return the improved quote
+    return {
+      id: quote.id,
+      text: parsedResponse.text.trim(),
+      source: parsedResponse.source,
+      title: parsedResponse.title,
+      date: parsedResponse.date,
+      languageCode: parsedResponse.languageCode,
+      languageName: parsedResponse.languageName,
+      analysis: quote.analysis, // Preserve existing analysis
+    };
+
+  } catch (error) {
+    console.error("Error improving quote:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("An unknown error occurred while improving the quote.");
   }
 };

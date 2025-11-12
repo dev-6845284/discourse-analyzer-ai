@@ -67,6 +67,7 @@ const App: React.FC = () => {
     handleAddQuoteManually: addQuoteManually,
     handleUpdateQuoteLanguage,
     handleClearQuotes,
+    handleImproveQuote: improveQuote,
   } = useQuotes();
 
   const {
@@ -98,6 +99,10 @@ const App: React.FC = () => {
 
   const handleAnalyzeQuote = (quote: any) => {
     analyzeQuote(quote, getCurrentApiKey(), selectedAI);
+  };
+
+  const handleImproveQuote = (quote: any) => {
+    improveQuote(quote, getCurrentApiKey(), selectedAI);
   };
 
   const handleExtractQuotes = async () => {
@@ -549,6 +554,7 @@ const App: React.FC = () => {
                     key={quote.id}
                     quote={quote}
                     onAnalyze={handleAnalyzeQuote}
+                    onImprove={handleImproveQuote}
                     onLanguageChange={handleUpdateQuoteLanguage}
                     isApiKeySet={!!getCurrentApiKey()}
                   />

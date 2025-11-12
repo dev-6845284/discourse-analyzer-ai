@@ -4,12 +4,14 @@ import {
   fetchQuotesForPerson as fetchQuotesGemini,
   analyzeQuoteText as analyzeQuoteGemini,
   extractQuotesFromText as extractQuotesGemini,
+  improveQuote as improveQuoteGemini,
   JsonParsingError as JsonParsingErrorGemini,
 } from '../services/geminiService';
 import {
   fetchQuotesForPerson as fetchQuotesGrok,
   analyzeQuoteText as analyzeQuoteGrok,
   extractQuotesFromText as extractQuotesGrok,
+  improveQuote as improveQuoteGrok,
   JsonParsingError as JsonParsingErrorGrok,
 } from '../services/grokService';
 import { SUPPORTED_LANGUAGES } from '../constants';
@@ -249,6 +251,45 @@ export function useQuotes() {
     setQuotes([]);
   }, []);
 
+  const handleImproveQuote = useCallback(
+    async (quote: Quote, apiKey: string, selectedAI: AIProvider) => {
+      if (!apiKey) {
+        setError(
+          `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to improve quotes.`
+        );
+        return;
+      }
+
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === quote.id ? { ...q, isImproving: true } : q))
+      );
+      setError(null);
+      setRawApiResponseError(null);
+
+      try {
+        const improvedQuote =
+          selectedAI === 'gemini'
+            ? await improveQuoteGemini(apiKey, quote)
+            : await improveQuoteGrok(apiKey, quote);
+
+        setQuotes((prev) =>
+          prev.map((q) => (q.id === quote.id ? { ...improvedQuote, isImproving: false } : q))
+        );
+      } catch (e: any) {
+        if (e instanceof JsonParsingErrorGemini || e instanceof JsonParsingErrorGrok) {
+          setError(`Quote improvement failed: ${e.message}`);
+          setRawApiResponseError(e.rawResponse);
+        } else {
+          setError(`Quote improvement failed: ${e.message}`);
+        }
+        setQuotes((prev) =>
+          prev.map((q) => (q.id === quote.id ? { ...q, isImproving: false } : q))
+        );
+      }
+    },
+    []
+  );
+
   const clearError = useCallback(() => {
     setError(null);
     setRawApiResponseError(null);
@@ -265,6 +306,7 @@ export function useQuotes() {
     handleAddQuoteManually,
     handleUpdateQuoteLanguage,
     handleClearQuotes,
+    handleImproveQuote,
     clearError,
   };
 }

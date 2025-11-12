@@ -7,11 +7,12 @@ import { SUPPORTED_LANGUAGES } from '../constants';
 interface QuoteCardProps {
   quote: Quote;
   onAnalyze: (quote: Quote) => void;
+  onImprove: (quote: Quote) => void;
   onLanguageChange: (quoteId: string, newLanguageCode: string) => void;
   isApiKeySet: boolean;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onLanguageChange, isApiKeySet }) => {
+const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onLanguageChange, isApiKeySet }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -72,6 +73,17 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onLanguageChang
               </button>
             </div>
           )}
+          
+          <div className="mt-3 pt-3 border-t border-gray-700/50">
+            <button
+              onClick={() => onImprove(quote)}
+              disabled={!isApiKeySet || quote.isImproving}
+              className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              title={!isApiKeySet ? "Please set your API key in the control panel" : "Improve this quote by finding the full context from the source"}
+            >
+              {quote.isImproving ? <Spinner /> : '🔍 Improve Quote'}
+            </button>
+          </div>
         </>
       )}
     </div>
