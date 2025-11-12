@@ -86,7 +86,7 @@ export const fetchQuotesForPerson = async (
   existingQuotesText: string[], 
   temperature: number, 
   maxQuoteLength: number,
-  timePeriod: { description: string; startDate: string; endDate: string }
+  timePeriod: { description: string; startDate?: string; endDate?: string }
 ): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Gemini API key is missing.");
   const ai = new GoogleGenAI({ apiKey });
@@ -120,7 +120,7 @@ ${quotesToExclude}
 
     const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
-Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
+Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
 
 ---
 
@@ -158,8 +158,8 @@ If none of the above applies → exclude as **unverifiable**.
 ### ⚙️ WEB SEARCH PLAN (Multilingual)
 ${languageInstruction}
 ${exclusionInstruction}
-**Time segmentation:** 30 years divided into 6-month intervals.
-For each interval, perform targeted multilingual searches using all relevant spellings of the individual’s name, including both **Latin** and **Cyrillic** forms where appropriate.
+**Time Period:** Focus your search on quotes from ${timePeriod.description}. Only include quotes that were published or made during this time period.
+For this time period, perform targeted multilingual searches using all relevant spellings of the individual's name, including both **Latin** and **Cyrillic** forms where appropriate.
 **Keywords:**
 - English: "interview", "quote", "speech", "statement", "article", "publication", "op-ed", "press conference"
 - Russian: "интервью", "цитата", "речь", "заявление", "статья", "публикация", "пресс-конференция"

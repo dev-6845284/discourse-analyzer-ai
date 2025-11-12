@@ -83,7 +83,7 @@ export const fetchQuotesForPerson = async (
   existingQuotesText: string[],
   temperature: number,
   maxQuoteLength: number,
-  timePeriod: { description: string; startDate: string; endDate: string }
+  timePeriod: { description: string; startDate?: string; endDate?: string }
 ): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
@@ -151,7 +151,7 @@ If none of the above applies → exclude as **unverifiable**.
 ### ⚙️ WEB SEARCH PLAN (Multilingual)
 ${languageInstruction}
 ${exclusionInstruction}
-**Time Period:** Focus your search on quotes from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (${timePeriod.startDate} to ${timePeriod.endDate})` : ''}. Only include quotes that were published or made during this time period.
+**Time Period:** Focus your search on quotes from ${timePeriod.description}. Only include quotes that were published or made during this time period.
 For this time period, perform targeted multilingual searches using all relevant spellings of the individual's name, including both **Latin** and **Cyrillic** forms where appropriate.
 **Keywords:**
 - English: "interview", "quote", "speech", "statement", "article", "publication", "op-ed", "press conference"
