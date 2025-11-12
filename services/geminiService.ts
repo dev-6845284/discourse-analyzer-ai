@@ -113,7 +113,7 @@ ${quotesToExclude}
 - Locate primary sources with direct quotes by ${personName}.
 - If a source's license is unclear or restrictive, do not extract the quote.
 - For each quote, provide a maximum of ${maxQuoteLength} characters of the most significant part of the statement.
-- If more than ${maxQuoteLength} characters are essential for context, output truncated quote and the text '(read article for full quote)'.
+- If more than ${maxQuoteLength} characters are essential for context, output truncated quote appended with the the text '... (read article for full quote)'.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
 - Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source or the '(long quote—link only)' placeholder.
 - Always provide the full citation (title, source URL, date).`;
