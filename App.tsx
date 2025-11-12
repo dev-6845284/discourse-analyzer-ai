@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 // FIX: Import AnalysisDetail, UserInfo, and the new ExportData type.
 import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail, UserInfo, ExportData } from './types';
 import { fetchQuotesForPerson, analyzeQuoteText, extractQuotesFromText, JsonParsingError } from './services/geminiService';
+import { fetchQuotesForPerson as fetchQuotesForPersonGrok, analyzeQuoteText as analyzeQuoteTextGrok, extractQuotesFromText as extractQuotesFromTextGrok, JsonParsingError as JsonParsingErrorGrok } from './services/grokService';
 import QuoteCard from './components/QuoteCard';
 import Spinner from './components/Spinner';
 import AddQuoteModal from './components/AddQuoteModal';
