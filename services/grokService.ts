@@ -107,7 +107,6 @@ ${quotesToExclude}
     const quoteExtractionInstruction = `
 ### 📜 QUOTE EXTRACTION RULES
 - Locate primary sources with direct quotes by ${personName}.
-- If a source's license is unclear or restrictive, do not extract the quote.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
 - Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source.
 - Always provide the full citation (title, source URL, date).`;
@@ -158,7 +157,7 @@ For this time period, perform targeted multilingual searches using all relevant 
 - English: "interview", "quote", "speech", "statement", "article", "publication", "op-ed", "press conference"
 - Russian: "интервью", "цитата", "речь", "заявление", "статья", "публикация", "пресс-конференция"
 - Lithuanian: "interviu", "citata", "kalba", "pareiškimas", "straipsnis", "publikacija", "spaudos konferencija"
-**Sources:** Google, Yandex, Bing, LRT, Delfi, 15min.lt, Verslo Žinios, government records, think tanks, transcript repositories, and official sites.
+**Sources:** [Delfi](https://www.delfi.lt), [15min](https://www.15min.lt), [TV3](https://www.tv3.lt), [Lrytas](https://www.lrytas.lt), [LRT](https://www.lrt.lt), [Alfa](https://www.alfa.lt), [VE.lt](https://www.ve.lt), [Diena.lt](https://www.diena.lt), [Respublika](https://www.respublika.lt), [Verslo žinios](https://www.vz.lt), government records, think tanks, transcript repositories, and official sites.
 Extract only **direct quotes or verbatim authored text**, no summaries.
 
 ---

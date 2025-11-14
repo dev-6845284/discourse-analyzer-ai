@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 // FIX: Import AnalysisDetail, UserInfo, and the new ExportData type.
 import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail, UserInfo, ExportData } from './types';
-import { fetchQuotesForPerson, analyzeQuoteText, extractQuotesFromText, JsonParsingError } from './services/geminiService';
-import { fetchQuotesForPerson as fetchQuotesForPersonGrok, analyzeQuoteText as analyzeQuoteTextGrok, extractQuotesFromText as extractQuotesFromTextGrok, JsonParsingError as JsonParsingErrorGrok } from './services/grokService';
+// FIX: Import improveQuote from services
+import { fetchQuotesForPerson, analyzeQuoteText, extractQuotesFromText, improveQuote, JsonParsingError } from './services/geminiService';
+import { fetchQuotesForPerson as fetchQuotesForPersonGrok, analyzeQuoteText as analyzeQuoteTextGrok, extractQuotesFromText as extractQuotesFromTextGrok, improveQuote as improveQuoteGrok, JsonParsingError as JsonParsingErrorGrok } from './services/grokService';
 import QuoteCard from './components/QuoteCard';
 import Spinner from './components/Spinner';
 import AddQuoteModal from './components/AddQuoteModal';
@@ -283,6 +284,45 @@ const App: React.FC = () => {
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
     }
   }, [apiKey, grokApiKey, selectedAI, quotes]);
+
+  const handleImproveQuote = useCallback(async (quote: Quote) => {
+    const currentApiKey = selectedAI === 'gemini' ? apiKey : grokApiKey;
+    if (!currentApiKey) {
+      setError(`Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to improve quotes.`);
+      return;
+    }
+
+    if (!personName) {
+      setError("Please enter a person's name to improve quotes.");
+      return;
+    }
+
+    setQuotes((prev) =>
+      prev.map((q) => (q.id === quote.id ? { ...q, isImproving: true } : q))
+    );
+    setError(null);
+    setRawApiResponseError(null);
+
+    try {
+      const improvedQuote = selectedAI === 'gemini'
+        ? await improveQuote(currentApiKey, quote, personName)
+        : await improveQuoteGrok(currentApiKey, quote, personName);
+
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === quote.id ? { ...improvedQuote, isImproving: false } : q))
+      );
+    } catch (e: any) {
+      if ((selectedAI === 'gemini' && e instanceof JsonParsingError) || (selectedAI === 'grok' && e instanceof JsonParsingErrorGrok)) {
+        setError(`Quote improvement failed: ${e.message}`);
+        setRawApiResponseError(e.rawResponse);
+      } else {
+        setError(`Quote improvement failed: ${e.message}`);
+      }
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === quote.id ? { ...q, isImproving: false } : q))
+      );
+    }
+  }, [apiKey, grokApiKey, selectedAI, personName]);
 
   const handleExtractQuotes = useCallback(async () => {
     const currentApiKey = selectedAI === 'gemini' ? apiKey : grokApiKey;
@@ -721,7 +761,9 @@ const App: React.FC = () => {
                     <QuoteCard 
                       key={quote.id} 
                       quote={quote} 
-                      onAnalyze={handleAnalyzeQuote} 
+                      onAnalyze={handleAnalyzeQuote}
+{/* FIX: The onImprove prop was missing. Implemented handleImproveQuote and passed it here. */}
+                      onImprove={handleImproveQuote} 
                       onLanguageChange={handleUpdateQuoteLanguage}
                       isApiKeySet={!!(selectedAI === 'gemini' ? apiKey : grokApiKey)} 
                     />

@@ -14,9 +14,47 @@ import {
   improveQuote as improveQuoteGrok,
   JsonParsingError as JsonParsingErrorGrok,
 } from '../services/grokService';
+import {
+  fetchQuotesForPerson as fetchQuotesChatGpt,
+  analyzeQuoteText as analyzeQuoteChatGpt,
+  extractQuotesFromText as extractQuotesChatGpt,
+  improveQuote as improveQuoteChatGpt,
+  JsonParsingError as JsonParsingErrorChatGpt,
+} from '../services/chatGptService';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { AIProvider } from './useApiKeys';
 import { TimePeriodResult } from '../utils/timePeriod';
+
+const getApiService = (provider: AIProvider) => {
+  switch (provider) {
+    case 'gemini':
+      return {
+        fetchQuotes: fetchQuotesGemini,
+        analyzeQuote: analyzeQuoteGemini,
+        extractQuotes: extractQuotesGemini,
+        improveQuote: improveQuoteGemini,
+        JsonParsingError: JsonParsingErrorGemini,
+      };
+    case 'grok':
+      return {
+        fetchQuotes: fetchQuotesGrok,
+        analyzeQuote: analyzeQuoteGrok,
+        extractQuotes: extractQuotesGrok,
+        improveQuote: improveQuoteGrok,
+        JsonParsingError: JsonParsingErrorGrok,
+      };
+    case 'chatgpt':
+       return {
+        fetchQuotes: fetchQuotesChatGpt,
+        analyzeQuote: analyzeQuoteChatGpt,
+        extractQuotes: extractQuotesChatGpt,
+        improveQuote: improveQuoteChatGpt,
+        JsonParsingError: JsonParsingErrorChatGpt,
+      };
+    default:
+      throw new Error('Invalid AI provider selected');
+  }
+};
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -51,29 +89,18 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
+        const { fetchQuotes, JsonParsingError } = getApiService(selectedAI);
         const existingQuotesText = quotes.map((q) => q.text);
-        const newQuotes =
-          selectedAI === 'gemini'
-            ? await fetchQuotesGemini(
-                apiKey,
-                personName,
-                selectedLanguages,
-                resultCount,
-                existingQuotesText,
-                temperature,
-                maxQuoteLength,
-                timePeriod
-              )
-            : await fetchQuotesGrok(
-                apiKey,
-                personName,
-                selectedLanguages,
-                resultCount,
-                existingQuotesText,
-                temperature,
-                maxQuoteLength,
-                timePeriod
-              );
+        const newQuotes = await fetchQuotes(
+            apiKey,
+            personName,
+            selectedLanguages,
+            resultCount,
+            existingQuotesText,
+            temperature,
+            maxQuoteLength,
+            timePeriod
+        );
 
         const uniqueNewQuotes = newQuotes.filter(
           (nq) => !quotes.some((eq) => eq.text === nq.text)
@@ -85,7 +112,8 @@ export function useQuotes() {
           setQuotes((prevQuotes) => [...prevQuotes, ...uniqueNewQuotes]);
         }
       } catch (e: any) {
-        if (e instanceof JsonParsingErrorGemini || e instanceof JsonParsingErrorGrok) {
+        const { JsonParsingError } = getApiService(selectedAI);
+        if (e instanceof JsonParsingError) {
           setError(`Search failed: ${e.message}`);
           setRawApiResponseError(e.rawResponse);
         } else {
@@ -114,16 +142,15 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const analysis =
-          selectedAI === 'gemini'
-            ? await analyzeQuoteGemini(apiKey, quote.text, quote.languageCode, quote.languageName)
-            : await analyzeQuoteGrok(apiKey, quote.text, quote.languageCode, quote.languageName);
+        const { analyzeQuote, JsonParsingError } = getApiService(selectedAI);
+        const analysis = await analyzeQuote(apiKey, quote.text, quote.languageCode, quote.languageName);
 
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q))
         );
       } catch (e: any) {
-        if (e instanceof JsonParsingErrorGemini || e instanceof JsonParsingErrorGrok) {
+        const { JsonParsingError } = getApiService(selectedAI);
+        if (e instanceof JsonParsingError) {
           setError(`Analysis failed: ${e.message}`);
           setRawApiResponseError(e.rawResponse);
         } else {
@@ -164,10 +191,8 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const extractedQuotes =
-          selectedAI === 'gemini'
-            ? await extractQuotesGemini(apiKey, personName, textToExtract)
-            : await extractQuotesGrok(apiKey, personName, textToExtract);
+        const { extractQuotes, JsonParsingError } = getApiService(selectedAI);
+        const extractedQuotes = await extractQuotes(apiKey, personName, textToExtract);
 
         const uniqueNewQuotes = extractedQuotes.filter(
           (nq) => !quotes.some((eq) => eq.text === nq.text)
@@ -180,7 +205,8 @@ export function useQuotes() {
           onSuccess();
         }
       } catch (e: any) {
-        if (e instanceof JsonParsingErrorGemini || e instanceof JsonParsingErrorGrok) {
+        const { JsonParsingError } = getApiService(selectedAI);
+        if (e instanceof JsonParsingError) {
           setError(`Extraction failed: ${e.message}`);
           setRawApiResponseError(e.rawResponse);
         } else {
@@ -272,16 +298,15 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const improvedQuote =
-          selectedAI === 'gemini'
-            ? await improveQuoteGemini(apiKey, quote, personName)
-            : await improveQuoteGrok(apiKey, quote, personName);
+        const { improveQuote, JsonParsingError } = getApiService(selectedAI);
+        const improvedQuote = await improveQuote(apiKey, quote, personName);
 
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...improvedQuote, isImproving: false } : q))
         );
       } catch (e: any) {
-        if (e instanceof JsonParsingErrorGemini || e instanceof JsonParsingErrorGrok) {
+        const { JsonParsingError } = getApiService(selectedAI);
+        if (e instanceof JsonParsingError) {
           setError(`Quote improvement failed: ${e.message}`);
           setRawApiResponseError(e.rawResponse);
         } else {

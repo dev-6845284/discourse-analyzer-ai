@@ -17,6 +17,7 @@ export const DEFAULT_SEARCH_PARAMS = {
 export const STORAGE_KEYS = {
   GEMINI_API_KEY: 'geminiApiKey',
   GROK_API_KEY: 'grokApiKey',
+  CHATGPT_API_KEY: 'chatGptApiKey',
   SELECTED_AI: 'selectedAI',
   TIME_PERIOD_TYPE: 'timePeriodType',
   TIME_PERIOD_VALUE: 'timePeriodValue',

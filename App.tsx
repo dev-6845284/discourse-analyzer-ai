@@ -19,9 +19,11 @@ const App: React.FC = () => {
   const {
     apiKey,
     grokApiKey,
+    chatGptApiKey,
     selectedAI,
     handleApiKeyChange,
     handleGrokApiKeyChange,
+    handleChatGptApiKeyChange,
     handleAISelectionChange,
     getCurrentApiKey,
   } = useApiKeys();
@@ -119,6 +121,16 @@ const App: React.FC = () => {
     clearTextToExtract();
     closeAddModal();
   };
+  
+  const getApiKeyTooltip = () => {
+    switch (selectedAI) {
+      case 'gemini': return 'Please enter your Gemini API key';
+      case 'grok': return 'Please enter your Grok API key';
+      case 'chatgpt': return 'Please enter your ChatGPT API key';
+      default: return 'Please enter an API key';
+    }
+  }
+
 
   if (!user) {
     return (
@@ -232,6 +244,34 @@ const App: React.FC = () => {
                       . Your key is stored in your browser's local storage.
                     </p>
                   </div>
+                  <div className="mt-4">
+                    <label
+                      htmlFor="chatGptApiKey"
+                      className="block text-sm font-medium text-gray-300 mb-1"
+                    >
+                      ChatGPT API Key
+                    </label>
+                    <input
+                      type="password"
+                      id="chatGptApiKey"
+                      value={chatGptApiKey}
+                      onChange={(e) => handleChatGptApiKeyChange(e.target.value)}
+                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+                      placeholder="Enter your OpenAI API key"
+                    />
+                    <p className="mt-2 text-xs text-gray-400">
+                      Get your key from{' '}
+                      <a
+                        href="https://platform.openai.com/api-keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-400 hover:underline"
+                      >
+                        OpenAI Platform
+                      </a>
+                      . Your key is stored in your browser's local storage.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Section 1: Search */}
@@ -254,13 +294,23 @@ const App: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleAISelectionChange('grok')}
-                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors rounded-r-md ${
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
                           selectedAI === 'grok'
                             ? 'bg-cyan-600 text-white'
                             : 'text-gray-300 hover:bg-gray-600'
                         }`}
                       >
                         Grok
+                      </button>
+                      <button
+                        onClick={() => handleAISelectionChange('chatgpt')}
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors rounded-r-md ${
+                          selectedAI === 'chatgpt'
+                            ? 'bg-cyan-600 text-white'
+                            : 'text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        ChatGPT
                       </button>
                     </div>
                   </div>
@@ -430,11 +480,7 @@ const App: React.FC = () => {
                   <button
                     onClick={handleSearch}
                     disabled={!getCurrentApiKey() || isLoading}
-                    title={
-                      !getCurrentApiKey()
-                        ? `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key`
-                        : ''
-                    }
+                    title={!getCurrentApiKey() ? getApiKeyTooltip() : ''}
                     className="mt-6 w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
                   >
                     {isLoading ? <Spinner /> : 'Find New Quotes'}
@@ -461,7 +507,7 @@ const App: React.FC = () => {
                       }
                       title={
                         !getCurrentApiKey()
-                          ? `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key`
+                          ? getApiKeyTooltip()
                           : !personName
                           ? "Please enter a person's name"
                           : !textToExtract
@@ -479,7 +525,7 @@ const App: React.FC = () => {
                       }
                       title={
                         !getCurrentApiKey()
-                          ? `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key`
+                          ? getApiKeyTooltip()
                           : !personName
                           ? "Please enter a person's name"
                           : !textToExtract
