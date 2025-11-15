@@ -1,56 +1,68 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserInfo } from '../types';
-import { APPROVED_EMAILS } from '../constants';
 import { decodeJwt, shouldBypassAuth, getDefaultLocalUser } from '../utils/auth';
 import { GOOGLE_CLIENT_ID } from '../config/app.config';
+import api from '../utils/api';
 
 // Declare the 'google' global object provided by the Google Identity Services script
 declare const google: any;
 
 export function useAuth() {
-  const [user, setUser] = useState<UserInfo | null>(() => {
-    return shouldBypassAuth() ? getDefaultLocalUser() : null;
-  });
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
-  const handleCredentialResponse = useCallback((response: any) => {
-    const decoded = decodeJwt(response.credential);
-    if (decoded && decoded.email) {
-      if (APPROVED_EMAILS.includes(decoded.email)) {
-        setUser({
-          email: decoded.email,
-          name: decoded.name,
-          picture: decoded.picture,
-        });
+  const handleCredentialResponse = useCallback(async (response: any) => {
+    try {
+      const res = await api.post('/login', { token: response.credential });
+      if (res.data.user) {
+        setUser(res.data.user);
         setLoginError(null);
-      } else {
-        setLoginError('Access denied. Your email is not on the approved list.');
       }
-    } else {
-      setLoginError('Login failed. Could not verify email.');
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Login failed.';
+      setLoginError(message);
     }
   }, []);
 
-  const handleLogout = useCallback(() => {
-    setUser(null);
-    setLoginError(null);
+  const handleLogout = useCallback(async () => {
+    try {
+      await api.post('/logout');
+      setUser(null);
+      setLoginError(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, []);
+
+  const checkUserSession = useCallback(async () => {
+    if (shouldBypassAuth()) {
+      setUser(getDefaultLocalUser());
+      setIsAuthLoading(false);
+      return;
+    }
+    try {
+      const res = await api.get('/user');
+      if (res.data.user) {
+        setUser(res.data.user);
+      }
+    } catch (error) {
+      // No active session, user needs to log in.
+    } finally {
+      setIsAuthLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const hostname = window.location.hostname;
-    // Initialize Google Sign-In only in production-like environments
-    if (
-      hostname &&
-      hostname !== 'localhost' &&
-      hostname !== '127.0.0.1' &&
-      !user &&
-      googleButtonRef.current
-    ) {
+    checkUserSession();
+  }, [checkUserSession]);
+
+  useEffect(() => {
+    if (!isAuthLoading && !user && googleButtonRef.current) {
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
-        use_fedcm_for_prompt: false,
       });
       google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'outline',
@@ -58,11 +70,12 @@ export function useAuth() {
       });
       google.accounts.id.prompt();
     }
-  }, [user, handleCredentialResponse]);
+  }, [isAuthLoading, user, handleCredentialResponse]);
 
   return {
     user,
     loginError,
+    isAuthLoading,
     googleButtonRef,
     handleLogout,
   };

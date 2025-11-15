@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from './hooks/useAuth';
-import { useApiKeys } from './hooks/useApiKeys';
 import { useSearchParams } from './hooks/useSearchParams';
 import { useTimePeriod } from './hooks/useTimePeriod';
 import { useQuotes } from './hooks/useQuotes';
@@ -16,21 +15,12 @@ import { SUPPORTED_LANGUAGES } from './constants';
 const App: React.FC = () => {
   // Custom hooks
   const { user, loginError, googleButtonRef, handleLogout } = useAuth();
-  const {
-    apiKey,
-    grokApiKey,
-    chatGptApiKey,
-    selectedAI,
-    handleApiKeyChange,
-    handleGrokApiKeyChange,
-    handleChatGptApiKeyChange,
-    handleAISelectionChange,
-    getCurrentApiKey,
-  } = useApiKeys();
 
   const {
     personName,
     setPersonName,
+    selectedAI,
+    handleAISelectionChange,
     selectedLanguages,
     resultCount,
     setResultCount,
@@ -70,15 +60,11 @@ const App: React.FC = () => {
     handleUpdateQuoteLanguage,
     handleClearQuotes,
     handleImproveQuote: improveQuote,
-  } = useQuotes();
+  } = useQuotes(handleLogout);
 
   const {
     sortOrder,
     setSortOrder,
-    filterCategory,
-    setFilterCategory,
-    filterRating,
-    setFilterRating,
     filteredAndSortedQuotes,
   } = useQuoteFilters(quotes);
 
@@ -88,7 +74,6 @@ const App: React.FC = () => {
   // Wrapped handlers
   const handleSearch = () => {
     searchQuotes(
-      getCurrentApiKey(),
       selectedAI,
       personName,
       selectedLanguages,
@@ -100,16 +85,16 @@ const App: React.FC = () => {
   };
 
   const handleAnalyzeQuote = (quote: any) => {
-    analyzeQuote(quote, getCurrentApiKey(), selectedAI);
+    analyzeQuote(quote, selectedAI);
   };
 
   const handleImproveQuote = (quote: any) => {
-    improveQuote(quote, getCurrentApiKey(), selectedAI, personName);
+    improveQuote(quote, selectedAI, personName);
   };
 
   const handleExtractQuotes = async () => {
     setIsExtracting(true);
-    await extractQuotes(getCurrentApiKey(), selectedAI, personName, textToExtract, () => {
+    await extractQuotes(selectedAI, personName, textToExtract, () => {
       clearTextToExtract();
       setIsExtracting(false);
     });
@@ -121,16 +106,6 @@ const App: React.FC = () => {
     clearTextToExtract();
     closeAddModal();
   };
-  
-  const getApiKeyTooltip = () => {
-    switch (selectedAI) {
-      case 'gemini': return 'Please enter your Gemini API key';
-      case 'grok': return 'Please enter your Grok API key';
-      case 'chatgpt': return 'Please enter your ChatGPT API key';
-      default: return 'Please enter an API key';
-    }
-  }
-
 
   if (!user) {
     return (
@@ -185,95 +160,6 @@ const App: React.FC = () => {
               className={`${isFormCollapsed ? 'hidden' : 'block'} md:block`}
             >
               <div className="space-y-6">
-                {/* Section 0: Settings */}
-                <div className="p-4 bg-gray-800/50 rounded-lg">
-                  <h2 className="text-xl font-semibold text-cyan-400 mb-4">Settings</h2>
-                  <div>
-                    <label
-                      htmlFor="apiKey"
-                      className="block text-sm font-medium text-gray-300 mb-1"
-                    >
-                      Gemini API Key
-                    </label>
-                    <input
-                      type="password"
-                      id="apiKey"
-                      value={apiKey}
-                      onChange={(e) => handleApiKeyChange(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-                      placeholder="Enter your API key"
-                    />
-                    <p className="mt-2 text-xs text-gray-400">
-                      Get your key from{' '}
-                      <a
-                        href="https://aistudio.google.com/app/apikey"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-400 hover:underline"
-                      >
-                        Google AI Studio
-                      </a>
-                      . Your key is stored in your browser's local storage.
-                    </p>
-                  </div>
-                  <div className="mt-4">
-                    <label
-                      htmlFor="grokApiKey"
-                      className="block text-sm font-medium text-gray-300 mb-1"
-                    >
-                      Grok API Key
-                    </label>
-                    <input
-                      type="password"
-                      id="grokApiKey"
-                      value={grokApiKey}
-                      onChange={(e) => handleGrokApiKeyChange(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-                      placeholder="Enter your Grok API key"
-                    />
-                    <p className="mt-2 text-xs text-gray-400">
-                      Get your key from{' '}
-                      <a
-                        href="https://console.x.ai/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-400 hover:underline"
-                      >
-                        xAI Console
-                      </a>
-                      . Your key is stored in your browser's local storage.
-                    </p>
-                  </div>
-                  <div className="mt-4">
-                    <label
-                      htmlFor="chatGptApiKey"
-                      className="block text-sm font-medium text-gray-300 mb-1"
-                    >
-                      ChatGPT API Key
-                    </label>
-                    <input
-                      type="password"
-                      id="chatGptApiKey"
-                      value={chatGptApiKey}
-                      onChange={(e) => handleChatGptApiKeyChange(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-                      placeholder="Enter your OpenAI API key"
-                    />
-                    <p className="mt-2 text-xs text-gray-400">
-                      Get your key from{' '}
-                      <a
-                        href="https://platform.openai.com/api-keys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-400 hover:underline"
-                      >
-                        OpenAI Platform
-                      </a>
-                      . Your key is stored in your browser's local storage.
-                    </p>
-                  </div>
-                </div>
-
                 {/* Section 1: Search */}
                 <div className="p-4 bg-gray-800/50 rounded-lg">
                   <h2 className="text-xl font-semibold text-cyan-400 mb-4">Search for Quotes</h2>
@@ -479,8 +365,7 @@ const App: React.FC = () => {
                   </div>
                   <button
                     onClick={handleSearch}
-                    disabled={!getCurrentApiKey() || isLoading}
-                    title={!getCurrentApiKey() ? getApiKeyTooltip() : ''}
+                    disabled={isLoading}
                     className="mt-6 w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
                   >
                     {isLoading ? <Spinner /> : 'Find New Quotes'}
@@ -503,12 +388,10 @@ const App: React.FC = () => {
                     <button
                       onClick={handleExtractQuotes}
                       disabled={
-                        !getCurrentApiKey() || isExtracting || !textToExtract || !personName
+                        isExtracting || !textToExtract || !personName
                       }
                       title={
-                        !getCurrentApiKey()
-                          ? getApiKeyTooltip()
-                          : !personName
+                        !personName
                           ? "Please enter a person's name"
                           : !textToExtract
                           ? 'Please enter text to extract'
@@ -521,12 +404,10 @@ const App: React.FC = () => {
                     <button
                       onClick={openAddModal}
                       disabled={
-                        !getCurrentApiKey() || isExtracting || !textToExtract || !personName
+                        isExtracting || !textToExtract || !personName
                       }
                       title={
-                        !getCurrentApiKey()
-                          ? getApiKeyTooltip()
-                          : !personName
+                        !personName
                           ? "Please enter a person's name"
                           : !textToExtract
                           ? 'Please enter text to add'
@@ -602,7 +483,7 @@ const App: React.FC = () => {
                     onAnalyze={handleAnalyzeQuote}
                     onImprove={handleImproveQuote}
                     onLanguageChange={handleUpdateQuoteLanguage}
-                    isApiKeySet={!!getCurrentApiKey()}
+                    isApiKeySet={true}
                   />
                 ))}
               </div>

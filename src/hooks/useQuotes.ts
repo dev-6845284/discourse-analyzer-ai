@@ -1,71 +1,42 @@
 import { useState, useCallback } from 'react';
 import { Quote } from '../types';
-import {
-  fetchQuotesForPerson as fetchQuotesGemini,
-  analyzeQuoteText as analyzeQuoteGemini,
-  extractQuotesFromText as extractQuotesGemini,
-  improveQuote as improveQuoteGemini,
-  JsonParsingError as JsonParsingErrorGemini,
-} from '../services/geminiService';
-import {
-  fetchQuotesForPerson as fetchQuotesGrok,
-  analyzeQuoteText as analyzeQuoteGrok,
-  extractQuotesFromText as extractQuotesGrok,
-  improveQuote as improveQuoteGrok,
-  JsonParsingError as JsonParsingErrorGrok,
-} from '../services/grokService';
-import {
-  fetchQuotesForPerson as fetchQuotesChatGpt,
-  analyzeQuoteText as analyzeQuoteChatGpt,
-  extractQuotesFromText as extractQuotesChatGpt,
-  improveQuote as improveQuoteChatGpt,
-  JsonParsingError as JsonParsingErrorChatGpt,
-} from '../services/chatGptService';
 import { SUPPORTED_LANGUAGES } from '../constants';
-import { AIProvider } from './useApiKeys';
 import { TimePeriodResult } from '../utils/timePeriod';
+import api from '../utils/api';
 
-const getApiService = (provider: AIProvider) => {
-  switch (provider) {
-    case 'gemini':
-      return {
-        fetchQuotes: fetchQuotesGemini,
-        analyzeQuote: analyzeQuoteGemini,
-        extractQuotes: extractQuotesGemini,
-        improveQuote: improveQuoteGemini,
-        JsonParsingError: JsonParsingErrorGemini,
-      };
-    case 'grok':
-      return {
-        fetchQuotes: fetchQuotesGrok,
-        analyzeQuote: analyzeQuoteGrok,
-        extractQuotes: extractQuotesGrok,
-        improveQuote: improveQuoteGrok,
-        JsonParsingError: JsonParsingErrorGrok,
-      };
-    case 'chatgpt':
-       return {
-        fetchQuotes: fetchQuotesChatGpt,
-        analyzeQuote: analyzeQuoteChatGpt,
-        extractQuotes: extractQuotesChatGpt,
-        improveQuote: improveQuoteChatGpt,
-        JsonParsingError: JsonParsingErrorChatGpt,
-      };
-    default:
-      throw new Error('Invalid AI provider selected');
+// Custom error class for JSON parsing failures from the backend
+export class JsonParsingError extends Error {
+  rawResponse?: string;
+
+  constructor(message: string, rawResponse?: string) {
+    super(message);
+    this.name = 'JsonParsingError';
+    this.rawResponse = rawResponse;
   }
-};
+}
 
-export function useQuotes() {
+export function useQuotes(handleLogout: () => void) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rawApiResponseError, setRawApiResponseError] = useState<string | null>(null);
 
+  const handleError = (e: any, context: string) => {
+    if (e.response?.status === 401) {
+      setError('Authentication failed. Please log in again.');
+      handleLogout();
+    } else {
+      const message = e.response?.data?.message || e.message;
+      setError(`${context} failed: ${message}`);
+      if (e.response?.data?.rawResponse) {
+        setRawApiResponseError(e.response.data.rawResponse);
+      }
+    }
+  };
+
   const handleSearch = useCallback(
     async (
-      apiKey: string,
-      selectedAI: AIProvider,
+      selectedAI: string,
       personName: string,
       selectedLanguages: string[],
       resultCount: number,
@@ -73,12 +44,6 @@ export function useQuotes() {
       maxQuoteLength: number,
       timePeriod: TimePeriodResult
     ) => {
-      if (!apiKey) {
-        setError(
-          `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key in the Settings section.`
-        );
-        return;
-      }
       if (!personName) {
         setError("Please enter a person's name.");
         return;
@@ -89,18 +54,19 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const { fetchQuotes, JsonParsingError } = getApiService(selectedAI);
         const existingQuotesText = quotes.map((q) => q.text);
-        const newQuotes = await fetchQuotes(
-            apiKey,
-            personName,
-            selectedLanguages,
-            resultCount,
-            existingQuotesText,
-            temperature,
-            maxQuoteLength,
-            timePeriod
-        );
+        const response = await api.post('/quotes/search', {
+          aiProvider: selectedAI,
+          personName,
+          languages: selectedLanguages,
+          resultCount,
+          existingQuotesText,
+          temperature,
+          maxQuoteLength,
+          timePeriod,
+        });
+
+        const newQuotes = response.data;
 
         const uniqueNewQuotes = newQuotes.filter(
           (nq) => !quotes.some((eq) => eq.text === nq.text)
@@ -112,29 +78,16 @@ export function useQuotes() {
           setQuotes((prevQuotes) => [...prevQuotes, ...uniqueNewQuotes]);
         }
       } catch (e: any) {
-        const { JsonParsingError } = getApiService(selectedAI);
-        if (e instanceof JsonParsingError) {
-          setError(`Search failed: ${e.message}`);
-          setRawApiResponseError(e.rawResponse);
-        } else {
-          setError(`Search failed: ${e.message}`);
-        }
+        handleError(e, 'Search');
       } finally {
         setIsLoading(false);
       }
     },
-    [quotes]
+    [quotes, handleLogout]
   );
 
   const handleAnalyzeQuote = useCallback(
-    async (quote: Quote, apiKey: string, selectedAI: AIProvider) => {
-      if (!apiKey) {
-        setError(
-          `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to analyze quotes.`
-        );
-        return;
-      }
-
+    async (quote: Quote, selectedAI: string) => {
       setQuotes((prev) =>
         prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: true } : q))
       );
@@ -142,42 +95,34 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const { analyzeQuote, JsonParsingError } = getApiService(selectedAI);
-        const analysis = await analyzeQuote(apiKey, quote.text, quote.languageCode, quote.languageName);
+        const response = await api.post('/quotes/analyze', {
+          aiProvider: selectedAI,
+          quoteText: quote.text,
+          quoteLanguageCode: quote.languageCode,
+          quoteLanguageName: quote.languageName,
+        });
+        const analysis = response.data;
 
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q))
         );
       } catch (e: any) {
-        const { JsonParsingError } = getApiService(selectedAI);
-        if (e instanceof JsonParsingError) {
-          setError(`Analysis failed: ${e.message}`);
-          setRawApiResponseError(e.rawResponse);
-        } else {
-          setError(`Analysis failed: ${e.message}`);
-        }
+        handleError(e, 'Analysis');
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: false } : q))
         );
       }
     },
-    []
+    [handleLogout]
   );
 
   const handleExtractQuotes = useCallback(
     async (
-      apiKey: string,
-      selectedAI: AIProvider,
+      selectedAI: string,
       personName: string,
       textToExtract: string,
       onSuccess: () => void
     ) => {
-      if (!apiKey) {
-        setError(
-          `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to extract quotes.`
-        );
-        return;
-      }
       if (!personName) {
         setError("Please enter a person's name to attribute the extracted quotes.");
         return;
@@ -191,8 +136,12 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const { extractQuotes, JsonParsingError } = getApiService(selectedAI);
-        const extractedQuotes = await extractQuotes(apiKey, personName, textToExtract);
+        const response = await api.post('/quotes/extract', {
+          aiProvider: selectedAI,
+          personName,
+          textContent: textToExtract,
+        });
+        const extractedQuotes = response.data;
 
         const uniqueNewQuotes = extractedQuotes.filter(
           (nq) => !quotes.some((eq) => eq.text === nq.text)
@@ -205,16 +154,10 @@ export function useQuotes() {
           onSuccess();
         }
       } catch (e: any) {
-        const { JsonParsingError } = getApiService(selectedAI);
-        if (e instanceof JsonParsingError) {
-          setError(`Extraction failed: ${e.message}`);
-          setRawApiResponseError(e.rawResponse);
-        } else {
-          setError(`Extraction failed: ${e.message}`);
-        }
+        handleError(e, 'Extraction');
       }
     },
-    [quotes]
+    [quotes, handleLogout]
   );
 
   const handleAddQuoteManually = useCallback(
@@ -278,14 +221,7 @@ export function useQuotes() {
   }, []);
 
   const handleImproveQuote = useCallback(
-    async (quote: Quote, apiKey: string, selectedAI: AIProvider, personName: string) => {
-      if (!apiKey) {
-        setError(
-          `Please enter your ${selectedAI === 'gemini' ? 'Gemini' : 'Grok'} API key to improve quotes.`
-        );
-        return;
-      }
-
+    async (quote: Quote, selectedAI: string, personName: string) => {
       if (!personName) {
         setError("Please enter a person's name to improve quotes.");
         return;
@@ -298,26 +234,24 @@ export function useQuotes() {
       setRawApiResponseError(null);
 
       try {
-        const { improveQuote, JsonParsingError } = getApiService(selectedAI);
-        const improvedQuote = await improveQuote(apiKey, quote, personName);
+        const response = await api.post('/quotes/improve', {
+          aiProvider: selectedAI,
+          quote,
+          personName,
+        });
+        const improvedQuote = response.data;
 
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...improvedQuote, isImproving: false } : q))
         );
       } catch (e: any) {
-        const { JsonParsingError } = getApiService(selectedAI);
-        if (e instanceof JsonParsingError) {
-          setError(`Quote improvement failed: ${e.message}`);
-          setRawApiResponseError(e.rawResponse);
-        } else {
-          setError(`Quote improvement failed: ${e.message}`);
-        }
+        handleError(e, 'Quote improvement');
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...q, isImproving: false } : q))
         );
       }
     },
-    []
+    [handleLogout]
   );
 
   const clearError = useCallback(() => {
