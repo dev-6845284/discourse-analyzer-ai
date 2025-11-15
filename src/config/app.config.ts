@@ -1,10 +1,13 @@
-// IMPORTANT: YOU MUST REPLACE THIS VALUE.
+// IMPORTANT: YOU MUST SET THIS ENVIRONMENT VARIABLE.
 // This is a placeholder and will not work in production.
-// 1. Go to https://console.cloud.google.com/apis/credentials
-// 2. Create an "OAuth client ID" for a "Web application".
-// 3. Under "Authorized JavaScript origins", add your production URL
-// 4. Copy the generated Client ID and paste it here.
-export const GOOGLE_CLIENT_ID = '850990674967-j8itp1dsvgv3cjefqd9jme9p7ksb46rq.apps.googleusercontent.com';
+// 1. Create a .env file in the root of your project.
+// 2. Add the following line to your .env file:
+//    VITE_GOOGLE_CLIENT_ID=your-google-client-id
+// 3. Go to https://console.cloud.google.com/apis/credentials
+// 4. Create an "OAuth client ID" for a "Web application".
+// 5. Under "Authorized JavaScript origins", add your production URL
+// 6. Copy the generated Client ID and use it as the value for VITE_GOOGLE_CLIENT_ID.
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'missing-client-id';
 
 export const DEFAULT_SEARCH_PARAMS = {
   resultCount: 10,
