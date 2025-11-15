@@ -4,7 +4,7 @@
 // 2. Create an "OAuth client ID" for a "Web application".
 // 3. Under "Authorized JavaScript origins", add your production URL
 // 4. Copy the generated Client ID and paste it here.
-export const GOOGLE_CLIENT_ID = '366810244569-3490uiu9puprf0otaj2eq58jdsc9as15.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID = '850990674967-j8itp1dsvgv3cjefqd9jme9p7ksb46rq.apps.googleusercontent.com';
 
 export const DEFAULT_SEARCH_PARAMS = {
   resultCount: 10,
