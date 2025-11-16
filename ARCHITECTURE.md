@@ -67,16 +67,6 @@ Manages Google authentication state and initialization.
 - `googleButtonRef` - Ref for Google Sign-In button
 - `handleLogout` - Logout handler
 
-### `useApiKeys()`
-Manages API keys for Gemini and Grok, with localStorage persistence.
-
-**Returns:**
-- `apiKey`, `grokApiKey` - API keys
-- `selectedAI` - Current AI provider ('gemini' | 'grok')
-- `handleApiKeyChange`, `handleGrokApiKeyChange` - Update handlers
-- `handleAISelectionChange` - AI provider selection
-- `getCurrentApiKey()` - Gets the active API key
-
 ### `useSearchParams()`
 Manages all search-related parameters.
 

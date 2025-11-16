@@ -3,17 +3,26 @@ import React from 'react';
 interface ErrorDisplayProps {
   error: string | null;
   rawApiResponseError: string | null;
+  clearError?: () => void;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, rawApiResponseError }) => {
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, rawApiResponseError, clearError }) => {
   if (!error && !rawApiResponseError) return null;
 
   return (
     <>
       {error && (
-        <div className="bg-red-600/20 text-red-300 p-4 rounded-lg mb-6 ring-1 ring-inset ring-red-500/30">
+        <div className="bg-red-600/20 text-red-300 p-4 rounded-lg mb-6 ring-1 ring-inset ring-red-500/30 relative">
           <p className="font-bold">Error</p>
           <p>{error}</p>
+          {clearError && (
+            <button
+              onClick={clearError}
+              className="absolute top-2 right-2 text-red-300 hover:text-red-100"
+            >
+              &times;
+            </button>
+          )}
         </div>
       )}
 

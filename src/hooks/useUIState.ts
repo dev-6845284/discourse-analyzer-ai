@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 export function useUIState() {
-  const [isFormCollapsed, setIsFormCollapsed] = useState<boolean>(true);
+  const [isFormCollapsed, setIsFormCollapsed] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
 
   const toggleFormCollapsed = useCallback(() => {

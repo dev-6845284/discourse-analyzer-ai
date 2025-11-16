@@ -12,9 +12,6 @@ export interface AnalysisDetail {
   justification: string;
 }
 
-// FIX: Changed from an interface to a mapped type. This improves type safety and inference
-// when indexing the object with a variable of type AnalysisCategory, fixing errors in
-// App.tsx and AnalysisReport.tsx.
 export type AnalysisResult = {
   [key in AnalysisCategory]: AnalysisDetail;
 };
@@ -32,24 +29,10 @@ export interface Quote {
   isImproving?: boolean;
 }
 
-export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
-
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-  command: LogCommand;
-  requestPayload: any;
-  responsePayload?: any;
-  error?: any;
-}
-
-// FIX: Update GroundingChunk to match the @google/genai type.
-// The `web` property and its nested `uri` and `title` properties are optional.
 export type GroundingChunk = {
-  web?: {
-    uri?: string;
-    title?: string;
-  };
+  text: string;
+  title: string;
+  source: string;
 };
 
 export interface UserInfo {
@@ -61,4 +44,15 @@ export interface UserInfo {
 export interface ExportData {
   personName: string;
   quotes: Quote[];
+}
+
+export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  command: LogCommand;
+  requestPayload: any;
+  responsePayload?: any;
+  error?: any;
 }

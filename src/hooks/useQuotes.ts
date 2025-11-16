@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Quote } from '../types';
+import { Quote, AnalysisCategory, AnalysisRating } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { TimePeriodResult } from '../utils/timePeriod';
 import api from '../utils/api';
@@ -26,10 +26,18 @@ export function useQuotes(handleLogout: () => void) {
       setError('Authentication failed. Please log in again.');
       handleLogout();
     } else {
-      const message = e.response?.data?.message || e.message;
+      const errorData = e.response?.data;
+      let message = errorData?.message || e.message;
+
+      // Prepend a user-friendly message for model response errors
+      if (errorData?.errorType === 'ModelResponseError') {
+        message = `The AI model blocked the response. Details: ${message}`;
+      }
+
       setError(`${context} failed: ${message}`);
-      if (e.response?.data?.rawResponse) {
-        setRawApiResponseError(e.response.data.rawResponse);
+
+      if (errorData?.rawResponse) {
+        setRawApiResponseError(errorData.rawResponse);
       }
     }
   };
@@ -42,7 +50,10 @@ export function useQuotes(handleLogout: () => void) {
       resultCount: number,
       temperature: number,
       maxQuoteLength: number,
-      timePeriod: TimePeriodResult
+      timePeriod: TimePeriodResult,
+      filterCategory: AnalysisCategory | 'all',
+      filterRating: AnalysisRating | 'all',
+      sortOrder: 'newest' | 'oldest'
     ) => {
       if (!personName) {
         setError("Please enter a person's name.");
@@ -64,19 +75,14 @@ export function useQuotes(handleLogout: () => void) {
           temperature,
           maxQuoteLength,
           timePeriod,
+          filterCategory,
+          filterRating,
+          sortOrder,
         });
 
         const newQuotes = response.data;
 
-        const uniqueNewQuotes = newQuotes.filter(
-          (nq) => !quotes.some((eq) => eq.text === nq.text)
-        );
-
-        if (uniqueNewQuotes.length === 0) {
-          setError('No new quotes were found. Try a different search or clear existing quotes.');
-        } else {
-          setQuotes((prevQuotes) => [...prevQuotes, ...uniqueNewQuotes]);
-        }
+        setQuotes(newQuotes);
       } catch (e: any) {
         handleError(e, 'Search');
       } finally {
@@ -97,9 +103,7 @@ export function useQuotes(handleLogout: () => void) {
       try {
         const response = await api.post('/quotes/analyze', {
           aiProvider: selectedAI,
-          quoteText: quote.text,
-          quoteLanguageCode: quote.languageCode,
-          quoteLanguageName: quote.languageName,
+          quote: quote,
         });
         const analysis = response.data;
 
@@ -139,20 +143,12 @@ export function useQuotes(handleLogout: () => void) {
         const response = await api.post('/quotes/extract', {
           aiProvider: selectedAI,
           personName,
-          textContent: textToExtract,
+          textToExtract,
         });
         const extractedQuotes = response.data;
 
-        const uniqueNewQuotes = extractedQuotes.filter(
-          (nq) => !quotes.some((eq) => eq.text === nq.text)
-        );
-
-        if (uniqueNewQuotes.length === 0) {
-          setError('No new, unique quotes were extracted from the text.');
-        } else {
-          setQuotes((prevQuotes) => [...prevQuotes, ...uniqueNewQuotes]);
-          onSuccess();
-        }
+        setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
+        onSuccess();
       } catch (e: any) {
         handleError(e, 'Extraction');
       }

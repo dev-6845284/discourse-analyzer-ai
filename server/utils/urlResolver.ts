@@ -13,13 +13,12 @@ export const resolveUrl = async (url: string): Promise<string> => {
     const response = await fetch(url, {
       method: 'HEAD', // Use HEAD to avoid downloading the full content
       redirect: 'follow',
-      mode: 'cors',
     });
 
     // Return the final URL after all redirects
     return response.url || url;
   } catch (error) {
-    // If fetch fails (CORS, network error, etc.), return the original URL
+    // If fetch fails (network error, etc.), return the original URL
     console.warn(`Failed to resolve URL ${url}:`, error);
     return url;
   }
