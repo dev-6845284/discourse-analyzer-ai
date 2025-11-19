@@ -72,8 +72,12 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid token' });
     }
 
-    const allowedUsers = (process.env.ALLOWED_USERS || '').split(',');
-    if (!allowedUsers.includes(payload.email)) {
+    const allowedUsers = (process.env.ALLOWED_USERS || '')
+      .split(',')
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email.length > 0);
+
+    if (!allowedUsers.includes(payload.email.toLowerCase())) {
       return res.status(403).json({ message: 'User not allowed' });
     }
 

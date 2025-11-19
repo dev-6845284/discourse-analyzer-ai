@@ -30,7 +30,3 @@ export const SUPPORTED_LANGUAGES: { code: string; name: string }[] = [
     { code: 'dk', name: 'Danish' },
     { code: 'es', name: 'Spanish' },
 ];
-
-export const APPROVED_EMAILS: string[] = [
-    "laurynas.simaitis@gmail.com",
-];
