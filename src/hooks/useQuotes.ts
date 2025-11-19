@@ -138,6 +138,7 @@ export function useQuotes(handleLogout: () => void) {
       selectedAI: string,
       personName: string,
       textToExtract: string,
+      details: { source: string; title: string; date: string; languageCode: string; languageName: string; },
       onSuccess: () => void
     ) => {
       if (!personName) {
@@ -158,6 +159,7 @@ export function useQuotes(handleLogout: () => void) {
           model: selectedAI,
           personName,
           textContent: textToExtract,
+          ...details,
           apiKeys,
         });
         const extractedQuotes = response.data;

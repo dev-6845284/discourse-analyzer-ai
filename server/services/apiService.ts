@@ -97,14 +97,24 @@ export const analyzeQuote = async (req: Request, res: Response) => {
 };
 
 export const extractQuotes = async (req: Request, res: Response) => {
-  const { personName, textContent, model, temperature, apiKeys } = req.body;
+  const { personName, textContent, model, temperature, apiKeys, source, title, date, languageCode, languageName } = req.body;
   const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, textContent, model });
 
   try {
     const { service, apiKey } = getService(model, apiKeys);
     const quotes = await service.extractQuotesFromText(apiKey, personName, textContent, temperature, logId, req.session.id!);
-    updateLogEntry(req.session.id!, logId, quotes);
-    res.json(quotes);
+
+    const enrichedQuotes = quotes.map(q => ({
+      ...q,
+      source: source || q.source,
+      title: title || q.title,
+      date: date || q.date,
+      languageCode: languageCode || q.languageCode,
+      languageName: languageName || q.languageName
+    }));
+
+    updateLogEntry(req.session.id!, logId, enrichedQuotes);
+    res.json(enrichedQuotes);
   } catch (error: any) {
     console.error('Error extracting quotes:', error);
     updateLogEntry(req.session.id!, logId, undefined, error);

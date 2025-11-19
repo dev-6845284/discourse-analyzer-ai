@@ -88,6 +88,7 @@ const App: React.FC = () => {
 
   const [logsVisible, setLogsVisible] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'extract'>('add');
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -141,19 +142,33 @@ const App: React.FC = () => {
     improveQuote(quote, selectedAI, personName);
   };
 
-  const handleExtractQuotes = async () => {
+  const performExtraction = async (details: any) => {
     setIsExtracting(true);
-    await extractQuotes(selectedAI, personName, textToExtract, () => {
+    await extractQuotes(selectedAI, personName, textToExtract, details, () => {
       clearTextToExtract();
       setIsExtracting(false);
     });
     setIsExtracting(false);
   };
 
-  const handleAddQuoteManually = (details: any) => {
-    addQuoteManually(personName, textToExtract, details, handleAnalyzeQuote);
-    clearTextToExtract();
+  const handleModalSave = (details: any) => {
+    if (modalMode === 'extract') {
+      performExtraction(details);
+    } else {
+      addQuoteManually(personName, textToExtract, details, handleAnalyzeQuote);
+      clearTextToExtract();
+    }
     closeAddModal();
+  };
+
+  const openExtractModal = () => {
+    setModalMode('extract');
+    openAddModal();
+  };
+
+  const openAddQuoteModal = () => {
+    setModalMode('add');
+    openAddModal();
   };
 
   if (!user) {
@@ -498,7 +513,7 @@ const App: React.FC = () => {
                     ></textarea>
                     <div className="mt-4 flex flex-col sm:flex-row gap-2">
                       <button
-                        onClick={handleExtractQuotes}
+                        onClick={openExtractModal}
                         disabled={
                           isExtracting || !textToExtract || !personName
                         }
@@ -514,7 +529,7 @@ const App: React.FC = () => {
                         {isExtracting ? <Spinner /> : 'Extract & Analyze'}
                       </button>
                       <button
-                        onClick={openAddModal}
+                        onClick={openAddQuoteModal}
                         disabled={
                           isExtracting || !textToExtract || !personName
                         }
@@ -607,7 +622,8 @@ const App: React.FC = () => {
             <AddQuoteModal
               isOpen={isAddModalOpen}
               onClose={closeAddModal}
-              onSave={handleAddQuoteManually}
+              onSave={handleModalSave}
+              mode={modalMode}
             />
           )}
           <ApiKeySettingsModal
