@@ -372,26 +372,67 @@ Return only the JSON object.`;
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
-      const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
-Follow these steps carefully:
-1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using your knowledge.
-2.  **Think step-by-step in English** to determine the rating and justification for each category.
-3.  **Translate your English justification** into high-quality, natural-sounding ${quoteLanguageName}.
-4.  **Construct the final JSON object**. Ensure the 'justification' fields contain the translated text from step 3. The entire response must be a single, valid JSON object (do not wrap it in markdown).
+      // Step 1: Deep Analysis with Search
+      const analysisPrompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
+Analyze the original text directly in ${quoteLanguageName} to understand its full meaning and nuance.
+Fact-check all claims using your knowledge and web search if necessary.
 
-The JSON object must have keys: "Populism", "Fact Twisting", "Lies & False Claims", and "Inflammatory Language".
-Each key must have a value that is an object with two properties:
-1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe".
-2. "justification": A string in ${quoteLanguageName} explaining the rating.
+Provide a detailed assessment for each of the following categories:
+1. Populism
+2. Fact Twisting
+3. Lies & False Claims
+4. Inflammatory Language
+
+For each category, determine a rating (None, Low, Medium, High, Severe) and provide a justification in ${quoteLanguageName}.
 
 Analyze this text: "${quoteText}"`;
 
-      const rawText = await callChatGptAPI(
+      const analysisNotes = await callChatGptAPI(
         apiKey,
-        [{ role: 'user', content: prompt }],
+        [{ role: 'user', content: analysisPrompt }],
         logId,
         sessionId,
-        { temperature }
+        {
+          temperature,
+          useSearch: true,
+          enforceJson: false,
+          metadata: { stage: 'analysis', task: 'analyzeQuote' }
+        }
+      );
+
+      if (!analysisNotes || !analysisNotes.trim()) {
+        throw new Error("The analysis stage returned empty content.");
+      }
+
+      // Step 2: Format to JSON
+      const formattingPrompt = `You are a structured data formatter. Convert the analysis notes below into a strict JSON payload.
+
+### Output Requirements
+- Return exactly one JSON object.
+- The JSON object must have keys: "Populism", "Fact Twisting", "Lies & False Claims", and "Inflammatory Language".
+- Each key must have a value that is an object with two properties:
+  1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe".
+  2. "justification": A string in ${quoteLanguageName} explaining the rating based on the notes.
+
+### Analysis Notes
+<<<
+${analysisNotes}
+>>>
+
+Return only the JSON object.`;
+
+      const rawText = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: formattingPrompt }],
+        logId,
+        sessionId,
+        {
+          temperature: 0,
+          useSearch: false,
+          enforceJson: true,
+          model: CHATGPT_FORMATTER_MODEL,
+          metadata: { stage: 'formatting', task: 'analyzeQuote' }
+        }
       );
 
       const jsonText = extractJson(rawText);
