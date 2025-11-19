@@ -57,8 +57,6 @@ app.use(
   })
 );
 
-app.use('/api', apiRoutes);
-
 app.post('/api/login', async (req, res) => {
   const { token } = req.body;
   try {
@@ -106,6 +104,8 @@ app.post('/api/logout', (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
   });
 });
+
+app.use('/api', apiRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
