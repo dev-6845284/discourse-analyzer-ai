@@ -1,22 +1,18 @@
-import { Quote, AnalysisResult } from "../types";
+import {
+  Quote,
+  AnalysisResult,
+  JsonParsingError,
+  AnalysisCategory,
+  AnalysisRating,
+} from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
-import { appendLogRequestPayload } from '../services/logService';
+import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
+import { LlmService } from './LlmService';
 
 const OPENAI_API_BASE_URL = "https://api.openai.com/v1";
-
-/**
- * Custom error class for JSON parsing failures.
- * It includes the raw text response from the AI for debugging.
- */
-export class JsonParsingError extends Error {
-  public rawResponse: string;
-
-  constructor(message: string, rawResponse: string) {
-    super(message);
-    this.name = 'JsonParsingError';
-    this.rawResponse = rawResponse;
-  }
-}
+const CHATGPT_MODEL = "gpt-5-search-api";
+const CHATGPT_FORMATTER_MODEL = process.env.CHATGPT_FORMATTER_MODEL || 'gpt-4o-mini';
+// more formatter options: 'gpt-4.1-mini'
 
 /**
  * A more robust way to extract a JSON object from a string that might be
@@ -34,96 +30,163 @@ const extractJson = (text: string): string | null => {
   return null;
 };
 
+type ChatGptCallOptions = {
+  temperature?: number;
+  useSearch?: boolean;
+  enforceJson?: boolean;
+  model?: string;
+  metadata?: Record<string, any>;
+};
+
 /**
  * Helper function to call the ChatGPT API.
  * It enforces JSON output for more reliable parsing.
  */
 const callChatGptAPI = async (
   apiKey: string,
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{ role: string; content: string }> ,
   logId: string,
   sessionId: string,
-  temperature: number = 0.7
+  options: ChatGptCallOptions = {}
 ): Promise<string> => {
-  const prompt = messages.map(m => `### ${m.role}\n${m.content}`).join('\n\n');
+  const {
+    temperature,
+    useSearch = false,
+    enforceJson = true,
+    model = CHATGPT_MODEL,
+    metadata,
+  } = options;
+
+  const prompt = messages.map((m) => `### ${m.role}\n${m.content}`).join('\n\n');
   appendLogRequestPayload(sessionId, logId, { prompt });
 
-  const response = await fetch(`${OPENAI_API_BASE_URL}/chat/completions`, {
+  const requestBody: any = {
+    model,
+    messages,
+  };
+
+  if (enforceJson) {
+    requestBody.response_format = { type: 'json_object' };
+  }
+
+  if (typeof temperature === 'number' && !useSearch) {
+    requestBody.temperature = temperature;
+  }
+
+  if (useSearch) {
+    requestBody.web_search_options = {};
+  }
+
+  const requestDetails = {
+    url: `${OPENAI_API_BASE_URL}/chat/completions`,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      messages: [{ role: 'user', content: prompt }],
-      // Enforce JSON output for reliability, as all prompts request it.
-      response_format: { type: "json_object" },
-      temperature,
-    }),
+    body: requestBody,
+  };
+
+  const interactionId = addModelInteractionLog(sessionId, logId, {
+    provider: 'OpenAI',
+    model,
+    operation: 'chat.completions',
+    requestPayload: requestDetails,
+    metadata: { useSearch, enforceJson, ...(metadata || {}) },
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`ChatGPT API request failed: ${response.status} ${response.statusText}. ${errorText}`);
-  }
-
-  const data = await response.json();
-
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error("ChatGPT API returned no response choices.");
-  }
-
-  const content = data.choices[0].message?.content;
-  if (!content) {
-    console.warn("ChatGPT response did not contain message content. Full message:", data.choices[0].message);
-    throw new Error("ChatGPT API returned empty content.");
-  }
-
-  return content;
-};
-
-
-export const fetchQuotesForPerson = async (
-  apiKey: string,//1
-  personName: string,//2
-  languages: string[],//3
-  resultCount: number,//4
-  existingQuotesText: string[],//5
-  temperature: number,//6
-  maxQuoteLength: number,//7
-  timePeriod: { description: string; startDate?: string; endDate?: string },//8
-  logId: string,//9
-  sessionId: string,//10
-): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("OpenAI API key is missing.");
+  let responseSnapshot: any;
+  let capturedError: any;
 
   try {
-    const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
-    const languageInstruction = languageNames.length > 0
-      ? `Your search must cover sources in the following languages: ${languageNames.join(', ')}.`
-      : 'Your search should primarily cover English sources, but identify and return the language for any non-English quotes you find.';
+    const response = await fetch(requestDetails.url, {
+      method: requestDetails.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestDetails.body),
+    });
 
-    let exclusionInstruction = '';
-    if (existingQuotesText && existingQuotesText.length > 0) {
-      const quotesToExclude = existingQuotesText.map(q => `- "${q.slice(0, 150)}..."`).join('\n');
-      exclusionInstruction = `
+    if (!response.ok) {
+      const errorText = await response.text();
+      const apiError = new Error(`ChatGPT API request failed: ${response.status} ${response.statusText}. ${errorText}`);
+      (apiError as any).rawResponse = { status: response.status, statusText: response.statusText, body: errorText };
+      (apiError as any).name = 'ChatGptApiError';
+      capturedError = apiError;
+      throw apiError;
+    }
+
+    const data = await response.json();
+    responseSnapshot = { status: response.status, body: data };
+
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("ChatGPT API returned no response choices.");
+    }
+
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      console.warn("ChatGPT response did not contain message content. Full message:", data.choices[0].message);
+      throw new Error("ChatGPT API returned empty content.");
+    }
+
+    return content;
+  } catch (error) {
+    if (!capturedError) {
+      capturedError = error;
+    }
+    throw error;
+  } finally {
+    completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+  }
+};
+
+class ChatGptService implements LlmService {
+  public async fetchQuotesForPerson(
+    apiKey: string,
+    personName: string,
+    languages: string[],
+    maxQuotes: number,
+    context: string[],
+    temperature: number,
+    maxQuoteLength: number,
+    timePeriod: { description: string; startDate?: string; endDate?: string },
+    category: AnalysisCategory | 'all',
+    rating: AnalysisRating | 'all',
+    sortOrder: 'newest' | 'oldest',
+    logId: string,
+    sessionId: string
+  ): Promise<Quote[]> {
+    if (!apiKey) throw new Error("OpenAI API key is missing.");
+    let LIMIT_QUOTE_LENGTH = false;
+
+    try {
+      const effectiveMaxQuoteLength = maxQuoteLength || 280;
+      const quoteTextLineInstruction = LIMIT_QUOTE_LENGTH
+        ? `- Text: "<verbatim quote text truncated to ${effectiveMaxQuoteLength} characters; append '... (read article for full quote)' if you truncated>"`
+        : '';
+
+      const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
+      const languageInstruction = languageNames.length > 0
+        ? `Your search must cover sources in the following languages: ${languageNames.join(', ')}.`
+        : 'Your search should primarily cover English sources, but identify and return the language for any non-English quotes you find.';
+
+      let exclusionInstruction = '';
+      if (context && context.length > 0) {
+        const quotesToExclude = context.map(q => `- "${q.slice(0, 150)}..."`).join('\n');
+        exclusionInstruction = `
 You MUST find new quotes that are NOT in the following list. Do not repeat any of the quotes below.
 Here are the quotes that have already been found:
 ${quotesToExclude}
 `;
-    }
+      }
 
-    const quoteExtractionInstruction = `
+      const quoteExtractionInstruction = `
 ### 📜 QUOTE EXTRACTION RULES
 - Locate primary sources with direct quotes by ${personName}.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
 - Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source.
 - Always provide the full citation (title, source URL, date).`;
 
-    const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
+      const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
-Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
+Conduct a comprehensive investigation to find up to ${maxQuotes} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
 
 ---
 
@@ -174,70 +237,127 @@ Extract only **direct quotes or verbatim authored text**, no summaries.
 ${quoteExtractionInstruction}
 ---
 
-### 📤 OUTPUT FORMAT
-Return the response as a single, valid JSON object with a key "quotes". The value of "quotes" should be an array of objects.
-Each object in the array must have six string properties: "text" (the quote), "source" (URL), "title", "date" (YYYY-MM-DD), "languageCode" (e.g., "en", "ru"), and "languageName" (e.g., "English", "Russian").
-If you cannot find a specific date, provide the publication date of the source. If that is also unavailable, provide an estimated date or the year.
-Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title", "date": "2023-10-27", "languageCode": "en", "languageName": "English"}] }
-- Do not include any other text or markdown formatting outside of the JSON object.`;
+### 📤 OUTPUT FORMAT FOR THIS RESPONSE
+Return **plain text**, not JSON. For each distinct quote you verify, output a block that follows this template exactly:
 
-    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
+Quote #n:
+${quoteTextLineInstruction}
+- Source: <direct, human-accessible URL>
+- Title: <article, interview, or speech title>
+- Date: <YYYY-MM-DD>
+- LanguageName: <e.g., English, Lithuanian>
+- LanguageCode: <e.g., en, lt>
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
-    }
+Separate each block with a blank line. Include up to ${maxQuotes} quotes. Do not include JSON, markdown tables, or commentary outside of the prescribed blocks.`;
+      
+      const researchNotes = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: prompt }],
+        logId,
+        sessionId,
+        {
+          useSearch: true,
+          enforceJson: false,
+          metadata: { stage: 'web-research', task: 'fetchQuotes' },
+        }
+      );
 
-    let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
-    }
-
-    const quotesData = parsedResponse.quotes;
-
-    if (!quotesData || !Array.isArray(quotesData) || quotesData.length === 0) {
-      return [];
-    }
-
-    const quotes: Quote[] = quotesData.map((q, index) => {
-      if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
-        console.warn(`Skipping malformed quote object at index ${index}:`, q);
-        return null;
+      const trimmedResearchNotes = researchNotes?.trim();
+      if (!trimmedResearchNotes) {
+        throw new Error('ChatGPT web search stage returned empty content.');
       }
-      return {
-        id: `quote-${Date.now()}-${index}`,
-        text: q.text.trim(),
-        source: q.source,
-        title: q.title,
-        date: q.date,
-        languageCode: q.languageCode,
-        languageName: q.languageName,
-      };
-    }).filter((q): q is Quote => q !== null);
 
-    if (quotes.length === 0) {
-      console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
+      const formattingPrompt = `You are a structured data formatter. Convert the research notes below into a strict JSON payload.
+
+### Output Requirements
+- Return exactly one JSON object with a top-level "quotes" array.
+- Each quote object must include the fields: text, source, title, date (YYYY-MM-DD), languageCode, languageName.
+- Include at most ${Math.min(maxQuotes, 50)} quotes and prefer the most recent ones (sortOrder: ${sortOrder}).
+- Only include quotes that clearly reference ${personName} during ${timePeriod.description}. Drop ambiguous or unverifiable entries.
+- Preserve verbatim wording from the notes (within the ${effectiveMaxQuoteLength}-character limit described earlier). If the note already indicates truncation, keep the provided suffix.
+- If any required field is missing in the notes, exclude that quote.
+
+### Additional Filters
+- Category focus: ${category}.
+- Rating emphasis: ${rating}.
+- Supported languages: ${languages.length ? languages.join(', ') : 'any (auto-detect)'}.
+
+### Research Notes
+<<<
+${trimmedResearchNotes}
+>>>
+
+Return only the JSON object.`;
+
+      const structuredResponse = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: formattingPrompt }],
+        logId,
+        sessionId,
+        {
+          temperature: 0,
+          useSearch: false,
+          enforceJson: true,
+          model: CHATGPT_FORMATTER_MODEL,
+          metadata: { stage: 'formatting', task: 'fetchQuotes' },
+        }
+      );
+
+      const jsonText = extractJson(structuredResponse);
+      if (!jsonText) {
+        throw new JsonParsingError('Could not parse the formatter response. The format was unexpected.', structuredResponse);
+      }
+
+      let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error('Failed to parse JSON response:', jsonText);
+        throw new JsonParsingError('Could not parse the AI formatting response. The format was unexpected.', jsonText);
+      }
+
+      const quotesData = parsedResponse.quotes;
+
+      if (!quotesData || !Array.isArray(quotesData) || quotesData.length === 0) {
+        return [];
+      }
+
+      const quotes: Quote[] = quotesData.map((q, index) => {
+        if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
+          console.warn(`Skipping malformed quote object at index ${index}:`, q);
+          return null;
+        }
+        return {
+          id: `quote-${Date.now()}-${index}`,
+          text: q.text.trim(),
+          source: q.source,
+          title: q.title,
+          date: q.date,
+          languageCode: q.languageCode,
+          languageName: q.languageName,
+        };
+      }).filter((q): q is Quote => q !== null);
+
+      if (quotes.length === 0) {
+        console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
+      }
+
+      return quotes;
+
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while fetching quotes.");
     }
-
-    return quotes;
-
-  } catch (error) {
-    console.error("Error fetching quotes:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unknown error occurred while fetching quotes.");
   }
-};
 
-export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string, sessionId: string): Promise<AnalysisResult> => {
-  if (!apiKey) throw new Error("OpenAI API key is missing.");
+  public async analyzeQuoteText(apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, temperature: number, logId: string, sessionId: string): Promise<AnalysisResult> {
+    if (!apiKey) throw new Error("OpenAI API key is missing.");
 
-  try {
-    const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
+    try {
+      const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
 Follow these steps carefully:
 1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using your knowledge.
 2.  **Think step-by-step in English** to determine the rating and justification for each category.
@@ -251,34 +371,40 @@ Each key must have a value that is an object with two properties:
 
 Analyze this text: "${quoteText}"`;
 
-    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+      const rawText = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: prompt }],
+        logId,
+        sessionId,
+        { temperature }
+      );
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", rawText);
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", rawText);
+      }
+
+      try {
+        return JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON from analysis response:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
+      }
+
+    } catch (error) {
+      console.error("Error analyzing quote:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
     }
+  }
+
+  public async extractQuotesFromText(apiKey: string, personName: string, textContent: string, temperature: number, logId: string, sessionId: string): Promise<Quote[]> {
+    if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
-      return JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON from analysis response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
-    }
-
-  } catch (error) {
-    console.error("Error analyzing quote:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
-  }
-};
-
-export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string, sessionId: string): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("OpenAI API key is missing.");
-
-  try {
-    const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
+      const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
 
 The provided text can be one of two things:
 1. A block of text (like an article) containing one or more statements explicitly attributed to "${personName}".
@@ -300,66 +426,72 @@ Here is the text to analyze:
 ${textContent}
 ---`;
 
-    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+      const rawText = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: prompt }],
+        logId,
+        sessionId,
+        { temperature }
+      );
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", rawText);
-    }
-
-    let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response for text extraction:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", jsonText);
-    }
-
-    const quotesData = parsedResponse.quotes;
-
-    if (!quotesData || !Array.isArray(quotesData)) {
-      console.warn("The AI response did not contain a 'quotes' array.");
-      return [];
-    }
-
-    const quotes: Quote[] = quotesData.map((q, index) => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-
-      if (!q.text || !q.languageCode || !q.languageName) {
-        console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
-        return null;
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", rawText);
       }
 
-      return {
-        id: `quote-text-${Date.now()}-${index}`,
-        text: q.text.trim(),
-        source: "User-Provided Text",
-        title: `Extracted from manual input`,
-        date: `${year}-${month}-${day}`,
-        languageCode: q.languageCode,
-        languageName: q.languageName,
-      };
-    }).filter((q): q is Quote => q !== null);
+      let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON response for text extraction:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", jsonText);
+      }
 
-    return quotes;
+      const quotesData = parsedResponse.quotes;
 
-  } catch (error) {
-    console.error("Error extracting quotes from text:", error);
-    if (error instanceof Error) {
-      throw error;
+      if (!quotesData || !Array.isArray(quotesData)) {
+        console.warn("The AI response did not contain a 'quotes' array.");
+        return [];
+      }
+
+      const quotes: Quote[] = quotesData.map((q, index) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+
+        if (!q.text || !q.languageCode || !q.languageName) {
+          console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
+          return null;
+        }
+
+        return {
+          id: `quote-text-${Date.now()}-${index}`,
+          text: q.text.trim(),
+          source: "User-Provided Text",
+          title: `Extracted from manual input`,
+          date: `${year}-${month}-${day}`,
+          languageCode: q.languageCode,
+          languageName: q.languageName,
+        };
+      }).filter((q): q is Quote => q !== null);
+
+      return quotes;
+
+    } catch (error) {
+      console.error("Error extracting quotes from text:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while extracting quotes from the text.");
     }
-    throw new Error("An unknown error occurred while extracting quotes from the text.");
   }
-};
 
-export const improveQuote = async (apiKey: string, quote: Quote, personName: string, logId: string, sessionId: string): Promise<Partial<Quote>> => {
-  if (!apiKey) throw new Error("OpenAI API key is missing.");
+  public async improveQuote(apiKey: string, quote: Quote, personName: string, temperature: number, logId: string, sessionId: string): Promise<Partial<Quote>> {
+    if (!apiKey) throw new Error("OpenAI API key is missing.");
 
-  try {
-    const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
+    try {
+      const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
 
 **Current Quote Information:**
 - Person: ${personName}
@@ -406,49 +538,58 @@ Example:
 
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+      const rawText = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: prompt }],
+        logId,
+        sessionId,
+        { temperature, useSearch: true }
+      );
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
+      }
+
+      // The API is configured to return JSON, so we can parse it directly.
+      let parsedResponse: {
+        text: string;
+        source: string;
+        title: string;
+        date: string;
+        languageCode: string;
+        languageName: string;
+        improved: boolean;
+        improvementNote: string;
+      };
+
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON response:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
+      }
+      
+      // Return the improved quote
+      return {
+        id: quote.id,
+        text: parsedResponse.text.trim(),
+        source: parsedResponse.source,
+        title: parsedResponse.title,
+        date: parsedResponse.date,
+        languageCode: parsedResponse.languageCode,
+        languageName: parsedResponse.languageName,
+        analysis: quote.analysis, // Preserve existing analysis
+      };
+
+    } catch (error) {
+      console.error("Error improving quote:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while improving the quote.");
     }
-
-    // The API is configured to return JSON, so we can parse it directly.
-    let parsedResponse: {
-      text: string;
-      source: string;
-      title: string;
-      date: string;
-      languageCode: string;
-      languageName: string;
-      improved: boolean;
-      improvementNote: string;
-    };
-
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
-    }
-    
-    // Return the improved quote
-    return {
-      id: quote.id,
-      text: parsedResponse.text.trim(),
-      source: parsedResponse.source,
-      title: parsedResponse.title,
-      date: parsedResponse.date,
-      languageCode: parsedResponse.languageCode,
-      languageName: parsedResponse.languageName,
-      analysis: quote.analysis, // Preserve existing analysis
-    };
-
-  } catch (error) {
-    console.error("Error improving quote:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unknown error occurred while improving the quote.");
   }
-};
+}
+
+export default new ChatGptService();

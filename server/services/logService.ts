@@ -1,57 +1,160 @@
-import { LogEntry, LogCommand } from '../types';
+import { LogEntry, LogErrorDetails, ModelInteractionLog } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-const logs: LogEntry[] = [];
-const MAX_LOG_ENTRIES = 1000; // To prevent unbounded memory usage
+const logs = new Map<string, LogEntry[]>();
+const MAX_LOG_ENTRIES_PER_SESSION = 1000; // To prevent unbounded memory usage
 
-export const addLogEntry = (command: LogCommand, requestPayload: any): string => {
+const normalizeError = (error?: any): LogErrorDetails | undefined => {
+  if (!error) {
+    return undefined;
+  }
+
+  if (typeof error === 'object') {
+    return {
+      message: typeof error.message === 'string' ? error.message : JSON.stringify(error),
+      stack: typeof error.stack === 'string' ? error.stack : undefined,
+      rawResponse:
+        (error as any).rawResponse ??
+        (error as any).response ??
+        (error as any).data ??
+        (error as any).body,
+      errorType: typeof error.name === 'string' ? error.name : (error as any).errorType,
+    };
+  }
+
+  return {
+    message: String(error),
+  };
+};
+
+const safeClone = <T>(payload: T): T => {
+  if (payload === undefined || payload === null) {
+    return payload;
+  }
+  try {
+    return JSON.parse(JSON.stringify(payload));
+  } catch (error) {
+    console.warn('Failed to clone payload for logging. Falling back to original reference.', error);
+    return payload;
+  }
+};
+
+const ensureSessionLogs = (sessionId: string): LogEntry[] => {
+  if (!logs.has(sessionId)) {
+    logs.set(sessionId, []);
+  }
+  return logs.get(sessionId)!;
+};
+
+const findEntry = (sessionId: string, entryId: string): LogEntry | undefined => {
+  const sessionLogs = logs.get(sessionId);
+  if (!sessionLogs) return undefined;
+  return sessionLogs.find((log) => log.id === entryId);
+};
+
+export const addLogEntry = (sessionId: string, command: 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote', requestPayload: any): string => {
+  const sessionLogs = ensureSessionLogs(sessionId);
+
   const id = uuidv4();
   const entry: LogEntry = {
     id,
     timestamp: new Date().toISOString(),
     command,
-    requestPayload,
+    requestPayload: safeClone(requestPayload),
+    modelInteractions: [],
   };
 
-  if (logs.length >= MAX_LOG_ENTRIES) {
-    logs.shift(); // Remove the oldest entry
+  if (sessionLogs.length >= MAX_LOG_ENTRIES_PER_SESSION) {
+    sessionLogs.shift(); // Remove the oldest entry for that session
   }
-  logs.push(entry);
+  sessionLogs.push(entry);
 
   return id;
 };
 
 export const updateLogEntry = (
+  sessionId: string,
   id: string,
   responsePayload?: any,
   error?: any
 ): void => {
-  const entry = logs.find((log) => log.id === id);
+  const entry = findEntry(sessionId, id);
   if (entry) {
-    entry.responsePayload = responsePayload;
-    entry.error = error
-      ? {
-          message: error.message,
-          stack: error.stack,
-          rawResponse: error.rawResponse,
-          errorType: error.name,
-        }
-      : undefined;
+    entry.responsePayload = safeClone(responsePayload);
+    entry.error = normalizeError(error);
   }
 };
 
-export const appendLogRequestPayload = (id: string, payloadToAppend: { prompt: string }): void => {
-  const entry = logs.find((log) => log.id === id);
+export const appendLogRequestPayload = (sessionId: string, id: string, payloadToAppend: Record<string, any>): void => {
+  const entry = findEntry(sessionId, id);
   if (entry) {
-    entry.requestPayload = { ...entry.requestPayload, ...payloadToAppend };
+    entry.requestPayload = { ...entry.requestPayload, ...safeClone(payloadToAppend) };
   }
+};
+
+type ModelInteractionInput = {
+  provider: string;
+  model: string;
+  operation: string;
+  requestPayload: any;
+  metadata?: Record<string, any>;
+};
+
+export const addModelInteractionLog = (
+  sessionId: string,
+  logId: string,
+  interaction: ModelInteractionInput
+): string | null => {
+  const entry = findEntry(sessionId, logId);
+  if (!entry) return null;
+
+  const interactionEntry: ModelInteractionLog = {
+    id: uuidv4(),
+    timestamp: new Date().toISOString(),
+    provider: interaction.provider,
+    model: interaction.model,
+    operation: interaction.operation,
+    requestPayload: safeClone(interaction.requestPayload),
+    metadata: interaction.metadata ? safeClone(interaction.metadata) : undefined,
+  };
+
+  if (!entry.modelInteractions) {
+    entry.modelInteractions = [];
+  }
+
+  entry.modelInteractions.push(interactionEntry);
+  return interactionEntry.id;
+};
+
+export const completeModelInteractionLog = (
+  sessionId: string,
+  logId: string,
+  interactionId: string | null | undefined,
+  responsePayload?: any,
+  error?: any
+): void => {
+  if (!interactionId) return;
+  const entry = findEntry(sessionId, logId);
+  if (!entry || !entry.modelInteractions) return;
+
+  const interaction = entry.modelInteractions.find((item) => item.id === interactionId);
+  if (!interaction) return;
+
+  if (responsePayload !== undefined) {
+    interaction.responsePayload = safeClone(responsePayload);
+  }
+
+  interaction.error = normalizeError(error);
+  interaction.completedAt = new Date().toISOString();
 };
 
 export const getLogs = (
+  sessionId: string,
   page: number,
   pageSize: number
 ): { logs: LogEntry[]; total: number; pages: number } => {
-  const sortedLogs = [...logs].sort(
+  const sessionLogs = logs.get(sessionId) || [];
+  const sortedLogs = [...sessionLogs].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
@@ -60,7 +163,9 @@ export const getLogs = (
 
   return {
     logs: paginatedLogs,
-    total: logs.length,
-    pages: Math.ceil(logs.length / pageSize),
+    total: sessionLogs.length,
+    pages: Math.ceil(sessionLogs.length / pageSize),
   };
 };
+
+

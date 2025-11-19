@@ -12,6 +12,8 @@ import Spinner from './components/Spinner';
 import AddQuoteModal from './components/AddQuoteModal';
 import { SUPPORTED_LANGUAGES } from './constants';
 import LogViewer from './components/LogViewer';
+import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
+import { ExportData } from './types';
 
 const App: React.FC = () => {
   // Custom hooks
@@ -61,6 +63,7 @@ const App: React.FC = () => {
     handleUpdateQuoteLanguage,
     handleClearQuotes,
     handleImproveQuote: improveQuote,
+    handleLoadQuotes,
   } = useQuotes(handleLogout);
 
   const {
@@ -83,6 +86,27 @@ const App: React.FC = () => {
   } = useUIState();
 
   const [logsVisible, setLogsVisible] = useState(false);
+
+  const handleExport = () => {
+    exportQuotesToFile(personName, quotes);
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importQuotesFromFile(
+        file,
+        (data: ExportData) => {
+          setPersonName(data.personName);
+          handleLoadQuotes(data);
+        },
+        (errorMessage: string) => {
+          // You might want to use your existing error display mechanism
+          alert(errorMessage);
+        }
+      );
+    }
+  };
 
   // Collapse the form when logs are shown to provide more space
   useEffect(() => {
@@ -189,9 +213,25 @@ const App: React.FC = () => {
             <div className="md:col-span-1 p-6 bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-cyan-400">Discourse Analyzer</h1>
-                <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-white">
-                  Logout
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleExport}
+                    className="text-sm text-gray-400 hover:text-white"
+                    title="Export current quotes to a JSON file"
+                  >
+                    Export
+                  </button>
+                  <label
+                    className="text-sm text-gray-400 hover:text-white cursor-pointer"
+                    title="Import quotes from a JSON file"
+                  >
+                    Import
+                    <input type="file" className="hidden" accept=".json" onChange={handleImport} />
+                  </label>
+                  <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-white">
+                    Logout
+                  </button>
+                </div>
               </div>
 
               <div className="md:hidden mb-4">

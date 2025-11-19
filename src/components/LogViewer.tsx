@@ -17,6 +17,15 @@ const LogEntryCard: React.FC<{ entry: LogEntry }> = ({ entry }) => {
     return 'bg-yellow-200 dark:bg-yellow-700';
   };
 
+  const getInteractionStatus = (interaction: { responsePayload?: any; error?: any }) => {
+    if (interaction.error) return { label: 'Error', color: 'bg-red-500 text-white' };
+    if (interaction.responsePayload) return { label: 'Success', color: 'bg-green-500 text-white' };
+    return { label: 'Pending', color: 'bg-yellow-500 text-white' };
+  };
+
+  const formatJson = (payload: any, fallback: string) =>
+    payload ? JSON.stringify(payload, null, 2) : fallback;
+
   return (
     <div
       className={`mb-4 p-4 rounded-lg shadow-md transition-all duration-300 ${getStatusColor()}`}
@@ -76,6 +85,66 @@ const LogEntryCard: React.FC<{ entry: LogEntry }> = ({ entry }) => {
               )}
             </div>
           </div>
+          {entry.modelInteractions && entry.modelInteractions.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-semibold text-md mb-3 text-gray-800 dark:text-gray-200">
+                Model Calls ({entry.modelInteractions.length})
+              </h4>
+              <div className="space-y-3">
+                {entry.modelInteractions.map((interaction) => {
+                  const status = getInteractionStatus(interaction);
+                  return (
+                    <div key={interaction.id} className="p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white/70 dark:bg-gray-900/50">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                            {interaction.provider} · {interaction.model}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{interaction.operation}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(interaction.timestamp).toLocaleString()}
+                            {interaction.completedAt ? ` → ${new Date(interaction.completedAt).toLocaleTimeString()}` : ''}
+                          </p>
+                        </div>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full ${status.color}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        <div>
+                          <p className="text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Model Request</p>
+                          <pre className="bg-gray-100 dark:bg-gray-950 p-2 rounded text-[11px] overflow-auto max-h-48">
+                            {formatJson(interaction.requestPayload, 'No request payload recorded.')}
+                          </pre>
+                        </div>
+                        <div>
+                          {interaction.responsePayload && (
+                            <div className="mb-2">
+                              <p className="text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Model Response</p>
+                              <pre className="bg-gray-100 dark:bg-gray-950 p-2 rounded text-[11px] overflow-auto max-h-48">
+                                {formatJson(interaction.responsePayload, 'No response payload recorded.')}
+                              </pre>
+                            </div>
+                          )}
+                          {interaction.error && (
+                            <div>
+                              <p className="text-xs font-semibold mb-1 text-red-600 dark:text-red-400">Model Error</p>
+                              <pre className="bg-red-100 dark:bg-red-950 p-2 rounded text-[11px] overflow-auto max-h-48">
+                                {formatJson(interaction.error, 'Error details unavailable.')}
+                              </pre>
+                            </div>
+                          )}
+                          {!interaction.responsePayload && !interaction.error && (
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Awaiting model response...</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

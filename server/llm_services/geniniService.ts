@@ -1,34 +1,19 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { Quote, AnalysisResult, GroundingChunk } from "../types";
+import {
+  Quote,
+  AnalysisResult,
+  GroundingChunk,
+  ModelResponseError,
+  JsonParsingError,
+  AnalysisCategory,
+  AnalysisRating,
+} from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { resolveUrls } from '../utils/urlResolver';
-import { appendLogRequestPayload } from '../services/logService';
+import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
+import { LlmService } from './LlmService';
 
 // The AI client will be initialized on-demand within each function.
-
-/**
- * Custom error class for JSON parsing failures.
- * It includes the raw text response from the AI for debugging.
- */
-export class JsonParsingError extends Error {
-  public rawResponse: string;
-
-  constructor(message: string, rawResponse: string) {
-    super(message);
-    this.name = 'JsonParsingError';
-    this.rawResponse = rawResponse;
-  }
-}
-
-/**
- * Custom error class for failures due to the model's response being blocked.
- */
-export class ModelResponseError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ModelResponseError';
-  }
-}
 
 /**
  * Validates the response from the Gemini API, ensuring it contains text content.
@@ -89,50 +74,54 @@ const extractJson = (text: string): string | null => {
   return null;
 };
 
+class GeminiService implements LlmService {
+  public async fetchQuotesForPerson(
+    apiKey: string,
+    personName: string,
+    languages: string[],
+    maxQuotes: number,
+    context: string[],
+    temperature: number,
+    maxQuoteLength: number,
+    timePeriod: { description: string; startDate?: string; endDate?: string },
+    category: AnalysisCategory | 'all',
+    rating: AnalysisRating | 'all',
+    sortOrder: 'newest' | 'oldest',
+    logId: string,
+    sessionId: string
+  ): Promise<Quote[]> {
+    if (!apiKey) throw new Error("Gemini API key is missing.");
+    const ai = new GoogleGenAI({ apiKey });
 
-export const fetchQuotesForPerson = async (
-  apiKey: string, 
-  personName: string, 
-  languages: string[], 
-  resultCount: number, 
-  existingQuotesText: string[], 
-  temperature: number, 
-  maxQuoteLength: number,
-  timePeriod: { description: string; startDate?: string; endDate?: string },
-  logId: string
-): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("Gemini API key is missing.");
-  const ai = new GoogleGenAI({ apiKey });
+    try {
+      const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
+      const languageInstruction = languageNames.length > 0
+          ? `Your search must cover sources in the following languages: ${languageNames.join(', ')}.`
+          : 'Your search should primarily cover English sources, but identify and return the language for any non-English quotes you find.';
 
-  try {
-    const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
-    const languageInstruction = languageNames.length > 0
-        ? `Your search must cover sources in the following languages: ${languageNames.join(', ')}.`
-        : 'Your search should primarily cover English sources, but identify and return the language for any non-English quotes you find.';
-
-    let exclusionInstruction = '';
-    if (existingQuotesText && existingQuotesText.length > 0) {
-        const quotesToExclude = existingQuotesText.map(q => `- "${q.slice(0, 150)}..."`).join('\n');
-        exclusionInstruction = `
+      let exclusionInstruction = '';
+      if (context && context.length > 0) {
+          const quotesToExclude = context.map(q => `- "${q.slice(0, 150)}..."`).join('\n');
+          exclusionInstruction = `
 You MUST find new quotes that are NOT in the following list. Do not repeat any of the quotes below.
 Here are the quotes that have already been found:
 ${quotesToExclude}
 `;
-    }
-    
-    const quoteExtractionInstruction = `
+      }
+      
+      const quoteExtractionInstruction = `
 ### 📜 QUOTE EXTRACTION RULES
-- Locate primary sources with direct quotes by ${personName}.
-- For each quote, provide a maximum of ${maxQuoteLength} characters of the most significant part of the statement.
-- If more than ${maxQuoteLength} characters are essential for context, output truncated quote appended with the the text '... (read article for full quote)'.
+- Locate publicly published direct quotes by Remigijus Žemaitaitis.
+- For each quote, provide a maximum of 90 characters of the most significant part of the statement.
+- If more than 90 characters are essential for context, output truncated quote appended with the the text '... (read article for full quote)'.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
-- Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source or the '(long quote—link only)' placeholder.
+- Paraphrase and summarize within the quote text. The \"text\" field must contain up to given text length limit, or '(long quote—link only)' placeholder.
 - Always provide the full citation (title, source URL, date).`;
 
 
-    const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
+      const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
-Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
+Conduct a comprehensive investigation to find up to ${maxQuotes} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
 
 ---
 
@@ -189,92 +178,114 @@ Each object in the array must have six string properties: "text" (the quote), "s
 If you cannot find a specific date, provide the publication date of the source. If that is also unavailable, provide an estimated date or the year.
 Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title", "date": "2023-10-27", "languageCode": "en", "languageName": "English"}] }
 Do not include any other text or markdown formatting outside of the JSON object.`;
-    
-    appendLogRequestPayload(logId, { prompt });
-    
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        temperature: temperature,
-      },
-    });
+      
+      appendLogRequestPayload(sessionId, logId, { prompt });
 
-    const rawText = getValidatedResponseText(response, "searching for quotes");
-    
-    // FIX: Use a robust regex-based method to extract the JSON object.
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-        console.error("No valid JSON object found in the AI response:", rawText);
-        throw new Error("Could not find a valid JSON object in the AI's response.");
-    }
-    
-    let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
-    try {
-        parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-        console.error("Failed to parse JSON response:", jsonText);
-        throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
-    }
+      const requestDetails = {
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          tools: [{ googleSearch: {} }],
+          temperature: 0.5,
+        },
+      };
 
-    const quotesData = parsedResponse.quotes;
+      const interactionId = addModelInteractionLog(sessionId, logId, {
+        provider: 'Google',
+        model: requestDetails.model,
+        operation: 'generateContent',
+        requestPayload: requestDetails,
+        metadata: { task: 'fetchQuotes' },
+      });
 
-    if (!quotesData || !Array.isArray(quotesData) || quotesData.length === 0) {
-        return []; // Return an empty array instead of throwing an error if no new quotes are found.
-    }
-    
-    // FIX: Map the new JSON structure to the app's Quote type.
-    const quotes: Quote[] = quotesData.map((q, index) => {
-        // Add a check for malformed quote objects from the AI
-        if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
-            console.warn(`Skipping malformed quote object at index ${index}:`, q);
-            return null;
-        }
-        return {
-            id: `quote-${Date.now()}-${index}`,
-            text: q.text.trim(),
-            source: q.source,
-            title: q.title,
-            date: q.date,
-            languageCode: q.languageCode,
-            languageName: q.languageName,
-        };
-    }).filter((q): q is Quote => q !== null); // Filter out any nulls from malformed objects
+      let response: GenerateContentResponse;
+      let responseSnapshot: any;
+      let capturedError: any;
 
-    if (quotes.length === 0) {
-        // This can happen if the AI returns malformed data.
-        // It's not an error if it simply found no *new* quotes.
-        console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
-    }
-
-    // URL resolution disabled due to CORS issues
-    const urls = quotes.map(q => q.source);
-    const resolvedUrls = await resolveUrls(urls);
-    const quotesWithResolvedUrls = quotes.map((quote, index) => ({
-      ...quote,
-      source: resolvedUrls[index],
-    }));
-
-    return quotes;
-
-  } catch (error) {
-    console.error("Error fetching quotes:", error);
-    // FIX: Re-throw the original error to provide more specific feedback to the user.
-    if (error instanceof Error) {
+      try {
+        response = await ai.models.generateContent(requestDetails);
+        responseSnapshot = response;
+      } catch (error) {
+        capturedError = error;
         throw error;
+      } finally {
+        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+      }
+
+      const rawText = getValidatedResponseText(response, "searching for quotes");
+      
+      // FIX: Use a robust regex-based method to extract the JSON object.
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+          console.error("No valid JSON object found in the AI response:", rawText);
+          throw new Error("Could not find a valid JSON object in the AI's response.");
+      }
+      
+      let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
+      try {
+          parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+          console.error("Failed to parse JSON response:", jsonText);
+          throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
+      }
+
+      const quotesData = parsedResponse.quotes;
+
+      if (!quotesData || !Array.isArray(quotesData) || quotesData.length === 0) {
+          return []; // Return an empty array instead of throwing an error if no new quotes are found.
+      }
+      
+      // FIX: Map the new JSON structure to the app's Quote type.
+      const quotes: Quote[] = quotesData.map((q, index) => {
+          // Add a check for malformed quote objects from the AI
+          if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
+              console.warn(`Skipping malformed quote object at index ${index}:`, q);
+              return null;
+          }
+          return {
+              id: `quote-${Date.now()}-${index}`,
+              text: q.text.trim(),
+              source: q.source,
+              title: q.title,
+              date: q.date,
+              languageCode: q.languageCode,
+              languageName: q.languageName,
+          };
+      }).filter((q): q is Quote => q !== null); // Filter out any nulls from malformed objects
+
+      if (quotes.length === 0) {
+          // This can happen if the AI returns malformed data.
+          // It's not an error if it simply found no *new* quotes.
+          console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
+      }
+
+      // URL resolution disabled due to CORS issues
+      const urls = quotes.map(q => q.source);
+      const resolvedUrls = await resolveUrls(urls);
+      const quotesWithResolvedUrls = quotes.map((quote, index) => ({
+        ...quote,
+        source: resolvedUrls[index],
+      }));
+
+      return quotes;
+
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+      // FIX: Re-throw the original error to provide more specific feedback to the user.
+      if (error instanceof Error) {
+          throw error;
+      }
+      throw new Error("An unknown error occurred while fetching quotes.");
     }
-    throw new Error("An unknown error occurred while fetching quotes.");
   }
-};
 
 
-export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string): Promise<AnalysisResult> => {
-    if (!apiKey) throw new Error("Gemini API key is missing.");
-    const ai = new GoogleGenAI({ apiKey });
-    
-    try {
-        const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
+  public async analyzeQuoteText(apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, temperature: number, logId: string, sessionId: string): Promise<AnalysisResult> {
+      if (!apiKey) throw new Error("Gemini API key is missing.");
+      const ai = new GoogleGenAI({ apiKey });
+      
+      try {
+          const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
 Follow these steps carefully:
 1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using online search.
 2.  **Think step-by-step in English** to determine the rating and justification for each category.
@@ -288,46 +299,69 @@ Each key must have a value that is an object with two properties:
 
 Analyze this text: "${quoteText}"`;
 
-        appendLogRequestPayload(logId, { prompt });
+          appendLogRequestPayload(sessionId, logId, { prompt });
 
-        const response: GenerateContentResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                tools: [{ googleSearch: {} }],
-            }
-        });
-        
-        const rawText = getValidatedResponseText(response, "analyzing the quote");
+          const requestDetails = {
+              model: 'gemini-2.5-flash',
+              contents: prompt,
+              config: {
+                  tools: [{ googleSearch: {} }],
+                  temperature: temperature,
+              }
+          };
 
-        const jsonText = extractJson(rawText);
-        if (!jsonText) {
-            console.error("No valid JSON object found in the AI analysis response:", rawText);
-            throw new Error("Could not find a valid JSON object in the AI's analysis response.");
-        }
-        
-        try {
-            return JSON.parse(jsonText);
-        } catch (e) {
-            console.error("Failed to parse JSON from analysis response:", jsonText);
-            throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
-        }
+          const interactionId = addModelInteractionLog(sessionId, logId, {
+            provider: 'Google',
+            model: requestDetails.model,
+            operation: 'generateContent',
+            requestPayload: requestDetails,
+            metadata: { task: 'analyzeQuote' },
+          });
 
-    } catch (error) {
-        console.error("Error analyzing quote:", error);
-        if (error instanceof Error) {
+          let response: GenerateContentResponse;
+          let responseSnapshot: any;
+          let capturedError: any;
+
+          try {
+            response = await ai.models.generateContent(requestDetails);
+            responseSnapshot = response;
+          } catch (error) {
+            capturedError = error;
             throw error;
-        }
-        throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
-    }
-};
+          } finally {
+            completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+          }
+          
+          const rawText = getValidatedResponseText(response, "analyzing the quote");
 
-export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("Gemini API key is missing.");
-  const ai = new GoogleGenAI({ apiKey });
+          const jsonText = extractJson(rawText);
+          if (!jsonText) {
+              console.error("No valid JSON object found in the AI analysis response:", rawText);
+              throw new Error("Could not find a valid JSON object in the AI's analysis response.");
+          }
+          
+          try {
+              return JSON.parse(jsonText);
+          } catch (e) {
+              console.error("Failed to parse JSON from analysis response:", jsonText);
+              throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
+          }
 
-  try {
-    const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
+      } catch (error) {
+          console.error("Error analyzing quote:", error);
+          if (error instanceof Error) {
+              throw error;
+          }
+          throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
+      }
+  }
+
+  public async extractQuotesFromText(apiKey: string, personName: string, textContent: string, temperature: number, logId: string, sessionId: string): Promise<Quote[]> {
+    if (!apiKey) throw new Error("Gemini API key is missing.");
+    const ai = new GoogleGenAI({ apiKey });
+
+    try {
+      const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
 
 The provided text can be one of two things:
 1. A block of text (like an article) containing one or more statements explicitly attributed to "${personName}".
@@ -349,84 +383,111 @@ Here is the text to analyze:
 ${textContent}
 ---`;
 
-    appendLogRequestPayload(logId, { prompt });
-    
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-
-    const rawText = getValidatedResponseText(response, "extracting quotes from text");
-
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-        console.error("No valid JSON object found in the AI response for text extraction:", rawText);
-        throw new Error("Could not find a valid JSON object in the AI's response for text extraction.");
-    }
-    
-    let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
-    try {
-        parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-        console.error("Failed to parse JSON response for text extraction:", jsonText);
-        throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", jsonText);
-    }
-
-    const quotesData = parsedResponse.quotes;
-
-    if (!quotesData || !Array.isArray(quotesData)) {
-      console.warn("The AI response did not contain a 'quotes' array.");
-      return [];
-    }
-    
-    const quotes: Quote[] = quotesData.map((q, index) => {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-
-        if (!q.text || !q.languageCode || !q.languageName) {
-            console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
-            return null;
+      appendLogRequestPayload(sessionId, logId, { prompt });
+      
+      const requestDetails = {
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          temperature: temperature,
         }
+      };
 
-        return {
-            id: `quote-text-${Date.now()}-${index}`,
-            text: q.text.trim(),
-            source: "User-Provided Text",
-            title: `Extracted from manual input`,
-            date: `${year}-${month}-${day}`,
-            languageCode: q.languageCode,
-            languageName: q.languageName,
-        };
-    }).filter((q): q is Quote => q !== null);
+      const interactionId = addModelInteractionLog(sessionId, logId, {
+        provider: 'Google',
+        model: requestDetails.model,
+        operation: 'generateContent',
+        requestPayload: requestDetails,
+        metadata: { task: 'extractFromText' },
+      });
 
-    return quotes;
+      let response: GenerateContentResponse;
+      let responseSnapshot: any;
+      let capturedError: any;
 
-  } catch (error) {
-    console.error("Error extracting quotes from text:", error);
-    if (error instanceof Error) {
+      try {
+        response = await ai.models.generateContent(requestDetails);
+        responseSnapshot = response;
+      } catch (error) {
+        capturedError = error;
         throw error;
+      } finally {
+        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+      }
+
+      const rawText = getValidatedResponseText(response, "extracting quotes from text");
+
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+          console.error("No valid JSON object found in the AI response for text extraction:", rawText);
+          throw new Error("Could not find a valid JSON object in the AI's response for text extraction.");
+      }
+      
+      let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
+      try {
+          parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+          console.error("Failed to parse JSON response for text extraction:", jsonText);
+          throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", jsonText);
+      }
+
+      const quotesData = parsedResponse.quotes;
+
+      if (!quotesData || !Array.isArray(quotesData)) {
+        console.warn("The AI response did not contain a 'quotes' array.");
+        return [];
+      }
+      
+      const quotes: Quote[] = quotesData.map((q, index) => {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+
+          if (!q.text || !q.languageCode || !q.languageName) {
+              console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
+              return null;
+          }
+
+          return {
+              id: `quote-text-${Date.now()}-${index}`,
+              text: q.text.trim(),
+              source: "User-Provided Text",
+              title: `Extracted from manual input`,
+              date: `${year}-${month}-${day}`,
+              languageCode: q.languageCode,
+              languageName: q.languageName,
+          };
+      }).filter((q): q is Quote => q !== null);
+
+      return quotes;
+
+    } catch (error) {
+      console.error("Error extracting quotes from text:", error);
+      if (error instanceof Error) {
+          throw error;
+      }
+      throw new Error("An unknown error occurred while extracting quotes from the text.");
     }
-    throw new Error("An unknown error occurred while extracting quotes from the text.");
   }
-};
 
-/**
- * Improve/expand an existing quote by finding the full context from the original source
- */
-export const improveQuote = async (
-  apiKey: string,
-  quote: Quote,
-  personName: string,
-  logId: string
-): Promise<Quote> => {
-  if (!apiKey) throw new Error("Gemini API key is missing.");
-  const ai = new GoogleGenAI({ apiKey });
+  /**
+   * Improve/expand an existing quote by finding the full context from the original source
+   */
+  public async improveQuote(
+    apiKey: string,
+    quote: Quote,
+    personName: string,
+    temperature: number,
+    logId: string,
+    sessionId: string
+  ): Promise<Partial<Quote>> {
+    if (!apiKey) throw new Error("Gemini API key is missing.");
+    const ai = new GoogleGenAI({ apiKey });
 
-  try {
+    try {
 
-    const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
+      const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
 
 **Current Quote Information:**
 - Person: ${personName}
@@ -474,62 +535,88 @@ Example:
 
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    appendLogRequestPayload(logId, { prompt });
+      appendLogRequestPayload(sessionId, logId, { prompt });
 
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
+      const requestDetails = {
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          tools: [{ googleSearch: {} }],
+          temperature: temperature,
+        }
+      };
+
+      const interactionId = addModelInteractionLog(sessionId, logId, {
+        provider: 'Google',
+        model: requestDetails.model,
+        operation: 'generateContent',
+        requestPayload: requestDetails,
+        metadata: { task: 'improveQuote' },
+      });
+
+      let response: GenerateContentResponse;
+      let responseSnapshot: any;
+      let capturedError: any;
+
+      try {
+        response = await ai.models.generateContent(requestDetails);
+        responseSnapshot = response;
+      } catch (error) {
+        capturedError = error;
+        throw error;
+      } finally {
+        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
       }
-    });
 
-    const responseText = getValidatedResponseText(response, "improving quote");
+      const responseText = getValidatedResponseText(response, "improving quote");
 
-    const jsonText = extractJson(responseText);
-    if (!jsonText) {
-      console.error("No valid JSON object found in the Gemini API response:", responseText);
-      throw new Error("Could not find a valid JSON object in the AI's response.");
+      const jsonText = extractJson(responseText);
+      if (!jsonText) {
+        console.error("No valid JSON object found in the Gemini API response:", responseText);
+        throw new Error("Could not find a valid JSON object in the AI's response.");
+      }
+
+      let parsedResponse: {
+        text: string;
+        source: string;
+        title: string;
+        date: string;
+        languageCode: string;
+        languageName: string;
+        improved: boolean;
+        improvementNote: string;
+      };
+
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON response:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
+      }
+
+      // URL resolution disabled due to CORS issues
+      // const resolvedUrl = await resolveUrls([parsedResponse.source]);
+
+      // Return the improved quote
+      return {
+        id: quote.id,
+        text: parsedResponse.text.trim(),
+        source: parsedResponse.source,
+        title: parsedResponse.title,
+        date: parsedResponse.date,
+        languageCode: parsedResponse.languageCode,
+        languageName: parsedResponse.languageName,
+        analysis: quote.analysis, // Preserve existing analysis
+      };
+
+    } catch (error) {
+      console.error("Error improving quote:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while improving the quote.");
     }
-
-    let parsedResponse: {
-      text: string;
-      source: string;
-      title: string;
-      date: string;
-      languageCode: string;
-      languageName: string;
-      improved: boolean;
-      improvementNote: string;
-    };
-
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
-    }
-
-    // URL resolution disabled due to CORS issues
-    // const resolvedUrl = await resolveUrls([parsedResponse.source]);
-
-    // Return the improved quote
-    return {
-      id: quote.id,
-      text: parsedResponse.text.trim(),
-      source: parsedResponse.source,
-      title: parsedResponse.title,
-      date: parsedResponse.date,
-      languageCode: parsedResponse.languageCode,
-      languageName: parsedResponse.languageName,
-      analysis: quote.analysis, // Preserve existing analysis
-    };
-
-  } catch (error) {
-    console.error("Error improving quote:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unknown error occurred while improving the quote.");
   }
-};
+}
+
+export default new GeminiService();

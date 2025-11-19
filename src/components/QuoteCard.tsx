@@ -59,20 +59,18 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onLa
             </div>
           </div>
           
-          {quote.analysis ? (
-            <AnalysisReport analysis={quote.analysis} />
-          ) : (
-            <div className="mt-4 pt-4 border-t border-gray-700/50">
-              <button
-                onClick={() => onAnalyze(quote)}
-                disabled={!isApiKeySet || quote.isAnalyzing}
-                className="w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-                title={!isApiKeySet ? "Please set your API key in the control panel" : ""}
-              >
-                {quote.isAnalyzing ? <Spinner /> : 'Analyze Quote'}
-              </button>
-            </div>
-          )}
+          {quote.analysis && <AnalysisReport analysis={quote.analysis} />}
+
+          <div className="mt-4 pt-4 border-t border-gray-700/50">
+            <button
+              onClick={() => onAnalyze(quote)}
+              disabled={!isApiKeySet || quote.isAnalyzing}
+              className="w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              title={!isApiKeySet ? "Please set your API key in the control panel" : ""}
+            >
+              {quote.isAnalyzing ? <Spinner /> : (quote.analysis ? 'Analyze Again' : 'Analyze Quote')}
+            </button>
+          </div>
           
           <div className="mt-3 pt-3 border-t border-gray-700/50">
             <button

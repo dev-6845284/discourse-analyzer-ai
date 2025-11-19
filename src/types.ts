@@ -34,13 +34,34 @@ export interface Quote {
 
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
 
+export interface LogErrorDetails {
+  message: string;
+  stack?: string;
+  rawResponse?: any;
+  errorType?: string;
+}
+
+export interface ModelInteractionLog {
+  id: string;
+  timestamp: string;
+  provider: string;
+  model: string;
+  operation: string;
+  requestPayload: any;
+  responsePayload?: any;
+  error?: LogErrorDetails;
+  completedAt?: string;
+  metadata?: Record<string, any>;
+}
+
 export interface LogEntry {
   id: string;
   timestamp: string;
   command: LogCommand;
   requestPayload: any;
   responsePayload?: any;
-  error?: any;
+  error?: LogErrorDetails;
+  modelInteractions?: ModelInteractionLog[];
 }
 
 // FIX: Update GroundingChunk to match the @google/genai type.

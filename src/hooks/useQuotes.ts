@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Quote, AnalysisCategory, AnalysisRating } from '../types';
+import { Quote, AnalysisCategory, AnalysisRating, ExportData } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { TimePeriodResult } from '../utils/timePeriod';
 import api from '../utils/api';
@@ -20,6 +20,12 @@ export function useQuotes(handleLogout: () => void) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rawApiResponseError, setRawApiResponseError] = useState<string | null>(null);
+
+  const handleLoadQuotes = useCallback((data: ExportData) => {
+    setQuotes(data.quotes);
+    // This is a good place to also set the person's name in the main App component
+    // but for now, we'll just load the quotes.
+  }, []);
 
   const handleError = (e: any, context: string) => {
     if (e.response?.status === 401) {
@@ -67,17 +73,17 @@ export function useQuotes(handleLogout: () => void) {
       try {
         const existingQuotesText = quotes.map((q) => q.text);
         const response = await api.post('/quotes/search', {
-          aiProvider: selectedAI,
+          model: selectedAI,
           personName,
           languages: selectedLanguages,
-          resultCount,
-          existingQuotesText,
+          maxQuotes: resultCount,
+          context: existingQuotesText,
           temperature,
           maxQuoteLength,
           timePeriod,
-          filterCategory,
-          filterRating,
-          sortOrder,
+          category: filterCategory,
+          rating: filterRating,
+          sortBy: sortOrder,
         });
 
         const newQuotes = response.data;
@@ -102,8 +108,10 @@ export function useQuotes(handleLogout: () => void) {
 
       try {
         const response = await api.post('/quotes/analyze', {
-          aiProvider: selectedAI,
-          quote: quote,
+          model: selectedAI,
+          quoteText: quote.text,
+          quoteLanguageCode: quote.languageCode,
+          quoteLanguageName: quote.languageName,
         });
         const analysis = response.data;
 
@@ -141,7 +149,7 @@ export function useQuotes(handleLogout: () => void) {
 
       try {
         const response = await api.post('/quotes/extract', {
-          aiProvider: selectedAI,
+          model: selectedAI,
           personName,
           textToExtract,
         });
@@ -231,7 +239,7 @@ export function useQuotes(handleLogout: () => void) {
 
       try {
         const response = await api.post('/quotes/improve', {
-          aiProvider: selectedAI,
+          model: selectedAI,
           quote,
           personName,
         });
@@ -268,5 +276,6 @@ export function useQuotes(handleLogout: () => void) {
     handleClearQuotes,
     handleImproveQuote,
     clearError,
+    handleLoadQuotes,
   };
 }

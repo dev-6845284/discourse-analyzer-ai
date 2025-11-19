@@ -1,219 +1,153 @@
+import { Request, Response } from 'express';
 import {
   Quote,
   AnalysisResult,
-  AnalysisCategory,
-  AnalysisRating,
+  ModelResponseError,
+  JsonParsingError,
 } from '../types';
-import * as geminiService from '../llm_services/geniniService';
-import * as chatGptService from '../llm_services/chatGptService';
-import * as grokService from '../llm_services/grokService';
-import { addLogEntry, updateLogEntry } from './logService';
+import geminiService from '../llm_services/geniniService';
+import chatGptService from '../llm_services/chatGptService';
+import grokService from '../llm_services/grokService';
+import { addLogEntry, updateLogEntry, getLogs } from './logService';
+import { LlmService } from '../llm_services/LlmService';
 
-export { JsonParsingError, ModelResponseError } from '../llm_services/geniniService';
-
-const getApiKey = (aiProvider: string): string => {
-  const key = {
-    gemini: process.env.GEMINI_API_KEY,
-    grok: process.env.GROK_API_KEY,
-    chatgpt: process.env.CHATGPT_API_KEY,
-  }[aiProvider];
-
-  if (!key) throw new Error(`API key for ${aiProvider} is not configured.`);
-  return key;
+const getService = (model: string): { service: LlmService; apiKey: string } => {
+  switch (model) {
+    case 'gemini':
+      return { service: geminiService, apiKey: process.env.GEMINI_API_KEY! };
+    case 'chatgpt':
+      return { service: chatGptService, apiKey: process.env.CHATGPT_API_KEY! };
+    case 'grok':
+      return { service: grokService, apiKey: process.env.GROK_API_KEY! };
+    default:
+      throw new Error('Invalid model specified');
+  }
 };
 
-export const fetchQuotesForPerson = async (
-  aiProvider: string,
-  personName: string,
-  languages: string[],
-  resultCount: number,
-  existingQuotesText: string[],
-  temperature: number,
-  maxQuoteLength: number,
-  timePeriod: { description: string; startDate?: string; endDate?: string },
-  filterCategory: AnalysisCategory | 'all',
-  filterRating: AnalysisRating | 'all',
-  sortOrder: 'newest' | 'oldest'
-): Promise<Quote[]> => {
-  const apiKey = getApiKey(aiProvider);
-  const logId = addLogEntry('fetchQuotes', {
-    aiProvider,
+export const fetchQuotes = async (req: Request, res: Response) => {
+  const {
+    model,
     personName,
     languages,
-    resultCount,
-    existingQuotesText,
+    maxQuotes,
+    context,
     temperature,
     maxQuoteLength,
     timePeriod,
-    filterCategory,
-    filterRating,
+    category,
+    rating,
     sortOrder,
-  });
+  } = req.body;
+
+  const logId = addLogEntry(req.session.id!, 'fetchQuotes', { personName, model, context, maxQuotes, languages, category, rating, sortOrder, maxQuoteLength, timePeriod });
 
   try {
-    let quotes: Quote[];
-    switch (aiProvider) {
-      case 'gemini':
-        quotes = await geminiService.fetchQuotesForPerson(
-          apiKey,
-          personName,
-          languages,
-          resultCount,
-          existingQuotesText,
-          temperature,
-          maxQuoteLength,
-          timePeriod,
-          logId
-        );
-        break;
-      case 'chatgpt':
-        quotes = await chatGptService.fetchQuotesForPerson(
-          apiKey,
-          personName,
-          languages,
-          resultCount,
-          existingQuotesText,
-          temperature,
-          maxQuoteLength,
-          timePeriod,
-          logId
-        );
-        break;
-      case 'grok':
-        quotes = await grokService.fetchQuotesForPerson(
-          apiKey,
-          personName,
-          languages,
-          resultCount,
-          existingQuotesText,
-          temperature,
-          maxQuoteLength,
-          timePeriod,
-          logId
-        );
-        break;
-      default:
-        throw new Error('Invalid AI provider');
+    const { service, apiKey } = getService(model);
+    const quotes = await service.fetchQuotesForPerson(
+      apiKey,
+      personName,
+      languages,
+      maxQuotes,
+      context,
+      temperature,
+      maxQuoteLength,
+      timePeriod,
+      category,
+      rating,
+      sortOrder,
+      logId,
+      req.session.id!,
+    );
+    updateLogEntry(req.session.id!, logId, quotes);
+    res.json(quotes);
+  } catch (error: any) {
+    console.error('Error fetching quotes:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
     }
-
-    // Apply filtering and sorting
-    let filteredQuotes = quotes;
-    if (filterCategory && filterCategory !== 'all') {
-      filteredQuotes = filteredQuotes.filter(
-        (q) =>
-          q.analysis &&
-          q.analysis[filterCategory]?.rating !== 'None' &&
-          q.analysis[filterCategory]?.rating !== undefined
-      );
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
     }
-
-    if (filterRating && filterRating !== 'all') {
-      filteredQuotes = filteredQuotes.filter(
-        (q) =>
-          q.analysis &&
-          Object.values(q.analysis).some(
-            (detail) => detail.rating === filterRating
-          )
-      );
-    }
-
-    const sortedQuotes = [...filteredQuotes].sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      if (isNaN(dateA.getTime())) return 1;
-      if (isNaN(dateB.getTime())) return -1;
-      if (sortOrder === 'oldest') {
-        return dateA.getTime() - dateB.getTime();
-      }
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    updateLogEntry(logId, sortedQuotes);
-    return sortedQuotes;
-  } catch (error) {
-    updateLogEntry(logId, undefined, error);
-    console.error(`Error fetching quotes with ${aiProvider}:`, error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error(`An unknown error occurred while fetching quotes with ${aiProvider}.`);
+    res.status(500).json({ message: 'Failed to fetch quotes' });
   }
 };
 
-export const analyzeQuoteText = async (aiProvider: string, quote: Quote): Promise<AnalysisResult> => {
-  const apiKey = getApiKey(aiProvider);
-  const logId = addLogEntry('analyzeQuote', { aiProvider, quote });
+export const analyzeQuote = async (req: Request, res: Response) => {
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature } = req.body;
+  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model });
+
   try {
-    let analysis: AnalysisResult;
-    switch (aiProvider) {
-      case 'gemini':
-        analysis = await geminiService.analyzeQuoteText(apiKey, quote.text, quote.languageCode, quote.languageName, logId);
-        break;
-      case 'chatgpt':
-        analysis = await chatGptService.analyzeQuoteText(apiKey, quote.text, quote.languageCode, quote.languageName, logId);
-        break;
-      case 'grok':
-        analysis = await grokService.analyzeQuoteText(apiKey, quote.text, quote.languageCode, quote.languageName, logId);
-        break;
-      default:
-        throw new Error('Invalid AI provider');
+    const { service, apiKey } = getService(model);
+    const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!);
+    updateLogEntry(req.session.id!, logId, analysis);
+    res.json(analysis);
+  } catch (error: any) {
+    console.error('Error analyzing quote:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
     }
-    updateLogEntry(logId, analysis);
-    return analysis;
-  } catch (error) {
-    updateLogEntry(logId, undefined, error);
-    throw error;
+     if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to analyze quote' });
   }
 };
 
-export const extractQuotesFromText = async (aiProvider: string, personName: string, textToExtract: string): Promise<Quote[]> => {
-  const apiKey = getApiKey(aiProvider);
-  const logId = addLogEntry('extractQuote', { aiProvider, personName, textToExtract });
+export const extractQuotes = async (req: Request, res: Response) => {
+  const { personName, textContent, model, temperature } = req.body;
+  const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, textContent, model });
+
   try {
-    let quotes: Quote[];
-    switch (aiProvider) {
-      case 'gemini':
-        quotes = await geminiService.extractQuotesFromText(apiKey, personName, textToExtract, logId);
-        break;
-      case 'chatgpt':
-        quotes = await chatGptService.extractQuotesFromText(apiKey, personName, textToExtract, logId);
-        break;
-      case 'grok':
-        quotes = await grokService.extractQuotesFromText(apiKey, personName, textToExtract, logId);
-        break;
-      default:
-        throw new Error('Invalid AI provider');
+    const { service, apiKey } = getService(model);
+    const quotes = await service.extractQuotesFromText(apiKey, personName, textContent, temperature, logId, req.session.id!);
+    updateLogEntry(req.session.id!, logId, quotes);
+    res.json(quotes);
+  } catch (error: any) {
+    console.error('Error extracting quotes:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
     }
-    updateLogEntry(logId, quotes);
-    return quotes;
-  } catch (error) {
-    updateLogEntry(logId, undefined, error);
-    throw error;
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to extract quotes' });
   }
 };
 
-export const improveQuote = async (aiProvider: string, quote: Quote, personName: string): Promise<Partial<Quote>> => {
-  const apiKey = getApiKey(aiProvider);
-  const logId = addLogEntry('improveQuote', { aiProvider, quote, personName });
+export const improveSingleQuote = async (req: Request, res: Response) => {
+  const { quote, personName, model, temperature } = req.body;
+  const logId = addLogEntry(req.session.id!, 'improveQuote', { quote, personName, model });
+
   try {
-    let improvedQuote: Partial<Quote>;
-    switch (aiProvider) {
-      case 'gemini':
-        improvedQuote = await geminiService.improveQuote(apiKey, quote, personName, logId);
-        break;
-      case 'chatgpt':
-        improvedQuote = await chatGptService.improveQuote(apiKey, quote, personName, logId);
-        break;
-      case 'grok':
-        improvedQuote = await grokService.improveQuote(apiKey, quote, personName, logId);
-        break;
-      default:
-        throw new Error('Invalid AI provider');
+    const { service, apiKey } = getService(model);
+    const improvedQuote = await service.improveQuote(apiKey, quote, personName, temperature, logId, req.session.id!);
+    updateLogEntry(req.session.id!, logId, improvedQuote);
+    res.json(improvedQuote);
+  } catch (error: any) {
+    console.error('Error improving quote:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
     }
-    updateLogEntry(logId, improvedQuote);
-    return improvedQuote;
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to improve quote' });
+  }
+};
+
+export const getApiLogs = (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+  try {
+    const logsData = getLogs(req.session.id!, page, pageSize);
+    res.json(logsData);
   } catch (error) {
-    updateLogEntry(logId, undefined, error);
-    throw error;
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ message: 'Failed to fetch logs' });
   }
 };

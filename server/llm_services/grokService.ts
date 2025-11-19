@@ -1,25 +1,17 @@
-import { Quote, AnalysisResult } from "../types";
+import {
+  Quote,
+  AnalysisResult,
+  JsonParsingError,
+  AnalysisCategory,
+  AnalysisRating,
+} from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
-import { appendLogRequestPayload } from '../services/logService';
-//import { resolveUrls } from '../utils/urlResolver';
+import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
+import { LlmService } from './LlmService';
 
 // Grok API uses OpenAI-compatible endpoints
 const GROK_API_BASE_URL = "https://api.x.ai/v1";
 const GROK_MODEL = "grok-4-fast"; // or "grok-2-latest"
-
-/**
- * Custom error class for JSON parsing failures.
- * It includes the raw text response from the AI for debugging.
- */
-export class JsonParsingError extends Error {
-  public rawResponse: string;
-
-  constructor(message: string, rawResponse: string) {
-    super(message);
-    this.name = 'JsonParsingError';
-    this.rawResponse = rawResponse;
-  }
-}
 
 /**
  * A more robust way to extract a JSON object from a string that might be
@@ -50,77 +42,112 @@ const callGrokAPI = async (
   const prompt = messages.map(m => `### ${m.role}\n${m.content}`).join('\n\n');
   appendLogRequestPayload(sessionId, logId, { prompt });
 
-  const response = await fetch(`${GROK_API_BASE_URL}/chat/completions`, {
+  const requestDetails = {
+    url: `${GROK_API_BASE_URL}/chat/completions`,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
+    body: {
       model: GROK_MODEL,
       messages,
       temperature,
-    }),
+    }
+  };
+
+  const interactionId = addModelInteractionLog(sessionId, logId, {
+    provider: 'xAI',
+    model: GROK_MODEL,
+    operation: 'chat.completions',
+    requestPayload: requestDetails,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Grok API request failed: ${response.status} ${response.statusText}. ${errorText}`);
-  }
-
-  const data = await response.json();
-
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error("Grok API returned no response choices.");
-  }
-
-  const content = data.choices[0].message?.content;
-  if (!content) {
-    throw new Error("Grok API returned empty content.");
-  }
-
-  return content;
-};
-
-export const fetchQuotesForPerson = async (
-  apiKey: string,//1
-  personName: string,//2
-  languages: string[],//3
-  resultCount: number,//4
-  existingQuotesText: string[],//5
-  temperature: number,//6
-  maxQuoteLength: number,//7
-  timePeriod: { description: string; startDate?: string; endDate?: string },//8
-  logId: string//9
-): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("Grok API key is missing.");
+  let responseSnapshot: any;
+  let capturedError: any;
 
   try {
-    const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
-    const languageInstruction = languageNames.length > 0
-      ? `Your search must cover sources in the following languages: ${languageNames.join(', ')}.`
-      : 'Your search should primarily cover English sources, but identify and return the language for any non-English quotes you find.';
+    const response = await fetch(requestDetails.url, {
+      method: requestDetails.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestDetails.body),
+    });
 
-    let exclusionInstruction = '';
-    if (existingQuotesText && existingQuotesText.length > 0) {
-      const quotesToExclude = existingQuotesText.map(q => `- "${q.slice(0, 150)}..."`).join('\n');
-      exclusionInstruction = `
+    if (!response.ok) {
+      const errorText = await response.text();
+      const apiError = new Error(`Grok API request failed: ${response.status} ${response.statusText}. ${errorText}`);
+      (apiError as any).rawResponse = { status: response.status, statusText: response.statusText, body: errorText };
+      (apiError as any).name = 'GrokApiError';
+      capturedError = apiError;
+      throw apiError;
+    }
+
+    const data = await response.json();
+    responseSnapshot = { status: response.status, body: data };
+
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("Grok API returned no response choices.");
+    }
+
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      throw new Error("Grok API returned empty content.");
+    }
+
+    return content;
+  } catch (error) {
+    if (!capturedError) {
+      capturedError = error;
+    }
+    throw error;
+  } finally {
+    completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+  }
+};
+
+class GrokService implements LlmService {
+  public async fetchQuotesForPerson(
+    apiKey: string,
+    personName: string,
+    languages: string[],
+    maxQuotes: number,
+    context: string[],
+    temperature: number,
+    maxQuoteLength: number,
+    timePeriod: { description: string; startDate?: string; endDate?: string },
+    category: AnalysisCategory | 'all',
+    rating: AnalysisRating | 'all',
+    sortOrder: 'newest' | 'oldest',
+    logId: string,
+    sessionId: string
+  ): Promise<Quote[]> {
+    if (!apiKey) throw new Error("Grok API key is missing.");
+
+    try {
+      const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
+      const languageInstruction = languageNames.length > 0
+        ? `Your search must cover sources in the following languages: ${languageNames.join(', ')}.`
+        : 'Your search should primarily cover English sources, but identify and return the language for any non-English quotes you find.';
+
+      let exclusionInstruction = '';
+      if (context && context.length > 0) {
+        const quotesToExclude = context.map(q => `- "${q.slice(0, 150)}..."`).join('\n');
+        exclusionInstruction = `
 You MUST find new quotes that are NOT in the following list. Do not repeat any of the quotes below.
 Here are the quotes that have already been found:
 ${quotesToExclude}
 `;
-    }
+      }
 
-    const quoteExtractionInstruction = `
+      const quoteExtractionInstruction = `
 ### 📜 QUOTE EXTRACTION RULES
 - Locate primary sources with direct quotes by ${personName}.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
 - Do not paraphrase or summarize within the quote text. The "text" field must contain only verbatim words from the source.
 - Always provide the full citation (title, source URL, date).`;
 
-    const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
+      const prompt = `### SYSTEM & TASK PROMPT — SECURE RESEARCH FRAMEWORK
 **Task Overview**
-Conduct a comprehensive investigation to find up to ${resultCount} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
+Conduct a comprehensive investigation to find up to ${maxQuotes} public quotes, interviews, and published texts of the individual named **${personName}** from ${timePeriod.description}${timePeriod.startDate && timePeriod.endDate ? ` (specifically between ${timePeriod.startDate} and ${timePeriod.endDate})` : ''}. The investigation must rely **only on verifiable, public, human-visible quotes or authored texts** attributed to that individual, collected from reputable sources.
 
 ---
 
@@ -178,74 +205,66 @@ If you cannot find a specific date, provide the publication date of the source. 
 Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title", "date": "2023-10-27", "languageCode": "en", "languageName": "English"}] }
 - Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
+      const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, 0.5);
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      console.error("No valid JSON object found in the Grok API response:", rawText);
-      throw new Error("Could not find a valid JSON object in the AI's response.");
-    }
-
-    let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
-    }
-
-    const quotesData = parsedResponse.quotes;
-
-    if (!quotesData || !Array.isArray(quotesData) || quotesData.length === 0) {
-      return []; // Return an empty array instead of throwing an error if no new quotes are found.
-    }
-
-    // Map the new JSON structure to the app's Quote type.
-    const quotes: Quote[] = quotesData.map((q, index) => {
-      // Add a check for malformed quote objects from the AI
-      if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
-        console.warn(`Skipping malformed quote object at index ${index}:`, q);
-        return null;
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        console.error("No valid JSON object found in the Grok API response:", rawText);
+        throw new Error("Could not find a valid JSON object in the AI's response.");
       }
-      return {
-        id: `quote-${Date.now()}-${index}`,
-        text: q.text.trim(),
-        source: q.source,
-        title: q.title,
-        date: q.date,
-        languageCode: q.languageCode,
-        languageName: q.languageName,
-      };
-    }).filter((q): q is Quote => q !== null); // Filter out any nulls from malformed objects
 
-    if (quotes.length === 0) {
-      console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
+      let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON response:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
+      }
+
+      const quotesData = parsedResponse.quotes;
+
+      if (!quotesData || !Array.isArray(quotesData) || quotesData.length === 0) {
+        return []; // Return an empty array instead of throwing an error if no new quotes are found.
+      }
+
+      // Map the new JSON structure to the app's Quote type.
+      const quotes: Quote[] = quotesData.map((q, index) => {
+        // Add a check for malformed quote objects from the AI
+        if (!q.text || !q.source || !q.title || !q.date || !q.languageCode || !q.languageName) {
+          console.warn(`Skipping malformed quote object at index ${index}:`, q);
+          return null;
+        }
+        return {
+          id: `quote-${Date.now()}-${index}`,
+          text: q.text.trim(),
+          source: q.source,
+          title: q.title,
+          date: q.date,
+          languageCode: q.languageCode,
+          languageName: q.languageName,
+        };
+      }).filter((q): q is Quote => q !== null); // Filter out any nulls from malformed objects
+
+      if (quotes.length === 0) {
+        console.warn("The AI response contained malformed quote data, but no valid quotes could be extracted.");
+      }
+
+      return quotes;
+
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while fetching quotes.");
     }
-
-    // URL resolution disabled due to CORS issues
-    // const urls = quotes.map(q => q.source);
-    // const resolvedUrls = await resolveUrls(urls);
-    // const quotesWithResolvedUrls = quotes.map((quote, index) => ({
-    //   ...quote,
-    //   source: resolvedUrls[index],
-    // }));
-
-    return quotes;
-
-  } catch (error) {
-    console.error("Error fetching quotes:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unknown error occurred while fetching quotes.");
   }
-};
 
-export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string, sessionId: string): Promise<AnalysisResult> => {
-  if (!apiKey) throw new Error("Grok API key is missing.");
+  public async analyzeQuoteText(apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, temperature: number, logId: string, sessionId: string): Promise<AnalysisResult> {
+    if (!apiKey) throw new Error("Grok API key is missing.");
 
-  try {
-    const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
+    try {
+      const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
 Follow these steps carefully:
 1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using your knowledge.
 2.  **Think step-by-step in English** to determine the rating and justification for each category.
@@ -259,35 +278,35 @@ Each key must have a value that is an object with two properties:
 
 Analyze this text: "${quoteText}"`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+      const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      console.error("No valid JSON object found in the Grok API analysis response:", rawText);
-      throw new Error("Could not find a valid JSON object in the AI's analysis response.");
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        console.error("No valid JSON object found in the Grok API analysis response:", rawText);
+        throw new Error("Could not find a valid JSON object in the AI's analysis response.");
+      }
+
+      try {
+        return JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON from analysis response:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
+      }
+
+    } catch (error) {
+      console.error("Error analyzing quote:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
     }
+  }
+
+  public async extractQuotesFromText(apiKey: string, personName: string, textContent: string, temperature: number, logId: string, sessionId: string): Promise<Quote[]> {
+    if (!apiKey) throw new Error("Grok API key is missing.");
 
     try {
-      return JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON from analysis response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
-    }
-
-  } catch (error) {
-    console.error("Error analyzing quote:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
-  }
-};
-
-export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string, sessionId: string): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("Grok API key is missing.");
-
-  try {
-    const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
+      const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
 
 The provided text can be one of two things:
 1. A block of text (like an article) containing one or more statements explicitly attributed to "${personName}".
@@ -309,76 +328,77 @@ Here is the text to analyze:
 ${textContent}
 ---`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+      const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      console.error("No valid JSON object found in the Grok API response for text extraction:", rawText);
-      throw new Error("Could not find a valid JSON object in the AI's response for text extraction.");
-    }
-
-    let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response for text extraction:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", jsonText);
-    }
-
-    const quotesData = parsedResponse.quotes;
-
-    if (!quotesData || !Array.isArray(quotesData)) {
-      console.warn("The AI response did not contain a 'quotes' array.");
-      return [];
-    }
-
-    const quotes: Quote[] = quotesData.map((q, index) => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-
-      if (!q.text || !q.languageCode || !q.languageName) {
-        console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
-        return null;
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        console.error("No valid JSON object found in the Grok API response for text extraction:", rawText);
+        throw new Error("Could not find a valid JSON object in the AI's response for text extraction.");
       }
 
-      return {
-        id: `quote-text-${Date.now()}-${index}`,
-        text: q.text.trim(),
-        source: "User-Provided Text",
-        title: `Extracted from manual input`,
-        date: `${year}-${month}-${day}`,
-        languageCode: q.languageCode,
-        languageName: q.languageName,
-      };
-    }).filter((q): q is Quote => q !== null);
+      let parsedResponse: { quotes: { text: string; languageCode: string; languageName: string; }[] };
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON response for text extraction:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's response for text extraction. The format was unexpected.", jsonText);
+      }
 
-    return quotes;
+      const quotesData = parsedResponse.quotes;
 
-  } catch (error) {
-    console.error("Error extracting quotes from text:", error);
-    if (error instanceof Error) {
-      throw error;
+      if (!quotesData || !Array.isArray(quotesData)) {
+        console.warn("The AI response did not contain a 'quotes' array.");
+        return [];
+      }
+
+      const quotes: Quote[] = quotesData.map((q, index) => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+
+        if (!q.text || !q.languageCode || !q.languageName) {
+          console.warn(`Skipping malformed extracted quote at index ${index}:`, q);
+          return null;
+        }
+
+        return {
+          id: `quote-text-${Date.now()}-${index}`,
+          text: q.text.trim(),
+          source: "User-Provided Text",
+          title: `Extracted from manual input`,
+          date: `${year}-${month}-${day}`,
+          languageCode: q.languageCode,
+          languageName: q.languageName,
+        };
+      }).filter((q): q is Quote => q !== null);
+
+      return quotes;
+
+    } catch (error) {
+      console.error("Error extracting quotes from text:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while extracting quotes from the text.");
     }
-    throw new Error("An unknown error occurred while extracting quotes from the text.");
   }
-};
 
-/**
- * Improve/expand an existing quote by finding the full context from the original source
- */
-export const improveQuote = async (
-  apiKey: string,
-  quote: Quote,
-  personName: string,
-  logId: string,
-  sessionId: string,
-): Promise<Partial<Quote>> => {
-  if (!apiKey) throw new Error("Grok API key is missing.");
+  /**
+   * Improve/expand an existing quote by finding the full context from the original source
+   */
+  public async improveQuote(
+    apiKey: string,
+    quote: Quote,
+    personName: string,
+    temperature: number,
+    logId: string,
+    sessionId: string,
+  ): Promise<Partial<Quote>> {
+    if (!apiKey) throw new Error("Grok API key is missing.");
 
-  try {
-    const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
+    try {
+      const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
 
 **Current Quote Information:**
 - Person: ${personName}
@@ -426,52 +446,55 @@ Example:
 
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+      const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
 
-    const jsonText = extractJson(rawText);
-    if (!jsonText) {
-      console.error("No valid JSON object found in the Grok API response:", rawText);
-      throw new Error("Could not find a valid JSON object in the AI's response.");
+      const jsonText = extractJson(rawText);
+      if (!jsonText) {
+        console.error("No valid JSON object found in the Grok API response:", rawText);
+        throw new Error("Could not find a valid JSON object in the AI's response.");
+      }
+
+      let parsedResponse: {
+        text: string;
+        source: string;
+        title: string;
+        date: string;
+        languageCode: string;
+        languageName: string;
+        improved: boolean;
+        improvementNote: string;
+      };
+
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (e) {
+        console.error("Failed to parse JSON response:", jsonText);
+        throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
+      }
+
+      // URL resolution disabled due to CORS issues
+      // const resolvedUrl = await resolveUrls([parsedResponse.source]);
+
+      // Return the improved quote
+      return {
+        id: quote.id,
+        text: parsedResponse.text.trim(),
+        source: parsedResponse.source,
+        title: parsedResponse.title,
+        date: parsedResponse.date,
+        languageCode: parsedResponse.languageCode,
+        languageName: parsedResponse.languageName,
+        analysis: quote.analysis, // Preserve existing analysis
+      };
+
+    } catch (error) {
+      console.error("Error improving quote:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("An unknown error occurred while improving the quote.");
     }
-
-    let parsedResponse: {
-      text: string;
-      source: string;
-      title: string;
-      date: string;
-      languageCode: string;
-      languageName: string;
-      improved: boolean;
-      improvementNote: string;
-    };
-
-    try {
-      parsedResponse = JSON.parse(jsonText);
-    } catch (e) {
-      console.error("Failed to parse JSON response:", jsonText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
-    }
-
-    // URL resolution disabled due to CORS issues
-    // const resolvedUrl = await resolveUrls([parsedResponse.source]);
-
-    // Return the improved quote
-    return {
-      id: quote.id,
-      text: parsedResponse.text.trim(),
-      source: parsedResponse.source,
-      title: parsedResponse.title,
-      date: parsedResponse.date,
-      languageCode: parsedResponse.languageCode,
-      languageName: parsedResponse.languageName,
-      analysis: quote.analysis, // Preserve existing analysis
-    };
-
-  } catch (error) {
-    console.error("Error improving quote:", error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("An unknown error occurred while improving the quote.");
   }
-};
+}
+
+export default new GrokService();
