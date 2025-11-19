@@ -4,6 +4,7 @@ import {
   JsonParsingError,
   AnalysisCategory,
   AnalysisRating,
+  ModelResponseError,
 } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
@@ -106,6 +107,20 @@ const callChatGptAPI = async (
 
     if (!response.ok) {
       const errorText = await response.text();
+      let errorJson;
+      try {
+        errorJson = JSON.parse(errorText);
+      } catch (e) {
+        // ignore
+      }
+
+      if (response.status === 429 || (errorJson?.error?.code === 'rate_limit_exceeded')) {
+        const message = errorJson?.error?.message || 'Rate limit exceeded. Please try again later.';
+        const apiError = new ModelResponseError(message);
+        capturedError = apiError;
+        throw apiError;
+      }
+
       const apiError = new Error(`ChatGPT API request failed: ${response.status} ${response.statusText}. ${errorText}`);
       (apiError as any).rawResponse = { status: response.status, statusText: response.statusText, body: errorText };
       (apiError as any).name = 'ChatGptApiError';
