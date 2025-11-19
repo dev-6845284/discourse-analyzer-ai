@@ -113,7 +113,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(buildPath));
 
   // For any other request, serve the index.html file
-  app.get('*', (req, res) => {
+  app.get(/.*/, (req, res) => {
     res.sendFile(path.resolve(buildPath, 'index.html'));
   });
 } else {
