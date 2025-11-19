@@ -10,6 +10,7 @@ import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
 import { addLogEntry, updateLogEntry, getLogs } from './logService';
 import { LlmService } from '../llm_services/LlmService';
+import { postProcessResponse } from './responseProcessor';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -104,14 +105,13 @@ export const extractQuotes = async (req: Request, res: Response) => {
     const { service, apiKey } = getService(model, apiKeys);
     const quotes = await service.extractQuotesFromText(apiKey, personName, textContent, temperature, logId, req.session.id!);
 
-    const enrichedQuotes = quotes.map(q => ({
-      ...q,
-      source: source || q.source,
-      title: title || q.title,
-      date: date || q.date,
-      languageCode: languageCode || q.languageCode,
-      languageName: languageName || q.languageName
-    }));
+    const enrichedQuotes = postProcessResponse('extractQuotesFromText', quotes, {
+      source,
+      title,
+      date,
+      languageCode,
+      languageName
+    });
 
     updateLogEntry(req.session.id!, logId, enrichedQuotes);
     res.json(enrichedQuotes);
