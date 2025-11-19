@@ -2,8 +2,7 @@ import { Quote, AnalysisResult } from "../types";
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { appendLogRequestPayload } from '../services/logService';
 
-const CHATGPT_API_BASE_URL = "https://api.openai.com/v1";
-const CHATGPT_MODEL = "gpt-4.1-mini";
+const OPENAI_API_BASE_URL = "https://api.openai.com/v1";
 
 /**
  * Custom error class for JSON parsing failures.
@@ -41,19 +40,22 @@ const extractJson = (text: string): string | null => {
  */
 const callChatGptAPI = async (
   apiKey: string,
-  prompt: string,
+  messages: Array<{ role: string; content: string }>,
   logId: string,
+  sessionId: string,
   temperature: number = 0.7
 ): Promise<string> => {
-  appendLogRequestPayload(logId, { prompt });
-  const response = await fetch(`${CHATGPT_API_BASE_URL}/chat/completions`, {
+  const prompt = messages.map(m => `### ${m.role}\n${m.content}`).join('\n\n');
+  appendLogRequestPayload(sessionId, logId, { prompt });
+
+  const response = await fetch(`${OPENAI_API_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: CHATGPT_MODEL,
+      model: "gpt-4.1-mini",
       messages: [{ role: 'user', content: prompt }],
       // Enforce JSON output for reliability, as all prompts request it.
       response_format: { type: "json_object" },
@@ -83,17 +85,18 @@ const callChatGptAPI = async (
 
 
 export const fetchQuotesForPerson = async (
-  apiKey: string,
-  personName: string,
-  languages: string[],
-  resultCount: number,
-  existingQuotesText: string[],
-  temperature: number,
-  maxQuoteLength: number,
-  timePeriod: { description: string; startDate?: string; endDate?: string },
-  logId: string
+  apiKey: string,//1
+  personName: string,//2
+  languages: string[],//3
+  resultCount: number,//4
+  existingQuotesText: string[],//5
+  temperature: number,//6
+  maxQuoteLength: number,//7
+  timePeriod: { description: string; startDate?: string; endDate?: string },//8
+  logId: string,//9
+  sessionId: string,//10
 ): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("ChatGPT API key is missing.");
+  if (!apiKey) throw new Error("OpenAI API key is missing.");
 
   try {
     const languageNames = languages.map(code => SUPPORTED_LANGUAGES.find(l => l.code === code)?.name).filter(Boolean);
@@ -178,15 +181,19 @@ If you cannot find a specific date, provide the publication date of the source. 
 Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title", "date": "2023-10-27", "languageCode": "en", "languageName": "English"}] }
 - Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callChatGptAPI(apiKey, prompt, logId, temperature);
+    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
 
-    // The API is configured to return JSON, so we can parse it directly.
+    const jsonText = extractJson(rawText);
+    if (!jsonText) {
+      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
+    }
+
     let parsedResponse: { quotes: { text: string; source: string; title: string; date: string; languageCode: string; languageName: string; }[] };
     try {
-      parsedResponse = JSON.parse(rawText);
+      parsedResponse = JSON.parse(jsonText);
     } catch (e) {
-      console.error("Failed to parse JSON response:", rawText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
+      console.error("Failed to parse JSON response:", jsonText);
+      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
     }
 
     const quotesData = parsedResponse.quotes;
@@ -226,8 +233,8 @@ Example format: { "quotes": [{"text": "This is the quote.", "source": "https://e
   }
 };
 
-export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string): Promise<AnalysisResult> => {
-  if (!apiKey) throw new Error("ChatGPT API key is missing.");
+export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string, sessionId: string): Promise<AnalysisResult> => {
+  if (!apiKey) throw new Error("OpenAI API key is missing.");
 
   try {
     const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
@@ -244,7 +251,7 @@ Each key must have a value that is an object with two properties:
 
 Analyze this text: "${quoteText}"`;
 
-    const rawText = await callChatGptAPI(apiKey, prompt, logId);
+    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
 
     const jsonText = extractJson(rawText);
     if (!jsonText) {
@@ -267,8 +274,8 @@ Analyze this text: "${quoteText}"`;
   }
 };
 
-export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string): Promise<Quote[]> => {
-  if (!apiKey) throw new Error("ChatGPT API key is missing.");
+export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string, sessionId: string): Promise<Quote[]> => {
+  if (!apiKey) throw new Error("OpenAI API key is missing.");
 
   try {
     const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
@@ -293,7 +300,7 @@ Here is the text to analyze:
 ${textContent}
 ---`;
 
-    const rawText = await callChatGptAPI(apiKey, prompt, logId);
+    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
 
     const jsonText = extractJson(rawText);
     if (!jsonText) {
@@ -348,8 +355,8 @@ ${textContent}
   }
 };
 
-export const improveQuote = async (apiKey: string, quote: Quote, personName: string, logId: string): Promise<Partial<Quote>> => {
-  if (!apiKey) throw new Error("ChatGPT API key is missing.");
+export const improveQuote = async (apiKey: string, quote: Quote, personName: string, logId: string, sessionId: string): Promise<Partial<Quote>> => {
+  if (!apiKey) throw new Error("OpenAI API key is missing.");
 
   try {
     const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
@@ -399,7 +406,12 @@ Example:
 
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callChatGptAPI(apiKey, prompt, logId);
+    const rawText = await callChatGptAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
+
+    const jsonText = extractJson(rawText);
+    if (!jsonText) {
+      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
+    }
 
     // The API is configured to return JSON, so we can parse it directly.
     let parsedResponse: {
@@ -414,10 +426,10 @@ Do not include any other text or markdown formatting outside of the JSON object.
     };
 
     try {
-      parsedResponse = JSON.parse(rawText);
+      parsedResponse = JSON.parse(jsonText);
     } catch (e) {
-      console.error("Failed to parse JSON response:", rawText);
-      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", rawText);
+      console.error("Failed to parse JSON response:", jsonText);
+      throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
     }
     
     // Return the improved quote

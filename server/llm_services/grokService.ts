@@ -44,10 +44,11 @@ const callGrokAPI = async (
   apiKey: string,
   messages: Array<{ role: string; content: string }>,
   logId: string,
+  sessionId: string,
   temperature: number = 0.7
 ): Promise<string> => {
   const prompt = messages.map(m => `### ${m.role}\n${m.content}`).join('\n\n');
-  appendLogRequestPayload(logId, { prompt });
+  appendLogRequestPayload(sessionId, logId, { prompt });
 
   const response = await fetch(`${GROK_API_BASE_URL}/chat/completions`, {
     method: 'POST',
@@ -82,15 +83,15 @@ const callGrokAPI = async (
 };
 
 export const fetchQuotesForPerson = async (
-  apiKey: string,
-  personName: string,
-  languages: string[],
-  resultCount: number,
-  existingQuotesText: string[],
-  temperature: number,
-  maxQuoteLength: number,
-  timePeriod: { description: string; startDate?: string; endDate?: string },
-  logId: string
+  apiKey: string,//1
+  personName: string,//2
+  languages: string[],//3
+  resultCount: number,//4
+  existingQuotesText: string[],//5
+  temperature: number,//6
+  maxQuoteLength: number,//7
+  timePeriod: { description: string; startDate?: string; endDate?: string },//8
+  logId: string//9
 ): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
@@ -177,7 +178,7 @@ If you cannot find a specific date, provide the publication date of the source. 
 Example format: { "quotes": [{"text": "This is the quote.", "source": "https://example.com/article", "title": "Article Title", "date": "2023-10-27", "languageCode": "en", "languageName": "English"}] }
 - Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, temperature);
+    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
 
     const jsonText = extractJson(rawText);
     if (!jsonText) {
@@ -240,7 +241,7 @@ Example format: { "quotes": [{"text": "This is the quote.", "source": "https://e
   }
 };
 
-export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string): Promise<AnalysisResult> => {
+export const analyzeQuoteText = async (apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, logId: string, sessionId: string): Promise<AnalysisResult> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
   try {
@@ -258,7 +259,7 @@ Each key must have a value that is an object with two properties:
 
 Analyze this text: "${quoteText}"`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId);
+    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
 
     const jsonText = extractJson(rawText);
     if (!jsonText) {
@@ -282,7 +283,7 @@ Analyze this text: "${quoteText}"`;
   }
 };
 
-export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string): Promise<Quote[]> => {
+export const extractQuotesFromText = async (apiKey: string, personName: string, textContent: string, logId: string, sessionId: string): Promise<Quote[]> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
   try {
@@ -308,7 +309,7 @@ Here is the text to analyze:
 ${textContent}
 ---`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId);
+    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
 
     const jsonText = extractJson(rawText);
     if (!jsonText) {
@@ -371,7 +372,8 @@ export const improveQuote = async (
   apiKey: string,
   quote: Quote,
   personName: string,
-  logId: string
+  logId: string,
+  sessionId: string,
 ): Promise<Partial<Quote>> => {
   if (!apiKey) throw new Error("Grok API key is missing.");
 
@@ -424,7 +426,7 @@ Example:
 
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
-    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId);
+    const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId);
 
     const jsonText = extractJson(rawText);
     if (!jsonText) {
