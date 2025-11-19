@@ -65,15 +65,14 @@ const App: React.FC = () => {
     handleClearQuotes,
     handleImproveQuote: improveQuote,
     handleLoadQuotes,
+    clearError,
   } = useQuotes(handleLogout);
 
   const {
     sortOrder,
     setSortOrder,
     filterCategory,
-    setFilterCategory,
     filterRating,
-    setFilterRating,
     filteredAndSortedQuotes,
   } = useQuoteFilters(quotes);
 
@@ -207,13 +206,13 @@ const App: React.FC = () => {
             >
               API Keys
             </button>
-            {user && (
+            {(
               <p className="text-gray-700 dark:text-gray-300">
                 Welcome, {user.name}
               </p>
             )}
             <div ref={googleButtonRef}></div>
-            {user && (
+            {(
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -551,8 +550,12 @@ const App: React.FC = () => {
             </div>
 
             {/* Right Panel: Results */}
-            <div className="md:col-span-2">
-              <ErrorDisplay error={error} rawApiResponseError={rawApiResponseError} />
+            <div className="md:col-span-2 space-y-6">
+              <ErrorDisplay
+                error={error}
+                rawApiResponseError={rawApiResponseError}
+                clearError={clearError}
+              />
 
               <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between">
                 <div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserInfo } from '../types';
-import { decodeJwt, shouldBypassAuth, getDefaultLocalUser } from '../utils/auth';
+import { shouldBypassAuth, getDefaultLocalUser } from '../utils/auth';
 import { GOOGLE_CLIENT_ID } from '../config/app.config';
 import api from '../utils/api';
 

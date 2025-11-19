@@ -1,4 +1,4 @@
-import { Quote, AnalysisCategory, AnalysisRating, AnalysisDetail } from '../types';
+import { Quote } from '../types';
 
 /**
  * Checks if a quote is a duplicate

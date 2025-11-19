@@ -111,7 +111,7 @@ ${quotesToExclude}
       
       const quoteExtractionInstruction = `
 ### 📜 QUOTE EXTRACTION RULES
-- Locate publicly published direct quotes by Remigijus Žemaitaitis.
+- Locate publicly published direct quotes by ${personName}.
 - For each quote, provide a maximum of 90 characters of the most significant part of the statement.
 - If more than 90 characters are essential for context, output truncated quote appended with the the text '... (read article for full quote)'.
 - In case article contains several quotes, join them with a separator string. Use ' | ' as separator string. Substantive content: ≥10 words or key factual statement.
@@ -267,7 +267,7 @@ Do not include any other text or markdown formatting outside of the JSON object.
         source: resolvedUrls[index],
       }));
 
-      return quotes;
+      return quotesWithResolvedUrls;
 
     } catch (error) {
       console.error("Error fetching quotes:", error);
