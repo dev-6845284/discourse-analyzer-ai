@@ -3,6 +3,7 @@ import { Quote, AnalysisCategory, AnalysisRating, ExportData } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { TimePeriodResult } from '../utils/timePeriod';
 import api from '../utils/api';
+import { loadFromStorage } from '../utils/localStorage';
 
 // Custom error class for JSON parsing failures from the backend
 export class JsonParsingError extends Error {
@@ -72,6 +73,7 @@ export function useQuotes(handleLogout: () => void) {
 
       try {
         const existingQuotesText = quotes.map((q) => q.text);
+        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const response = await api.post('/quotes/search', {
           model: selectedAI,
           personName,
@@ -84,6 +86,7 @@ export function useQuotes(handleLogout: () => void) {
           category: filterCategory,
           rating: filterRating,
           sortBy: sortOrder,
+          apiKeys,
         });
 
         const newQuotes = response.data;
@@ -107,11 +110,13 @@ export function useQuotes(handleLogout: () => void) {
       setRawApiResponseError(null);
 
       try {
+        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const response = await api.post('/quotes/analyze', {
           model: selectedAI,
           quoteText: quote.text,
           quoteLanguageCode: quote.languageCode,
           quoteLanguageName: quote.languageName,
+          apiKeys,
         });
         const analysis = response.data;
 
@@ -148,10 +153,12 @@ export function useQuotes(handleLogout: () => void) {
       setRawApiResponseError(null);
 
       try {
+        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const response = await api.post('/quotes/extract', {
           model: selectedAI,
           personName,
           textToExtract,
+          apiKeys,
         });
         const extractedQuotes = response.data;
 
@@ -238,10 +245,12 @@ export function useQuotes(handleLogout: () => void) {
       setRawApiResponseError(null);
 
       try {
+        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const response = await api.post('/quotes/improve', {
           model: selectedAI,
           quote,
           personName,
+          apiKeys,
         });
         const improvedQuote = response.data;
 

@@ -10,6 +10,7 @@ import ErrorDisplay from './components/results/ErrorDisplay';
 import QuoteCard from './components/QuoteCard';
 import Spinner from './components/Spinner';
 import AddQuoteModal from './components/AddQuoteModal';
+import ApiKeySettingsModal from './components/ApiKeySettingsModal';
 import { SUPPORTED_LANGUAGES } from './constants';
 import LogViewer from './components/LogViewer';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
@@ -86,6 +87,7 @@ const App: React.FC = () => {
   } = useUIState();
 
   const [logsVisible, setLogsVisible] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -183,6 +185,12 @@ const App: React.FC = () => {
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
               {logsVisible ? 'Hide Logs' : 'Show Logs'}
+            </button>
+            <button
+              onClick={() => setIsApiKeyModalOpen(true)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              API Keys
             </button>
             {user && (
               <p className="text-gray-700 dark:text-gray-300">
@@ -602,6 +610,10 @@ const App: React.FC = () => {
               onSave={handleAddQuoteManually}
             />
           )}
+          <ApiKeySettingsModal
+            isOpen={isApiKeyModalOpen}
+            onClose={() => setIsApiKeyModalOpen(false)}
+          />
         </div>
       </div>
     </div>

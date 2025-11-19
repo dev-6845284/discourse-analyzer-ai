@@ -11,14 +11,14 @@ import grokService from '../llm_services/grokService';
 import { addLogEntry, updateLogEntry, getLogs } from './logService';
 import { LlmService } from '../llm_services/LlmService';
 
-const getService = (model: string): { service: LlmService; apiKey: string } => {
+const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
     case 'gemini':
-      return { service: geminiService, apiKey: process.env.GEMINI_API_KEY! };
+      return { service: geminiService, apiKey: apiKeys?.gemini || process.env.GEMINI_API_KEY! };
     case 'chatgpt':
-      return { service: chatGptService, apiKey: process.env.CHATGPT_API_KEY! };
+      return { service: chatGptService, apiKey: apiKeys?.chatgpt || process.env.CHATGPT_API_KEY! };
     case 'grok':
-      return { service: grokService, apiKey: process.env.GROK_API_KEY! };
+      return { service: grokService, apiKey: apiKeys?.grok || process.env.GROK_API_KEY! };
     default:
       throw new Error('Invalid model specified');
   }
@@ -37,12 +37,13 @@ export const fetchQuotes = async (req: Request, res: Response) => {
     category,
     rating,
     sortOrder,
+    apiKeys,
   } = req.body;
 
   const logId = addLogEntry(req.session.id!, 'fetchQuotes', { personName, model, context, maxQuotes, languages, category, rating, sortOrder, maxQuoteLength, timePeriod });
 
   try {
-    const { service, apiKey } = getService(model);
+    const { service, apiKey } = getService(model, apiKeys);
     const quotes = await service.fetchQuotesForPerson(
       apiKey,
       personName,
@@ -74,11 +75,11 @@ export const fetchQuotes = async (req: Request, res: Response) => {
 };
 
 export const analyzeQuote = async (req: Request, res: Response) => {
-  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature } = req.body;
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys } = req.body;
   const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model });
 
   try {
-    const { service, apiKey } = getService(model);
+    const { service, apiKey } = getService(model, apiKeys);
     const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!);
     updateLogEntry(req.session.id!, logId, analysis);
     res.json(analysis);
@@ -96,11 +97,11 @@ export const analyzeQuote = async (req: Request, res: Response) => {
 };
 
 export const extractQuotes = async (req: Request, res: Response) => {
-  const { personName, textContent, model, temperature } = req.body;
+  const { personName, textContent, model, temperature, apiKeys } = req.body;
   const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, textContent, model });
 
   try {
-    const { service, apiKey } = getService(model);
+    const { service, apiKey } = getService(model, apiKeys);
     const quotes = await service.extractQuotesFromText(apiKey, personName, textContent, temperature, logId, req.session.id!);
     updateLogEntry(req.session.id!, logId, quotes);
     res.json(quotes);
@@ -118,11 +119,11 @@ export const extractQuotes = async (req: Request, res: Response) => {
 };
 
 export const improveSingleQuote = async (req: Request, res: Response) => {
-  const { quote, personName, model, temperature } = req.body;
+  const { quote, personName, model, temperature, apiKeys } = req.body;
   const logId = addLogEntry(req.session.id!, 'improveQuote', { quote, personName, model });
 
   try {
-    const { service, apiKey } = getService(model);
+    const { service, apiKey } = getService(model, apiKeys);
     const improvedQuote = await service.improveQuote(apiKey, quote, personName, temperature, logId, req.session.id!);
     updateLogEntry(req.session.id!, logId, improvedQuote);
     res.json(improvedQuote);
