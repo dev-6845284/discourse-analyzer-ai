@@ -10,10 +10,11 @@ export const isAuthenticated = (
     path: req.path,
     sessionID: req.sessionID,
     hasUser: !!req.session?.user,
-    env: process.env.NODE_ENV
+    env: process.env.NODE_ENV,
+    bypassAuth: process.env.BYPASS_AUTH
   });
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.BYPASS_AUTH === 'true') {
     return next();
   }
   if (req.session.user) {
