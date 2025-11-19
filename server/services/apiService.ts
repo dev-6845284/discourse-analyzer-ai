@@ -1,0 +1,164 @@
+import { Request, Response } from 'express';
+import {
+  Quote,
+  AnalysisResult,
+  ModelResponseError,
+  JsonParsingError,
+} from '../types';
+import geminiService from '../llm_services/geniniService';
+import chatGptService from '../llm_services/chatGptService';
+import grokService from '../llm_services/grokService';
+import { addLogEntry, updateLogEntry, getLogs } from './logService';
+import { LlmService } from '../llm_services/LlmService';
+import { postProcessResponse } from './responseProcessor';
+
+const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
+  switch (model) {
+    case 'gemini':
+      return { service: geminiService, apiKey: apiKeys?.gemini || process.env.GEMINI_API_KEY! };
+    case 'chatgpt':
+      return { service: chatGptService, apiKey: apiKeys?.chatgpt || process.env.CHATGPT_API_KEY! };
+    case 'grok':
+      return { service: grokService, apiKey: apiKeys?.grok || process.env.GROK_API_KEY! };
+    default:
+      throw new Error('Invalid model specified');
+  }
+};
+
+export const fetchQuotes = async (req: Request, res: Response) => {
+  const {
+    model,
+    personName,
+    languages,
+    maxQuotes,
+    context,
+    temperature,
+    maxQuoteLength,
+    timePeriod,
+    category,
+    rating,
+    sortOrder,
+    apiKeys,
+  } = req.body;
+
+  const logId = addLogEntry(req.session.id!, 'fetchQuotes', { personName, model, context, maxQuotes, languages, category, rating, sortOrder, maxQuoteLength, timePeriod });
+
+  try {
+    const { service, apiKey } = getService(model, apiKeys);
+    const quotes = await service.fetchQuotesForPerson(
+      apiKey,
+      personName,
+      languages,
+      maxQuotes,
+      context,
+      temperature,
+      maxQuoteLength,
+      timePeriod,
+      category,
+      rating,
+      sortOrder,
+      logId,
+      req.session.id!,
+    );
+    updateLogEntry(req.session.id!, logId, quotes);
+    res.json(quotes);
+  } catch (error: any) {
+    console.error('Error fetching quotes:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to fetch quotes' });
+  }
+};
+
+export const analyzeQuote = async (req: Request, res: Response) => {
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys } = req.body;
+  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model });
+
+  try {
+    const { service, apiKey } = getService(model, apiKeys);
+    const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!);
+    updateLogEntry(req.session.id!, logId, analysis);
+    res.json(analysis);
+  } catch (error: any) {
+    console.error('Error analyzing quote:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+     if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to analyze quote' });
+  }
+};
+
+export const extractQuotes = async (req: Request, res: Response) => {
+  const { personName, textContent, model, temperature, apiKeys, source, title, date, languageCode, languageName } = req.body;
+  const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, textContent, model });
+
+  try {
+    const { service, apiKey } = getService(model, apiKeys);
+    const quotes = await service.extractQuotesFromText(apiKey, personName, textContent, temperature, logId, req.session.id!);
+
+    const enrichedQuotes = postProcessResponse('extractQuotesFromText', quotes, {
+      source,
+      title,
+      date,
+      languageCode,
+      languageName
+    });
+
+    updateLogEntry(req.session.id!, logId, enrichedQuotes);
+    res.json(enrichedQuotes);
+  } catch (error: any) {
+    console.error('Error extracting quotes:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to extract quotes' });
+  }
+};
+
+export const improveSingleQuote = async (req: Request, res: Response) => {
+  const { quote, personName, model, temperature, apiKeys } = req.body;
+  const logId = addLogEntry(req.session.id!, 'improveQuote', { quote, personName, model });
+
+  try {
+    const { service, apiKey } = getService(model, apiKeys);
+    const improvedQuote = await service.improveQuote(apiKey, quote, personName, temperature, logId, req.session.id!);
+    updateLogEntry(req.session.id!, logId, improvedQuote);
+    res.json(improvedQuote);
+  } catch (error: any) {
+    console.error('Error improving quote:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to improve quote' });
+  }
+};
+
+export const getApiLogs = (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+  try {
+    const logsData = getLogs(req.session.id!, page, pageSize);
+    res.json(logsData);
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ message: 'Failed to fetch logs' });
+  }
+};
