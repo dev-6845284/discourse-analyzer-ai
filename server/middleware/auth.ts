@@ -5,6 +5,14 @@ export const isAuthenticated = (
   res: Response,
   next: NextFunction
 ) => {
+  // Log session details for debugging
+  console.log('Auth Check:', {
+    path: req.path,
+    sessionID: req.sessionID,
+    hasUser: !!req.session?.user,
+    env: process.env.NODE_ENV
+  });
+
   if (process.env.NODE_ENV === 'development') {
     return next();
   }

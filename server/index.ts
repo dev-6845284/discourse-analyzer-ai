@@ -14,6 +14,9 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Trust proxy is required for secure cookies behind Vercel/Nginx proxies
+app.set('trust proxy', 1);
+
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 app.use(helmet());
