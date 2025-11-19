@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import session from 'express-session';
+import helmet from 'helmet';
+import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import path from 'path';
 import { isAuthenticated } from './middleware/auth';
@@ -14,10 +16,14 @@ const port = process.env.PORT || 3001;
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+app.use(helmet());
 app.use(express.json());
+
+const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: true,
     cookie: {
