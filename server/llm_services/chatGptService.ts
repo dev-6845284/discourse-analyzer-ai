@@ -460,7 +460,8 @@ Return only the JSON object.`;
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
-      const prompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
+      // Step 1: Analyze and Extract with Search
+      const extractionPrompt = `Analyze the following text to extract quotes by "${personName}" and identify the language of each quote.
 
 The provided text can be one of two things:
 1. A block of text (like an article) containing one or more statements explicitly attributed to "${personName}".
@@ -470,24 +471,58 @@ Your task is to identify which case it is and act accordingly.
 - If the text is a block of text, extract all statements explicitly attributed to "${personName}".
 - If the text appears to be a direct quote by "${personName}", return the text itself as the single quote.
 
-Return the response as a single, valid JSON object with a key "quotes". The value of "quotes" should be an array of objects.
-Each object must have three properties: "text" (the full quote), "languageCode" (e.g., "en", "lt"), and "languageName" (e.g., "English", "Lithuanian").
-If you find no quotes, return an empty array.
-Do not include any other text or markdown formatting outside of the JSON object.
-
-Example: { "quotes": [ { "text": "...", "languageCode": "fr", "languageName": "French" } ] }
+For each identified quote, determine the language (name and code).
 
 Here is the text to analyze:
 ---
 ${textContent}
 ---`;
 
-      const rawText = await callChatGptAPI(
+      const extractionNotes = await callChatGptAPI(
         apiKey,
-        [{ role: 'user', content: prompt }],
+        [{ role: 'user', content: extractionPrompt }],
         logId,
         sessionId,
-        { temperature }
+        {
+          temperature,
+          useSearch: true,
+          enforceJson: false,
+          metadata: { stage: 'extraction', task: 'extractQuotesFromText' }
+        }
+      );
+
+      if (!extractionNotes || !extractionNotes.trim()) {
+        throw new Error("The extraction stage returned empty content.");
+      }
+
+      // Step 2: Format to JSON
+      const formattingPrompt = `You are a structured data formatter. Convert the extraction notes below into a strict JSON payload.
+
+### Output Requirements
+- Return exactly one JSON object with a key "quotes".
+- The value of "quotes" should be an array of objects.
+- Each object must have three properties: "text" (the full quote), "languageCode" (e.g., "en", "lt"), and "languageName" (e.g., "English", "Lithuanian").
+- If no quotes are found, return an empty array.
+
+### Extraction Notes
+<<<
+${extractionNotes}
+>>>
+
+Return only the JSON object.`;
+
+      const rawText = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: formattingPrompt }],
+        logId,
+        sessionId,
+        {
+          temperature: 0,
+          useSearch: false,
+          enforceJson: true,
+          model: CHATGPT_FORMATTER_MODEL,
+          metadata: { stage: 'formatting', task: 'extractQuotesFromText' }
+        }
       );
 
       const jsonText = extractJson(rawText);

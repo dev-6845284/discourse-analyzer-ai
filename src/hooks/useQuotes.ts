@@ -157,7 +157,7 @@ export function useQuotes(handleLogout: () => void) {
         const response = await api.post('/quotes/extract', {
           model: selectedAI,
           personName,
-          textToExtract,
+          textContent: textToExtract,
           apiKeys,
         });
         const extractedQuotes = response.data;
