@@ -25,9 +25,24 @@ async function connectToDatabase() {
   }
 
   if (!cached.promise) {
+    let dbName = 'discourse-analyzer';
+    try {
+      const url = new URL(MONGODB_URI!);
+      if (url.pathname && url.pathname.length > 1) {
+        dbName = url.pathname.substring(1);
+      }
+    } catch (e) {
+      console.warn('Could not parse database name from URI, using default:', dbName);
+    }
+
+    if (process.env.DB_SCHEMA_SUFFIX) {
+      dbName += process.env.DB_SCHEMA_SUFFIX;
+    }
+
     const opts = {
       bufferCommands: false,
       serverSelectionTimeoutMS: parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '5000', 10),
+      dbName,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {

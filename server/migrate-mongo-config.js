@@ -13,6 +13,10 @@ try {
   console.warn("Could not parse database name from URI, using default:", databaseName);
 }
 
+if (process.env.DB_SCHEMA_SUFFIX) {
+  databaseName += process.env.DB_SCHEMA_SUFFIX;
+}
+
 const config = {
   mongodb: {
     url: uri,
