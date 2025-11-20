@@ -17,7 +17,15 @@ export const createPerson = async (req: Request, res: Response) => {
       description,
     });
 
-    await person.save();
+    const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
+
+    await Promise.race([
+      person.save(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Save operation timed out')), timeout)
+      ),
+    ]);
+
     res.status(201).json(person);
   } catch (error: any) {
     console.error('Error creating person:', error);
@@ -40,7 +48,13 @@ export const getPeople = async (req: Request, res: Response) => {
       };
     }
 
-    const people = await Person.find(query).sort({ name: 1 }).limit(50);
+    const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
+
+    const people = await Person.find(query)
+      .sort({ name: 1 })
+      .limit(50)
+      .maxTimeMS(timeout);
+
     res.json(people);
   } catch (error: any) {
     console.error('Error fetching people:', error);
