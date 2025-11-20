@@ -21,6 +21,17 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 app.use(helmet());
 app.use(express.json());
 
+// Ensure database connection for every request (serverless friendly)
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
 const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 app.use(
@@ -124,12 +135,16 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(port, async () => {
-  try {
-    await connectToDatabase();
-    console.log(`Server is running on http://localhost:${port}`);
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-});
+if (require.main === module) {
+  app.listen(port, async () => {
+    try {
+      await connectToDatabase();
+      console.log(`Server is running on http://localhost:${port}`);
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  });
+}
+
+export default app;
