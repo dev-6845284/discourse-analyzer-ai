@@ -15,6 +15,8 @@ import { SUPPORTED_LANGUAGES } from './constants';
 import LogViewer from './components/LogViewer';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
 import { ExportData } from './types';
+import { PersonManager } from './components/people/PersonManager';
+import { PersonSelector } from './components/people/PersonSelector';
 
 const App: React.FC = () => {
   // Custom hooks
@@ -88,6 +90,7 @@ const App: React.FC = () => {
   const [logsVisible, setLogsVisible] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'extract'>('add');
+  const [activeTab, setActiveTab] = useState<'search' | 'people'>('search');
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -285,6 +288,34 @@ const App: React.FC = () => {
                 id="controls-panel"
                 className={`${isFormCollapsed ? 'hidden' : 'block'} md:block`}
               >
+                <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
+                  <button
+                    onClick={() => setActiveTab('search')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 'search'
+                        ? 'bg-cyan-600 text-white shadow'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    Search
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('people')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 'people'
+                        ? 'bg-cyan-600 text-white shadow'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    People
+                  </button>
+                </div>
+
+                {activeTab === 'people' ? (
+                  <div className="bg-gray-100 rounded-lg h-[calc(100vh-200px)] overflow-hidden text-gray-900">
+                    <PersonManager />
+                  </div>
+                ) : (
                 <div className="space-y-6">
                   {/* Section 1: Search */}
                   <div className="p-4 bg-gray-800/50 rounded-lg">
@@ -333,13 +364,9 @@ const App: React.FC = () => {
                       >
                         Person's Name
                       </label>
-                      <input
-                        type="text"
-                        id="personName"
+                      <PersonSelector
                         value={personName}
-                        onChange={(e) => setPersonName(e.target.value)}
-                        className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-                        placeholder="e.g., Albert Einstein"
+                        onChange={setPersonName}
                       />
                     </div>
 
@@ -546,6 +573,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                )}
               </div>
             </div>
 

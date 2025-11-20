@@ -83,3 +83,14 @@ export interface ExportData {
   personName: string;
   quotes: Quote[];
 }
+
+export interface Person {
+  _id: string;
+  name: string;
+  firstname?: string;
+  surname?: string;
+  aliases: string[];
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
