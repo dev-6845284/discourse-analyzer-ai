@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import session from 'express-session';
 import helmet from 'helmet';
 import crypto from 'crypto';
@@ -8,8 +8,7 @@ import { OAuth2Client } from 'google-auth-library';
 import path from 'path';
 import { isAuthenticated } from './middleware/auth';
 import apiRoutes from './routes/api';
-
-dotenv.config();
+import connectToDatabase from './db';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -125,6 +124,12 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen(port, async () => {
+  try {
+    await connectToDatabase();
+    console.log(`Server is running on http://localhost:${port}`);
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 });

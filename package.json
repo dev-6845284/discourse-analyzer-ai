@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run migrate:deploy && vite build",
+    "migrate:deploy": "cd server && npm install && npm run migrate:up",
     "preview": "vite preview"
   },
   "dependencies": {
