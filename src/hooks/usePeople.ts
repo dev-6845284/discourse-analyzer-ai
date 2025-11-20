@@ -12,7 +12,7 @@ export function usePeople() {
     setError(null);
     try {
       const response = await api.get('/people', { params: { search } });
-      setPeople(response.data);
+      setPeople(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch people');
     } finally {
@@ -35,11 +35,42 @@ export function usePeople() {
     }
   }, []);
 
+  const updatePerson = useCallback(async (id: string, personData: Partial<Person>) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.put(`/people/${id}`, personData);
+      setPeople((prev) => prev.map(p => p._id === id ? response.data : p));
+      return response.data;
+    } catch (err: any) {
+      setError(err.message || 'Failed to update person');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const deletePerson = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await api.delete(`/people/${id}`);
+      setPeople((prev) => prev.filter(p => p._id !== id));
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete person');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     people,
     isLoading,
     error,
     fetchPeople,
     createPerson,
+    updatePerson,
+    deletePerson,
   };
 }

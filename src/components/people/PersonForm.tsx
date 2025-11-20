@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { Person } from '../../types';
 
 interface PersonFormProps {
+  initialData?: Person;
   onSubmit: (data: Partial<Person>) => Promise<void>;
   onCancel: () => void;
 }
 
-export const PersonForm: React.FC<PersonFormProps> = ({ onSubmit, onCancel }) => {
+export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    firstname: '',
-    surname: '',
-    aliases: '',
-    description: '',
+    name: initialData?.name || '',
+    firstname: initialData?.firstname || '',
+    surname: initialData?.surname || '',
+    aliases: initialData?.aliases?.join(', ') || '',
+    description: initialData?.description || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,7 +25,9 @@ export const PersonForm: React.FC<PersonFormProps> = ({ onSubmit, onCancel }) =>
         ...formData,
         aliases: formData.aliases.split(',').map(a => a.trim()).filter(a => a),
       });
-      setFormData({ name: '', firstname: '', surname: '', aliases: '', description: '' });
+      if (!initialData) {
+        setFormData({ name: '', firstname: '', surname: '', aliases: '', description: '' });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -93,7 +96,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ onSubmit, onCancel }) =>
           disabled={isSubmitting}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Saving...' : 'Save Person'}
+          {isSubmitting ? 'Saving...' : (initialData ? 'Update Person' : 'Save Person')}
         </button>
       </div>
     </form>

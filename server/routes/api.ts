@@ -17,5 +17,7 @@ router.get('/logs', (req, res) => apiService.getApiLogs(req, res));
 // Person routes
 router.get('/people', (req, res) => personService.getPeople(req, res));
 router.post('/people', (req, res) => personService.createPerson(req, res));
+router.put('/people/:id', (req, res) => personService.updatePerson(req, res));
+router.delete('/people/:id', (req, res) => personService.deletePerson(req, res));
 
 export default router;

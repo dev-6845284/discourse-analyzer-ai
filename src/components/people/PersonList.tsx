@@ -1,22 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Person } from '../../types';
-import { usePeople } from '../../hooks/usePeople';
 
 interface PersonListProps {
+  people: Person[];
+  isLoading: boolean;
+  error?: string | null;
+  onSearch: (term: string) => void;
   onSelect?: (person: Person) => void;
+  onEdit?: (person: Person) => void;
+  onDelete?: (person: Person) => void;
 }
 
-export const PersonList: React.FC<PersonListProps> = ({ onSelect }) => {
-  const { people, isLoading, error, fetchPeople } = usePeople();
+export const PersonList: React.FC<PersonListProps> = ({ 
+  people = [], 
+  isLoading, 
+  error,
+  onSearch,
+  onSelect, 
+  onEdit, 
+  onDelete 
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    fetchPeople();
-  }, [fetchPeople]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchPeople(searchTerm);
+    onSearch(searchTerm);
   };
 
   return (
@@ -44,16 +52,38 @@ export const PersonList: React.FC<PersonListProps> = ({ onSelect }) => {
         {people.map((person) => (
           <div
             key={person._id}
-            className="p-4 bg-white rounded shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
-            onClick={() => onSelect && onSelect(person)}
+            className="p-4 bg-white rounded shadow hover:shadow-md transition-shadow border border-gray-200 flex justify-between items-start"
           >
-            <h3 className="font-bold text-lg">{person.name}</h3>
-            {person.aliases.length > 0 && (
-              <p className="text-sm text-gray-500">Aliases: {person.aliases.join(', ')}</p>
-            )}
-            {person.description && (
-              <p className="text-sm text-gray-600 mt-1">{person.description}</p>
-            )}
+            <div 
+              className="flex-1 cursor-pointer"
+              onClick={() => onSelect && onSelect(person)}
+            >
+              <h3 className="font-bold text-lg">{person.name}</h3>
+              {person.aliases.length > 0 && (
+                <p className="text-sm text-gray-500">Aliases: {person.aliases.join(', ')}</p>
+              )}
+              {person.description && (
+                <p className="text-sm text-gray-600 mt-1">{person.description}</p>
+              )}
+            </div>
+            <div className="flex gap-2 ml-4">
+              {onEdit && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onEdit(person); }}
+                  className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded border border-blue-200"
+                >
+                  Edit
+                </button>
+              )}
+              {onDelete && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onDelete(person); }}
+                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded border border-red-200"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         ))}
         {!isLoading && people.length === 0 && (

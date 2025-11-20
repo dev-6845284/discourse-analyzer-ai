@@ -61,3 +61,55 @@ export const getPeople = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch people', details: error.message });
   }
 };
+
+export const updatePerson = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, firstname, surname, aliases, description } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
+
+    const person = await Person.findByIdAndUpdate(
+      id,
+      {
+        name,
+        firstname,
+        surname,
+        aliases: aliases || [],
+        description,
+      },
+      { new: true, runValidators: true }
+    ).maxTimeMS(timeout);
+
+    if (!person) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    res.json(person);
+  } catch (error: any) {
+    console.error('Error updating person:', error);
+    res.status(500).json({ error: 'Failed to update person', details: error.message });
+  }
+};
+
+export const deletePerson = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
+    
+    const person = await Person.findByIdAndDelete(id).maxTimeMS(timeout);
+
+    if (!person) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    res.json({ message: 'Person deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting person:', error);
+    res.status(500).json({ error: 'Failed to delete person', details: error.message });
+  }
+};
