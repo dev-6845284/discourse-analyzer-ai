@@ -14,4 +14,8 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export const saveQuote = async (quoteData: any) => {
+  return api.post('/quotes', quoteData);
+};
+
 export default api;

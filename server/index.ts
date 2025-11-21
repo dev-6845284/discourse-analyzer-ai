@@ -58,7 +58,13 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
+
+      // Check if origin is in allowedOrigins or is a subdomain of pasitikrink.org
+      const isAllowed =
+        allowedOrigins.indexOf(origin) !== -1 ||
+        /^https:\/\/([a-zA-Z0-9-]+\.)*pasitikrink\.org$/.test(origin);
+
+      if (!isAllowed) {
         const msg =
           'The CORS policy for this site does not ' +
           'allow access from the specified Origin.';

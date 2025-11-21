@@ -14,7 +14,8 @@ import ApiKeySettingsModal from './components/ApiKeySettingsModal';
 import { SUPPORTED_LANGUAGES } from './constants';
 import LogViewer from './components/LogViewer';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
-import { ExportData } from './types';
+import { saveQuote } from './utils/api';
+import { ExportData, Quote } from './types';
 import { PersonManager } from './components/people/PersonManager';
 import { PersonSelector } from './components/people/PersonSelector';
 
@@ -91,6 +92,26 @@ const App: React.FC = () => {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'extract'>('add');
   const [activeTab, setActiveTab] = useState<'search' | 'people'>('search');
+
+  const handleSaveQuote = async (quote: Quote) => {
+    try {
+      await saveQuote({
+        text: quote.text,
+        personName: personName,
+        source: quote.source,
+        date: quote.date,
+        context: quote.title, // Using title as context for now if available
+        metadata: {
+          languageCode: quote.languageCode,
+          analysis: quote.analysis
+        }
+      });
+      // Optional: Show success message
+    } catch (err) {
+      console.error('Failed to save quote:', err);
+      // Optional: Show error message
+    }
+  };
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -640,6 +661,7 @@ const App: React.FC = () => {
                       quote={quote}
                       onAnalyze={handleAnalyzeQuote}
                       onImprove={handleImproveQuote}
+                      onSave={handleSaveQuote}
                       onLanguageChange={handleUpdateQuoteLanguage}
                       isApiKeySet={true}
                     />

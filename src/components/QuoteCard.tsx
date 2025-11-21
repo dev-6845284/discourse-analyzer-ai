@@ -8,12 +8,20 @@ interface QuoteCardProps {
   quote: Quote;
   onAnalyze: (quote: Quote) => void;
   onImprove: (quote: Quote) => void;
+  onSave: (quote: Quote) => void;
   onLanguageChange: (quoteId: string, newLanguageCode: string) => void;
   isApiKeySet: boolean;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onLanguageChange, isApiKeySet }) => {
+const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSave, onLanguageChange, isApiKeySet }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSave = () => {
+    onSave(quote);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
 
   return (
     <div className={`relative bg-gray-800 rounded-xl shadow-lg transition-all duration-300 hover:bg-gray-700/50 hover:shadow-cyan-500/10 ${isCollapsed ? 'py-4 px-6' : 'p-6'}`}>
@@ -61,25 +69,48 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onLa
           
           {quote.analysis && <AnalysisReport analysis={quote.analysis} />}
 
-          <div className="mt-4 pt-4 border-t border-gray-700/50">
+          <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
             <button
               onClick={() => onAnalyze(quote)}
               disabled={!isApiKeySet || quote.isAnalyzing}
-              className="w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-              title={!isApiKeySet ? "Please set your API key in the control panel" : ""}
+              className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!isApiKeySet ? "Please set your API key" : (quote.analysis ? 'Analyze Again' : 'Analyze Quote')}
             >
-              {quote.isAnalyzing ? <Spinner /> : (quote.analysis ? 'Analyze Again' : 'Analyze Quote')}
+              {quote.isAnalyzing ? <Spinner /> : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              )}
             </button>
-          </div>
-          
-          <div className="mt-3 pt-3 border-t border-gray-700/50">
+
             <button
               onClick={() => onImprove(quote)}
               disabled={!isApiKeySet || quote.isImproving}
-              className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-              title={!isApiKeySet ? "Please set your API key in the control panel" : "Improve this quote by finding the full context from the source"}
+              className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!isApiKeySet ? "Please set your API key" : "Improve quote context"}
             >
-              {quote.isImproving ? <Spinner /> : '🔍 Improve Quote'}
+              {quote.isImproving ? <Spinner /> : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={handleSave}
+              disabled={isSaved}
+              className={`p-2 rounded-lg transition-colors ${isSaved ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+              title="Save to database"
+            >
+              {isSaved ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+              )}
             </button>
           </div>
         </>
