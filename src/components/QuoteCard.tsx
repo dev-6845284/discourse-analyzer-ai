@@ -11,9 +11,10 @@ interface QuoteCardProps {
   onSave: (quote: Quote) => void;
   onLanguageChange: (quoteId: string, newLanguageCode: string) => void;
   isApiKeySet: boolean;
+  hideSaveButton?: boolean;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSave, onLanguageChange, isApiKeySet }) => {
+const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSave, onLanguageChange, isApiKeySet, hideSaveButton }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -96,13 +97,14 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
               )}
             </button>
 
+            {!hideSaveButton && (
             <button
               onClick={handleSave}
-              disabled={isSaved}
-              className={`p-2 rounded-lg transition-colors ${isSaved ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
-              title="Save to database"
+              disabled={isSaved || quote.isStored}
+              className={`p-2 rounded-lg transition-colors ${isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+              title={isSaved || quote.isStored ? "Saved" : "Save to database"}
             >
-              {isSaved ? (
+              {isSaved || quote.isStored ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -112,6 +114,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
                 </svg>
               )}
             </button>
+            )}
           </div>
         </>
       )}

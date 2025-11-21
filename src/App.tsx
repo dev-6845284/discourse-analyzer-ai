@@ -15,9 +15,10 @@ import { SUPPORTED_LANGUAGES } from './constants';
 import LogViewer from './components/LogViewer';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
 import { saveQuote } from './utils/api';
-import { ExportData, Quote } from './types';
+import { ExportData, Quote, Person } from './types';
 import { PersonManager } from './components/people/PersonManager';
 import { PersonSelector } from './components/people/PersonSelector';
+import StoredQuotes from './components/StoredQuotes';
 
 const App: React.FC = () => {
   // Custom hooks
@@ -69,6 +70,7 @@ const App: React.FC = () => {
     handleImproveQuote: improveQuote,
     handleLoadQuotes,
     clearError,
+    markQuoteAsStored,
   } = useQuotes(handleLogout);
 
   const {
@@ -92,6 +94,8 @@ const App: React.FC = () => {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'extract'>('add');
   const [activeTab, setActiveTab] = useState<'search' | 'people'>('search');
+  const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   const handleSaveQuote = async (quote: Quote) => {
     try {
@@ -106,6 +110,7 @@ const App: React.FC = () => {
           analysis: quote.analysis
         }
       });
+      markQuoteAsStored(quote.id);
       // Optional: Show success message
     } catch (err) {
       console.error('Failed to save quote:', err);
@@ -143,6 +148,7 @@ const App: React.FC = () => {
 
   // Wrapped handlers
   const handleSearch = () => {
+    setResultsTab('new');
     searchQuotes(
       selectedAI,
       personName,
@@ -274,9 +280,6 @@ const App: React.FC = () => {
                     Import
                     <input type="file" className="hidden" accept=".json" onChange={handleImport} />
                   </label>
-                  <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-white">
-                    Logout
-                  </button>
                 </div>
               </div>
 
@@ -334,7 +337,12 @@ const App: React.FC = () => {
 
                 {activeTab === 'people' ? (
                   <div className="bg-gray-100 rounded-lg h-[calc(100vh-200px)] overflow-hidden text-gray-900">
-                    <PersonManager />
+                    <PersonManager 
+                      onSelectPerson={(person) => {
+                        setSelectedPerson(person);
+                        setResultsTab('stored');
+                      }}
+                    />
                   </div>
                 ) : (
                 <div className="space-y-6">
@@ -600,6 +608,51 @@ const App: React.FC = () => {
 
             {/* Right Panel: Results */}
             <div className="md:col-span-2 space-y-6">
+              <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
+                <button
+                  onClick={() => setResultsTab('new')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                    resultsTab === 'new'
+                      ? 'bg-cyan-600 text-white shadow'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                >
+                  Search Results
+                </button>
+                <button
+                  onClick={() => setResultsTab('stored')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                    resultsTab === 'stored'
+                      ? 'bg-cyan-600 text-white shadow'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                >
+                  Stored Quotes
+                </button>
+              </div>
+
+              {resultsTab === 'stored' ? (
+                <div className="space-y-4">
+                  {selectedPerson && (
+                    <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
+                      <span className="text-gray-300">Filtered by: <strong>{selectedPerson.name}</strong></span>
+                      <button
+                        onClick={() => setSelectedPerson(null)}
+                        className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
+                      >
+                        Clear Filter
+                      </button>
+                    </div>
+                  )}
+                  <StoredQuotes
+                    selectedPerson={selectedPerson}
+                    onAnalyze={(quote) => analyzeQuote(quote, selectedAI)}
+                    onImprove={(quote) => improveQuote(quote, selectedAI, quote.personName || selectedPerson?.name || personName)}
+                    isApiKeySet={!!user}
+                  />
+                </div>
+              ) : (
+                <>
               <ErrorDisplay
                 error={error}
                 rawApiResponseError={rawApiResponseError}
@@ -667,6 +720,8 @@ const App: React.FC = () => {
                     />
                   ))}
                 </div>
+              )}
+              </>
               )}
             </div>
           </main>

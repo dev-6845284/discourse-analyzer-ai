@@ -233,6 +233,14 @@ export function useQuotes(handleLogout: () => void) {
     setQuotes([]);
   }, []);
 
+  const markQuoteAsStored = useCallback((quoteId: string) => {
+    setQuotes((prevQuotes) =>
+      prevQuotes.map((q) =>
+        q.id === quoteId ? { ...q, isStored: true } : q
+      )
+    );
+  }, []);
+
   const handleImproveQuote = useCallback(
     async (quote: Quote, selectedAI: string, personName: string) => {
       if (!personName) {
@@ -288,5 +296,6 @@ export function useQuotes(handleLogout: () => void) {
     handleImproveQuote,
     clearError,
     handleLoadQuotes,
+    markQuoteAsStored,
   };
 }

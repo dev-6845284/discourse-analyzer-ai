@@ -4,7 +4,11 @@ import { PersonForm } from './PersonForm';
 import { usePeople } from '../../hooks/usePeople';
 import { Person } from '../../types';
 
-export const PersonManager: React.FC = () => {
+interface PersonManagerProps {
+  onSelectPerson?: (person: Person) => void;
+}
+
+export const PersonManager: React.FC<PersonManagerProps> = ({ onSelectPerson }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const { people, isLoading, error, createPerson, updatePerson, deletePerson, fetchPeople } = usePeople();
@@ -62,6 +66,7 @@ export const PersonManager: React.FC = () => {
           onSearch={fetchPeople}
           onEdit={setEditingPerson}
           onDelete={handleDelete}
+          onSelect={onSelectPerson}
         />
       )}
     </div>

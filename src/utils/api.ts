@@ -18,4 +18,9 @@ export const saveQuote = async (quoteData: any) => {
   return api.post('/quotes', quoteData);
 };
 
+export const getStoredQuotes = async (personId?: string) => {
+  const params = personId ? { personId } : {};
+  return api.get('/quotes', { params });
+};
+
 export default api;

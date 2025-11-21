@@ -45,3 +45,23 @@ export const saveQuote = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to save quote', details: error.message });
   }
 };
+
+export const getQuotes = async (req: Request, res: Response) => {
+  try {
+    const { personId } = req.query;
+    const query: any = {};
+
+    if (personId) {
+      query.person = personId;
+    }
+
+    const quotes = await Quote.find(query)
+      .populate('person')
+      .sort({ createdAt: -1 });
+
+    res.json(quotes);
+  } catch (error: any) {
+    console.error('Error fetching quotes:', error);
+    res.status(500).json({ error: 'Failed to fetch quotes', details: error.message });
+  }
+};

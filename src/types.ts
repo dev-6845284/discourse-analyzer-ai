@@ -30,6 +30,8 @@ export interface Quote {
   analysis?: AnalysisResult;
   isAnalyzing?: boolean;
   isImproving?: boolean;
+  personName?: string;
+  isStored?: boolean;
 }
 
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
