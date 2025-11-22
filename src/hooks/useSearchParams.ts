@@ -5,7 +5,7 @@ import { DEFAULT_SEARCH_PARAMS, DEFAULT_AI_PROVIDER } from '../config/app.config
 export function useSearchParams() {
   const [personName, setPersonName] = useState<string>('');
   const [selectedAI, setSelectedAI] = useState<string>(DEFAULT_AI_PROVIDER);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['lt']);
   const [resultCount, setResultCount] = useState<number>(DEFAULT_SEARCH_PARAMS.resultCount);
   const [temperature, setTemperature] = useState<number>(DEFAULT_SEARCH_PARAMS.temperature);
   const [maxQuoteLength, setMaxQuoteLength] = useState<number>(DEFAULT_SEARCH_PARAMS.maxQuoteLength);
