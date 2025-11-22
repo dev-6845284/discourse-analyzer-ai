@@ -39,6 +39,7 @@ export interface UserInfo {
   email: string;
   name: string;
   picture?: string;
+  role?: string;
 }
 
 export interface ExportData {
