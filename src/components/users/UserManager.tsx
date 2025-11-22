@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';
-import { UserList } from './UserList';
-import { UserForm } from './UserForm';
-import { PasswordModal } from './PasswordModal';
+import { UserList } from './UserList.tsx';
+import { UserForm } from './UserForm.tsx';
+import { PasswordModal } from './PasswordModal.tsx';
 import Spinner from '../Spinner';
 
 export const UserManager: React.FC = () => {
