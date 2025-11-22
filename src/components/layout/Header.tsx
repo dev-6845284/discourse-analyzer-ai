@@ -10,6 +10,7 @@ interface HeaderProps {
   setIsApiKeyModalOpen: (isOpen: boolean) => void;
   googleButtonRef: React.RefObject<HTMLDivElement>;
   handleLogout: () => void;
+  onChangePassword: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   setIsApiKeyModalOpen,
   googleButtonRef,
   handleLogout,
+  onChangePassword,
 }) => {
   return (
     <header className="flex justify-between items-center mb-6">
@@ -46,6 +48,14 @@ export const Header: React.FC<HeaderProps> = ({
         >
           API Keys
         </button>
+        {user._id && (
+          <button
+            onClick={onChangePassword}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Change Password
+          </button>
+        )}
         <p className="text-gray-700 dark:text-gray-300">Welcome, {user.name}</p>
         <div ref={googleButtonRef}></div>
         <button

@@ -77,10 +77,19 @@ export type GroundingChunk = {
 };
 
 export interface UserInfo {
+  _id?: string;
   email: string;
   name: string;
   picture?: string;
   role?: string;
+}
+
+export interface User {
+  _id: string;
+  alias: string;
+  email: string;
+  role: 'admin' | 'editor' | 'moderator' | 'viewer';
+  createdAt: string;
 }
 
 export interface ExportData {

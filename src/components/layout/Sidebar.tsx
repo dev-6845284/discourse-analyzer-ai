@@ -3,11 +3,12 @@ import React from 'react';
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  activeTab: 'search' | 'people';
-  onTabChange: (tab: 'search' | 'people') => void;
+  activeTab: 'search' | 'people' | 'users';
+  onTabChange: (tab: 'search' | 'people' | 'users') => void;
   onExport: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
   children: React.ReactNode;
+  userRole?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -18,6 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onExport,
   onImport,
   children,
+  userRole,
 }) => {
   return (
     <div className="md:col-span-1 p-6 bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto">
@@ -98,6 +100,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             People
           </button>
+          {userRole === 'admin' && (
+            <button
+              onClick={() => onTabChange('users')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'users'
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              Users
+            </button>
+          )}
         </div>
         {children}
       </div>

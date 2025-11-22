@@ -13,6 +13,8 @@ import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
 import { saveQuote } from './utils/api';
 import { ExportData, Quote, Person } from './types';
 import { PersonManager } from './components/people/PersonManager';
+import { UserManager } from './components/users/UserManager';
+import { PasswordModal } from './components/users/PasswordModal';
 import StoredQuotes from './components/StoredQuotes';
 
 // New Components
@@ -24,7 +26,7 @@ import { SearchResults } from './components/results/SearchResults';
 
 const App: React.FC = () => {
   // Custom hooks
-  const { user, loginError, googleButtonRef, handleLogout } = useAuth();
+  const { user, loginError, googleButtonRef, handleLogout, loginWithPassword } = useAuth();
 
   const {
     personName,
@@ -96,8 +98,9 @@ const App: React.FC = () => {
 
   const [logsVisible, setLogsVisible] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'extract'>('add');
-  const [activeTab, setActiveTab] = useState<'search' | 'people'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'people' | 'users'>('search');
   const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
@@ -204,11 +207,19 @@ const App: React.FC = () => {
     openAddModal();
   };
 
+  const openChangePasswordModal = () => {
+    setIsChangePasswordModalOpen(true);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
         <div className="container mx-auto p-4 md:p-8">
-          <LoginScreen googleButtonRef={googleButtonRef} loginError={loginError} />
+          <LoginScreen 
+            googleButtonRef={googleButtonRef} 
+            loginError={loginError} 
+            onLogin={loginWithPassword}
+          />
         </div>
       </div>
     );
@@ -217,18 +228,17 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
       <div className="container mx-auto p-4 md:p-6 lg:p-8">
-        <Header
-          user={user}
-          isFormCollapsed={isFormCollapsed}
-          toggleFormCollapsed={toggleFormCollapsed}
-          logsVisible={logsVisible}
-          setLogsVisible={setLogsVisible}
-          setIsApiKeyModalOpen={setIsApiKeyModalOpen}
-          googleButtonRef={googleButtonRef}
-          handleLogout={handleLogout}
-        />
-
-        <LogViewer logsVisible={logsVisible} />
+          <Header
+            user={user}
+            isFormCollapsed={isFormCollapsed}
+            toggleFormCollapsed={toggleFormCollapsed}
+            logsVisible={logsVisible}
+            setLogsVisible={setLogsVisible}
+            setIsApiKeyModalOpen={setIsApiKeyModalOpen}
+            googleButtonRef={googleButtonRef}
+            handleLogout={handleLogout}
+            onChangePassword={openChangePasswordModal}
+          />        <LogViewer logsVisible={logsVisible} />
 
         <div
           className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 overflow-hidden ${
@@ -243,6 +253,7 @@ const App: React.FC = () => {
               onTabChange={setActiveTab}
               onExport={handleExport}
               onImport={handleImport}
+              userRole={user.role}
             >
               {activeTab === 'people' ? (
                 <div className="bg-gray-100 rounded-lg h-[calc(100vh-200px)] overflow-hidden text-gray-900">
@@ -252,6 +263,10 @@ const App: React.FC = () => {
                       setResultsTab('stored');
                     }}
                   />
+                </div>
+              ) : activeTab === 'users' ? (
+                <div className="text-gray-400 text-sm text-center mt-4">
+                  Manage system users, roles and passwords.
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -300,80 +315,86 @@ const App: React.FC = () => {
 
             {/* Right Panel: Results */}
             <div className="md:col-span-2 space-y-6">
-              <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
-                <button
-                  onClick={() => setResultsTab('new')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                    resultsTab === 'new'
-                      ? 'bg-cyan-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  }`}
-                >
-                  Search Results
-                </button>
-                <button
-                  onClick={() => setResultsTab('stored')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                    resultsTab === 'stored'
-                      ? 'bg-cyan-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  }`}
-                >
-                  Stored Quotes
-                </button>
-              </div>
-
-              {resultsTab === 'stored' ? (
-                <div className="space-y-4">
-                  {selectedPerson && (
-                    <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
-                      <span className="text-gray-300">
-                        Filtered by: <strong>{selectedPerson.name}</strong>
-                      </span>
-                      <button
-                        onClick={() => setSelectedPerson(null)}
-                        className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
-                      >
-                        Clear Filter
-                      </button>
-                    </div>
-                  )}
-                  <StoredQuotes
-                    selectedPerson={selectedPerson}
-                    selectedAI={selectedAI}
-                    isApiKeySet={!!user}
-                  />
-                </div>
+              {activeTab === 'users' ? (
+                <UserManager />
               ) : (
-                <SearchResults
-                  results={filteredAndSortedQuotes}
-                  error={error}
-                  rawApiResponseError={rawApiResponseError}
-                  personName={personName}
-                  sortOrder={sortOrder}
-                  setSortOrder={setSortOrder}
-                  onClear={handleClearQuotes}
-                  onAnalyze={(quote) => analyzeQuote(quote, selectedAI)}
-                  onImprove={(quote) => improveQuote(quote, selectedAI, personName)}
-                  onSave={(quote) => {
-                    saveQuote({
-                      text: quote.text,
-                      personName: personName,
-                      source: quote.source,
-                      date: quote.date,
-                      metadata: {
-                        title: quote.title,
-                        languageCode: quote.languageCode,
-                        languageName: quote.languageName,
-                        analysis: quote.analysis
-                      }
-                    }).then(() => markQuoteAsStored(quote.id));
-                  }}
-                  onLanguageChange={handleUpdateQuoteLanguage}
-                  onAccept={acceptQuote}
-                  onDiscard={discardQuote}
-                  clearError={clearError}
-                />
+                <>
+                  <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
+                    <button
+                      onClick={() => setResultsTab('new')}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                        resultsTab === 'new'
+                          ? 'bg-cyan-600 text-white shadow'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      Search Results
+                    </button>
+                    <button
+                      onClick={() => setResultsTab('stored')}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                        resultsTab === 'stored'
+                          ? 'bg-cyan-600 text-white shadow'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      Stored Quotes
+                    </button>
+                  </div>
+
+                  {resultsTab === 'stored' ? (
+                    <div className="space-y-4">
+                      {selectedPerson && (
+                        <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
+                          <span className="text-gray-300">
+                            Filtered by: <strong>{selectedPerson.name}</strong>
+                          </span>
+                          <button
+                            onClick={() => setSelectedPerson(null)}
+                            className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
+                          >
+                            Clear Filter
+                          </button>
+                        </div>
+                      )}
+                      <StoredQuotes
+                        selectedPerson={selectedPerson}
+                        selectedAI={selectedAI}
+                        isApiKeySet={!!user}
+                      />
+                    </div>
+                  ) : (
+                    <SearchResults
+                      results={filteredAndSortedQuotes}
+                      error={error}
+                      rawApiResponseError={rawApiResponseError}
+                      personName={personName}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      onClear={handleClearQuotes}
+                      onAnalyze={(quote) => analyzeQuote(quote, selectedAI)}
+                      onImprove={(quote) => improveQuote(quote, selectedAI, personName)}
+                      onSave={(quote) => {
+                        saveQuote({
+                          text: quote.text,
+                          personName: personName,
+                          source: quote.source,
+                          date: quote.date,
+                          metadata: {
+                            title: quote.title,
+                            languageCode: quote.languageCode,
+                            languageName: quote.languageName,
+                            analysis: quote.analysis
+                          }
+                        }).then(() => markQuoteAsStored(quote.id));
+                      }}
+                      onLanguageChange={handleUpdateQuoteLanguage}
+                      onAccept={acceptQuote}
+                      onDiscard={discardQuote}
+                      clearError={clearError}
+                    />
+                  )}
+                </>
               )}
             </div>
           </main>
@@ -390,6 +411,16 @@ const App: React.FC = () => {
             isOpen={isApiKeyModalOpen}
             onClose={() => setIsApiKeyModalOpen(false)}
           />
+          {isChangePasswordModalOpen && user && user._id && (
+            <PasswordModal
+              user={{ _id: user._id, name: user.name }}
+              onClose={() => setIsChangePasswordModalOpen(false)}
+              onSubmit={() => {
+                setIsChangePasswordModalOpen(false);
+                alert('Password updated successfully');
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
