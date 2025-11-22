@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Quote, Person } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
-import api, { getStoredQuotes } from '../utils/api';
+import api, { getStoredQuotes, updateQuote } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 interface StoredQuotesProps {
@@ -28,7 +28,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         apiKeys,
       });
       const analysis = response.data;
-      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q));
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: { ...q, analysis }, isAnalyzing: false } : q));
     } catch (err) {
       console.error('Analysis failed:', err);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
@@ -47,11 +47,56 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         apiKeys,
       });
       const improvedQuote = response.data;
-      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...improvedQuote, isImproving: false } : q));
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: { ...q, ...improvedQuote }, isImproving: false } : q));
     } catch (err) {
       console.error('Improvement failed:', err);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: false } : q));
     }
+  };
+
+  const handleAccept = async (quote: Quote) => {
+    if (!quote.draft) return;
+
+    // Ensure we reset loading states when merging draft
+    const updatedQuoteData = { 
+      ...quote, 
+      ...quote.draft, 
+      draft: undefined,
+      isAnalyzing: false,
+      isImproving: false
+    };
+    
+    // Optimistic update
+    setQuotes(prev => prev.map(q => q.id === quote.id ? updatedQuoteData : q));
+
+    try {
+      // Persist to backend
+      // We need to map the frontend Quote structure back to what the backend expects for update
+      // Or simply send the fields we want to update.
+      // The backend updateQuote expects the body to be the fields to update.
+      
+      const updatePayload: any = {
+        text: updatedQuoteData.text,
+        metadata: {
+            ...updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {},
+            languageCode: updatedQuoteData.languageCode,
+            languageName: updatedQuoteData.languageName,
+            title: updatedQuoteData.title
+        }
+      };
+
+      await updateQuote(quote.id, updatePayload);
+      
+    } catch (err) {
+      console.error('Failed to persist accepted quote:', err);
+      setError('Failed to save changes to the server.');
+      // Revert optimistic update? Or just show error.
+      // For now, just show error.
+    }
+  };
+
+  const handleDiscard = (quote: Quote) => {
+    setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: undefined } : q));
   };
 
   useEffect(() => {
@@ -103,8 +148,10 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               quote={quote}
               onAnalyze={handleAnalyze}
               onImprove={handleImprove}
-              onSave={() => {}} // No-op since button is hidden
-              onLanguageChange={() => {}} // Not implemented for stored quotes yet
+              onSave={() => {}} // Stored quotes are already saved
+              onLanguageChange={() => {}} // Implement if needed for stored quotes
+              onAccept={handleAccept}
+              onDiscard={handleDiscard}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
             />

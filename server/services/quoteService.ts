@@ -65,3 +65,25 @@ export const getQuotes = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch quotes', details: error.message });
   }
 };
+
+export const updateQuote = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const quote = await Quote.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true } // Return the updated document
+    ).populate('person');
+
+    if (!quote) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    res.json(quote);
+  } catch (error: any) {
+    console.error('Error updating quote:', error);
+    res.status(500).json({ error: 'Failed to update quote', details: error.message });
+  }
+};

@@ -32,6 +32,7 @@ export interface Quote {
   isImproving?: boolean;
   personName?: string;
   isStored?: boolean;
+  draft?: Partial<Quote>;
 }
 
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';

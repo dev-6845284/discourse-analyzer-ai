@@ -70,6 +70,8 @@ const App: React.FC = () => {
     handleUpdateQuoteLanguage,
     handleClearQuotes,
     handleImproveQuote: improveQuote,
+    handleAcceptQuote: acceptQuote,
+    handleDiscardQuote: discardQuote,
     handleLoadQuotes,
     clearError,
     markQuoteAsStored,
@@ -351,10 +353,25 @@ const App: React.FC = () => {
                   sortOrder={sortOrder}
                   setSortOrder={setSortOrder}
                   onClear={handleClearQuotes}
-                  onAnalyze={handleAnalyzeQuote}
-                  onImprove={handleImproveQuote}
-                  onSave={handleSaveQuote}
+                  onAnalyze={(quote) => analyzeQuote(quote, selectedAI)}
+                  onImprove={(quote) => improveQuote(quote, selectedAI, personName)}
+                  onSave={(quote) => {
+                    saveQuote({
+                      text: quote.text,
+                      personName: personName,
+                      source: quote.source,
+                      date: quote.date,
+                      metadata: {
+                        title: quote.title,
+                        languageCode: quote.languageCode,
+                        languageName: quote.languageName,
+                        analysis: quote.analysis
+                      }
+                    }).then(() => markQuoteAsStored(quote.id));
+                  }}
                   onLanguageChange={handleUpdateQuoteLanguage}
+                  onAccept={acceptQuote}
+                  onDiscard={discardQuote}
                   clearError={clearError}
                 />
               )}

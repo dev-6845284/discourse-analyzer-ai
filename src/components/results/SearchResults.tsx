@@ -15,6 +15,8 @@ interface SearchResultsProps {
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (id: string, lang: string) => void;
+  onAccept: (quote: Quote) => void;
+  onDiscard: (quote: Quote) => void;
   clearError: () => void;
 }
 
@@ -30,6 +32,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onImprove,
   onSave,
   onLanguageChange,
+  onAccept,
+  onDiscard,
   clearError,
 }) => {
   return (
@@ -97,6 +101,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               onImprove={onImprove}
               onSave={onSave}
               onLanguageChange={onLanguageChange}
+              onAccept={onAccept}
+              onDiscard={onDiscard}
               isApiKeySet={true}
             />
           ))}
