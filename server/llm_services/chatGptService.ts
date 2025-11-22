@@ -422,7 +422,7 @@ Analyze this text: "${quoteText}"`;
 - Return exactly one JSON object.
 - The JSON object must have keys: "Populism", "Fact Twisting", "Lies & False Claims", and "Inflammatory Language".
 - Each key must have a value that is an object with two properties:
-  1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe".
+  1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe". Map intermediate ratings like "Medium–High" to the closest standard rating.
   2. "justification": A string in ${quoteLanguageName} explaining the rating based on the notes.
 
 ### Analysis Notes
