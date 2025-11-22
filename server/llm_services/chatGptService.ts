@@ -582,7 +582,8 @@ Return only the JSON object.`;
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
-      const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
+      // Step 1: Research and Improve with Search
+      const researchPrompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
 
 **Current Quote Information:**
 - Person: ${personName}
@@ -601,40 +602,71 @@ Return only the JSON object.`;
 - Extract only verbatim text from the source - no paraphrasing or summarization
 - If you find multiple related quotes from the same source, join them with ' | ' separator
 - The expanded quote must be substantive (≥10 words or key factual statement)
-- If you cannot find the quote or better context, return the original quote unchanged
+- If you cannot find the quote or better context, explicitly state that you are returning the original quote unchanged.
 - Ensure you provide the most direct, accessible source URL
 
 **Output Format:**
-Return a single, valid JSON object with these properties:
-- "text": The improved/expanded quote text (verbatim from source)
-- "source": The verified source URL (update if you found a better/more direct link)
-- "title": The verified title of the source
-- "date": The verified date in YYYY-MM-DD format
-- "languageCode": The language code (e.g., "en", "lt", "ru")
-- "languageName": The language name (e.g., "English", "Lithuanian", "Russian")
-- "improved": A boolean indicating whether you successfully improved the quote (true) or returned it unchanged (false)
-- "improvementNote": A brief explanation of what was improved or why it couldn't be improved
+Return detailed research notes containing:
+- The improved/expanded quote text (verbatim)
+- The verified source URL
+- The verified title
+- The verified date (YYYY-MM-DD)
+- The language details
+- A brief note on what was improved or why it couldn't be improved.
 
-Example:
-{
-  "text": "The full expanded quote text here...",
-  "source": "https://example.com/article",
-  "title": "Article Title",
-  "date": "2023-10-27",
-  "languageCode": "en",
-  "languageName": "English",
-  "improved": true,
-  "improvementNote": "Expanded from partial quote to full statement from the speech"
-}
+Do not output JSON yet. Just provide the information clearly.`;
 
-Do not include any other text or markdown formatting outside of the JSON object.`;
+      const researchNotes = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: researchPrompt }],
+        logId,
+        sessionId,
+        {
+          temperature,
+          useSearch: true,
+          enforceJson: false,
+          metadata: { stage: 'research', task: 'improveQuote' }
+        }
+      );
+
+      if (!researchNotes || !researchNotes.trim()) {
+        throw new Error("The research stage returned empty content.");
+      }
+
+      // Step 2: Format to JSON
+      const formattingPrompt = `You are a structured data formatter. Convert the research notes below into a strict JSON payload.
+
+### Output Requirements
+- Return exactly one JSON object.
+- The JSON object must have these properties:
+  - "text": The improved/expanded quote text (verbatim from source)
+  - "source": The verified source URL
+  - "title": The verified title of the source
+  - "date": The verified date in YYYY-MM-DD format
+  - "languageCode": The language code (e.g., "en", "lt", "ru")
+  - "languageName": The language name (e.g., "English", "Lithuanian", "Russian")
+  - "improved": A boolean indicating whether the quote was successfully improved (true) or returned unchanged (false)
+  - "improvementNote": A brief explanation of what was improved or why it couldn't be improved
+
+### Research Notes
+<<<
+${researchNotes}
+>>>
+
+Return only the JSON object.`;
 
       const rawText = await callChatGptAPI(
         apiKey,
-        [{ role: 'user', content: prompt }],
+        [{ role: 'user', content: formattingPrompt }],
         logId,
         sessionId,
-        { temperature, useSearch: true }
+        {
+          temperature: 0,
+          useSearch: false,
+          enforceJson: true,
+          model: CHATGPT_FORMATTER_MODEL,
+          metadata: { stage: 'formatting', task: 'improveQuote' }
+        }
       );
 
       const jsonText = extractJson(rawText);
