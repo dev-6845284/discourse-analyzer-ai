@@ -115,7 +115,18 @@ const callChatGptAPI = async (
       }
 
       if (response.status === 429 || (errorJson?.error?.code === 'rate_limit_exceeded')) {
-        const message = errorJson?.error?.message || 'Rate limit exceeded. Please try again later.';
+        let message = errorJson?.error?.message || 'Rate limit exceeded. Please try again later.';
+
+        // Make the message user-friendly if it contains technical details
+        if (message.includes('Rate limit reached')) {
+          const waitTimeMatch = message.match(/Please try again in ([\d\.]+)s/);
+          if (waitTimeMatch) {
+            message = `OpenAI rate limit reached. Please wait ${waitTimeMatch[1]} seconds before trying again.`;
+          } else {
+            message = 'OpenAI rate limit reached. Please try again later.';
+          }
+        }
+
         const apiError = new ModelResponseError(message);
         capturedError = apiError;
         throw apiError;
