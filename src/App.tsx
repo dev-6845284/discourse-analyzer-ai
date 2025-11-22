@@ -338,14 +338,7 @@ const App: React.FC = () => {
                   )}
                   <StoredQuotes
                     selectedPerson={selectedPerson}
-                    onAnalyze={(quote) => analyzeQuote(quote, selectedAI)}
-                    onImprove={(quote) =>
-                      improveQuote(
-                        quote,
-                        selectedAI,
-                        quote.personName || selectedPerson?.name || personName
-                      )
-                    }
+                    selectedAI={selectedAI}
                     isApiKeySet={!!user}
                   />
                 </div>

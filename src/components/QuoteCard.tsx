@@ -18,6 +18,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
+  const isBusy = quote.isAnalyzing || quote.isImproving;
+
   const handleSave = () => {
     onSave(quote);
     setIsSaved(true);
@@ -57,7 +59,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
                 <select
                     value={quote.languageCode}
                     onChange={(e) => onLanguageChange(quote.id, e.target.value)}
-                    className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1"
+                    disabled={isBusy}
+                    className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Quote language"
                 >
                     {SUPPORTED_LANGUAGES.map(lang => (
@@ -73,7 +76,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
           <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
             <button
               onClick={() => onAnalyze(quote)}
-              disabled={!isApiKeySet || quote.isAnalyzing}
+              disabled={!isApiKeySet || isBusy}
               className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title={!isApiKeySet ? "Please set your API key" : (quote.analysis ? 'Analyze Again' : 'Analyze Quote')}
             >
@@ -86,7 +89,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
 
             <button
               onClick={() => onImprove(quote)}
-              disabled={!isApiKeySet || quote.isImproving}
+              disabled={!isApiKeySet || isBusy}
               className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title={!isApiKeySet ? "Please set your API key" : "Improve quote context"}
             >
@@ -98,22 +101,24 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAnalyze, onImprove, onSa
             </button>
 
             {!hideSaveButton && (
-            <button
-              onClick={handleSave}
-              disabled={isSaved || quote.isStored}
-              className={`p-2 rounded-lg transition-colors ${isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
-              title={isSaved || quote.isStored ? "Saved" : "Save to database"}
-            >
-              {isSaved || quote.isStored ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button
+                onClick={handleSave}
+                disabled={!isApiKeySet || isBusy || quote.isStored}
+                className={`p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
+                title={isSaved || quote.isStored ? "Saved" : "Save to database"}
+              >
+                {isSaved || quote.isStored ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
-              )}
-            </button>
+                )}
+              </button>
             )}
           </div>
         </>

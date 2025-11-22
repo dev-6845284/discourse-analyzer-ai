@@ -2,19 +2,57 @@ import React, { useEffect, useState } from 'react';
 import { Quote, Person } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
-import { getStoredQuotes } from '../utils/api';
+import api, { getStoredQuotes } from '../utils/api';
+import { loadFromStorage } from '../utils/localStorage';
 
 interface StoredQuotesProps {
   selectedPerson: Person | null;
-  onAnalyze: (quote: Quote) => void;
-  onImprove: (quote: Quote) => void;
+  selectedAI: string;
   isApiKeySet: boolean;
 }
 
-const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, onAnalyze, onImprove, isApiKeySet }) => {
+const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleAnalyze = async (quote: Quote) => {
+    setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
+    try {
+      const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+      const response = await api.post('/quotes/analyze', {
+        model: selectedAI,
+        quoteText: quote.text,
+        quoteLanguageCode: quote.languageCode,
+        quoteLanguageName: quote.languageName,
+        apiKeys,
+      });
+      const analysis = response.data;
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q));
+    } catch (err) {
+      console.error('Analysis failed:', err);
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
+      // Optionally set error state
+    }
+  };
+
+  const handleImprove = async (quote: Quote) => {
+    setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: true } : q));
+    try {
+      const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+      const response = await api.post('/quotes/improve', {
+        model: selectedAI,
+        quote,
+        personName: quote.personName || selectedPerson?.name || 'Unknown',
+        apiKeys,
+      });
+      const improvedQuote = response.data;
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...improvedQuote, isImproving: false } : q));
+    } catch (err) {
+      console.error('Improvement failed:', err);
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: false } : q));
+    }
+  };
 
   useEffect(() => {
     const fetchQuotes = async () => {
@@ -63,8 +101,8 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, onAnalyze, 
             <QuoteCard
               key={quote.id}
               quote={quote}
-              onAnalyze={onAnalyze}
-              onImprove={onImprove}
+              onAnalyze={handleAnalyze}
+              onImprove={handleImprove}
               onSave={() => {}} // No-op since button is hidden
               onLanguageChange={() => {}} // Not implemented for stored quotes yet
               isApiKeySet={isApiKeySet}
