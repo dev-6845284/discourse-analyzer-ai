@@ -126,6 +126,9 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           languageName: q.metadata?.languageName || 'English',
           analysis: q.metadata?.analysis,
           personName: q.person?.name,
+          analysisContext: q.analysisContext,
+          links: q.metadata?.links,
+          metadata: q.metadata,
         }));
         setQuotes(mappedQuotes);
       } catch (err) {

@@ -38,7 +38,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Sync state with props when quote updates
   React.useEffect(() => {
     setAnalysisContext(quote.analysisContext || '');
-    setLinks(quote.metadata?.links || []);
+    setLinks(quote.links || quote.metadata?.links || []);
   }, [quote.analysisContext, quote.links, quote.metadata]);
 
   const isBusy = quote.isAnalyzing || quote.isImproving;

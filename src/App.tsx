@@ -114,6 +114,8 @@ const App: React.FC = () => {
         source: quote.source,
         date: quote.date,
         context: quote.title, // Using title as context for now if available
+        analysisContext: quote.analysisContext,
+        links: quote.links,
         metadata: {
           languageCode: quote.languageCode,
           analysis: quote.analysis
