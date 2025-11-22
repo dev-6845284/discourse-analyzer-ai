@@ -116,12 +116,20 @@ export function useQuotes(handleLogout: () => void) {
           quoteText: quote.text,
           quoteLanguageCode: quote.languageCode,
           quoteLanguageName: quote.languageName,
+          analysisContext: quote.analysisContext,
+          links: quote.links,
           apiKeys,
         });
         const analysis = response.data;
 
         setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { ...q, draft: { ...q, analysis }, isAnalyzing: false } : q))
+          prev.map((q) => (q.id === quote.id ? { 
+            ...q, 
+            analysisContext: quote.analysisContext,
+            links: quote.links,
+            draft: { ...q, analysis }, 
+            isAnalyzing: false 
+          } : q))
         );
       } catch (e: any) {
         handleError(e, 'Analysis');

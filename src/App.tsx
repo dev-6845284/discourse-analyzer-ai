@@ -387,6 +387,8 @@ const App: React.FC = () => {
                           personName: personName,
                           source: quote.source,
                           date: quote.date,
+                          analysisContext: quote.analysisContext,
+                          links: quote.links,
                           metadata: {
                             title: quote.title,
                             languageCode: quote.languageCode,

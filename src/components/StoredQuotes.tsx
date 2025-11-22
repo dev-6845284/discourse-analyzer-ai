@@ -25,10 +25,18 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         quoteText: quote.text,
         quoteLanguageCode: quote.languageCode,
         quoteLanguageName: quote.languageName,
+        analysisContext: quote.analysisContext,
+        links: quote.links,
         apiKeys,
       });
       const analysis = response.data;
-      setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: { ...q, analysis }, isAnalyzing: false } : q));
+      setQuotes(prev => prev.map(q => q.id === quote.id ? { 
+        ...q, 
+        analysisContext: quote.analysisContext,
+        links: quote.links,
+        draft: { ...q, analysis }, 
+        isAnalyzing: false 
+      } : q));
     } catch (err) {
       console.error('Analysis failed:', err);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
@@ -77,11 +85,13 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       
       const updatePayload: any = {
         text: updatedQuoteData.text,
+        analysisContext: updatedQuoteData.analysisContext,
         metadata: {
             ...updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {},
             languageCode: updatedQuoteData.languageCode,
             languageName: updatedQuoteData.languageName,
-            title: updatedQuoteData.title
+            title: updatedQuoteData.title,
+            links: updatedQuoteData.links
         }
       };
 

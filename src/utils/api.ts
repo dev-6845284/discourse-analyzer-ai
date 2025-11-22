@@ -27,4 +27,24 @@ export const updateQuote = async (quoteId: string, quoteData: any) => {
   return api.put(`/quotes/${quoteId}`, quoteData);
 };
 
+export const analyzeQuote = async (
+  model: string,
+  quoteText: string,
+  quoteLanguageCode: string,
+  quoteLanguageName: string,
+  apiKeys: Record<string, string>,
+  analysisContext?: string,
+  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+) => {
+  return api.post('/quotes/analyze', {
+    model,
+    quoteText,
+    quoteLanguageCode,
+    quoteLanguageName,
+    apiKeys,
+    analysisContext,
+    links,
+  });
+};
+
 export default api;

@@ -4,7 +4,7 @@ import Person from '../models/Person';
 
 export const saveQuote = async (req: Request, res: Response) => {
   try {
-    const { text, personName, source, date, context, tags, metadata } = req.body;
+    const { text, personName, source, date, context, tags, metadata, analysisContext, links } = req.body;
 
     if (!text || !personName) {
       return res.status(400).json({ error: 'Text and personName are required' });
@@ -26,6 +26,11 @@ export const saveQuote = async (req: Request, res: Response) => {
       }
     }
 
+    const finalMetadata = metadata || {};
+    if (links) {
+      finalMetadata.links = links;
+    }
+
     // Create the quote
     const quote = new Quote({
       text,
@@ -33,8 +38,9 @@ export const saveQuote = async (req: Request, res: Response) => {
       sourceUrl: source,
       date: date ? new Date(date) : undefined,
       context,
+      analysisContext,
       tags: tags || [],
-      metadata: metadata || {},
+      metadata: finalMetadata,
     });
 
     await quote.save();

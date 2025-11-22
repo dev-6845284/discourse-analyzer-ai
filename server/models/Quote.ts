@@ -7,6 +7,7 @@ export interface IQuote extends Document {
   date?: Date;
   tags: string[];
   context?: string;
+  analysisContext?: string;
   foundBy?: string;
   improvedBy?: string;
   analyzedBy?: string;
@@ -23,6 +24,7 @@ const QuoteSchema: Schema = new Schema(
     date: { type: Date },
     tags: { type: [String], index: true },
     context: { type: String },
+    analysisContext: { type: String },
     foundBy: { type: String },
     improvedBy: { type: String },
     analyzedBy: { type: String },

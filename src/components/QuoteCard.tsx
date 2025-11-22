@@ -29,15 +29,35 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [analysisContext, setAnalysisContext] = useState(quote.analysisContext || '');
+  const [links, setLinks] = useState<{ url: string; title?: string; type: 'quote' | 'context' }[]>(quote.links || quote.metadata?.links || []);
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [newLinkType, setNewLinkType] = useState<'quote' | 'context'>('context');
 
   const isBusy = quote.isAnalyzing || quote.isImproving;
   const hasDraft = !!quote.draft;
   const displayQuote = hasDraft ? (quote.draft as Quote) : quote;
 
   const handleSave = () => {
-    onSave(quote);
+    onSave({ ...quote, analysisContext, links });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleAddLink = () => {
+    if (newLinkUrl) {
+      setLinks([...links, { url: newLinkUrl, type: newLinkType }]);
+      setNewLinkUrl('');
+    }
+  };
+
+  const handleRemoveLink = (index: number) => {
+    setLinks(links.filter((_, i) => i !== index));
+  };
+
+  const handleAnalyze = () => {
+    onAnalyze({ ...quote, analysisContext, links });
   };
 
   return (
@@ -99,6 +119,109 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           
           {displayQuote.analysis && <AnalysisReport analysis={displayQuote.analysis} />}
 
+          {/* Display Context & Links (Read-only view) */}
+          {!showAdvanced && (quote.analysisContext || (links && links.length > 0)) && (
+            <div className="mt-3 pt-3 border-t border-gray-700/30 text-xs">
+              {quote.analysisContext && (
+                <div className="mb-2">
+                  <span className="text-gray-500 font-semibold uppercase tracking-wider text-[10px]">Context: </span>
+                  <span className="text-gray-400 italic">{quote.analysisContext}</span>
+                </div>
+              )}
+              {links && links.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {links.map((link, i) => (
+                    <a 
+                      key={i} 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className={`flex items-center gap-1 px-2 py-1 rounded border transition-colors ${
+                        link.type === 'quote' 
+                          ? 'border-blue-900/50 bg-blue-900/20 text-blue-400 hover:bg-blue-900/30' 
+                          : 'border-purple-900/50 bg-purple-900/20 text-purple-400 hover:bg-purple-900/30'
+                      }`}
+                      title={link.url}
+                    >
+                      <span className="uppercase text-[10px] font-bold opacity-70">{link.type === 'quote' ? 'Source' : 'Ref'}</span>
+                      <span className="max-w-[150px] truncate">{link.title || new URL(link.url).hostname}</span>
+                      <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Advanced Analysis Section */}
+          {!hasDraft && (
+            <div className="mt-4 border-t border-gray-700/50 pt-2">
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mb-2"
+              >
+                {showAdvanced ? '▼ Hide Advanced Analysis' : '▶ Advanced Analysis'}
+              </button>
+              
+              {showAdvanced && (
+                <div className="bg-gray-900/50 p-3 rounded-lg space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Context for Analysis</label>
+                    <textarea
+                      value={analysisContext}
+                      onChange={(e) => setAnalysisContext(e.target.value)}
+                      placeholder="Provide context to help the AI determine truthfulness (e.g., 'This was said during a debate about tax reform...')"
+                      className="w-full bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                      rows={2}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Fact-Checking Links</label>
+                    <div className="space-y-2">
+                      {links.map((link, index) => (
+                        <div key={index} className="flex items-center gap-2 text-xs bg-gray-800 p-1.5 rounded border border-gray-700">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase ${link.type === 'quote' ? 'bg-blue-900 text-blue-300' : 'bg-purple-900 text-purple-300'}`}>
+                            {link.type}
+                          </span>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 truncate flex-1 hover:underline">
+                            {link.url}
+                          </a>
+                          <button onClick={() => handleRemoveLink(index)} className="text-red-400 hover:text-red-300 px-1">×</button>
+                        </div>
+                      ))}
+                      
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newLinkUrl}
+                          onChange={(e) => setNewLinkUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="flex-1 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-1.5 focus:border-cyan-500"
+                        />
+                        <select
+                          value={newLinkType}
+                          onChange={(e) => setNewLinkType(e.target.value as 'quote' | 'context')}
+                          className="bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-1.5"
+                        >
+                          <option value="context">Context</option>
+                          <option value="quote">Quote Source</option>
+                        </select>
+                        <button
+                          onClick={handleAddLink}
+                          disabled={!newLinkUrl}
+                          className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
             {hasDraft ? (
               <>
@@ -124,7 +247,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             ) : (
               <>
                 <button
-                  onClick={() => onAnalyze(quote)}
+                  onClick={handleAnalyze}
                   disabled={!isApiKeySet || isBusy}
                   className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title={!isApiKeySet ? "Please set your API key" : (quote.analysis ? 'Analyze Again' : 'Analyze Quote')}

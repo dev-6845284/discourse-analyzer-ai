@@ -29,7 +29,9 @@ export interface LlmService {
     quoteLanguageName: string,
     temperature: number,
     logId: string,
-    sessionId: string
+    sessionId: string,
+    analysisContext?: string,
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
   ): Promise<AnalysisResult>;
 
   extractQuotesFromText(

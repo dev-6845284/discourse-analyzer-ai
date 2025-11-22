@@ -280,14 +280,35 @@ Do not include any other text or markdown formatting outside of the JSON object.
   }
 
 
-  public async analyzeQuoteText(apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, temperature: number, logId: string, sessionId: string): Promise<AnalysisResult> {
+  public async analyzeQuoteText(
+    apiKey: string,
+    quoteText: string,
+    quoteLanguageCode: string,
+    quoteLanguageName: string,
+    temperature: number,
+    logId: string,
+    sessionId: string,
+    analysisContext?: string,
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+  ): Promise<AnalysisResult> {
       if (!apiKey) throw new Error("Gemini API key is missing.");
       const ai = new GoogleGenAI({ apiKey });
       
       try {
+          let contextInstruction = '';
+          if (analysisContext) {
+            contextInstruction = `\n\n### User-Provided Context\nThe user has provided the following context to help with the analysis:\n"${analysisContext}"\nUse this context to better understand the intent and background of the quote.`;
+          }
+
+          let linksInstruction = '';
+          if (links && links.length > 0) {
+            const linkList = links.map(l => `- ${l.url} (${l.type}${l.title ? `: ${l.title}` : ''})`).join('\n');
+            linksInstruction = `\n\n### Reference Material\nThe user has provided the following links as reference material:\n${linkList}\nPlease consult these sources if possible to verify facts or understand the context.`;
+          }
+
           const prompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
 Follow these steps carefully:
-1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using online search.
+1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance. Fact-check all claims using online search.${contextInstruction}${linksInstruction}
 2.  **Think step-by-step in English** to determine the rating and justification for each category.
 3.  **Translate your English justification** into high-quality, natural-sounding ${quoteLanguageName}.
 4.  **Construct the final JSON object**. Ensure the 'justification' fields contain the translated text from step 3. The entire response must be a single, valid JSON object (do not wrap it in markdown).

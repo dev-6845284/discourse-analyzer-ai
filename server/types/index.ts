@@ -24,6 +24,8 @@ export interface Quote {
   date: string;
   languageCode: string;
   languageName: string;
+  analysisContext?: string;
+  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
   analysis?: AnalysisResult;
   isAnalyzing?: boolean;
   isImproving?: boolean;
