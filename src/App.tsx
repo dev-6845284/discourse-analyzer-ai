@@ -15,6 +15,7 @@ import { ExportData, Quote, Person } from './types';
 import { PersonManager } from './components/people/PersonManager';
 import { UserManager } from './components/users/UserManager';
 import { PasswordModal } from './components/users/PasswordModal';
+import { EditProfileModal } from './components/users/EditProfileModal';
 import StoredQuotes from './components/StoredQuotes';
 
 // New Components
@@ -26,7 +27,7 @@ import { SearchResults } from './components/results/SearchResults';
 
 const App: React.FC = () => {
   // Custom hooks
-  const { user, loginError, googleButtonRef, handleLogout, loginWithPassword } = useAuth();
+  const { user, loginError, googleButtonRef, handleLogout, loginWithPassword, updateUser } = useAuth();
 
   const {
     personName,
@@ -99,6 +100,7 @@ const App: React.FC = () => {
   const [logsVisible, setLogsVisible] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'extract'>('add');
   const [activeTab, setActiveTab] = useState<'search' | 'people' | 'users'>('search');
   const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
@@ -211,6 +213,10 @@ const App: React.FC = () => {
     setIsChangePasswordModalOpen(true);
   };
 
+  const openEditProfileModal = () => {
+    setIsEditProfileModalOpen(true);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
@@ -238,6 +244,7 @@ const App: React.FC = () => {
             googleButtonRef={googleButtonRef}
             handleLogout={handleLogout}
             onChangePassword={openChangePasswordModal}
+            onEditProfile={openEditProfileModal}
           />        <LogViewer logsVisible={logsVisible} />
 
         <div
@@ -418,6 +425,16 @@ const App: React.FC = () => {
               onSubmit={() => {
                 setIsChangePasswordModalOpen(false);
                 alert('Password updated successfully');
+              }}
+            />
+          )}
+          {isEditProfileModalOpen && user && user._id && (
+            <EditProfileModal
+              user={{ _id: user._id, name: user.name }}
+              onClose={() => setIsEditProfileModalOpen(false)}
+              onSubmit={(newName) => {
+                setIsEditProfileModalOpen(false);
+                updateUser({ name: newName });
               }}
             />
           )}

@@ -25,6 +25,44 @@ router.put('/:id/password', isAuthenticated, async (req, res) => {
   }
 });
 
+router.put('/:id', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+
+    if (!isAdminUser && !isSelf) {
+      return res.status(403).json({ message: 'Unauthorized to update this user' });
+    }
+
+    const updates = { ...req.body };
+
+    // If not admin, restrict updates to allowed fields
+    if (!isAdminUser) {
+      const allowedFields = ['alias'];
+      Object.keys(updates).forEach(key => {
+        if (!allowedFields.includes(key)) {
+          delete updates[key];
+        }
+      });
+    }
+
+    const user = await userService.updateUser(req.params.id, updates);
+    
+    // If self-update, update session
+    if (isSelf) {
+      req.session.user = {
+        ...req.session.user!,
+        name: user.alias,
+      };
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user', error });
+  }
+});
+
 // Protect all user routes with authentication and admin check
 router.use(isAuthenticated, isAdmin);
 
@@ -46,15 +84,6 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Email already exists' });
     }
     res.status(500).json({ message: 'Error creating user', error });
-  }
-});
-
-router.put('/:id', async (req, res) => {
-  try {
-    const user = await userService.updateUser(req.params.id, req.body);
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating user', error });
   }
 });
 

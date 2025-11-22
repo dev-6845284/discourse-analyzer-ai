@@ -85,6 +85,10 @@ export function useAuth() {
     }
   }, [isAuthLoading, user, handleCredentialResponse]);
 
+  const updateUser = useCallback((updates: Partial<UserInfo>) => {
+    setUser(prev => prev ? { ...prev, ...updates } : null);
+  }, []);
+
   return {
     user,
     loginError,
@@ -92,5 +96,6 @@ export function useAuth() {
     googleButtonRef,
     handleLogout,
     loginWithPassword,
+    updateUser,
   };
 }
