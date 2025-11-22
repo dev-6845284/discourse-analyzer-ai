@@ -35,6 +35,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkType, setNewLinkType] = useState<'quote' | 'context'>('context');
 
+  // Sync state with props when quote updates
+  React.useEffect(() => {
+    setAnalysisContext(quote.analysisContext || '');
+    setLinks(quote.metadata?.links || []);
+  }, [quote.analysisContext, quote.links, quote.metadata]);
+
   const isBusy = quote.isAnalyzing || quote.isImproving;
   const hasDraft = !!quote.draft;
   const displayQuote = hasDraft ? (quote.draft as Quote) : quote;
