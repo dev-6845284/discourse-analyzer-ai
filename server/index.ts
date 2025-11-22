@@ -50,10 +50,7 @@ app.use(
 const allowedOrigins = [
   'http://localhost:3000',
   'https://discourse-analyzer-ai-preview.vercel.app',
-  'https://discourse-analyzer-ai.vercel.app',
-  'https://www.pasitikrink.org',
-  'https://pasitikrink.org',
-  'https://preview.pasitikrink.org'
+  'https://discourse-analyzer-ai.vercel.app'
 ];
 
 app.use(
