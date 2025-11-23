@@ -3,6 +3,7 @@ import * as apiService from '../services/apiService';
 import * as personService from '../services/personService';
 import * as quoteService from '../services/quoteService';
 import { isAuthenticated } from '../middleware/auth';
+import { isAdminOrDev } from '../middleware/admin';
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.post('/quotes/improve', (req, res) => apiService.improveSingleQuote(req, 
 router.post('/quotes', (req, res) => quoteService.saveQuote(req, res));
 router.get('/quotes', (req, res) => quoteService.getQuotes(req, res));
 router.put('/quotes/:id', (req, res) => quoteService.updateQuote(req, res));
-router.get('/logs', (req, res) => apiService.getApiLogs(req, res));
+router.get('/logs', isAdminOrDev, (req, res) => apiService.getApiLogs(req, res));
 
 // Person routes
 router.get('/people', (req, res) => personService.getPeople(req, res));

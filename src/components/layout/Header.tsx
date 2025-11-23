@@ -38,12 +38,14 @@ export const Header: React.FC<HeaderProps> = ({
         >
           {isFormCollapsed ? 'Expand Form' : 'Collapse Form'}
         </button>
-        <button
-          onClick={() => setLogsVisible(!logsVisible)}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          {logsVisible ? 'Hide Logs' : 'Show Logs'}
-        </button>
+        {(import.meta.env.DEV || user?.role === 'admin') && (
+          <button
+            onClick={() => setLogsVisible(!logsVisible)}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            {logsVisible ? 'Hide Logs' : 'Show Logs'}
+          </button>
+        )}
         <button
           onClick={() => setIsApiKeyModalOpen(true)}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"

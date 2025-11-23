@@ -224,7 +224,8 @@ const App: React.FC = () => {
             handleLogout={handleLogout}
             onChangePassword={openChangePasswordModal}
             onEditProfile={openEditProfileModal}
-          />        <LogViewer logsVisible={logsVisible} />
+          />
+          {(import.meta.env.DEV || user?.role === 'admin') && <LogViewer logsVisible={logsVisible} />}
 
         <div
           className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 overflow-hidden ${
