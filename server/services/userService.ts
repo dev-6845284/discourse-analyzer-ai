@@ -8,8 +8,8 @@ export const createUser = async (userData: Partial<IUser>) => {
   const user = new User(userData);
   await user.save();
   const userObj = user.toObject();
-  delete userObj.password;
-  return userObj;
+  const { password, ...userWithoutPassword } = userObj;
+  return userWithoutPassword;
 };
 
 export const updateUser = async (id: string, userData: Partial<IUser>) => {

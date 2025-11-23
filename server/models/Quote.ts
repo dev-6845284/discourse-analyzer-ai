@@ -40,4 +40,4 @@ QuoteSchema.index({ text: 'text', context: 'text', tags: 'text' });
 
 const collectionName = `quotes${process.env.DB_COLLECTION_SUFFIX || ''}`;
 
-export default mongoose.models.Quote || mongoose.model<IQuote>('Quote', QuoteSchema, collectionName);
+export default (mongoose.models.Quote as mongoose.Model<IQuote>) || mongoose.model<IQuote>('Quote', QuoteSchema, collectionName);

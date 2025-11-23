@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Quote, Person } from '../types';
+import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
 import api, { getStoredQuotes, updateQuote } from '../utils/api';
@@ -83,11 +83,13 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       // Or simply send the fields we want to update.
       // The backend updateQuote expects the body to be the fields to update.
       
-      const updatePayload: any = {
+      const updatePayload: QuoteUpdatePayload = {
         text: updatedQuoteData.text,
         analysisContext: updatedQuoteData.analysisContext,
+        sourceUrl: updatedQuoteData.source,
+        date: updatedQuoteData.date,
         metadata: {
-            ...updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {},
+            ...(updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {}),
             languageCode: updatedQuoteData.languageCode,
             languageName: updatedQuoteData.languageName,
             title: updatedQuoteData.title,

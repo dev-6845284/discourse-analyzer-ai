@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Quote } from '../types';
+import { Quote, AnalysisCategory, AnalysisResult } from '../types';
 import AnalysisReport from './AnalysisReport';
 import Spinner from './Spinner';
-import { SUPPORTED_LANGUAGES } from '../constants';
+import { SUPPORTED_LANGUAGES, RATING_ORDER } from '../constants';
 
 interface QuoteCardProps {
   quote: Quote;
@@ -34,12 +34,21 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [links, setLinks] = useState<{ url: string; title?: string; type: 'quote' | 'context' }[]>(quote.links || quote.metadata?.links || []);
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkType, setNewLinkType] = useState<'quote' | 'context'>('context');
+  const [selectedCategories, setSelectedCategories] = useState<AnalysisCategory[]>([]);
 
   // Sync state with props when quote updates
   React.useEffect(() => {
     setAnalysisContext(quote.analysisContext || '');
     setLinks(quote.links || quote.metadata?.links || []);
-  }, [quote.analysisContext, quote.links, quote.metadata]);
+    
+    // Initialize selected categories when draft analysis is available
+    if (quote.draft?.analysis) {
+      const initialSelection = (Object.entries(quote.draft.analysis) as [AnalysisCategory, any][])
+        .filter(([_, detail]) => RATING_ORDER[detail.rating] >= RATING_ORDER['Medium'])
+        .map(([category]) => category);
+      setSelectedCategories(initialSelection);
+    }
+  }, [quote.analysisContext, quote.links, quote.metadata, quote.draft]);
 
   const isBusy = quote.isAnalyzing || quote.isImproving;
   const hasDraft = !!quote.draft;
@@ -64,6 +73,38 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   const handleAnalyze = () => {
     onAnalyze({ ...quote, analysisContext, links });
+  };
+
+  const handleToggleCategory = (category: AnalysisCategory) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const handleAccept = () => {
+    if (!onAccept || !quote.draft) return;
+
+    // Filter analysis based on selected categories
+    const filteredAnalysis: AnalysisResult = {};
+    if (quote.draft.analysis) {
+      selectedCategories.forEach(category => {
+        if (quote.draft!.analysis![category]) {
+          filteredAnalysis[category] = quote.draft!.analysis![category];
+        }
+      });
+    }
+
+    const quoteWithFilteredAnalysis = {
+      ...quote,
+      draft: {
+        ...quote.draft,
+        analysis: filteredAnalysis
+      }
+    };
+
+    onAccept(quoteWithFilteredAnalysis);
   };
 
   return (
@@ -123,7 +164,14 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             </div>
           </div>
           
-          {displayQuote.analysis && <AnalysisReport analysis={displayQuote.analysis} />}
+          {displayQuote.analysis && (
+            <AnalysisReport 
+              analysis={displayQuote.analysis} 
+              selectable={hasDraft}
+              selectedCategories={selectedCategories}
+              onToggleCategory={handleToggleCategory}
+            />
+          )}
 
           {/* Display Context & Links (Read-only view) */}
           {!showAdvanced && (quote.analysisContext || (links && links.length > 0)) && (
@@ -232,7 +280,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             {hasDraft ? (
               <>
                 <button
-                  onClick={() => onAccept && onAccept(quote)}
+                  onClick={handleAccept}
                   className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

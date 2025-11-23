@@ -327,8 +327,6 @@ export function useQuotes(handleLogout: () => void) {
     handleDiscardQuote,
     clearError,
     handleLoadQuotes,
-    markQuoteAsStored,
-    // handleAcceptQuote,
-    // handleDiscardQuote,
+    markQuoteAsStored
   };
 }

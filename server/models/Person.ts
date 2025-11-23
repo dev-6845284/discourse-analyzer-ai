@@ -30,4 +30,4 @@ PersonSchema.index({ name: 'text', aliases: 'text', description: 'text' });
 
 const collectionName = `people${process.env.DB_COLLECTION_SUFFIX || ''}`;
 
-export default mongoose.models.Person || mongoose.model<IPerson>('Person', PersonSchema, collectionName);
+export default (mongoose.models.Person as mongoose.Model<IPerson>) || mongoose.model<IPerson>('Person', PersonSchema, collectionName);

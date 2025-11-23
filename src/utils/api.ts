@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { QuoteUpdatePayload } from '../types';
 
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
@@ -23,7 +24,7 @@ export const getStoredQuotes = async (personId?: string) => {
   return api.get('/quotes', { params });
 };
 
-export const updateQuote = async (quoteId: string, quoteData: any) => {
+export const updateQuote = async (quoteId: string, quoteData: QuoteUpdatePayload) => {
   return api.put(`/quotes/${quoteId}`, quoteData);
 };
 

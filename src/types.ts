@@ -16,7 +16,7 @@ export interface AnalysisDetail {
 // when indexing the object with a variable of type AnalysisCategory, fixing errors in
 // App.tsx and AnalysisReport.tsx.
 export type AnalysisResult = {
-  [key in AnalysisCategory]: AnalysisDetail;
+  [key in AnalysisCategory]?: AnalysisDetail;
 };
 
 export interface Quote {
@@ -112,4 +112,15 @@ export interface Person {
   description?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface QuoteUpdatePayload {
+  text?: string;
+  person?: string;
+  sourceUrl?: string;
+  date?: string | Date;
+  tags?: string[];
+  context?: string;
+  analysisContext?: string;
+  metadata?: Record<string, any>;
 }

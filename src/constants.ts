@@ -1,4 +1,3 @@
-
 import { AnalysisCategory, AnalysisRating } from "./types";
 
 export const CATEGORY_COLORS: Record<AnalysisCategory, string> = {
@@ -14,6 +13,14 @@ export const RATING_COLORS: Record<AnalysisRating, string> = {
   "Medium": "text-yellow-400",
   "High": "text-orange-400",
   "Severe": "text-red-500",
+};
+
+export const RATING_ORDER: Record<AnalysisRating, number> = {
+  "None": 0,
+  "Low": 1,
+  "Medium": 2,
+  "High": 3,
+  "Severe": 4,
 };
 
 export const ALL_CATEGORIES = Object.values(AnalysisCategory);

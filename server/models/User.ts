@@ -45,4 +45,4 @@ UserSchema.methods.comparePassword = async function (candidatePassword: string):
 
 const collectionName = `users${process.env.DB_COLLECTION_SUFFIX || ''}`;
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema, collectionName);
+export default (mongoose.models.User as mongoose.Model<IUser>) || mongoose.model<IUser>('User', UserSchema, collectionName);
