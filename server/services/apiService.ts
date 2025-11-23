@@ -76,12 +76,12 @@ export const fetchQuotes = async (req: Request, res: Response) => {
 };
 
 export const analyzeQuote = async (req: Request, res: Response) => {
-  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys } = req.body;
-  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model });
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links } = req.body;
+  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, analysisContext, links });
 
   try {
     const { service, apiKey } = getService(model, apiKeys);
-    const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!);
+    const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
     updateLogEntry(req.session.id!, logId, analysis);
     res.json(analysis);
   } catch (error: any) {

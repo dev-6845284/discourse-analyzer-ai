@@ -115,7 +115,18 @@ const callChatGptAPI = async (
       }
 
       if (response.status === 429 || (errorJson?.error?.code === 'rate_limit_exceeded')) {
-        const message = errorJson?.error?.message || 'Rate limit exceeded. Please try again later.';
+        let message = errorJson?.error?.message || 'Rate limit exceeded. Please try again later.';
+
+        // Make the message user-friendly if it contains technical details
+        if (message.includes('Rate limit reached')) {
+          const waitTimeMatch = message.match(/Please try again in ([\d\.]+)s/);
+          if (waitTimeMatch) {
+            message = `OpenAI rate limit reached. Please wait ${waitTimeMatch[1]} seconds before trying again.`;
+          } else {
+            message = 'OpenAI rate limit reached. Please try again later.';
+          }
+        }
+
         const apiError = new ModelResponseError(message);
         capturedError = apiError;
         throw apiError;
@@ -368,14 +379,35 @@ Return only the JSON object.`;
     }
   }
 
-  public async analyzeQuoteText(apiKey: string, quoteText: string, quoteLanguageCode: string, quoteLanguageName: string, temperature: number, logId: string, sessionId: string): Promise<AnalysisResult> {
+  public async analyzeQuoteText(
+    apiKey: string,
+    quoteText: string,
+    quoteLanguageCode: string,
+    quoteLanguageName: string,
+    temperature: number,
+    logId: string,
+    sessionId: string,
+    analysisContext?: string,
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+  ): Promise<AnalysisResult> {
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
+      let contextInstruction = '';
+      if (analysisContext) {
+        contextInstruction = `\n\n### User-Provided Context\nThe user has provided the following context to help with the analysis:\n"${analysisContext}"\nUse this context to better understand the intent and background of the quote.`;
+      }
+
+      let linksInstruction = '';
+      if (links && links.length > 0) {
+        const linkList = links.map(l => `- ${l.url} (${l.type}${l.title ? `: ${l.title}` : ''})`).join('\n');
+        linksInstruction = `\n\n### Reference Material\nThe user has provided the following links as reference material:\n${linkList}\nPlease consult these sources if possible to verify facts or understand the context.`;
+      }
+
       // Step 1: Deep Analysis with Search
       const analysisPrompt = `Perform a detailed analysis of the following text, which is in ${quoteLanguageName}.
 Analyze the original text directly in ${quoteLanguageName} to understand its full meaning and nuance.
-Fact-check all claims using your knowledge and web search if necessary.
+Fact-check all claims using your knowledge and web search if necessary.${contextInstruction}${linksInstruction}
 
 Provide a detailed assessment for each of the following categories:
 1. Populism
@@ -411,7 +443,7 @@ Analyze this text: "${quoteText}"`;
 - Return exactly one JSON object.
 - The JSON object must have keys: "Populism", "Fact Twisting", "Lies & False Claims", and "Inflammatory Language".
 - Each key must have a value that is an object with two properties:
-  1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe".
+  1. "rating": A string with one of these values: "None", "Low", "Medium", "High", "Severe". Map intermediate ratings like "Medium–High" to the closest standard rating.
   2. "justification": A string in ${quoteLanguageName} explaining the rating based on the notes.
 
 ### Analysis Notes
@@ -582,7 +614,8 @@ Return only the JSON object.`;
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
-      const prompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
+      // Step 1: Research and Improve with Search
+      const researchPrompt = `You are tasked with improving and expanding an existing quote by searching for the full context.
 
 **Current Quote Information:**
 - Person: ${personName}
@@ -601,40 +634,71 @@ Return only the JSON object.`;
 - Extract only verbatim text from the source - no paraphrasing or summarization
 - If you find multiple related quotes from the same source, join them with ' | ' separator
 - The expanded quote must be substantive (≥10 words or key factual statement)
-- If you cannot find the quote or better context, return the original quote unchanged
+- If you cannot find the quote or better context, explicitly state that you are returning the original quote unchanged.
 - Ensure you provide the most direct, accessible source URL
 
 **Output Format:**
-Return a single, valid JSON object with these properties:
-- "text": The improved/expanded quote text (verbatim from source)
-- "source": The verified source URL (update if you found a better/more direct link)
-- "title": The verified title of the source
-- "date": The verified date in YYYY-MM-DD format
-- "languageCode": The language code (e.g., "en", "lt", "ru")
-- "languageName": The language name (e.g., "English", "Lithuanian", "Russian")
-- "improved": A boolean indicating whether you successfully improved the quote (true) or returned it unchanged (false)
-- "improvementNote": A brief explanation of what was improved or why it couldn't be improved
+Return detailed research notes containing:
+- The improved/expanded quote text (verbatim)
+- The verified source URL
+- The verified title
+- The verified date (YYYY-MM-DD)
+- The language details
+- A brief note on what was improved or why it couldn't be improved.
 
-Example:
-{
-  "text": "The full expanded quote text here...",
-  "source": "https://example.com/article",
-  "title": "Article Title",
-  "date": "2023-10-27",
-  "languageCode": "en",
-  "languageName": "English",
-  "improved": true,
-  "improvementNote": "Expanded from partial quote to full statement from the speech"
-}
+Do not output JSON yet. Just provide the information clearly.`;
 
-Do not include any other text or markdown formatting outside of the JSON object.`;
+      const researchNotes = await callChatGptAPI(
+        apiKey,
+        [{ role: 'user', content: researchPrompt }],
+        logId,
+        sessionId,
+        {
+          temperature,
+          useSearch: true,
+          enforceJson: false,
+          metadata: { stage: 'research', task: 'improveQuote' }
+        }
+      );
+
+      if (!researchNotes || !researchNotes.trim()) {
+        throw new Error("The research stage returned empty content.");
+      }
+
+      // Step 2: Format to JSON
+      const formattingPrompt = `You are a structured data formatter. Convert the research notes below into a strict JSON payload.
+
+### Output Requirements
+- Return exactly one JSON object.
+- The JSON object must have these properties:
+  - "text": The improved/expanded quote text (verbatim from source)
+  - "source": The verified source URL
+  - "title": The verified title of the source
+  - "date": The verified date in YYYY-MM-DD format
+  - "languageCode": The language code (e.g., "en", "lt", "ru")
+  - "languageName": The language name (e.g., "English", "Lithuanian", "Russian")
+  - "improved": A boolean indicating whether the quote was successfully improved (true) or returned unchanged (false)
+  - "improvementNote": A brief explanation of what was improved or why it couldn't be improved
+
+### Research Notes
+<<<
+${researchNotes}
+>>>
+
+Return only the JSON object.`;
 
       const rawText = await callChatGptAPI(
         apiKey,
-        [{ role: 'user', content: prompt }],
+        [{ role: 'user', content: formattingPrompt }],
         logId,
         sessionId,
-        { temperature, useSearch: true }
+        {
+          temperature: 0,
+          useSearch: false,
+          enforceJson: true,
+          model: CHATGPT_FORMATTER_MODEL,
+          metadata: { stage: 'formatting', task: 'improveQuote' }
+        }
       );
 
       const jsonText = extractJson(rawText);

@@ -36,6 +36,19 @@ export function useAuth() {
     }
   }, []);
 
+  const loginWithPassword = useCallback(async (email, password) => {
+    try {
+      const res = await api.post('/login/password', { email, password });
+      if (res.data.user) {
+        setUser(res.data.user);
+        setLoginError(null);
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Login failed.';
+      setLoginError(message);
+    }
+  }, []);
+
   const checkUserSession = useCallback(async () => {
     if (shouldBypassAuth()) {
       setUser(getDefaultLocalUser());
@@ -72,11 +85,17 @@ export function useAuth() {
     }
   }, [isAuthLoading, user, handleCredentialResponse]);
 
+  const updateUser = useCallback((updates: Partial<UserInfo>) => {
+    setUser(prev => prev ? { ...prev, ...updates } : null);
+  }, []);
+
   return {
     user,
     loginError,
     isAuthLoading,
     googleButtonRef,
     handleLogout,
+    loginWithPassword,
+    updateUser,
   };
 }

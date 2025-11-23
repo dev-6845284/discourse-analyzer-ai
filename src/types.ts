@@ -16,7 +16,7 @@ export interface AnalysisDetail {
 // when indexing the object with a variable of type AnalysisCategory, fixing errors in
 // App.tsx and AnalysisReport.tsx.
 export type AnalysisResult = {
-  [key in AnalysisCategory]: AnalysisDetail;
+  [key in AnalysisCategory]?: AnalysisDetail;
 };
 
 export interface Quote {
@@ -27,9 +27,18 @@ export interface Quote {
   date: string;
   languageCode: string;
   languageName: string;
+  analysisContext?: string;
+  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+  metadata?: {
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+    [key: string]: any;
+  };
   analysis?: AnalysisResult;
   isAnalyzing?: boolean;
   isImproving?: boolean;
+  personName?: string;
+  isStored?: boolean;
+  draft?: Partial<Quote>;
 }
 
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
@@ -74,12 +83,44 @@ export type GroundingChunk = {
 };
 
 export interface UserInfo {
+  _id?: string;
   email: string;
   name: string;
   picture?: string;
+  role?: string;
+}
+
+export interface User {
+  _id: string;
+  alias: string;
+  email: string;
+  role: 'admin' | 'editor' | 'moderator' | 'viewer';
+  createdAt: string;
 }
 
 export interface ExportData {
   personName: string;
   quotes: Quote[];
+}
+
+export interface Person {
+  _id: string;
+  name: string;
+  firstname?: string;
+  surname?: string;
+  aliases: string[];
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteUpdatePayload {
+  text?: string;
+  person?: string;
+  sourceUrl?: string;
+  date?: string | Date;
+  tags?: string[];
+  context?: string;
+  analysisContext?: string;
+  metadata?: Record<string, any>;
 }

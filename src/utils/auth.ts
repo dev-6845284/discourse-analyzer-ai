@@ -22,5 +22,6 @@ export function getDefaultLocalUser() {
     email: 'developer@example.com',
     name: 'Local Developer',
     picture: '',
+    role: 'admin',
   };
 }

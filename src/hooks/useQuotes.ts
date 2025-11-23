@@ -116,12 +116,20 @@ export function useQuotes(handleLogout: () => void) {
           quoteText: quote.text,
           quoteLanguageCode: quote.languageCode,
           quoteLanguageName: quote.languageName,
+          analysisContext: quote.analysisContext,
+          links: quote.links,
           apiKeys,
         });
         const analysis = response.data;
 
         setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { ...q, analysis, isAnalyzing: false } : q))
+          prev.map((q) => (q.id === quote.id ? { 
+            ...q, 
+            analysisContext: quote.analysisContext,
+            links: quote.links,
+            draft: { ...q, analysis }, 
+            isAnalyzing: false 
+          } : q))
         );
       } catch (e: any) {
         handleError(e, 'Analysis');
@@ -233,6 +241,14 @@ export function useQuotes(handleLogout: () => void) {
     setQuotes([]);
   }, []);
 
+  const markQuoteAsStored = useCallback((quoteId: string) => {
+    setQuotes((prevQuotes) =>
+      prevQuotes.map((q) =>
+        q.id === quoteId ? { ...q, isStored: true } : q
+      )
+    );
+  }, []);
+
   const handleImproveQuote = useCallback(
     async (quote: Quote, selectedAI: string, personName: string) => {
       if (!personName) {
@@ -257,7 +273,7 @@ export function useQuotes(handleLogout: () => void) {
         const improvedQuote = response.data;
 
         setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { ...improvedQuote, isImproving: false } : q))
+          prev.map((q) => (q.id === quote.id ? { ...q, draft: { ...q, ...improvedQuote }, isImproving: false } : q))
         );
       } catch (e: any) {
         handleError(e, 'Quote improvement');
@@ -268,6 +284,27 @@ export function useQuotes(handleLogout: () => void) {
     },
     [handleLogout]
   );
+
+  const handleAcceptQuote = useCallback((quote: Quote) => {
+    if (!quote.draft) return;
+
+    // Ensure we reset loading states when merging draft, as the draft might contain
+    // stale loading states copied from the original quote during creation.
+    const updatedQuote = { 
+      ...quote, 
+      ...quote.draft, 
+      draft: undefined,
+      isAnalyzing: false,
+      isImproving: false
+    };
+    setQuotes((prev) => prev.map((q) => (q.id === quote.id ? updatedQuote : q)));
+  }, []);
+
+  const handleDiscardQuote = useCallback((quote: Quote) => {
+    setQuotes((prev) =>
+      prev.map((q) => (q.id === quote.id ? { ...q, draft: undefined } : q))
+    );
+  }, []);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -286,7 +323,10 @@ export function useQuotes(handleLogout: () => void) {
     handleUpdateQuoteLanguage,
     handleClearQuotes,
     handleImproveQuote,
+    handleAcceptQuote,
+    handleDiscardQuote,
     clearError,
     handleLoadQuotes,
+    markQuoteAsStored
   };
 }

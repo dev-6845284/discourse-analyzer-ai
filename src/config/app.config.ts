@@ -9,7 +9,7 @@
 // 6. Copy the generated Client ID and use it as the value for VITE_GOOGLE_CLIENT_ID.
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'missing-client-id';
 
-export const DEFAULT_AI_PROVIDER = 'gemini';
+export const DEFAULT_AI_PROVIDER = 'chatgpt';
 
 export const DEFAULT_SEARCH_PARAMS = {
   resultCount: 10,

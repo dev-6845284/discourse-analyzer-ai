@@ -15,6 +15,14 @@ export const isAuthenticated = (
   });
 
   if (process.env.BYPASS_AUTH === 'true') {
+    if (!req.session.user) {
+      req.session.user = {
+        email: 'developer@example.com',
+        name: 'Local Developer',
+        picture: '',
+        role: 'admin'
+      };
+    }
     return next();
   }
   if (req.session.user) {
