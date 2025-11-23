@@ -115,7 +115,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         aria-label={isCollapsed ? 'Expand quote' : 'Collapse quote'}
         title={isCollapsed ? 'Expand' : 'Collapse'}
       >
-        {isCollapsed ? '+' : '×'}
+        {isCollapsed ? '+' : '-'}
       </button>
 
       {hasDraft && (

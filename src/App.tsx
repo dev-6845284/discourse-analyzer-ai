@@ -106,29 +106,6 @@ const App: React.FC = () => {
   const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-  const handleSaveQuote = async (quote: Quote) => {
-    try {
-      await saveQuote({
-        text: quote.text,
-        personName: personName,
-        source: quote.source,
-        date: quote.date,
-        context: quote.title, // Using title as context for now if available
-        analysisContext: quote.analysisContext,
-        links: quote.links,
-        metadata: {
-          languageCode: quote.languageCode,
-          analysis: quote.analysis
-        }
-      });
-      markQuoteAsStored(quote.id);
-      // Optional: Show success message
-    } catch (err) {
-      console.error('Failed to save quote:', err);
-      // Optional: Show error message
-    }
-  };
-
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
   };
