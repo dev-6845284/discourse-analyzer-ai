@@ -4,137 +4,312 @@ import geminiService from '../llm_services/geniniService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
 import * as logService from './logService';
+import { postProcessResponse } from './responseProcessor';
+import { JsonParsingError, ModelResponseError } from '../types';
+import { createQuoteFixture } from '../testUtils/quoteFactory';
 
-// Mock dependencies
 jest.mock('../llm_services/geniniService');
 jest.mock('../llm_services/chatGptService');
 jest.mock('../llm_services/grokService');
 jest.mock('./logService');
+jest.mock('./responseProcessor', () => ({
+  postProcessResponse: jest.fn(),
+}));
+
+const createMockResponse = () => {
+  const response: Partial<Response> & { json: jest.Mock; status: jest.Mock } = {
+    json: jest.fn(),
+    status: jest.fn(),
+  };
+
+  (response.status as jest.Mock).mockReturnValue(response);
+  return response as Response & { json: jest.Mock; status: jest.Mock };
+};
 
 describe('apiService', () => {
+  const sessionId = 'test-session-id';
+  const logId = 'test-log-id';
   let req: Partial<Request>;
-  let res: Partial<Response>;
-  let jsonMock: jest.Mock;
-  let statusMock: jest.Mock;
+  let res: Response & { json: jest.Mock; status: jest.Mock };
 
   beforeEach(() => {
-    jsonMock = jest.fn();
-    statusMock = jest.fn().mockReturnValue({ json: jsonMock });
+    jest.clearAllMocks();
+    res = createMockResponse();
     req = {
       body: {},
-      session: { id: 'test-session-id' } as any,
+      session: { id: sessionId } as any,
     };
-    res = {
-      json: jsonMock,
-      status: statusMock,
-    };
-    jest.clearAllMocks();
-    (logService.addLogEntry as jest.Mock).mockReturnValue('test-log-id');
-  });
-
-  describe('fetchQuotes', () => {
-    it('should fetch quotes using gemini service when model is gemini', async () => {
-      req.body = {
-        model: 'gemini',
-        personName: 'Test Person',
-        apiKeys: { gemini: 'test-key' },
-      };
-
-      const mockQuotes = [{ text: 'Quote 1' }];
-      (geminiService.fetchQuotesForPerson as jest.Mock).mockResolvedValue(mockQuotes);
-
-      await apiService.fetchQuotes(req as Request, res as Response);
-
-      expect(geminiService.fetchQuotesForPerson).toHaveBeenCalledWith(
-        'test-key',
-        'Test Person',
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        'test-log-id',
-        'test-session-id'
-      );
-      expect(res.json).toHaveBeenCalledWith(mockQuotes);
-      expect(logService.updateLogEntry).toHaveBeenCalledWith('test-session-id', 'test-log-id', mockQuotes);
-    });
-
-    it('should handle errors gracefully', async () => {
-      req.body = {
-        model: 'gemini',
-        personName: 'Test Person',
-        apiKeys: { gemini: 'test-key' },
-      };
-
-      const error = new Error('Test Error');
-      (geminiService.fetchQuotesForPerson as jest.Mock).mockRejectedValue(error);
-
-      await apiService.fetchQuotes(req as Request, res as Response);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({ message: 'Failed to fetch quotes' });
-      expect(logService.updateLogEntry).toHaveBeenCalledWith('test-session-id', 'test-log-id', undefined, error);
-    });
+    (logService.addLogEntry as jest.Mock).mockReturnValue(logId);
+    (postProcessResponse as jest.Mock).mockImplementation((_operation: string, data: any) => data);
   });
 
   describe('analyzeQuote', () => {
-    it('should analyze quote using chatgpt service when model is chatgpt', async () => {
-      req.body = {
-        model: 'chatgpt',
-        quoteText: 'Test Quote',
-        apiKeys: { chatgpt: 'test-key' },
-      };
+    const baseAnalyzeBody = () => ({
+      model: 'chatgpt',
+      quoteText: 'Test Quote',
+      quoteLanguageCode: 'en',
+      quoteLanguageName: 'English',
+      temperature: 0.3,
+      apiKeys: { chatgpt: 'chat-key' },
+      analysisContext: 'context',
+      links: [{ url: 'https://example.com', type: 'quote' as const, title: 'Example' }],
+    });
 
+    it('routes analysis to chatgpt with full payload', async () => {
+      req.body = baseAnalyzeBody();
       const mockAnalysis = { sentiment: 'positive' };
       (chatGptService.analyzeQuoteText as jest.Mock).mockResolvedValue(mockAnalysis);
 
       await apiService.analyzeQuote(req as Request, res as Response);
 
       expect(chatGptService.analyzeQuoteText).toHaveBeenCalledWith(
-        'test-key',
+        'chat-key',
         'Test Quote',
-        undefined,
-        undefined,
-        undefined,
-        'test-log-id',
-        'test-session-id',
-        undefined,
-        undefined
+        'en',
+        'English',
+        0.3,
+        logId,
+        sessionId,
+        'context',
+        [{ url: 'https://example.com', type: 'quote', title: 'Example' }]
       );
       expect(res.json).toHaveBeenCalledWith(mockAnalysis);
-      expect(logService.updateLogEntry).toHaveBeenCalledWith('test-session-id', 'test-log-id', mockAnalysis);
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, mockAnalysis);
+    });
+
+    it('returns JsonParsingError details', async () => {
+      req.body = baseAnalyzeBody();
+      const error = new JsonParsingError('bad json', '{bad');
+      (chatGptService.analyzeQuoteText as jest.Mock).mockRejectedValue(error);
+
+      await apiService.analyzeQuote(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'bad json',
+        rawResponse: '{bad',
+        errorType: 'JsonParsingError',
+      });
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, undefined, error);
+    });
+
+    it('returns ModelResponseError details', async () => {
+      req.body = baseAnalyzeBody();
+      const error = new ModelResponseError('blocked');
+      (chatGptService.analyzeQuoteText as jest.Mock).mockRejectedValue(error);
+
+      await apiService.analyzeQuote(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'blocked',
+        errorType: 'ModelResponseError',
+      });
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, undefined, error);
+    });
+  });
+
+  describe('fetchQuotes', () => {
+    const baseFetchBody = () => ({
+      model: 'gemini',
+      personName: 'Test Person',
+      languages: ['en', 'lt'],
+      maxQuotes: 5,
+      context: ['context'],
+      temperature: 0.4,
+      maxQuoteLength: 120,
+      timePeriod: { description: '2020s' },
+      category: 'all',
+      rating: 'all',
+      sortOrder: 'newest',
+      apiKeys: { gemini: 'gem-key' },
+    });
+
+    it('routes fetch to gemini service with all options', async () => {
+      req.body = baseFetchBody();
+      const quotes = [createQuoteFixture({ id: 'quote-1' })];
+      (geminiService.fetchQuotesForPerson as jest.Mock).mockResolvedValue(quotes);
+
+      await apiService.fetchQuotes(req as Request, res as Response);
+
+      expect(geminiService.fetchQuotesForPerson).toHaveBeenCalledWith(
+        'gem-key',
+        'Test Person',
+        ['en', 'lt'],
+        5,
+        ['context'],
+        0.4,
+        120,
+        { description: '2020s' },
+        'all',
+        'all',
+        'newest',
+        logId,
+        sessionId
+      );
+      expect(res.json).toHaveBeenCalledWith(quotes);
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, quotes);
+    });
+
+    it('returns JsonParsingError metadata', async () => {
+      req.body = baseFetchBody();
+      const error = new JsonParsingError('bad json', '{bad');
+      (geminiService.fetchQuotesForPerson as jest.Mock).mockRejectedValue(error);
+
+      await apiService.fetchQuotes(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'bad json',
+        rawResponse: '{bad',
+        errorType: 'JsonParsingError',
+      });
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, undefined, error);
+    });
+
+    it('returns ModelResponseError metadata', async () => {
+      req.body = baseFetchBody();
+      const error = new ModelResponseError('blocked');
+      (geminiService.fetchQuotesForPerson as jest.Mock).mockRejectedValue(error);
+
+      await apiService.fetchQuotes(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'blocked',
+        errorType: 'ModelResponseError',
+      });
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, undefined, error);
     });
   });
 
   describe('extractQuotes', () => {
-    it('should extract quotes using grok service when model is grok', async () => {
-      req.body = {
-        model: 'grok',
-        personName: 'Test Person',
-        textContent: 'Some text with quotes',
-        apiKeys: { grok: 'test-key' },
-      };
+    const baseExtractBody = () => ({
+      model: 'grok',
+      personName: 'Person',
+      textContent: 'raw text',
+      temperature: 0.2,
+      apiKeys: { grok: 'grok-key' },
+      source: 'Provided Source',
+      title: 'Provided Title',
+      date: '2025-11-24',
+      languageCode: 'lt',
+      languageName: 'Lithuanian',
+    });
 
-      const mockExtractedQuotes = [{ text: 'Extracted Quote' }];
-      (grokService.extractQuotesFromText as jest.Mock).mockResolvedValue(mockExtractedQuotes);
+    it('post-processes extracted quotes and logs result', async () => {
+      req.body = baseExtractBody();
+      const rawQuotes = [createQuoteFixture({ id: 'raw-1' })];
+      const enrichedQuotes = [createQuoteFixture({ id: 'processed-1', text: 'Processed' })];
+      (grokService.extractQuotesFromText as jest.Mock).mockResolvedValue(rawQuotes);
+      (postProcessResponse as jest.Mock).mockReturnValue(enrichedQuotes);
 
       await apiService.extractQuotes(req as Request, res as Response);
 
       expect(grokService.extractQuotesFromText).toHaveBeenCalledWith(
-        'test-key',
-        'Test Person',
-        'Some text with quotes',
-        undefined,
-        'test-log-id',
-        'test-session-id'
+        'grok-key',
+        'Person',
+        'raw text',
+        0.2,
+        logId,
+        sessionId
       );
-      expect(res.json).toHaveBeenCalledWith(mockExtractedQuotes);
-      expect(logService.updateLogEntry).toHaveBeenCalledWith('test-session-id', 'test-log-id', mockExtractedQuotes);
+      expect(postProcessResponse).toHaveBeenCalledWith('extractQuotesFromText', rawQuotes, {
+        source: 'Provided Source',
+        title: 'Provided Title',
+        date: '2025-11-24',
+        languageCode: 'lt',
+        languageName: 'Lithuanian',
+      });
+      expect(res.json).toHaveBeenCalledWith(enrichedQuotes);
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, enrichedQuotes);
+    });
+
+    it('returns JsonParsingError metadata on failure', async () => {
+      req.body = baseExtractBody();
+      const error = new JsonParsingError('bad json', '{bad');
+      (grokService.extractQuotesFromText as jest.Mock).mockRejectedValue(error);
+
+      await apiService.extractQuotes(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'bad json',
+        rawResponse: '{bad',
+        errorType: 'JsonParsingError',
+      });
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, undefined, error);
+    });
+  });
+
+  describe('improveSingleQuote', () => {
+    const baseImproveBody = () => ({
+      model: 'chatgpt',
+      quote: createQuoteFixture({ text: 'Needs polishing' }),
+      personName: 'Person',
+      temperature: 0.1,
+      apiKeys: { chatgpt: 'chat-key' },
+    });
+
+    it('returns improved quote from service', async () => {
+      req.body = baseImproveBody();
+      const improved = createQuoteFixture({ text: 'Improved quote' });
+      (chatGptService.improveQuote as jest.Mock).mockResolvedValue(improved);
+
+      await apiService.improveSingleQuote(req as Request, res as Response);
+
+      expect(chatGptService.improveQuote).toHaveBeenCalledWith(
+        'chat-key',
+        req.body.quote,
+        'Person',
+        0.1,
+        logId,
+        sessionId
+      );
+      expect(res.json).toHaveBeenCalledWith(improved);
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, improved);
+    });
+
+    it('propagates JsonParsingError details', async () => {
+      req.body = baseImproveBody();
+      const error = new JsonParsingError('bad json', '{bad');
+      (chatGptService.improveQuote as jest.Mock).mockRejectedValue(error);
+
+      await apiService.improveSingleQuote(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'bad json',
+        rawResponse: '{bad',
+        errorType: 'JsonParsingError',
+      });
+      expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, undefined, error);
+    });
+  });
+
+  describe('getApiLogs', () => {
+    it('returns paginated logs for the session', () => {
+      req.query = { page: '2', pageSize: '5' };
+      const logsPayload = { logs: [{ id: '1' }], total: 1, pages: 1 };
+      (logService.getLogs as jest.Mock).mockReturnValue(logsPayload);
+
+      apiService.getApiLogs(req as Request, res as Response);
+
+      expect(logService.getLogs).toHaveBeenCalledWith(sessionId, 2, 5);
+      expect(res.json).toHaveBeenCalledWith(logsPayload);
+    });
+
+    it('handles errors when fetching logs', () => {
+      req.query = {};
+      const error = new Error('log failure');
+      (logService.getLogs as jest.Mock).mockImplementation(() => {
+        throw error;
+      });
+
+      apiService.getApiLogs(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Failed to fetch logs' });
     });
   });
 });
