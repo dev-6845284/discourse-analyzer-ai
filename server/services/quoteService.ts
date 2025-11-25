@@ -75,11 +75,19 @@ export const getQuotes = async (req: Request, res: Response) => {
     const { 
       personId, 
       text,        // text search
-      dateFrom,    // date range start
-      dateTo,      // date range end
+      dateFrom,    // quote date range start
+      dateTo,      // quote date range end
+      savedAtFrom, // savedAt range start
+      savedAtTo,   // savedAt range end
+      analyzedAtFrom, // analyzedAt range start
+      analyzedAtTo,   // analyzedAt range end
+      improvedAtFrom, // improvedAt range start
+      improvedAtTo,   // improvedAt range end
       rating,      // analysis rating filter (None, Low, Medium, High, Severe)
       language,    // language code filter
-      provider     // analyzedByProvider filter
+      provider,    // analyzedByProvider filter
+      sortField,   // field to sort by: savedAt, analyzedAt, improvedAt, date
+      sortOrder    // newest or oldest
     } = req.query;
     
     const query: any = {};
@@ -94,7 +102,7 @@ export const getQuotes = async (req: Request, res: Response) => {
       query.$text = { $search: text.trim() };
     }
 
-    // Date range filter
+    // Quote date range filter
     if (dateFrom || dateTo) {
       query.date = {};
       if (dateFrom) {
@@ -102,6 +110,39 @@ export const getQuotes = async (req: Request, res: Response) => {
       }
       if (dateTo) {
         query.date.$lte = new Date(dateTo as string);
+      }
+    }
+
+    // SavedAt date range filter
+    if (savedAtFrom || savedAtTo) {
+      query.savedAt = {};
+      if (savedAtFrom) {
+        query.savedAt.$gte = new Date(savedAtFrom as string);
+      }
+      if (savedAtTo) {
+        query.savedAt.$lte = new Date(savedAtTo as string);
+      }
+    }
+
+    // AnalyzedAt date range filter
+    if (analyzedAtFrom || analyzedAtTo) {
+      query.analyzedAt = {};
+      if (analyzedAtFrom) {
+        query.analyzedAt.$gte = new Date(analyzedAtFrom as string);
+      }
+      if (analyzedAtTo) {
+        query.analyzedAt.$lte = new Date(analyzedAtTo as string);
+      }
+    }
+
+    // ImprovedAt date range filter
+    if (improvedAtFrom || improvedAtTo) {
+      query.improvedAt = {};
+      if (improvedAtFrom) {
+        query.improvedAt.$gte = new Date(improvedAtFrom as string);
+      }
+      if (improvedAtTo) {
+        query.improvedAt.$lte = new Date(improvedAtTo as string);
       }
     }
 
@@ -128,9 +169,21 @@ export const getQuotes = async (req: Request, res: Response) => {
       ];
     }
 
+    // Determine sort configuration
+    const validSortFields = ['savedAt', 'analyzedAt', 'improvedAt', 'date'];
+    const field = validSortFields.includes(sortField as string) ? sortField as string : 'savedAt';
+    const order = sortOrder === 'oldest' ? 1 : -1;
+    
+    // Build sort object with fallback to savedAt for missing values
+    // MongoDB will use the primary sort field, falling back naturally
+    const sortConfig: any = { [field]: order };
+    if (field !== 'savedAt') {
+      sortConfig.savedAt = order; // Secondary sort for consistency
+    }
+
     const quotes = await Quote.find(query)
       .populate('person')
-      .sort({ createdAt: -1 });
+      .sort(sortConfig);
 
     res.json(quotes);
   } catch (error: any) {

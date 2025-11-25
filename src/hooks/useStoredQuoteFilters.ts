@@ -3,14 +3,25 @@ import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { STORAGE_KEYS, FILTER_DEBOUNCE_MS } from '../config/app.config';
 import { AnalysisRating } from '../types';
 
+export type SortField = 'savedAt' | 'analyzedAt' | 'improvedAt' | 'date';
+export type SortOrder = 'newest' | 'oldest';
+
 export interface StoredQuoteFilters {
   text: string;
   personId: string;
   dateFrom: string;
   dateTo: string;
+  savedAtFrom: string;
+  savedAtTo: string;
+  analyzedAtFrom: string;
+  analyzedAtTo: string;
+  improvedAtFrom: string;
+  improvedAtTo: string;
   rating: AnalysisRating | 'all';
   language: string;
   provider: string;
+  sortField: SortField;
+  sortOrder: SortOrder;
 }
 
 const DEFAULT_FILTERS: StoredQuoteFilters = {
@@ -18,9 +29,17 @@ const DEFAULT_FILTERS: StoredQuoteFilters = {
   personId: '',
   dateFrom: '',
   dateTo: '',
+  savedAtFrom: '',
+  savedAtTo: '',
+  analyzedAtFrom: '',
+  analyzedAtTo: '',
+  improvedAtFrom: '',
+  improvedAtTo: '',
   rating: 'all',
   language: 'lt', // Lithuanian default
   provider: 'all',
+  sortField: 'savedAt',
+  sortOrder: 'newest',
 };
 
 export function useStoredQuoteFilters() {
@@ -90,6 +109,12 @@ export function useStoredQuoteFilters() {
       filters.personId !== '' ||
       filters.dateFrom !== '' ||
       filters.dateTo !== '' ||
+      filters.savedAtFrom !== '' ||
+      filters.savedAtTo !== '' ||
+      filters.analyzedAtFrom !== '' ||
+      filters.analyzedAtTo !== '' ||
+      filters.improvedAtFrom !== '' ||
+      filters.improvedAtTo !== '' ||
       filters.rating !== 'all' ||
       filters.language !== 'lt' || // Compare to default
       filters.provider !== 'all'
@@ -103,11 +128,19 @@ export function useStoredQuoteFilters() {
       personId: filters.personId,
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
+      savedAtFrom: filters.savedAtFrom,
+      savedAtTo: filters.savedAtTo,
+      analyzedAtFrom: filters.analyzedAtFrom,
+      analyzedAtTo: filters.analyzedAtTo,
+      improvedAtFrom: filters.improvedAtFrom,
+      improvedAtTo: filters.improvedAtTo,
       rating: filters.rating,
       language: filters.language,
       provider: filters.provider,
+      sortField: filters.sortField,
+      sortOrder: filters.sortOrder,
     };
-  }, [debouncedText, filters.personId, filters.dateFrom, filters.dateTo, filters.rating, filters.language, filters.provider]);
+  }, [debouncedText, filters.personId, filters.dateFrom, filters.dateTo, filters.savedAtFrom, filters.savedAtTo, filters.analyzedAtFrom, filters.analyzedAtTo, filters.improvedAtFrom, filters.improvedAtTo, filters.rating, filters.language, filters.provider, filters.sortField, filters.sortOrder]);
 
   return {
     filters,

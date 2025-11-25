@@ -24,9 +24,17 @@ export interface StoredQuoteQueryParams {
   text?: string;
   dateFrom?: string;
   dateTo?: string;
+  savedAtFrom?: string;
+  savedAtTo?: string;
+  analyzedAtFrom?: string;
+  analyzedAtTo?: string;
+  improvedAtFrom?: string;
+  improvedAtTo?: string;
   rating?: string;
   language?: string;
   provider?: string;
+  sortField?: string;
+  sortOrder?: string;
 }
 
 export const getStoredQuotes = async (params: StoredQuoteQueryParams = {}) => {
