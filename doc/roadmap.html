@@ -1,0 +1,788 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Discourse Analyzer AI – Feature Roadmap Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-alt: #020617;
+      --card: #020617;
+      --card-alt: #020617;
+      --accent: #06b6d4;
+      --accent-soft: rgba(34, 211, 238, 0.15);
+      --accent-muted: #14b8a6;
+      --border: #1f2937;
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --success: #4ade80;
+      --warning: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #020617 100%);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 32px 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      background: linear-gradient(135deg, #020617 0%, #020617 55%, #0f172a 100%);
+      border-radius: 24px;
+      padding: 32px 28px 40px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      box-shadow:
+        0 18px 45px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.5),
+        0 0 60px rgba(45, 212, 191, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 5% 0, rgba(56, 189, 248, 0.06), transparent 55%),
+        radial-gradient(circle at 90% 0, rgba(45, 212, 191, 0.07), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .page-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .title-block h1 {
+      font-size: 1.8rem;
+      letter-spacing: 0.02em;
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .title-pill {
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      background: linear-gradient(90deg, rgba(8, 47, 73, 0.8), rgba(15, 118, 110, 0.8));
+      border: 1px solid rgba(34, 211, 238, 0.7);
+      color: #e0f2fe;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    .meta {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .meta strong {
+      color: var(--accent-muted);
+    }
+
+    .meta .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+    }
+
+    .meta .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 880px) {
+      .page {
+        padding: 22px 18px 28px;
+        border-radius: 20px;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .meta {
+        text-align: left;
+      }
+
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    section {
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    h2::before {
+      content: "";
+      display: inline-block;
+      width: 26px;
+      height: 1px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.7), transparent);
+    }
+
+    .tagline {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      font-size: 0.74rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .pill.impact {
+      border-color: rgba(34, 197, 94, 0.9);
+      color: #bbf7d0;
+      background: rgba(22, 101, 52, 0.6);
+    }
+
+    .pill.difficulty {
+      border-color: rgba(249, 115, 22, 0.9);
+      color: #fed7aa;
+      background: rgba(124, 45, 18, 0.45);
+    }
+
+    .pill.label {
+      border-color: rgba(56, 189, 248, 0.8);
+      color: #e0f2fe;
+      background: rgba(8, 47, 73, 0.7);
+    }
+
+    .feature-card {
+      position: relative;
+      padding: 12px 12px 12px 14px;
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.96)),
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 65%);
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      margin-bottom: 10px;
+      box-shadow:
+        0 14px 35px rgba(15, 23, 42, 0.9),
+        inset 0 0 0 0.5px rgba(15, 23, 42, 0.8);
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 55%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .feature-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .feature-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feature-id {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .feature-body {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .feature-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .feature-list li {
+      margin-bottom: 3px;
+    }
+
+    .feature-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .labelled-value {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .labelled-value span:first-child {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: rgba(148, 163, 184, 0.9);
+      letter-spacing: 0.1em;
+    }
+
+    .badge-soft {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--text-muted);
+    }
+
+    .badge-soft.phase1 {
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+
+    .badge-soft.phase2 {
+      border-color: #38bdf8;
+      color: #e0f2fe;
+    }
+
+    .badge-soft.phase3 {
+      border-color: #fbbf24;
+      color: #fef3c7;
+    }
+
+    .side-card {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      padding: 12px 12px 14px;
+      border: 1px solid rgba(30, 64, 175, 0.75);
+      box-shadow:
+        0 12px 26px rgba(15, 23, 42, 0.85),
+        inset 0 0 0 0.5px rgba(15, 23, 42, 0.9);
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .side-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 55%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .side-card h3 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: rgba(148, 163, 184, 0.95);
+      margin: 0 0 6px;
+    }
+
+    .side-card p {
+      margin: 0 0 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .side-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .side-list li {
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .side-list span.label {
+      color: rgba(148, 163, 184, 0.95);
+    }
+
+    .priority-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      margin-right: 5px;
+    }
+
+    .priority-high {
+      background: #f97316;
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.8);
+    }
+
+    .priority-med {
+      background: #eab308;
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.8);
+    }
+
+    .priority-low {
+      background: #22c55e;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+    }
+
+    footer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(30, 64, 175, 0.9);
+      font-size: 0.75rem;
+      color: rgba(148, 163, 184, 0.9);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    footer a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .export-hint {
+      font-size: 0.75rem;
+      color: rgba(148, 163, 184, 0.95);
+      text-align: right;
+    }
+
+    .export-hint code {
+      font-size: 0.75rem;
+      background: rgba(15, 23, 42, 0.95);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      color: #e5e7eb;
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .page {
+        box-shadow: none;
+        border-radius: 0;
+        border: none;
+      }
+      .page::before {
+        display: none;
+      }
+      .export-hint {
+        display: none;
+      }
+      .print-only {
+        display: inline;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-inner">
+
+      <header>
+        <div class="title-block">
+          <h1>
+            Discourse Analyzer AI
+            <span class="title-pill">Feature Roadmap</span>
+          </h1>
+          <p class="subtitle">
+            Suggested high-impact improvements focused on analysis depth, projects and reports,
+            search UX, auditability, and LLM transparency.
+          </p>
+        </div>
+        <div class="meta">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            Draft Feature Plan
+          </div>
+          <div>Generated for: <strong>discourse-analyzer-ai</strong></div>
+          <div>Date: <strong>2025‑11‑25</strong></div>
+          <div>Scope: <strong>Web + Node/Mongo backend</strong></div>
+        </div>
+      </header>
+
+      <div class="grid">
+
+        <!-- Left: Feature descriptions -->
+        <div>
+          <section>
+            <h2>Overview</h2>
+            <p class="tagline">
+              The current app already supports quote search, analysis, and storage across multiple LLM providers.
+              The roadmap below focuses on five next-step improvements ranked by impact and effort.
+            </p>
+            <div class="pill-row">
+              <span class="pill label">Analysis depth</span>
+              <span class="pill label">Projects & reporting</span>
+              <span class="pill label">Search UX</span>
+              <span class="pill label">Auditability</span>
+              <span class="pill label">LLM transparency</span>
+            </div>
+          </section>
+
+          <section>
+            <h2>Priority Features</h2>
+
+            <!-- Feature A -->
+            <article class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-title">
+                  <span class="feature-id">A</span>
+                  <span>Per‑Person Analysis Dashboard</span>
+                </div>
+                <div class="pill-row">
+                  <span class="pill impact">Impact: High</span>
+                  <span class="pill difficulty">Difficulty: Medium</span>
+                </div>
+              </div>
+              <p class="feature-body">
+                For each person, surface an analysis overview that aggregates all stored quotes:
+                category distribution, average ratings, and simple timelines to show how discourse
+                changes over time.
+              </p>
+              <ul class="feature-list">
+                <li>Expose a backend summary endpoint per person (category &amp; rating stats, time buckets).</li>
+                <li>Create a <code>PersonDashboard</code> UI hooked into <code>PersonManager</code> / stored quotes view.</li>
+                <li>Start with lightweight bar/line charts; later extend to comparisons and trends.</li>
+              </ul>
+              <div class="feature-meta">
+                <div class="labelled-value">
+                  <span>Focus</span><span>Analytical depth &amp; insight</span>
+                </div>
+                <span class="badge-soft phase2">Phase 2</span>
+              </div>
+            </article>
+
+            <!-- Feature B -->
+            <article class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-title">
+                  <span class="feature-id">B</span>
+                  <span>Projects (Saved Analyses)</span>
+                </div>
+                <div class="pill-row">
+                  <span class="pill impact">Impact: Very High</span>
+                  <span class="pill difficulty">Difficulty: Medium–High</span>
+                </div>
+              </div>
+              <p class="feature-body">
+                Introduce projects as first‑class entities: named analysis workspaces that bundle
+                search parameters, selected quotes, and analyst notes into something reusable and shareable.
+              </p>
+              <ul class="feature-list">
+                <li>Add a <code>Project</code> model and API (CRUD, quote linking, ownership).</li>
+                <li>New “Projects” tab: list, open, rename, and delete projects.</li>
+                <li>Inside a project: dedicated view with selected quotes and a notes panel.</li>
+              </ul>
+              <div class="feature-meta">
+                <div class="labelled-value">
+                  <span>Focus</span><span>Workflow &amp; collaboration</span>
+                </div>
+                <span class="badge-soft phase2">Phase 2</span>
+              </div>
+            </article>
+
+            <!-- Feature C -->
+            <article class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-title">
+                  <span class="feature-id">C</span>
+                  <span>Export &amp; AI‑Generated Reports</span>
+                </div>
+                <div class="pill-row">
+                  <span class="pill impact">Impact: High</span>
+                  <span class="pill difficulty">Difficulty: Medium</span>
+                </div>
+              </div>
+              <p class="feature-body">
+                From a project or current result set, let users export quotes and analyses as
+                JSON/CSV and trigger AI‑generated narrative reports summarising key themes and contradictions.
+              </p>
+              <ul class="feature-list">
+                <li>Implement <code>export.ts</code> utilities for JSON/CSV export from the browser.</li>
+                <li>Add a backend “generate report” endpoint leveraging existing LLM services.</li>
+                <li>Use a <code>ReportModal</code> to preview, tweak, and download Markdown/PDF.</li>
+              </ul>
+              <div class="feature-meta">
+                <div class="labelled-value">
+                  <span>Focus</span><span>Deliverables &amp; sharing</span>
+                </div>
+                <span class="badge-soft phase3">Phase 3</span>
+              </div>
+            </article>
+
+            <!-- Feature D -->
+            <article class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-title">
+                  <span class="feature-id">D</span>
+                  <span>Advanced Search &amp; Filters for Stored Quotes</span>
+                </div>
+                <div class="pill-row">
+                  <span class="pill impact">Impact: Medium–High</span>
+                  <span class="pill difficulty">Difficulty: Medium</span>
+                </div>
+              </div>
+              <p class="feature-body">
+                Strengthen navigation across growing datasets with robust filters and keyword search
+                over stored quotes, analysis metadata, and notes.
+              </p>
+              <ul class="feature-list">
+                <li>Extend the stored‑quote API with text, person, date, rating, language, and provider filters.</li>
+                <li>Create <code>useStoredQuoteFilters</code> and a dedicated filter bar above <code>StoredQuotes</code>.</li>
+                <li>Persist last‑used filters in localStorage to streamline frequent workflows.</li>
+              </ul>
+              <div class="feature-meta">
+                <div class="labelled-value">
+                  <span>Focus</span><span>Usability &amp; retrieval</span>
+                </div>
+                <span class="badge-soft phase1">Phase 1</span>
+              </div>
+            </article>
+
+            <!-- Feature E -->
+            <article class="feature-card">
+              <div class="feature-card-header">
+                <div class="feature-title">
+                  <span class="feature-id">E</span>
+                  <span>Audit &amp; Attribution Metadata</span>
+                </div>
+                <div class="pill-row">
+                  <span class="pill impact">Impact: Medium</span>
+                  <span class="pill difficulty">Difficulty: Low–Medium</span>
+                </div>
+              </div>
+              <p class="feature-body">
+                Capture who ran which analysis with which provider, when, and surface that metadata
+                alongside each quote to improve trust and compliance.
+              </p>
+              <ul class="feature-list">
+                <li>Extend <code>Quote</code> schema with audit fields (user, provider, timestamps, source mode).</li>
+                <li>Propagate current user and provider through <code>useQuotes</code> into save/analyse endpoints.</li>
+                <li>Show a concise “meta” line in quote cards and stored‑quotes detail views.</li>
+              </ul>
+              <div class="feature-meta">
+                <div class="labelled-value">
+                  <span>Focus</span><span>Governance &amp; trust</span>
+                </div>
+                <span class="badge-soft phase1">Phase 1</span>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <!-- Right: Roadmap & priorities -->
+        <aside>
+          <section>
+            <h2>Roadmap</h2>
+
+            <div class="side-card">
+              <h3>Phase 1 &mdash; Foundations</h3>
+              <p>Quick wins that improve reliability and daily usability.</p>
+              <ul class="side-list">
+                <li>
+                  <span class="label">
+                    <span class="priority-dot priority-high"></span>
+                    E. Audit &amp; Attribution
+                  </span>
+                  <span>Medium impact / Low–Med effort</span>
+                </li>
+                <li>
+                  <span class="label">
+                    <span class="priority-dot priority-med"></span>
+                    D. Stored‑Quote Filters
+                  </span>
+                  <span>Med–High impact / Med effort</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="side-card">
+              <h3>Phase 2 &mdash; Analysis &amp; Projects</h3>
+              <p>Turn the app into a reusable analysis environment.</p>
+              <ul class="side-list">
+                <li>
+                  <span class="label">
+                    <span class="priority-dot priority-high"></span>
+                    B. Projects
+                  </span>
+                  <span>Very high impact / Med–High effort</span>
+                </li>
+                <li>
+                  <span class="label">
+                    <span class="priority-dot priority-med"></span>
+                    A. Person Dashboards
+                  </span>
+                  <span>High impact / Med effort</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="side-card">
+              <h3>Phase 3 &mdash; Reporting</h3>
+              <p>Produce polished outputs and summaries directly from the tool.</p>
+              <ul class="side-list">
+                <li>
+                  <span class="label">
+                    <span class="priority-dot priority-med"></span>
+                    C. Exports &amp; AI Reports
+                  </span>
+                  <span>High impact / Med effort</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>Next Steps</h2>
+            <div class="side-card">
+              <h3>Suggested Implementation Order</h3>
+              <ol class="side-list">
+                <li>
+                  <span class="label">1. Extend Quote schema (E)</span>
+                  <span>backend + quote UIs</span>
+                </li>
+                <li>
+                  <span class="label">2. Stored‑quote filters (D)</span>
+                  <span>API + filter bar</span>
+                </li>
+                <li>
+                  <span class="label">3. Project model &amp; tab (B)</span>
+                  <span>CRUD + basic UI</span>
+                </li>
+                <li>
+                  <span class="label">4. Person dashboard (A)</span>
+                  <span>summary API + charts</span>
+                </li>
+                <li>
+                  <span class="label">5. Export &amp; reports (C)</span>
+                  <span>export utils + LLM</span>
+                </li>
+              </ol>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <footer>
+        <div>
+          This report summarises suggested improvements only; it does not reflect live production priorities.
+        </div>
+        <div class="export-hint">
+          To save a PDF, use <span class="print-only">browser print &rarr; Save as PDF.</span>
+          <span class="print-only"> </span>
+          <span class="screen-only">browser print &rarr; <code>Save as PDF</code>.</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

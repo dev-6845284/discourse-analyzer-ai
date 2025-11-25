@@ -39,6 +39,18 @@ export interface Quote {
   personName?: string;
   isStored?: boolean;
   draft?: Partial<Quote>;
+  // Audit fields
+  savedByUser?: string;
+  savedByName?: string;
+  savedAt?: string;
+  analyzedByUser?: string;
+  analyzedByName?: string;
+  analyzedByProvider?: string;
+  analyzedAt?: string;
+  improvedByUser?: string;
+  improvedByName?: string;
+  improvedByProvider?: string;
+  improvedAt?: string;
 }
 
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
@@ -123,4 +135,9 @@ export interface QuoteUpdatePayload {
   context?: string;
   analysisContext?: string;
   metadata?: Record<string, any>;
+  // Audit fields
+  analyzedByProvider?: string;
+  analyzedAt?: string;
+  improvedByProvider?: string;
+  improvedAt?: string;
 }

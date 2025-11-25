@@ -1,10 +1,16 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Quote from '../models/Quote';
 import Person from '../models/Person';
 
 export const saveQuote = async (req: Request, res: Response) => {
   try {
-    const { text, personName, source, date, context, tags, metadata, analysisContext, links } = req.body;
+    const { 
+      text, personName, source, date, context, tags, metadata, analysisContext, links,
+      // Audit fields from request
+      savedByUser, savedByName, analyzedByUser, analyzedByName, analyzedByProvider, analyzedAt,
+      improvedByUser, improvedByName, improvedByProvider, improvedAt
+    } = req.body;
 
     if (!text || !personName) {
       return res.status(400).json({ error: 'Text and personName are required' });
@@ -31,7 +37,7 @@ export const saveQuote = async (req: Request, res: Response) => {
       finalMetadata.links = links;
     }
 
-    // Create the quote
+    // Create the quote with audit fields
     const quote = new Quote({
       text,
       person: person._id,
@@ -41,6 +47,18 @@ export const saveQuote = async (req: Request, res: Response) => {
       analysisContext,
       tags: tags || [],
       metadata: finalMetadata,
+      // Audit fields
+      savedByUser: savedByUser ? new mongoose.Types.ObjectId(savedByUser) : undefined,
+      savedByName,
+      savedAt: new Date(),
+      analyzedByUser: analyzedByUser ? new mongoose.Types.ObjectId(analyzedByUser) : undefined,
+      analyzedByName,
+      analyzedByProvider,
+      analyzedAt: analyzedAt ? new Date(analyzedAt) : undefined,
+      improvedByUser: improvedByUser ? new mongoose.Types.ObjectId(improvedByUser) : undefined,
+      improvedByName,
+      improvedByProvider,
+      improvedAt: improvedAt ? new Date(improvedAt) : undefined,
     });
 
     await quote.save();
@@ -76,6 +94,17 @@ export const updateQuote = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
+    
+    // Convert string user IDs to ObjectIds for audit fields
+    if (updateData.analyzedByUser) {
+      updateData.analyzedByUser = new mongoose.Types.ObjectId(updateData.analyzedByUser);
+    }
+    if (updateData.improvedByUser) {
+      updateData.improvedByUser = new mongoose.Types.ObjectId(updateData.improvedByUser);
+    }
+    if (updateData.savedByUser) {
+      updateData.savedByUser = new mongoose.Types.ObjectId(updateData.savedByUser);
+    }
 
     const quote = await Quote.findByIdAndUpdate(
       id,

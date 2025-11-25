@@ -97,7 +97,14 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         }
       };
 
-      await updateQuote(quote.id, updatePayload);
+      // Include audit metadata for analysis
+      const auditPayload = {
+        ...updatePayload,
+        analyzedByProvider: selectedAI,
+        analyzedAt: new Date().toISOString()
+      };
+
+      await updateQuote(quote.id, auditPayload);
       
     } catch (err) {
       console.error('Failed to persist accepted quote:', err);
@@ -131,6 +138,18 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           analysisContext: q.analysisContext,
           links: q.metadata?.links,
           metadata: q.metadata,
+          // Audit fields
+          savedByUser: q.savedByUser,
+          savedByName: q.savedByName,
+          savedAt: q.savedAt,
+          analyzedByUser: q.analyzedByUser,
+          analyzedByName: q.analyzedByName,
+          analyzedByProvider: q.analyzedByProvider,
+          analyzedAt: q.analyzedAt,
+          improvedByUser: q.improvedByUser,
+          improvedByName: q.improvedByName,
+          improvedByProvider: q.improvedByProvider,
+          improvedAt: q.improvedAt,
         }));
         setQuotes(mappedQuotes);
       } catch (err) {

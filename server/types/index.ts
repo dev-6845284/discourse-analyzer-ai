@@ -29,6 +29,18 @@ export interface Quote {
   analysis?: AnalysisResult;
   isAnalyzing?: boolean;
   isImproving?: boolean;
+  // Audit fields
+  savedByUser?: string;
+  savedByName?: string;
+  savedAt?: string;
+  analyzedByUser?: string;
+  analyzedByName?: string;
+  analyzedByProvider?: string;
+  analyzedAt?: string;
+  improvedByUser?: string;
+  improvedByName?: string;
+  improvedByProvider?: string;
+  improvedAt?: string;
 }
 
 export type GroundingChunk = {

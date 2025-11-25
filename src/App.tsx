@@ -369,6 +369,11 @@ const App: React.FC = () => {
                           date: quote.date,
                           analysisContext: quote.analysisContext,
                           links: quote.links,
+                          // Include provider info if quote has analysis
+                          ...(quote.analysis ? {
+                            analyzedByProvider: selectedAI,
+                            analyzedAt: new Date().toISOString()
+                          } : {}),
                           metadata: {
                             title: quote.title,
                             languageCode: quote.languageCode,
