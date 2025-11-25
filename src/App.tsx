@@ -381,10 +381,10 @@ const App: React.FC = () => {
                             languageName: quote.languageName,
                             analysis: quote.analysis
                           }
-                        }).then(() => markQuoteAsStored(quote.id));
+                        }).then((response) => markQuoteAsStored(quote.id, response.data._id));
                       }}
                       onLanguageChange={handleUpdateQuoteLanguage}
-                      onAccept={acceptQuote}
+                      onAccept={(quote) => acceptQuote(quote, selectedAI)}
                       onDiscard={discardQuote}
                       onRemove={removeQuote}
                       clearError={clearError}

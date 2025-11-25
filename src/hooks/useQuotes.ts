@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { Quote, AnalysisCategory, AnalysisRating, ExportData } from '../types';
+import { Quote, AnalysisCategory, AnalysisRating, ExportData, QuoteUpdatePayload } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { TimePeriodResult } from '../utils/timePeriod';
-import api from '../utils/api';
+import api, { updateQuote } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 // Custom error class for JSON parsing failures from the backend
@@ -241,10 +241,10 @@ export function useQuotes(handleLogout: () => void) {
     setQuotes([]);
   }, []);
 
-  const markQuoteAsStored = useCallback((quoteId: string) => {
+  const markQuoteAsStored = useCallback((quoteId: string, dbId?: string) => {
     setQuotes((prevQuotes) =>
       prevQuotes.map((q) =>
-        q.id === quoteId ? { ...q, isStored: true } : q
+        q.id === quoteId ? { ...q, isStored: true, id: dbId || q.id } : q
       )
     );
   }, []);
@@ -285,7 +285,7 @@ export function useQuotes(handleLogout: () => void) {
     [handleLogout]
   );
 
-  const handleAcceptQuote = useCallback((quote: Quote) => {
+  const handleAcceptQuote = useCallback(async (quote: Quote, selectedAI?: string) => {
     if (!quote.draft) return;
 
     // Ensure we reset loading states when merging draft, as the draft might contain
@@ -298,6 +298,37 @@ export function useQuotes(handleLogout: () => void) {
       isImproving: false
     };
     setQuotes((prev) => prev.map((q) => (q.id === quote.id ? updatedQuote : q)));
+
+    // If the quote is already stored in the database, persist the changes
+    if (quote.isStored) {
+      try {
+        const updatePayload: QuoteUpdatePayload = {
+          text: updatedQuote.text,
+          analysisContext: updatedQuote.analysisContext,
+          sourceUrl: updatedQuote.source,
+          date: updatedQuote.date,
+          metadata: {
+            ...(updatedQuote.analysis ? { analysis: updatedQuote.analysis } : {}),
+            languageCode: updatedQuote.languageCode,
+            languageName: updatedQuote.languageName,
+            title: updatedQuote.title,
+            links: updatedQuote.links
+          }
+        };
+
+        // Include audit metadata for analysis
+        const auditPayload = {
+          ...updatePayload,
+          ...(selectedAI ? { analyzedByProvider: selectedAI } : {}),
+          analyzedAt: new Date().toISOString()
+        };
+
+        await updateQuote(quote.id, auditPayload);
+      } catch (e: any) {
+        console.error('Failed to persist accepted quote:', e);
+        setError('Failed to save analysis to the server.');
+      }
+    }
   }, []);
 
   const handleDiscardQuote = useCallback((quote: Quote) => {
