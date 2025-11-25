@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
+import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
+import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
 import api, { getStoredQuotes, updateQuote } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
@@ -15,6 +17,31 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filter state
+  const { filters, queryParams, hasActiveFilters, updateFilter, resetFilters } = useStoredQuoteFilters();
+  const [personFilterName, setPersonFilterName] = useState('');
+  const [selectedFilterPerson, setSelectedFilterPerson] = useState<Person | null>(null);
+
+  // Sync selectedPerson prop with filter state on mount
+  useEffect(() => {
+    if (selectedPerson) {
+      setPersonFilterName(selectedPerson.name);
+      setSelectedFilterPerson(selectedPerson);
+      updateFilter('personId', selectedPerson._id || '');
+    }
+  }, []); // Only on mount
+
+  const handlePersonSelect = useCallback((person: Person | null) => {
+    setSelectedFilterPerson(person);
+    updateFilter('personId', person?._id || '');
+  }, [updateFilter]);
+
+  const handleResetFilters = useCallback(() => {
+    resetFilters();
+    setPersonFilterName('');
+    setSelectedFilterPerson(null);
+  }, [resetFilters]);
 
   const handleAnalyze = async (quote: Quote) => {
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
@@ -123,7 +150,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       setIsLoading(true);
       setError(null);
       try {
-        const response = await getStoredQuotes(selectedPerson?._id);
+        const response = await getStoredQuotes(queryParams);
         // Map backend quotes to frontend Quote interface
         const mappedQuotes: Quote[] = response.data.map((q: any) => ({
           id: q._id,
@@ -161,20 +188,31 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     };
 
     fetchQuotes();
-  }, [selectedPerson]);
-
-  if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
-  if (error) return <div className="text-red-500 p-4">{error}</div>;
+  }, [queryParams]); // Re-fetch when filters change (uses debounced text)
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {selectedPerson ? `Stored Quotes for ${selectedPerson.name}` : 'All Stored Quotes'}
+      <h2 className="text-2xl font-bold text-gray-100 mb-4">
+        {selectedFilterPerson ? `Stored Quotes for ${selectedFilterPerson.name}` : 'All Stored Quotes'}
       </h2>
       
-      {quotes.length === 0 ? (
-        <p className="text-gray-500">No quotes found.</p>
-      ) : (
+      {/* Filter Bar */}
+      <StoredQuoteFilterBar
+        filters={filters}
+        personName={personFilterName}
+        onPersonNameChange={setPersonFilterName}
+        onPersonSelect={handlePersonSelect}
+        onFilterChange={updateFilter}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters || !!selectedFilterPerson}
+      />
+
+      {isLoading && <div className="flex justify-center p-8"><Spinner /></div>}
+      {error && <div className="text-red-500 p-4">{error}</div>}
+      
+      {!isLoading && !error && quotes.length === 0 ? (
+        <p className="text-gray-500">No quotes found{hasActiveFilters ? ' matching your filters' : ''}.</p>
+      ) : !isLoading && !error && (
         <div className="space-y-4">
           {quotes.map((quote) => (
             <QuoteCard

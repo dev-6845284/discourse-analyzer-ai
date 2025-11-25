@@ -23,4 +23,8 @@ export const STORAGE_KEYS = {
   SELECTED_AI: 'selectedAI',
   TIME_PERIOD_TYPE: 'timePeriodType',
   TIME_PERIOD_VALUE: 'timePeriodValue',
+  STORED_QUOTE_FILTERS: 'storedQuoteFilters',
 } as const;
+
+// Debounce delay for text search filters (milliseconds)
+export const FILTER_DEBOUNCE_MS = 500;

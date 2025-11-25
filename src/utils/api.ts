@@ -19,9 +19,22 @@ export const saveQuote = async (quoteData: any) => {
   return api.post('/quotes', quoteData);
 };
 
-export const getStoredQuotes = async (personId?: string) => {
-  const params = personId ? { personId } : {};
-  return api.get('/quotes', { params });
+export interface StoredQuoteQueryParams {
+  personId?: string;
+  text?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  rating?: string;
+  language?: string;
+  provider?: string;
+}
+
+export const getStoredQuotes = async (params: StoredQuoteQueryParams = {}) => {
+  // Filter out empty/undefined values and 'all' values
+  const cleanParams = Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v && v !== 'all' && v.trim?.() !== '')
+  );
+  return api.get('/quotes', { params: cleanParams });
 };
 
 export const updateQuote = async (quoteId: string, quoteData: QuoteUpdatePayload) => {

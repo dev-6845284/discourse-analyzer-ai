@@ -72,11 +72,60 @@ export const saveQuote = async (req: Request, res: Response) => {
 
 export const getQuotes = async (req: Request, res: Response) => {
   try {
-    const { personId } = req.query;
+    const { 
+      personId, 
+      text,        // text search
+      dateFrom,    // date range start
+      dateTo,      // date range end
+      rating,      // analysis rating filter (None, Low, Medium, High, Severe)
+      language,    // language code filter
+      provider     // analyzedByProvider filter
+    } = req.query;
+    
     const query: any = {};
 
+    // Person filter
     if (personId) {
       query.person = personId;
+    }
+
+    // Text search using MongoDB text index
+    if (text && typeof text === 'string' && text.trim()) {
+      query.$text = { $search: text.trim() };
+    }
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      query.date = {};
+      if (dateFrom) {
+        query.date.$gte = new Date(dateFrom as string);
+      }
+      if (dateTo) {
+        query.date.$lte = new Date(dateTo as string);
+      }
+    }
+
+    // Language filter (matches metadata.languageCode)
+    if (language && typeof language === 'string' && language !== 'all') {
+      query['metadata.languageCode'] = language;
+    }
+
+    // Provider filter
+    if (provider && typeof provider === 'string' && provider !== 'all') {
+      query.analyzedByProvider = provider;
+    }
+
+    // Rating filter - filter by highest rating in analysis.ratings
+    // Valid ratings: None, Low, Medium, High, Severe
+    const validRatings = ['None', 'Low', 'Medium', 'High', 'Severe'];
+    if (rating && typeof rating === 'string' && validRatings.includes(rating)) {
+      // Match quotes where any category in metadata.analysis has the specified rating
+      query.$or = [
+        { 'metadata.analysis.Populism.rating': rating },
+        { 'metadata.analysis.Fact Twisting.rating': rating },
+        { 'metadata.analysis.Lies & False Claims.rating': rating },
+        { 'metadata.analysis.Inflammatory Language.rating': rating },
+      ];
     }
 
     const quotes = await Quote.find(query)
