@@ -83,6 +83,8 @@ export const getQuotes = async (req: Request, res: Response) => {
       analyzedAtTo,   // analyzedAt range end
       improvedAtFrom, // improvedAt range start
       improvedAtTo,   // improvedAt range end
+      isAnalyzed,  // filter by analyzed status: 'true', 'false', or 'all'
+      isImproved,  // filter by improved status: 'true', 'false', or 'all'
       rating,      // analysis rating filter (None, Low, Medium, High, Severe)
       language,    // language code filter
       provider,    // analyzedByProvider filter
@@ -167,6 +169,22 @@ export const getQuotes = async (req: Request, res: Response) => {
         { 'metadata.analysis.Lies & False Claims.rating': rating },
         { 'metadata.analysis.Inflammatory Language.rating': rating },
       ];
+    }
+
+    // Analyzed status filter
+    if (isAnalyzed === 'true') {
+      query.analyzedAt = { ...query.analyzedAt, $exists: true, $ne: null };
+    } else if (isAnalyzed === 'false') {
+      query.$and = query.$and || [];
+      query.$and.push({ $or: [{ analyzedAt: { $exists: false } }, { analyzedAt: null }] });
+    }
+
+    // Improved status filter
+    if (isImproved === 'true') {
+      query.improvedAt = { ...query.improvedAt, $exists: true, $ne: null };
+    } else if (isImproved === 'false') {
+      query.$and = query.$and || [];
+      query.$and.push({ $or: [{ improvedAt: { $exists: false } }, { improvedAt: null }] });
     }
 
     // Determine sort configuration

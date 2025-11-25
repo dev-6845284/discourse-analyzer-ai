@@ -47,19 +47,11 @@ const App: React.FC = () => {
     setIsExtracting,
     handleLanguageChange,
     clearTextToExtract,
-    // Advanced date filters
-    savedAtFrom,
-    setSavedAtFrom,
-    savedAtTo,
-    setSavedAtTo,
-    analyzedAtFrom,
-    setAnalyzedAtFrom,
-    analyzedAtTo,
-    setAnalyzedAtTo,
-    improvedAtFrom,
-    setImprovedAtFrom,
-    improvedAtTo,
-    setImprovedAtTo,
+    // Status filters
+    isAnalyzed,
+    setIsAnalyzed,
+    isImproved,
+    setIsImproved,
   } = useSearchParams();
 
   const {
@@ -284,19 +276,11 @@ const App: React.FC = () => {
                       maxQuoteLength,
                       setMaxQuoteLength,
                     }}
-                    dateFilters={{
-                      savedAtFrom,
-                      setSavedAtFrom,
-                      savedAtTo,
-                      setSavedAtTo,
-                      analyzedAtFrom,
-                      setAnalyzedAtFrom,
-                      analyzedAtTo,
-                      setAnalyzedAtTo,
-                      improvedAtFrom,
-                      setImprovedAtFrom,
-                      improvedAtTo,
-                      setImprovedAtTo,
+                    statusFilters={{
+                      isAnalyzed,
+                      setIsAnalyzed,
+                      isImproved,
+                      setIsImproved,
                     }}
                     timePeriod={{
                       type: timePeriodType,

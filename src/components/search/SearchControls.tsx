@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PersonSelector } from '../people/PersonSelector';
 import Spinner from '../Spinner';
 import { SUPPORTED_LANGUAGES } from '../../constants';
@@ -16,19 +16,11 @@ interface SearchControlsProps {
     maxQuoteLength: number;
     setMaxQuoteLength: (len: number) => void;
   };
-  dateFilters: {
-    savedAtFrom: string;
-    setSavedAtFrom: (date: string) => void;
-    savedAtTo: string;
-    setSavedAtTo: (date: string) => void;
-    analyzedAtFrom: string;
-    setAnalyzedAtFrom: (date: string) => void;
-    analyzedAtTo: string;
-    setAnalyzedAtTo: (date: string) => void;
-    improvedAtFrom: string;
-    setImprovedAtFrom: (date: string) => void;
-    improvedAtTo: string;
-    setImprovedAtTo: (date: string) => void;
+  statusFilters: {
+    isAnalyzed: 'all' | 'true' | 'false';
+    setIsAnalyzed: (value: 'all' | 'true' | 'false') => void;
+    isImproved: 'all' | 'true' | 'false';
+    setIsImproved: (value: 'all' | 'true' | 'false') => void;
   };
   timePeriod: {
     type: string;
@@ -51,26 +43,12 @@ interface SearchControlsProps {
 
 export const SearchControls: React.FC<SearchControlsProps> = ({
   searchParams,
-  dateFilters,
+  statusFilters,
   timePeriod,
   languages,
   onSearch,
   isLoading,
 }) => {
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  const hasAdvancedFilters = dateFilters.savedAtFrom || dateFilters.savedAtTo ||
-    dateFilters.analyzedAtFrom || dateFilters.analyzedAtTo ||
-    dateFilters.improvedAtFrom || dateFilters.improvedAtTo;
-
-  const clearAdvancedFilters = () => {
-    dateFilters.setSavedAtFrom('');
-    dateFilters.setSavedAtTo('');
-    dateFilters.setAnalyzedAtFrom('');
-    dateFilters.setAnalyzedAtTo('');
-    dateFilters.setImprovedAtFrom('');
-    dateFilters.setImprovedAtTo('');
-  };
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg">
       <h2 className="text-xl font-semibold text-cyan-400 mb-4">
@@ -197,109 +175,37 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
             Will search for quotes from {timePeriod.description}
           </p>
         </div>
+      </div>
 
-        {/* Advanced Filters Toggle */}
-        <div className="mt-3 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
-          >
-            {showAdvancedFilters ? '▼ Hide' : '▶ Show'} Advanced Date Filters
-            {hasAdvancedFilters && <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>}
-          </button>
-          {hasAdvancedFilters && (
-            <button
-              type="button"
-              onClick={clearAdvancedFilters}
-              className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+      {/* Status Filters - Always Visible */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-300 mb-2">Status Filters</label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Analyzed</label>
+            <select
+              value={statusFilters.isAnalyzed}
+              onChange={(e) => statusFilters.setIsAnalyzed(e.target.value as 'all' | 'true' | 'false')}
+              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
             >
-              Clear
-            </button>
-          )}
-        </div>
-
-        {/* Advanced Date Filters */}
-        {showAdvancedFilters && (
-          <div className="mt-3 pt-3 border-t border-gray-700/50">
-            <div className="space-y-3">
-              {/* Saved At Range */}
-              <div className="bg-gray-700/30 p-3 rounded-lg">
-                <label className="block text-xs text-cyan-400 mb-2 font-medium">Saved Date</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] text-gray-500 mb-1">From</label>
-                    <input
-                      type="date"
-                      value={dateFilters.savedAtFrom}
-                      onChange={(e) => dateFilters.setSavedAtFrom(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-gray-500 mb-1">To</label>
-                    <input
-                      type="date"
-                      value={dateFilters.savedAtTo}
-                      onChange={(e) => dateFilters.setSavedAtTo(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Analyzed At Range */}
-              <div className="bg-gray-700/30 p-3 rounded-lg">
-                <label className="block text-xs text-cyan-400 mb-2 font-medium">Analyzed Date</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] text-gray-500 mb-1">From</label>
-                    <input
-                      type="date"
-                      value={dateFilters.analyzedAtFrom}
-                      onChange={(e) => dateFilters.setAnalyzedAtFrom(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-gray-500 mb-1">To</label>
-                    <input
-                      type="date"
-                      value={dateFilters.analyzedAtTo}
-                      onChange={(e) => dateFilters.setAnalyzedAtTo(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Improved At Range */}
-              <div className="bg-gray-700/30 p-3 rounded-lg">
-                <label className="block text-xs text-cyan-400 mb-2 font-medium">Improved Date</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] text-gray-500 mb-1">From</label>
-                    <input
-                      type="date"
-                      value={dateFilters.improvedAtFrom}
-                      onChange={(e) => dateFilters.setImprovedAtFrom(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-gray-500 mb-1">To</label>
-                    <input
-                      type="date"
-                      value={dateFilters.improvedAtTo}
-                      onChange={(e) => dateFilters.setImprovedAtTo(e.target.value)}
-                      className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+              <option value="all">All</option>
+              <option value="true">Analyzed</option>
+              <option value="false">Not Analyzed</option>
+            </select>
           </div>
-        )}
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Improved</label>
+            <select
+              value={statusFilters.isImproved}
+              onChange={(e) => statusFilters.setIsImproved(e.target.value as 'all' | 'true' | 'false')}
+              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+            >
+              <option value="all">All</option>
+              <option value="true">Improved</option>
+              <option value="false">Not Improved</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="mt-4">

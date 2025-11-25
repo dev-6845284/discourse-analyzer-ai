@@ -30,6 +30,8 @@ export interface StoredQuoteQueryParams {
   analyzedAtTo?: string;
   improvedAtFrom?: string;
   improvedAtTo?: string;
+  isAnalyzed?: 'all' | 'true' | 'false';
+  isImproved?: 'all' | 'true' | 'false';
   rating?: string;
   language?: string;
   provider?: string;

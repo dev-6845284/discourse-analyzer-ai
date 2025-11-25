@@ -17,6 +17,8 @@ export interface StoredQuoteFilters {
   analyzedAtTo: string;
   improvedAtFrom: string;
   improvedAtTo: string;
+  isAnalyzed: 'all' | 'true' | 'false';
+  isImproved: 'all' | 'true' | 'false';
   rating: AnalysisRating | 'all';
   language: string;
   provider: string;
@@ -35,6 +37,8 @@ const DEFAULT_FILTERS: StoredQuoteFilters = {
   analyzedAtTo: '',
   improvedAtFrom: '',
   improvedAtTo: '',
+  isAnalyzed: 'all',
+  isImproved: 'all',
   rating: 'all',
   language: 'lt', // Lithuanian default
   provider: 'all',
@@ -115,6 +119,8 @@ export function useStoredQuoteFilters() {
       filters.analyzedAtTo !== '' ||
       filters.improvedAtFrom !== '' ||
       filters.improvedAtTo !== '' ||
+      filters.isAnalyzed !== 'all' ||
+      filters.isImproved !== 'all' ||
       filters.rating !== 'all' ||
       filters.language !== 'lt' || // Compare to default
       filters.provider !== 'all'
@@ -134,13 +140,15 @@ export function useStoredQuoteFilters() {
       analyzedAtTo: filters.analyzedAtTo,
       improvedAtFrom: filters.improvedAtFrom,
       improvedAtTo: filters.improvedAtTo,
+      isAnalyzed: filters.isAnalyzed,
+      isImproved: filters.isImproved,
       rating: filters.rating,
       language: filters.language,
       provider: filters.provider,
       sortField: filters.sortField,
       sortOrder: filters.sortOrder,
     };
-  }, [debouncedText, filters.personId, filters.dateFrom, filters.dateTo, filters.savedAtFrom, filters.savedAtTo, filters.analyzedAtFrom, filters.analyzedAtTo, filters.improvedAtFrom, filters.improvedAtTo, filters.rating, filters.language, filters.provider, filters.sortField, filters.sortOrder]);
+  }, [debouncedText, filters.personId, filters.dateFrom, filters.dateTo, filters.savedAtFrom, filters.savedAtTo, filters.analyzedAtFrom, filters.analyzedAtTo, filters.improvedAtFrom, filters.improvedAtTo, filters.isAnalyzed, filters.isImproved, filters.rating, filters.language, filters.provider, filters.sortField, filters.sortOrder]);
 
   return {
     filters,

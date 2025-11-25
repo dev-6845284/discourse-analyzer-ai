@@ -12,13 +12,9 @@ export function useSearchParams() {
   const [textToExtract, setTextToExtract] = useState<string>('');
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
 
-  // Advanced date filters
-  const [savedAtFrom, setSavedAtFrom] = useState<string>('');
-  const [savedAtTo, setSavedAtTo] = useState<string>('');
-  const [analyzedAtFrom, setAnalyzedAtFrom] = useState<string>('');
-  const [analyzedAtTo, setAnalyzedAtTo] = useState<string>('');
-  const [improvedAtFrom, setImprovedAtFrom] = useState<string>('');
-  const [improvedAtTo, setImprovedAtTo] = useState<string>('');
+  // Status filters
+  const [isAnalyzed, setIsAnalyzed] = useState<'all' | 'true' | 'false'>('all');
+  const [isImproved, setIsImproved] = useState<'all' | 'true' | 'false'>('all');
 
   const handleAISelectionChange = useCallback((ai: string) => {
     setSelectedAI(ai);
@@ -53,18 +49,10 @@ export function useSearchParams() {
     setIsExtracting,
     handleLanguageChange,
     clearTextToExtract,
-    // Advanced date filters
-    savedAtFrom,
-    setSavedAtFrom,
-    savedAtTo,
-    setSavedAtTo,
-    analyzedAtFrom,
-    setAnalyzedAtFrom,
-    analyzedAtTo,
-    setAnalyzedAtTo,
-    improvedAtFrom,
-    setImprovedAtFrom,
-    improvedAtTo,
-    setImprovedAtTo,
+    // Status filters
+    isAnalyzed,
+    setIsAnalyzed,
+    isImproved,
+    setIsImproved,
   };
 }

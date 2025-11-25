@@ -311,6 +311,34 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
             ))}
           </select>
         </div>
+
+        {/* Analysis Status Filter */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Analysis Status</label>
+          <select
+            value={filters.isAnalyzed}
+            onChange={(e) => onFilterChange('isAnalyzed', e.target.value as 'all' | 'true' | 'false')}
+            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+          >
+            <option value="all">All</option>
+            <option value="true">Analyzed</option>
+            <option value="false">Not Analyzed</option>
+          </select>
+        </div>
+
+        {/* Improvement Status Filter */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Improvement Status</label>
+          <select
+            value={filters.isImproved}
+            onChange={(e) => onFilterChange('isImproved', e.target.value as 'all' | 'true' | 'false')}
+            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+          >
+            <option value="all">All</option>
+            <option value="true">Improved</option>
+            <option value="false">Not Improved</option>
+          </select>
+        </div>
       </div>
 
       {/* Advanced Filters - Date Ranges for savedAt, analyzedAt, improvedAt */}
