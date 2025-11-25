@@ -75,6 +75,7 @@ const App: React.FC = () => {
     handleImproveQuote: improveQuote,
     handleAcceptQuote: acceptQuote,
     handleDiscardQuote: discardQuote,
+    handleRemoveQuote: removeQuote,
     handleLoadQuotes,
     clearError,
     markQuoteAsStored,
@@ -385,6 +386,7 @@ const App: React.FC = () => {
                       onLanguageChange={handleUpdateQuoteLanguage}
                       onAccept={acceptQuote}
                       onDiscard={discardQuote}
+                      onRemove={removeQuote}
                       clearError={clearError}
                     />
                   )}

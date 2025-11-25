@@ -4,7 +4,7 @@ import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
 import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
 import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
-import api, { getStoredQuotes, updateQuote } from '../utils/api';
+import api, { getStoredQuotes, updateQuote, deleteQuote } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 interface StoredQuotesProps {
@@ -145,6 +145,20 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: undefined } : q));
   };
 
+  const handleDelete = async (quote: Quote) => {
+    if (!window.confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteQuote(quote.id);
+      setQuotes(prev => prev.filter(q => q.id !== quote.id));
+    } catch (err) {
+      console.error('Failed to delete quote:', err);
+      setError('Failed to delete quote from the server.');
+    }
+  };
+
   useEffect(() => {
     const fetchQuotes = async () => {
       setIsLoading(true);
@@ -217,13 +231,14 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           {quotes.map((quote) => (
             <QuoteCard
               key={quote.id}
-              quote={quote}
+              quote={{ ...quote, isStored: true }}
               onAnalyze={handleAnalyze}
               onImprove={handleImprove}
               onSave={() => {}} // Stored quotes are already saved
               onLanguageChange={() => {}} // Implement if needed for stored quotes
               onAccept={handleAccept}
               onDiscard={handleDiscard}
+              onDelete={handleDelete}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
             />

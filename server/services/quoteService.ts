@@ -171,3 +171,20 @@ export const updateQuote = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to update quote', details: error.message });
   }
 };
+
+export const deleteQuote = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const quote = await Quote.findByIdAndDelete(id);
+
+    if (!quote) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    res.json({ message: 'Quote deleted successfully', id });
+  } catch (error: any) {
+    console.error('Error deleting quote:', error);
+    res.status(500).json({ error: 'Failed to delete quote', details: error.message });
+  }
+};

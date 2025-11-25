@@ -306,6 +306,11 @@ export function useQuotes(handleLogout: () => void) {
     );
   }, []);
 
+  const handleRemoveQuote = useCallback((quote: Quote) => {
+    // Remove the quote entirely from the list (for non-stored quotes)
+    setQuotes((prev) => prev.filter((q) => q.id !== quote.id));
+  }, []);
+
   const clearError = useCallback(() => {
     setError(null);
     setRawApiResponseError(null);
@@ -325,6 +330,7 @@ export function useQuotes(handleLogout: () => void) {
     handleImproveQuote,
     handleAcceptQuote,
     handleDiscardQuote,
+    handleRemoveQuote,
     clearError,
     handleLoadQuotes,
     markQuoteAsStored

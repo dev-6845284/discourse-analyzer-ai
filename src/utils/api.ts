@@ -41,6 +41,10 @@ export const updateQuote = async (quoteId: string, quoteData: QuoteUpdatePayload
   return api.put(`/quotes/${quoteId}`, quoteData);
 };
 
+export const deleteQuote = async (quoteId: string) => {
+  return api.delete(`/quotes/${quoteId}`);
+};
+
 export const analyzeQuote = async (
   model: string,
   quoteText: string,

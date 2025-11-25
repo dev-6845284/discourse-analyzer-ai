@@ -39,6 +39,8 @@ router.put('/quotes/:id', (req, res) => {
   quoteService.updateQuote(req, res);
 });
 
+router.delete('/quotes/:id', (req, res) => quoteService.deleteQuote(req, res));
+
 router.get('/logs', isAdminOrDev, (req, res) => apiService.getApiLogs(req, res));
 
 // Person routes
