@@ -47,6 +47,19 @@ const App: React.FC = () => {
     setIsExtracting,
     handleLanguageChange,
     clearTextToExtract,
+    // Advanced date filters
+    savedAtFrom,
+    setSavedAtFrom,
+    savedAtTo,
+    setSavedAtTo,
+    analyzedAtFrom,
+    setAnalyzedAtFrom,
+    analyzedAtTo,
+    setAnalyzedAtTo,
+    improvedAtFrom,
+    setImprovedAtFrom,
+    improvedAtTo,
+    setImprovedAtTo,
   } = useSearchParams();
 
   const {
@@ -270,6 +283,20 @@ const App: React.FC = () => {
                       setTemperature,
                       maxQuoteLength,
                       setMaxQuoteLength,
+                    }}
+                    dateFilters={{
+                      savedAtFrom,
+                      setSavedAtFrom,
+                      savedAtTo,
+                      setSavedAtTo,
+                      analyzedAtFrom,
+                      setAnalyzedAtFrom,
+                      analyzedAtTo,
+                      setAnalyzedAtTo,
+                      improvedAtFrom,
+                      setImprovedAtFrom,
+                      improvedAtTo,
+                      setImprovedAtTo,
                     }}
                     timePeriod={{
                       type: timePeriodType,
