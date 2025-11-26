@@ -11,6 +11,7 @@ import grokService from '../llm_services/grokService';
 import { addLogEntry, updateLogEntry, getLogs } from './logService';
 import { LlmService } from '../llm_services/LlmService';
 import { postProcessResponse } from './responseProcessor';
+import { fetchArticle } from '../utils/articleExtractor';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -125,6 +126,66 @@ export const extractQuotes = async (req: Request, res: Response) => {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
     res.status(500).json({ message: 'Failed to extract quotes' });
+  }
+};
+
+export const extractQuotesFromUrl = async (req: Request, res: Response) => {
+  const { url, personName, model, temperature, apiKeys } = req.body;
+  const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, url, model, extractionType: 'url' });
+
+  try {
+    // Step 1: Fetch and extract article content
+    const article = await fetchArticle(url);
+
+    // Step 2: Use LLM to extract quotes from article content
+    const { service, apiKey } = getService(model, apiKeys);
+    const quotes = await service.extractQuotesFromArticle(
+      apiKey,
+      personName,
+      article.textContent,
+      {
+        url: article.url,
+        title: article.title,
+        byline: article.byline,
+        siteName: article.siteName,
+      },
+      temperature,
+      logId,
+      req.session.id!
+    );
+
+    updateLogEntry(req.session.id!, logId, quotes);
+    
+    // Return quotes along with article metadata for the frontend
+    res.json({
+      quotes,
+      articleMetadata: {
+        url: article.url,
+        title: article.title,
+        byline: article.byline,
+        siteName: article.siteName,
+        excerpt: article.excerpt,
+      }
+    });
+  } catch (error: any) {
+    console.error('Error extracting quotes from URL:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    
+    // Handle article fetch errors with user-friendly messages
+    if (error.message?.includes('Access denied') || 
+        error.message?.includes('not found') || 
+        error.message?.includes('Server error') ||
+        error.message?.includes('Could not extract article')) {
+      return res.status(400).json({ message: error.message, errorType: 'ArticleExtractionError' });
+    }
+    
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to extract quotes from URL' });
   }
 };
 

@@ -43,6 +43,21 @@ export interface LlmService {
     sessionId: string
   ): Promise<Quote[]>;
 
+  extractQuotesFromArticle(
+    apiKey: string,
+    personName: string,
+    articleContent: string,
+    articleMetadata: {
+      url: string;
+      title: string;
+      byline: string | null;
+      siteName: string | null;
+    },
+    temperature: number,
+    logId: string,
+    sessionId: string
+  ): Promise<Quote[]>;
+
   improveQuote(
     apiKey: string,
     quote: Quote,

@@ -13,6 +13,7 @@ router.use(isAuthenticated);
 router.post('/quotes/search', (req, res) => apiService.fetchQuotes(req, res));
 router.post('/quotes/analyze', (req, res) => apiService.analyzeQuote(req, res));
 router.post('/quotes/extract', (req, res) => apiService.extractQuotes(req, res));
+router.post('/quotes/extract-from-url', (req, res) => apiService.extractQuotesFromUrl(req, res));
 router.post('/quotes/improve', (req, res) => apiService.improveSingleQuote(req, res));
 
 // Inject session user info for audit purposes when saving quotes

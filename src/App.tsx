@@ -74,6 +74,7 @@ const App: React.FC = () => {
     handleSearch: searchQuotes,
     handleAnalyzeQuote: analyzeQuote,
     handleExtractQuotes: extractQuotes,
+    handleExtractFromUrl: extractFromUrl,
     handleAddQuoteManually: addQuoteManually,
     handleUpdateQuoteLanguage,
     handleClearQuotes,
@@ -111,6 +112,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'search' | 'people' | 'users'>('search');
   const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [extractionStatus, setExtractionStatus] = useState<string>('');
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -172,6 +174,28 @@ const App: React.FC = () => {
       setIsExtracting(false);
     });
     setIsExtracting(false);
+  };
+
+  const handleExtractFromUrl = async () => {
+    setIsExtracting(true);
+    setExtractionStatus('Fetching article...');
+    setResultsTab('new');
+    
+    await extractFromUrl(
+      selectedAI,
+      personName,
+      textToExtract.trim(),
+      temperature,
+      (status: string) => setExtractionStatus(status),
+      () => {
+        clearTextToExtract();
+        setIsExtracting(false);
+        setExtractionStatus('');
+      }
+    );
+    
+    setIsExtracting(false);
+    setExtractionStatus('');
   };
 
   const handleModalSave = (details: any) => {
@@ -307,6 +331,8 @@ const App: React.FC = () => {
                     personName={personName}
                     onExtract={openExtractModal}
                     onAdd={openAddQuoteModal}
+                    onExtractFromUrl={handleExtractFromUrl}
+                    extractionStatus={extractionStatus}
                   />
                 </div>
               )}

@@ -405,6 +405,23 @@ ${textContent}
     }
   }
 
+  public async extractQuotesFromArticle(
+    apiKey: string,
+    personName: string,
+    articleContent: string,
+    articleMetadata: {
+      url: string;
+      title: string;
+      byline: string | null;
+      siteName: string | null;
+    },
+    temperature: number,
+    logId: string,
+    sessionId: string
+  ): Promise<Quote[]> {
+    throw new Error("Extract from URL is not implemented for Grok. Please use ChatGPT for this feature.");
+  }
+
   /**
    * Improve/expand an existing quote by finding the full context from the original source
    */

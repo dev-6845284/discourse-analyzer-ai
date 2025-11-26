@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Quote, AnalysisCategory, AnalysisRating, ExportData, QuoteUpdatePayload } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { TimePeriodResult } from '../utils/timePeriod';
-import api, { updateQuote } from '../utils/api';
+import api, { updateQuote, extractFromUrl } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 // Custom error class for JSON parsing failures from the backend
@@ -176,6 +176,48 @@ export function useQuotes(handleLogout: () => void) {
         onSuccess();
       } catch (e: any) {
         handleError(e, 'Extraction');
+      }
+    },
+    [quotes, handleLogout]
+  );
+
+  const handleExtractFromUrl = useCallback(
+    async (
+      selectedAI: string,
+      personName: string,
+      url: string,
+      temperature: number,
+      onStatusChange: (status: string) => void,
+      onSuccess: () => void
+    ) => {
+      if (!personName) {
+        setError("Please enter a person's name to attribute the extracted quotes.");
+        return;
+      }
+      if (!url) {
+        setError('Please enter a URL to extract quotes from.');
+        return;
+      }
+
+      setError(null);
+      setRawApiResponseError(null);
+
+      try {
+        onStatusChange('Fetching article...');
+        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+        
+        onStatusChange('Extracting quotes from article...');
+        const response = await extractFromUrl(url, personName, selectedAI, temperature, apiKeys || {});
+        
+        const { quotes: extractedQuotes } = response.data;
+
+        if (extractedQuotes && extractedQuotes.length > 0) {
+          setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
+        }
+        
+        onSuccess();
+      } catch (e: any) {
+        handleError(e, 'URL extraction');
       }
     },
     [quotes, handleLogout]
@@ -355,6 +397,7 @@ export function useQuotes(handleLogout: () => void) {
     handleSearch,
     handleAnalyzeQuote,
     handleExtractQuotes,
+    handleExtractFromUrl,
     handleAddQuoteManually,
     handleUpdateQuoteLanguage,
     handleClearQuotes,

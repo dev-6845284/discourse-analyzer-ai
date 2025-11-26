@@ -75,4 +75,20 @@ export const analyzeQuote = async (
   });
 };
 
+export const extractFromUrl = async (
+  url: string,
+  personName: string,
+  model: string,
+  temperature: number,
+  apiKeys: Record<string, string>
+) => {
+  return api.post('/quotes/extract-from-url', {
+    url,
+    personName,
+    model,
+    temperature,
+    apiKeys,
+  });
+};
+
 export default api;

@@ -15,6 +15,10 @@ jest.mock('./logService');
 jest.mock('./responseProcessor', () => ({
   postProcessResponse: jest.fn(),
 }));
+jest.mock('../utils/articleExtractor', () => ({
+  fetchArticle: jest.fn(),
+  isValidUrl: jest.fn(),
+}));
 
 const createMockResponse = () => {
   const response: Partial<Response> & { json: jest.Mock; status: jest.Mock } = {
