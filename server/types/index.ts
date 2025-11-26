@@ -49,6 +49,26 @@ export type GroundingChunk = {
   source: string;
 };
 
+export interface ArticleRecommendation {
+  url: string;
+  title: string;
+  summary: string;
+  tags: string[];
+  relevanceScore: number;
+  publishedDate?: string;
+}
+
+export type AgenticSearchResult = 
+  | { type: 'quotes'; data: Quote[] }
+  | { type: 'articles'; data: ArticleRecommendation[] };
+
+export interface AgenticSearchOptions {
+  mode: 'quotes' | 'articles';
+  topics?: string[];
+  keywords?: string[];
+  searchDepth?: 'shallow' | 'deep';
+}
+
 export interface UserInfo {
   email: string;
   name: string;
@@ -61,7 +81,7 @@ export interface ExportData {
   quotes: Quote[];
 }
 
-export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
+export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote' | 'agenticSearch';
 
 export interface LogErrorDetails {
   message: string;

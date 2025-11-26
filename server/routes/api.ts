@@ -11,6 +11,7 @@ const router = express.Router();
 router.use(isAuthenticated);
 
 router.post('/quotes/search', (req, res) => apiService.fetchQuotes(req, res));
+router.post('/quotes/agentic-search', (req, res) => apiService.agenticSearch(req, res));
 router.post('/quotes/analyze', (req, res) => apiService.analyzeQuote(req, res));
 router.post('/quotes/extract', (req, res) => apiService.extractQuotes(req, res));
 router.post('/quotes/extract-from-url', (req, res) => apiService.extractQuotesFromUrl(req, res));

@@ -1,4 +1,4 @@
-import { LogEntry, LogErrorDetails, ModelInteractionLog } from '../types';
+import { LogEntry, LogErrorDetails, ModelInteractionLog, LogCommand } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 const logs = new Map<string, LogEntry[]>();
@@ -52,7 +52,7 @@ const findEntry = (sessionId: string, entryId: string): LogEntry | undefined => 
   return sessionLogs.find((log) => log.id === entryId);
 };
 
-export const addLogEntry = (sessionId: string, command: 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote', requestPayload: any): string => {
+export const addLogEntry = (sessionId: string, command: LogCommand, requestPayload: any): string => {
   const sessionLogs = ensureSessionLogs(sessionId);
 
   const id = uuidv4();

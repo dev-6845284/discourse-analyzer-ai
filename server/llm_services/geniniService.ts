@@ -30,7 +30,7 @@ import {
  * @returns The response text if valid.
  * @throws An error with a detailed message if the response is invalid.
  */
-const getValidatedResponseText = (response: GenerateContentResponse, context: string): string => {
+export const getValidatedResponseText = (response: GenerateContentResponse, context: string): string => {
     // Case 1: The entire prompt was blocked.
     if (response.promptFeedback?.blockReason) {
         const errorMessage = `Request blocked while ${context}. Reason: ${response.promptFeedback.blockReason}.`;

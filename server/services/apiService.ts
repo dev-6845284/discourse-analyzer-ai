@@ -8,6 +8,7 @@ import {
 import geminiService from '../llm_services/geniniService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
+import agenticService from '../llm_services/agenticService';
 import { addLogEntry, updateLogEntry, getLogs } from './logService';
 import { LlmService } from '../llm_services/LlmService';
 import { postProcessResponse } from './responseProcessor';
@@ -73,6 +74,46 @@ export const fetchQuotes = async (req: Request, res: Response) => {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
     res.status(500).json({ message: 'Failed to fetch quotes' });
+  }
+};
+
+export const agenticSearch = async (req: Request, res: Response) => {
+  const {
+    personName,
+    timePeriod,
+    languages,
+    options,
+    apiKeys,
+  } = req.body;
+
+  const logId = addLogEntry(req.session.id!, 'agenticSearch', { personName, timePeriod, languages, options });
+
+  try {
+    // Agentic search currently only supports Gemini
+    const apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY!;
+    
+    const result = await agenticService.search(
+      apiKey,
+      personName,
+      timePeriod,
+      languages,
+      options,
+      logId,
+      req.session.id!
+    );
+    
+    updateLogEntry(req.session.id!, logId, result);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error in agentic search:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: error.message || 'Failed to perform agentic search' });
   }
 };
 
