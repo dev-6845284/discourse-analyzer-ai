@@ -84,15 +84,21 @@ export const agenticSearch = async (req: Request, res: Response) => {
     languages,
     options,
     apiKeys,
+    provider = 'gemini',
   } = req.body;
 
-  const logId = addLogEntry(req.session.id!, 'agenticSearch', { personName, timePeriod, languages, options });
+  const logId = addLogEntry(req.session.id!, 'agenticSearch', { personName, timePeriod, languages, options, provider });
 
   try {
-    // Agentic search currently only supports Gemini
-    const apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY!;
+    let apiKey: string;
+    if (provider === 'openai') {
+      apiKey = apiKeys?.openai || process.env.OPENAI_API_KEY!;
+    } else {
+      apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY!;
+    }
     
     const result = await agenticService.search(
+      provider,
       apiKey,
       personName,
       timePeriod,

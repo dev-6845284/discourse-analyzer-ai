@@ -292,16 +292,20 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
       </div>
       
       {/* Agentic Search Toggle */}
-      <div className="mt-4 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+      <div className={`mt-4 p-3 bg-gray-700/50 rounded-lg border border-gray-600 ${searchParams.selectedAI === 'grok' ? 'opacity-50' : ''}`}>
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-gray-300">
             Agentic Search
+            {searchParams.selectedAI === 'grok' && (
+              <span className="ml-2 text-xs text-gray-400">(Not available with Grok)</span>
+            )}
           </label>
           <button
-            onClick={() => searchParams.setIsAgentic(!searchParams.isAgentic)}
+            onClick={() => searchParams.selectedAI !== 'grok' && searchParams.setIsAgentic(!searchParams.isAgentic)}
+            disabled={searchParams.selectedAI === 'grok'}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
               searchParams.isAgentic ? 'bg-cyan-600' : 'bg-gray-600'
-            }`}
+            } ${searchParams.selectedAI === 'grok' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${

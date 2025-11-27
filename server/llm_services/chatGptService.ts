@@ -22,11 +22,11 @@ import {
 } from './prompts';
 
 const OPENAI_API_BASE_URL = "https://api.openai.com/v1";
-const CHATGPT_MODEL = "gpt-5-search-api";
-const CHATGPT_FORMATTER_MODEL = process.env.CHATGPT_FORMATTER_MODEL || 'gpt-4o-mini';
-const CHAT_GPT_MINI = 'gpt-4.1-mini'
+export const CHATGPT_MODEL = "gpt-5-search-api";
+export const CHATGPT_FORMATTER_MODEL = process.env.CHATGPT_FORMATTER_MODEL || 'gpt-4o-mini';
+export const CHAT_GPT_MINI = 'gpt-4.1-mini'
 
-type ChatGptCallOptions = {
+export type ChatGptCallOptions = {
   temperature?: number;
   useSearch?: boolean;
   enforceJson?: boolean;
@@ -38,7 +38,7 @@ type ChatGptCallOptions = {
  * Helper function to call the ChatGPT API.
  * It enforces JSON output for more reliable parsing.
  */
-const callChatGptAPI = async (
+export const callChatGptAPI = async (
   apiKey: string,
   messages: Array<{ role: string; content: string }> ,
   logId: string,

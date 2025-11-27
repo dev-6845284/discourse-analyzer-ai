@@ -20,6 +20,9 @@ export function useSearchParams() {
 
   const handleAISelectionChange = useCallback((ai: string) => {
     setSelectedAI(ai);
+    if (ai === 'grok') {
+      setIsAgentic(false);
+    }
   }, []);
 
   const handleLanguageChange = useCallback((langCode: string) => {
