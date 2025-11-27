@@ -52,6 +52,10 @@ const App: React.FC = () => {
     setIsAnalyzed,
     isImproved,
     setIsImproved,
+    isAgentic,
+    setIsAgentic,
+    agenticMode,
+    setAgenticMode,
   } = useSearchParams();
 
   const {
@@ -68,6 +72,7 @@ const App: React.FC = () => {
 
   const {
     quotes,
+    articles,
     isLoading,
     error,
     rawApiResponseError,
@@ -85,6 +90,7 @@ const App: React.FC = () => {
     handleLoadQuotes,
     clearError,
     markQuoteAsStored,
+    handleCancelSearch,
   } = useQuotes(handleLogout);
 
   const {
@@ -155,7 +161,9 @@ const App: React.FC = () => {
       getTimePeriod(),
       filterCategory,
       filterRating,
-      sortOrder
+      sortOrder,
+      isAgentic,
+      agenticMode
     );
   };
 
@@ -299,6 +307,10 @@ const App: React.FC = () => {
                       setTemperature,
                       maxQuoteLength,
                       setMaxQuoteLength,
+                      isAgentic,
+                      setIsAgentic,
+                      agenticMode,
+                      setAgenticMode,
                     }}
                     statusFilters={{
                       isAnalyzed,
@@ -322,6 +334,7 @@ const App: React.FC = () => {
                       onChange: handleLanguageChange,
                     }}
                     onSearch={handleSearch}
+                    onCancel={handleCancelSearch}
                     isLoading={isLoading}
                   />
                   <ExtractionControls
@@ -389,6 +402,38 @@ const App: React.FC = () => {
                       />
                     </div>
                   ) : (
+                    articles.length > 0 ? (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold text-white">Found Articles ({articles.length})</h3>
+                          <button 
+                            onClick={() => handleClearQuotes()} // Reusing clear quotes to clear results
+                            className="text-sm text-gray-400 hover:text-white"
+                          >
+                            Clear Results
+                          </button>
+                        </div>
+                        {articles.map((article, idx) => (
+                          <div key={idx} className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-cyan-500/50 transition-colors">
+                            <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline font-medium text-lg block mb-2">
+                              {article.title}
+                            </a>
+                            <p className="text-gray-300 text-sm leading-relaxed">{article.summary}</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {article.tags.map(tag => (
+                                <span key={tag} className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-full border border-gray-600">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
+                              <span>Relevance: {(article.relevanceScore * 100).toFixed(0)}%</span>
+                              {article.publishedDate && <span>{article.publishedDate}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
                     <SearchResults
                       results={filteredAndSortedQuotes}
                       error={error}
@@ -426,6 +471,7 @@ const App: React.FC = () => {
                       onRemove={removeQuote}
                       clearError={clearError}
                     />
+                    )
                   )}
                 </>
               )}

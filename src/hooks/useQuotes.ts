@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { Quote, AnalysisCategory, AnalysisRating, ExportData, QuoteUpdatePayload } from '../types';
+import { useState, useCallback, useRef } from 'react';
+import { Quote, AnalysisCategory, AnalysisRating, ExportData, QuoteUpdatePayload, ArticleRecommendation } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { TimePeriodResult } from '../utils/timePeriod';
-import api, { updateQuote, extractFromUrl } from '../utils/api';
+import api, { updateQuote, extractFromUrl, agenticSearch } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 // Custom error class for JSON parsing failures from the backend
@@ -18,9 +18,20 @@ export class JsonParsingError extends Error {
 
 export function useQuotes(handleLogout: () => void) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [articles, setArticles] = useState<ArticleRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rawApiResponseError, setRawApiResponseError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleCancelSearch = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+      setError('Search cancelled by user.');
+    }
+  }, []);
 
   const handleLoadQuotes = useCallback((data: ExportData) => {
     setQuotes(data.quotes);
@@ -60,7 +71,9 @@ export function useQuotes(handleLogout: () => void) {
       timePeriod: TimePeriodResult,
       filterCategory: AnalysisCategory | 'all',
       filterRating: AnalysisRating | 'all',
-      sortOrder: 'newest' | 'oldest'
+      sortOrder: 'newest' | 'oldest',
+      isAgentic: boolean = false,
+      agenticMode: 'quotes' | 'articles' = 'quotes'
     ) => {
       if (!personName) {
         setError("Please enter a person's name.");
@@ -70,32 +83,57 @@ export function useQuotes(handleLogout: () => void) {
       setIsLoading(true);
       setError(null);
       setRawApiResponseError(null);
+      setArticles([]);
+
+      abortControllerRef.current = new AbortController();
 
       try {
-        const existingQuotesText = quotes.map((q) => q.text);
         const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-        const response = await api.post('/quotes/search', {
-          model: selectedAI,
-          personName,
-          languages: selectedLanguages,
-          maxQuotes: resultCount,
-          context: existingQuotesText,
-          temperature,
-          maxQuoteLength,
-          timePeriod,
-          category: filterCategory,
-          rating: filterRating,
-          sortBy: sortOrder,
-          apiKeys,
-        });
 
-        const newQuotes = response.data;
+        if (isAgentic) {
+          const response = await agenticSearch(
+            personName,
+            timePeriod,
+            selectedLanguages,
+            { mode: agenticMode },
+            apiKeys,
+            abortControllerRef.current.signal
+          );
 
-        setQuotes(newQuotes);
+          if (response.data.type === 'quotes') {
+            setQuotes(response.data.data as Quote[]);
+          } else if (response.data.type === 'articles') {
+            setArticles(response.data.data as ArticleRecommendation[]);
+            setQuotes([]);
+          }
+        } else {
+          const existingQuotesText = quotes.map((q) => q.text);
+          const response = await api.post('/quotes/search', {
+            model: selectedAI,
+            personName,
+            languages: selectedLanguages,
+            maxQuotes: resultCount,
+            context: existingQuotesText,
+            temperature,
+            maxQuoteLength,
+            timePeriod,
+            category: filterCategory,
+            rating: filterRating,
+            sortBy: sortOrder,
+            apiKeys,
+          }, { signal: abortControllerRef.current.signal });
+
+          const newQuotes = response.data;
+          setQuotes(newQuotes);
+        }
       } catch (e: any) {
+        if (e.name === 'CanceledError' || e.message === 'canceled') {
+          return;
+        }
         handleError(e, 'Search');
       } finally {
         setIsLoading(false);
+        abortControllerRef.current = null;
       }
     },
     [quotes, handleLogout]
@@ -281,6 +319,7 @@ export function useQuotes(handleLogout: () => void) {
 
   const handleClearQuotes = useCallback(() => {
     setQuotes([]);
+    setArticles([]);
   }, []);
 
   const markQuoteAsStored = useCallback((quoteId: string, dbId?: string) => {
@@ -391,10 +430,12 @@ export function useQuotes(handleLogout: () => void) {
 
   return {
     quotes,
+    articles,
     isLoading,
     error,
     rawApiResponseError,
     handleSearch,
+    handleCancelSearch,
     handleAnalyzeQuote,
     handleExtractQuotes,
     handleExtractFromUrl,

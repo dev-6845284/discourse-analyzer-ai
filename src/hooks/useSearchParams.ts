@@ -11,6 +11,8 @@ export function useSearchParams() {
   const [maxQuoteLength, setMaxQuoteLength] = useState<number>(DEFAULT_SEARCH_PARAMS.maxQuoteLength);
   const [textToExtract, setTextToExtract] = useState<string>('');
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
+  const [isAgentic, setIsAgentic] = useState<boolean>(false);
+  const [agenticMode, setAgenticMode] = useState<'quotes' | 'articles'>('quotes');
 
   // Status filters
   const [isAnalyzed, setIsAnalyzed] = useState<'all' | 'true' | 'false'>('all');
@@ -47,6 +49,10 @@ export function useSearchParams() {
     setTextToExtract,
     isExtracting,
     setIsExtracting,
+    isAgentic,
+    setIsAgentic,
+    agenticMode,
+    setAgenticMode,
     handleLanguageChange,
     clearTextToExtract,
     // Status filters

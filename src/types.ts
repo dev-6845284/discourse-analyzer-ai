@@ -102,12 +102,24 @@ export interface UserInfo {
   role?: string;
 }
 
-export interface User {
-  _id: string;
-  alias: string;
-  email: string;
-  role: 'admin' | 'editor' | 'moderator' | 'viewer';
-  createdAt: string;
+export interface ArticleRecommendation {
+  url: string;
+  title: string;
+  summary: string;
+  tags: string[];
+  relevanceScore: number;
+  publishedDate?: string;
+}
+
+export type AgenticSearchResult = 
+  | { type: 'quotes'; data: Quote[] }
+  | { type: 'articles'; data: ArticleRecommendation[] };
+
+export interface AgenticSearchOptions {
+  mode: 'quotes' | 'articles';
+  topics?: string[];
+  keywords?: string[];
+  searchDepth?: 'shallow' | 'deep';
 }
 
 export interface ExportData {

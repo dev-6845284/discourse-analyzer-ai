@@ -15,6 +15,10 @@ interface SearchControlsProps {
     setTemperature: (temp: number) => void;
     maxQuoteLength: number;
     setMaxQuoteLength: (len: number) => void;
+    isAgentic: boolean;
+    setIsAgentic: (val: boolean) => void;
+    agenticMode: 'quotes' | 'articles';
+    setAgenticMode: (mode: 'quotes' | 'articles') => void;
   };
   statusFilters: {
     isAnalyzed: 'all' | 'true' | 'false';
@@ -38,6 +42,7 @@ interface SearchControlsProps {
     onChange: (code: string) => void;
   };
   onSearch: () => void;
+  onCancel: () => void;
   isLoading: boolean;
 }
 
@@ -47,6 +52,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
   timePeriod,
   languages,
   onSearch,
+  onCancel,
   isLoading,
 }) => {
   return (
@@ -92,10 +98,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
         </div>
       </div>
       <div>
-        <label
-          htmlFor="personName"
-          className="block text-sm font-medium text-gray-300 mb-1"
-        >
+        <label className="block text-sm font-medium text-gray-300 mb-1">
           Person's Name
         </label>
         <PersonSelector
@@ -287,13 +290,80 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           ))}
         </div>
       </div>
-      <button
-        onClick={onSearch}
-        disabled={isLoading}
-        className="mt-6 w-full flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-      >
-        {isLoading ? <Spinner /> : 'Find New Quotes'}
-      </button>
+      
+      {/* Agentic Search Toggle */}
+      <div className="mt-4 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-300">
+            Agentic Search
+          </label>
+          <button
+            onClick={() => searchParams.setIsAgentic(!searchParams.isAgentic)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+              searchParams.isAgentic ? 'bg-cyan-600' : 'bg-gray-600'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                searchParams.isAgentic ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        
+        {searchParams.isAgentic && (
+          <div className="mt-3">
+            <label className="block text-xs text-gray-400 mb-1">Mode</label>
+            <div className="flex rounded-md bg-gray-800">
+              <button
+                onClick={() => searchParams.setAgenticMode('quotes')}
+                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-l-md ${
+                  searchParams.agenticMode === 'quotes'
+                    ? 'bg-cyan-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-700'
+                }`}
+              >
+                Quotes
+              </button>
+              <button
+                onClick={() => searchParams.setAgenticMode('articles')}
+                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-r-md ${
+                  searchParams.agenticMode === 'articles'
+                    ? 'bg-cyan-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-700'
+                }`}
+              >
+                Articles
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {searchParams.agenticMode === 'quotes' 
+                ? 'Deep search for quotes using multi-step reasoning.' 
+                : 'Find relevant articles and sources.'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 flex gap-2">
+        <button
+          onClick={onSearch}
+          disabled={isLoading}
+          className="flex-1 flex items-center justify-center px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+        >
+          {isLoading ? <Spinner className="mr-2 w-4 h-4" /> : null}
+          {isLoading ? (searchParams.isAgentic ? 'Agent Working...' : 'Searching...') : 'Search'}
+        </button>
+        
+        {isLoading && (
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </div>
   );
 };

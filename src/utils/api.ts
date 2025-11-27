@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { QuoteUpdatePayload } from '../types';
+import { QuoteUpdatePayload, AgenticSearchOptions, AgenticSearchResult } from '../types';
+import { TimePeriodResult } from './timePeriod';
 
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
@@ -89,6 +90,23 @@ export const extractFromUrl = async (
     temperature,
     apiKeys,
   });
+};
+
+export const agenticSearch = async (
+  personName: string,
+  timePeriod: TimePeriodResult,
+  languages: string[],
+  options: AgenticSearchOptions,
+  apiKeys: Record<string, string>,
+  signal?: AbortSignal
+) => {
+  return api.post<AgenticSearchResult>('/quotes/agentic-search', {
+    personName,
+    timePeriod,
+    languages,
+    options,
+    apiKeys,
+  }, { signal });
 };
 
 export default api;

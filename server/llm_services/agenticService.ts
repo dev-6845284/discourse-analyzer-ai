@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import {
   Quote,
@@ -12,8 +13,6 @@ import { getValidatedResponseText } from './geniniService';
 import { buildPlanningPrompt, buildSynthesisPrompt } from './prompts/agentic';
 
 class AgenticService {
-  private modelName = 'gemini-1.5-flash';
-
   public async search(
     apiKey: string,
     personName: string,
@@ -40,6 +39,7 @@ class AgenticService {
     try {
       const planResponse = await this.executePrompt(
         ai, 
+        'gemini-2.5-flash',
         planningPrompt, 
         sessionId, 
         logId, 
@@ -70,6 +70,7 @@ class AgenticService {
       try {
         const result = await this.executePrompt(
           ai,
+          'gemini-2.5-flash-lite',
           searchPrompt,
           sessionId,
           logId,
@@ -99,6 +100,7 @@ class AgenticService {
 
     const finalResponse = await this.executePrompt(
       ai,
+      'gemini-2.5-flash',
       synthesisPrompt,
       sessionId,
       logId,
@@ -114,7 +116,13 @@ class AgenticService {
     try {
       const parsed = JSON.parse(jsonFinal);
       if (options.mode === 'quotes') {
-        return { type: 'quotes', data: parsed.quotes || [] };
+        const quotes = parsed.quotes || [];
+        // Assign unique IDs to quotes to prevent frontend state issues (e.g. updating all quotes when one is analyzed)
+        const quotesWithIds = quotes.map((q: any) => ({
+          ...q,
+          id: q.id || crypto.randomUUID(),
+        }));
+        return { type: 'quotes', data: quotesWithIds };
       } else {
         return { type: 'articles', data: parsed.articles || [] };
       }
@@ -125,6 +133,7 @@ class AgenticService {
 
   private async executePrompt(
     ai: GoogleGenAI,
+    model: string,
     prompt: string,
     sessionId: string,
     logId: string,
@@ -132,7 +141,7 @@ class AgenticService {
     useSearch: boolean
   ): Promise<string> {
     const requestDetails = {
-      model: this.modelName,
+      model,
       contents: prompt,
       config: {
         temperature: 0.5,
