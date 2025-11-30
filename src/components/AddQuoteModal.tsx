@@ -6,10 +6,11 @@ interface AddQuoteModalProps {
   onClose: () => void;
   onSave: (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }) => void;
   mode?: 'add' | 'extract';
+  initialSource?: string;
 }
 
-const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add' }) => {
-  const [source, setSource] = useState('');
+const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add', initialSource = '' }) => {
+  const [source, setSource] = useState(initialSource);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [languageCode, setLanguageCode] = useState('en');

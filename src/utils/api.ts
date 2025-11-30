@@ -92,6 +92,10 @@ export const extractFromUrl = async (
   });
 };
 
+export const fetchArticle = async (url: string) => {
+  return api.post('/quotes/fetch-article', { url });
+};
+
 export const agenticSearch = async (
   personName: string,
   timePeriod: TimePeriodResult,

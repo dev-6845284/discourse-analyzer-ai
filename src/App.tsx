@@ -10,7 +10,7 @@ import AddQuoteModal from './components/AddQuoteModal';
 import ApiKeySettingsModal from './components/ApiKeySettingsModal';
 import LogViewer from './components/LogViewer';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
-import { saveQuote } from './utils/api';
+import { saveQuote, fetchArticle } from './utils/api';
 import { ExportData, Quote, Person } from './types';
 import { PersonManager } from './components/people/PersonManager';
 import { UserManager } from './components/users/UserManager';
@@ -119,9 +119,27 @@ const App: React.FC = () => {
   const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [extractionStatus, setExtractionStatus] = useState<string>('');
+  const [extractedSourceUrl, setExtractedSourceUrl] = useState<string>('');
+  const [shouldAnalyzeImmediately, setShouldAnalyzeImmediately] = useState<boolean>(true);
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
+  };
+
+  const handleAutoExtract = async (url: string) => {
+    setIsExtracting(true);
+    setExtractionStatus('Fetching article content...');
+    try {
+      const response = await fetchArticle(url);
+      const { textContent, metadata } = response.data;
+      setTextToExtract(textContent);
+      setExtractedSourceUrl(metadata.url);
+    } catch (error) {
+      console.error('Auto extraction failed', error);
+    } finally {
+      setIsExtracting(false);
+      setExtractionStatus('');
+    }
   };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,8 +228,13 @@ const App: React.FC = () => {
     if (modalMode === 'extract') {
       performExtraction(details);
     } else {
-      addQuoteManually(personName, textToExtract, details, handleAnalyzeQuote);
+      addQuoteManually(personName, textToExtract, details, (quote) => {
+        if (shouldAnalyzeImmediately) {
+          analyzeQuote(quote, selectedAI);
+        }
+      });
       clearTextToExtract();
+      setExtractedSourceUrl('');
     }
     closeAddModal();
   };
@@ -221,8 +244,9 @@ const App: React.FC = () => {
     openAddModal();
   };
 
-  const openAddQuoteModal = () => {
+  const openAddQuoteModal = (analyzeImmediately: boolean) => {
     setModalMode('add');
+    setShouldAnalyzeImmediately(analyzeImmediately);
     openAddModal();
   };
 
@@ -345,6 +369,7 @@ const App: React.FC = () => {
                     onExtract={openExtractModal}
                     onAdd={openAddQuoteModal}
                     onExtractFromUrl={handleExtractFromUrl}
+                    onAutoExtract={handleAutoExtract}
                     extractionStatus={extractionStatus}
                   />
                 </div>
@@ -484,6 +509,7 @@ const App: React.FC = () => {
               onClose={closeAddModal}
               onSave={handleModalSave}
               mode={modalMode}
+              initialSource={extractedSourceUrl}
             />
           )}
           <ApiKeySettingsModal

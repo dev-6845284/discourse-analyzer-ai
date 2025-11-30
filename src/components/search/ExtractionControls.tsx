@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Spinner from '../Spinner';
 
 /**
@@ -22,8 +22,9 @@ interface ExtractionControlsProps {
   isExtracting: boolean;
   personName: string;
   onExtract: () => void;
-  onAdd: () => void;
+  onAdd: (analyzeImmediately: boolean) => void;
   onExtractFromUrl?: () => void;
+  onAutoExtract?: (url: string) => void;
   extractionStatus?: string;
 }
 
@@ -35,9 +36,20 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
   onExtract,
   onAdd,
   onExtractFromUrl,
+  onAutoExtract,
   extractionStatus,
 }) => {
   const isUrl = isValidUrl(textToExtract);
+  const [analyzeImmediately, setAnalyzeImmediately] = useState(true);
+
+  useEffect(() => {
+    if (isUrl && onAutoExtract && !isExtracting) {
+      const timer = setTimeout(() => {
+        onAutoExtract(textToExtract);
+      }, 500); // Small delay to ensure user finished pasting/typing
+      return () => clearTimeout(timer);
+    }
+  }, [textToExtract, isUrl, onAutoExtract]); // Intentionally omitting isExtracting to avoid loops
 
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg">
@@ -103,20 +115,31 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
             >
               {isExtracting ? <Spinner /> : 'Extract & Analyze'}
             </button>
-            <button
-              onClick={onAdd}
-              disabled={isExtracting || !textToExtract || !personName}
-              title={
-                !personName
-                  ? "Please enter a person's name"
-                  : !textToExtract
-                  ? 'Please enter text to add'
-                  : ''
-              }
-              className="flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-            >
-              Add as Quote
-            </button>
+            <div className="flex flex-col flex-1 gap-2">
+              <button
+                onClick={() => onAdd(analyzeImmediately)}
+                disabled={isExtracting || !textToExtract || !personName}
+                title={
+                  !personName
+                    ? "Please enter a person's name"
+                    : !textToExtract
+                    ? 'Please enter text to add'
+                    : ''
+                }
+                className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+              >
+                Add Text as Quote
+              </button>
+              <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none justify-center">
+                <input 
+                  type="checkbox" 
+                  checked={analyzeImmediately} 
+                  onChange={(e) => setAnalyzeImmediately(e.target.checked)}
+                  className="rounded bg-gray-700 border-gray-600 text-cyan-600 focus:ring-cyan-500"
+                />
+                Analyze immediately
+              </label>
+            </div>
           </>
         )}
       </div>

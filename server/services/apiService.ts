@@ -270,3 +270,32 @@ export const getApiLogs = (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch logs' });
   }
 };
+
+export const fetchArticleContent = async (req: Request, res: Response) => {
+  const { url } = req.body;
+  
+  try {
+    const article = await fetchArticle(url);
+    res.json({
+      textContent: article.textContent,
+      metadata: {
+        url: article.url,
+        title: article.title,
+        byline: article.byline,
+        siteName: article.siteName,
+        excerpt: article.excerpt,
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching article content:', error);
+    
+    if (error.message?.includes('Access denied') || 
+        error.message?.includes('not found') || 
+        error.message?.includes('Server error') ||
+        error.message?.includes('Could not extract article')) {
+      return res.status(400).json({ message: error.message, errorType: 'ArticleExtractionError' });
+    }
+    
+    res.status(500).json({ message: 'Failed to fetch article content' });
+  }
+};
