@@ -14,6 +14,7 @@ import { LlmService } from '../llm_services/LlmService';
 import { postProcessResponse } from './responseProcessor';
 import { fetchArticle } from '../utils/articleExtractor';
 import { getTranscript } from './youtubeService';
+import { extractTranscriptTopics } from './topicExtractorService';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -345,3 +346,38 @@ export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Analyze YouTube transcript for topics and generate tag clouds
+ * Groups transcript into 15-minute blocks and extracts topics using fast models
+ */
+export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
+  const { blocks, language, model, apiKeys } = req.body;
+
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+    return res.status(400).json({ error: 'Blocks array is required and must not be empty' });
+  }
+
+  if (!apiKeys || typeof apiKeys !== 'object') {
+    return res.status(400).json({ error: 'API keys are required' });
+  }
+
+  try {
+    console.log(`[TopicAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
+    
+    const results = await extractTranscriptTopics({
+      blocks,
+      language: language || 'en',
+      model: model || 'gemini',
+      apiKeys,
+    });
+
+    console.log(`[TopicAnalysis] Successfully analyzed ${results.length} blocks`);
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing transcript topics:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to analyze transcript topics',
+      details: error.stack 
+    });
+  }
+};
