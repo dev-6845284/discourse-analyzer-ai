@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Spinner from '../Spinner';
 
 /**
@@ -26,6 +26,9 @@ interface ExtractionControlsProps {
   onExtractFromUrl?: () => void;
   onAutoExtract?: (url: string) => void;
   extractionStatus?: string;
+  extractionLanguage?: string;
+  setExtractionLanguage?: (lang: string) => void;
+  extractionError?: string | null;
 }
 
 export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
@@ -38,18 +41,32 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
   onExtractFromUrl,
   onAutoExtract,
   extractionStatus,
+  extractionLanguage = 'lt',
+  setExtractionLanguage,
+  extractionError,
 }) => {
   const isUrl = isValidUrl(textToExtract);
   const [analyzeImmediately, setAnalyzeImmediately] = useState(true);
+  const lastExtractionRef = React.useRef<{url: string, lang: string} | null>(null);
 
   useEffect(() => {
     if (isUrl && onAutoExtract && !isExtracting) {
+      // Prevent re-extracting the same URL with the same language if it was just processed
+      if (lastExtractionRef.current?.url === textToExtract && 
+          lastExtractionRef.current?.lang === extractionLanguage) {
+        return;
+      }
+
       const timer = setTimeout(() => {
+        lastExtractionRef.current = { url: textToExtract, lang: extractionLanguage };
         onAutoExtract(textToExtract);
       }, 500); // Small delay to ensure user finished pasting/typing
       return () => clearTimeout(timer);
+    } else if (!isUrl) {
+      // Reset if the text is cleared or changed to non-url
+      lastExtractionRef.current = null;
     }
-  }, [textToExtract, isUrl, onAutoExtract]); // Intentionally omitting isExtracting to avoid loops
+  }, [textToExtract, isUrl, onAutoExtract, extractionLanguage]); // Re-run if language changes
 
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg">
@@ -66,11 +83,33 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
         } here...`}
       ></textarea>
       
+      {/* Language Selector for URLs */}
+      {isUrl && setExtractionLanguage && (
+        <div className="mt-2 flex items-center gap-2">
+          <label className="text-xs text-gray-400">Extraction Language:</label>
+          <select
+            value={extractionLanguage}
+            onChange={(e) => setExtractionLanguage(e.target.value)}
+            className="bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs py-1 px-2"
+          >
+            <option value="lt">Lithuanian</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      )}
+
       {/* Status indicator */}
       {isExtracting && extractionStatus && (
         <div className="mt-2 text-sm text-cyan-400 flex items-center gap-2">
           <Spinner />
           <span>{extractionStatus}</span>
+        </div>
+      )}
+
+      {/* Error indicator */}
+      {extractionError && (
+        <div className="mt-2 text-sm text-red-400">
+          {extractionError}
         </div>
       )}
       
