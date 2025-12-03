@@ -58,6 +58,7 @@ export interface DialogLine {
 export interface SummaryItem {
   text: string;
   timestamp: string; // Format: "HH:MM:SS" or "N/A"
+  importance: number; // decimal, 0.1–1.0
 }
 
 export interface TopicAnalysis {

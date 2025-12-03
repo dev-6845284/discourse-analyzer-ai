@@ -41,11 +41,21 @@ async function analyzeSingleTopic(
   const summaryItems = (responseJson.summaryItems || []).map((item: any) => {
     if (typeof item === 'string') {
       // Backward compatibility: convert old string format
-      return { text: item, timestamp: 'N/A' };
+      return { text: item, timestamp: 'N/A', importance: 0.5 };
     }
+    
+    let importance = typeof item.importance === 'number' ? item.importance : 0.5;
+    // Normalize if the model returns 1-10 scale by mistake
+    if (importance > 1) {
+      importance = importance / 10;
+    }
+    // Clamp
+    importance = Math.max(0.1, Math.min(1.0, importance));
+
     return {
       text: item.text || '',
-      timestamp: item.timestamp || 'N/A'
+      timestamp: item.timestamp || 'N/A',
+      importance
     };
   });
   

@@ -127,16 +127,17 @@ Return a JSON object with this structure:
 {
   "topicTitle": "${group.title}", // You can refine the title if needed, but keep it short.
   "summaryItems": [
-    { "text": "Speaker X claims that...", "timestamp": "HH:MM:SS" },
-    { "text": "They argue that...", "timestamp": "HH:MM:SS" },
-    { "text": "Key fact mentioned: ...", "timestamp": "HH:MM:SS" }
+    { "text": "Speaker X claims that...", "timestamp": "HH:MM:SS", "importance": 0.9 },
+    { "text": "They argue that...", "timestamp": "HH:MM:SS", "importance": 0.7 },
+    { "text": "Key fact mentioned: ...", "timestamp": "HH:MM:SS", "importance": 0.3 }
   ]
 }
 
 CRITICAL INSTRUCTIONS:
-- Each summary item MUST be an object with "text" and "timestamp" fields.
+- Each summary item MUST be an object with "text", "timestamp", and "importance" fields.
 - "text" field: The summary of the fact/claim/argument.
 - "timestamp" field: The exact timestamp HH:MM:SS when that fact/claim was stated in the dialog.
+- "importance" field: A decimal number from 0.1 to 1.0 indicating how crucial this point is (1.0 = critical core argument, 0.1 = minor detail).
 - If a timestamp is [N/A], use 'N/A' in the timestamp field.
 - Timestamps should reference the EXACT timestamp from the dialog lines.
 - Format timestamps as HH:MM:SS (without brackets) in the timestamp field.

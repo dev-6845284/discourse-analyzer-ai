@@ -911,9 +911,24 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
                               <li
                                 key={idx}
                                 onClick={() => handleSummaryItemClick(group.id, item.timestamp, group.dialogLines)}
-                                className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors"
+                                className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors flex items-start"
                               >
-                                <span className="text-gray-400 font-mono text-xs mr-2 group-hover:text-cyan-400 transition-colors">[{item.timestamp}]</span>
+                                <span className="text-gray-400 font-mono text-xs mr-2 mt-0.5 group-hover:text-cyan-400 transition-colors shrink-0">[{item.timestamp}]</span>
+                                {item.importance !== undefined && (
+                                  <div className="flex flex-col w-16 mr-3 mt-1 shrink-0" title={`Importance: ${item.importance}`}>
+                                    <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full rounded-full ${
+                                          item.importance >= 0.8 ? 'bg-red-500' :
+                                          item.importance >= 0.5 ? 'bg-yellow-500' :
+                                          'bg-green-500'
+                                        }`}
+                                        style={{ width: `${item.importance * 100}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 text-right leading-none mt-0.5">{item.importance.toFixed(2)}</span>
+                                  </div>
+                                )}
                                 <span className="group-hover:underline">{item.text}</span>
                               </li>
                             ))}
