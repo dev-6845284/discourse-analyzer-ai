@@ -42,6 +42,20 @@ function formatTimestamp(seconds: number): string {
 }
 
 /**
+ * Converts timestamp string (HH:MM:SS or N/A) to seconds
+ */
+function parseTimestamp(timestamp: string): number | null {
+  if (timestamp === 'N/A' || !timestamp) return null;
+  const parts = timestamp.split(':');
+  if (parts.length !== 3) return null;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  const secs = parseInt(parts[2], 10);
+  if (isNaN(hours) || isNaN(minutes) || isNaN(secs)) return null;
+  return hours * 3600 + minutes * 60 + secs;
+}
+
+/**
  * Constructs formatted transcript text with timestamps
  */
 function constructFormattedTranscript(segments: TranscriptSegment[]): string {
@@ -71,8 +85,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
   const [filteredSegments, setFilteredSegments] = useState<TranscriptSegment[]>(segments);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
+  const [highlightedDialogLineId, setHighlightedDialogLineId] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dialogLineRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fullAnalysisInputRef = useRef<HTMLInputElement>(null);
   
@@ -208,6 +224,44 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
       newExpanded.add(blockId);
     }
     setExpandedBlocks(newExpanded);
+  };
+
+  /**
+   * Handle clicking on a summary item to highlight and scroll to matching dialog
+   */
+  const handleSummaryItemClick = (groupId: string, timestamp: string, groupDialogLines: any[]) => {
+    const targetSeconds = parseTimestamp(timestamp);
+    if (targetSeconds === null) return;
+
+    // Find the closest dialog line by timestamp
+    let closestLine = groupDialogLines[0];
+    let closestDiff = Math.abs(closestLine.timestamp - targetSeconds);
+
+    for (const line of groupDialogLines) {
+      const diff = Math.abs(line.timestamp - targetSeconds);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestLine = line;
+      }
+    }
+
+    // Create unique ID for this dialog line
+    const lineId = `${groupId}-${groupDialogLines.indexOf(closestLine)}-${closestLine.timestamp}`;
+    setHighlightedDialogLineId(lineId);
+
+    // Scroll to the dialog line
+    const element = dialogLineRefs.current.get(lineId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+
+    // Clear highlight after 3 seconds
+    setTimeout(() => {
+      setHighlightedDialogLineId(null);
+    }, 3000);
   };
 
   const handleExportSpeakers = () => {
@@ -852,11 +906,15 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
                       <h3 className="text-lg font-bold text-white mb-2">{group.title}</h3>
                       {group.analysis && (
                         <div className="bg-gray-800/50 p-3 rounded border border-gray-700/50">
-                          <ul className="list-disc list-inside space-y-1">
+                          <ul className="list-disc list-inside space-y-2">
                             {group.analysis.summaryItems.map((item, idx) => (
-                              <li key={idx} className="text-sm text-gray-300">
-                                <span className="text-gray-400 font-mono text-xs mr-2">[{item.timestamp}]</span>
-                                <span>{item.text}</span>
+                              <li
+                                key={idx}
+                                onClick={() => handleSummaryItemClick(group.id, item.timestamp, group.dialogLines)}
+                                className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors"
+                              >
+                                <span className="text-gray-400 font-mono text-xs mr-2 group-hover:text-cyan-400 transition-colors">[{item.timestamp}]</span>
+                                <span className="group-hover:underline">{item.text}</span>
                               </li>
                             ))}
                           </ul>
@@ -865,21 +923,41 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
                     </div>
                     
                     <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                      {group.dialogLines.map((line, idx) => (
-                        <div key={idx} className="flex gap-4 text-sm">
-                          <div className="w-24 flex-shrink-0 text-right">
-                            <span className="font-mono text-gray-500 text-xs block">
-                              {formatTimestamp(line.timestamp)}
-                            </span>
-                            <span className="font-bold text-purple-400 block truncate" title={line.speaker}>
-                              {line.speaker}
-                            </span>
+                      {group.dialogLines.map((line, idx) => {
+                        const lineId = `${group.id}-${idx}-${line.timestamp}`;
+                        const isHighlighted = highlightedDialogLineId === lineId;
+                        return (
+                          <div
+                            key={idx}
+                            ref={(el) => {
+                              if (el) {
+                                dialogLineRefs.current.set(lineId, el);
+                              }
+                            }}
+                            className={`flex gap-4 text-sm p-2 rounded transition-all ${
+                              isHighlighted
+                                ? 'bg-cyan-900/50 border border-cyan-500/50 shadow-lg shadow-cyan-500/20'
+                                : 'hover:bg-gray-700/30'
+                            }`}
+                          >
+                            <div className="w-24 flex-shrink-0 text-right">
+                              <span className={`font-mono text-xs block ${
+                                isHighlighted ? 'text-cyan-400 font-bold' : 'text-gray-500'
+                              }`}>
+                                {formatTimestamp(line.timestamp)}
+                              </span>
+                              <span className={`font-bold block truncate ${
+                                isHighlighted ? 'text-cyan-300' : 'text-purple-400'
+                              }`} title={line.speaker}>
+                                {line.speaker}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <p className={isHighlighted ? 'text-white' : 'text-gray-300'}>{line.text}</p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-gray-300">{line.text}</p>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
