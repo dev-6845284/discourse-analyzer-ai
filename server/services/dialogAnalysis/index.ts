@@ -38,15 +38,15 @@ export const analyzeDialogTopics = async (
   const topicGroups = await segmentTopics(flatDialog, language, fastModel, apiKeys);
   console.log(`[DialogAnalysis] Phase 1 Complete. Identified ${topicGroups.length} topic groups.`);
 
-  // Phase 1.5: Merge Topics
-  console.log('[DialogAnalysis] Phase 1.5: Merging related topics...');
+  // Phase 2: Merge Topics
+  console.log('[DialogAnalysis] Phase 2: Merging related topics...');
   const mergedGroups = await mergeTopics(topicGroups, language, betterModel, apiKeys);
-  console.log(`[DialogAnalysis] Phase 1.5 Complete. Reduced to ${mergedGroups.length} topic groups.`);
+  console.log(`[DialogAnalysis] Phase 2 Complete. Reduced to ${mergedGroups.length} topic groups.`);
 
-  // Phase 2: Topic Analysis
-  console.log('[DialogAnalysis] Phase 2: Starting topic analysis...');
+  // Phase 3: Topic Analysis
+  console.log('[DialogAnalysis] Phase 3: Starting topic analysis...');
   const analyzedGroups = await analyzeTopics(mergedGroups, language, betterModel, apiKeys);
-  console.log('[DialogAnalysis] Phase 2 Complete. Analysis finished.');
+  console.log('[DialogAnalysis] Phase 3 Complete. Analysis finished.');
 
   return analyzedGroups;
 };

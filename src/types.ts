@@ -53,6 +53,21 @@ export interface Quote {
   improvedAt?: string;
 }
 
+export interface AnalysisSession {
+  _id: string;
+  userId: string;
+  sourceUrl: string;
+  sourceType: 'youtube' | 'article' | 'text';
+  status: 'created' | 'extracting_transcript' | 'analyzing_topics' | 'identifying_speakers' | 'grouping_dialog' | 'completed' | 'failed';
+  createdAt: string;
+  updatedAt: string;
+  error?: string;
+  transcript?: any;
+  topicAnalysis?: any;
+  speakerAnalysis?: any;
+  dialogAnalysis?: any;
+}
+
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
 
 export interface LogErrorDetails {

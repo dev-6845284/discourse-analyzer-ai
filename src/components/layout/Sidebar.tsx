@@ -3,8 +3,8 @@ import React from 'react';
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  activeTab: 'search' | 'people' | 'users';
-  onTabChange: (tab: 'search' | 'people' | 'users') => void;
+  activeTab: 'search' | 'people' | 'users' | 'sessions';
+  onTabChange: (tab: 'search' | 'people' | 'users' | 'sessions') => void;
   onExport: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
   children: React.ReactNode;
@@ -99,6 +99,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }`}
           >
             People
+          </button>
+          <button
+            onClick={() => onTabChange('sessions')}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+              activeTab === 'sessions'
+                ? 'bg-cyan-600 text-white shadow'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            Sessions
           </button>
           {userRole === 'admin' && (
             <button

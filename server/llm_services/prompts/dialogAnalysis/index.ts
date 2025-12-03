@@ -108,13 +108,17 @@ export const buildAnalyzeSingleTopicPrompt = (
   group: TopicGroup,
   language: string
 ): string => {
-  const dialogText = group.dialogLines.map(l => `${l.speaker}: ${l.text}`).join('\n');
+  const dialogText = group.dialogLines.map((l, index) => {
+    const timestamp = l.timestamp ? `[${l.timestamp}]` : '[N/A]';
+    return `${timestamp} ${l.speaker}: ${l.text}`;
+  }).join('\n');
   
   return `
 Analyze the following topic group from a dialog.
 Topic: "${group.title}"
 
 Goal: Identify key stated facts, core ideas, claims, and arguments.
+IMPORTANT: Each line in the dialog is prefixed with a timestamp [HH:MM:SS] or [N/A] if not available.
 
 Dialog:
 ${dialogText}
@@ -123,11 +127,19 @@ Return a JSON object with this structure:
 {
   "topicTitle": "${group.title}", // You can refine the title if needed, but keep it short.
   "summaryItems": [
-    "Speaker X claims that...",
-    "They argue that...",
-    "Key fact mentioned: ..."
+    { "text": "Speaker X claims that...", "timestamp": "HH:MM:SS" },
+    { "text": "They argue that...", "timestamp": "HH:MM:SS" },
+    { "text": "Key fact mentioned: ...", "timestamp": "HH:MM:SS" }
   ]
 }
+
+CRITICAL INSTRUCTIONS:
+- Each summary item MUST be an object with "text" and "timestamp" fields.
+- "text" field: The summary of the fact/claim/argument.
+- "timestamp" field: The exact timestamp HH:MM:SS when that fact/claim was stated in the dialog.
+- If a timestamp is [N/A], use 'N/A' in the timestamp field.
+- Timestamps should reference the EXACT timestamp from the dialog lines.
+- Format timestamps as HH:MM:SS (without brackets) in the timestamp field.
 
 Language: ${language}
 Output Language: ${language}

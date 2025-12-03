@@ -120,6 +120,10 @@ const AnalysisSessionSchema: Schema = new Schema({
   dialogAnalysis: [Schema.Types.Mixed],
   
   error: String
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  // Ensure we respect environment-based collection suffix for multi-tenant/dev separation
+  collection: `analysissessions${process.env.DB_COLLECTION_SUFFIX || ''}`,
+});
 
 export default mongoose.model<IAnalysisSession>('AnalysisSession', AnalysisSessionSchema);

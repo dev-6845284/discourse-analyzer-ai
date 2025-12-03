@@ -3,7 +3,7 @@ import { buildMergeTopicsPrompt } from '../../llm_services/prompts';
 import { callGemini, extractJsonFromResponse } from './utils';
 
 /**
- * Phase 1.5: Merge adjacent topic groups that discuss the same broader topic
+ * Phase 2: Merge adjacent topic groups that discuss the same broader topic
  */
 export async function mergeTopics(
   groups: TopicGroup[],

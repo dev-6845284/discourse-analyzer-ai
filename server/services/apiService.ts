@@ -17,7 +17,7 @@ import { getTranscript } from './youtubeService';
 import { extractTranscriptTopics } from './topicExtractorService';
 import { identifySpeakers } from './speakerIdentificationService';
 import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysis';
-import { updateSessionStep, updateSessionStatus } from './analysisSessionService';
+import { updateSessionStep, updateSessionStatus, createSession } from './analysisSessionService';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -331,29 +331,41 @@ export const fetchArticleContent = async (req: Request, res: Response) => {
 };
 
 export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
-  const { url, language, sessionId } = req.body;
+  const { url, language, sessionId, save } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
+  let currentSessionId = sessionId;
+
   try {
-    if (sessionId) {
-      await updateSessionStatus(sessionId, 'extracting_transcript');
+    // If save is requested and no session exists, create one
+    if (save && !currentSessionId && req.session?.user) {
+      const session = await createSession(req.session.user._id as string, url, 'youtube');
+      currentSessionId = session._id;
+    }
+
+    if (currentSessionId) {
+      await updateSessionStatus(currentSessionId, 'extracting_transcript');
     }
 
     const transcript = await getTranscript(url, language);
 
-    if (sessionId) {
-      await updateSessionStep(sessionId, 'transcript', transcript, 'extracting_transcript');
+    if (currentSessionId) {
+      await updateSessionStep(currentSessionId, 'transcript', transcript, 'extracting_transcript');
     }
 
-    res.json(transcript);
+    // Return transcript with sessionId if available
+    res.json({ ...transcript, sessionId: currentSessionId });
   } catch (error: any) {
     console.error('Error fetching transcript:', error);
-    if (sessionId) {
-      await updateSessionStatus(sessionId, 'failed', error.message);
+    
+    // Let's use currentSessionId if it exists
+    if (currentSessionId) {
+       await updateSessionStatus(currentSessionId, 'failed', error.message);
     }
+
     const status = error.code === 'CAPTIONS_NOT_FOUND' ? 404 : 
                    error.code === 'VIDEO_RESTRICTED' ? 403 :
                    error.code === 'INVALID_VIDEO_ID' ? 400 : 500;

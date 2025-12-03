@@ -55,8 +55,13 @@ export interface DialogLine {
   timestamp: number; // seconds
 }
 
+export interface SummaryItem {
+  text: string;
+  timestamp: string; // Format: "HH:MM:SS" or "N/A"
+}
+
 export interface TopicAnalysis {
-  summaryItems: string[];
+  summaryItems: SummaryItem[];
 }
 
 export interface TopicGroup {

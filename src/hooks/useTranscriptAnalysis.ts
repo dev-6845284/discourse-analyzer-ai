@@ -9,6 +9,11 @@ export interface WeightedTag {
   frequency: number;
 }
 
+export interface SummaryItem {
+  text: string;
+  timestamp: string; // Format: "HH:MM:SS" or "N/A"
+}
+
 export interface TopicAnalysisResult {
   blockId: string;
   startTime: number;
@@ -42,7 +47,7 @@ export interface TopicGroup {
   title: string;
   dialogLines: DialogLine[];
   analysis?: {
-    summaryItems: string[];
+    summaryItems: SummaryItem[];
   };
 }
 
@@ -58,15 +63,19 @@ export interface UseTranscriptAnalysisState {
   error: string | null;
 }
 
-export function useTranscriptAnalysis() {
+export function useTranscriptAnalysis(initialData?: {
+  topicAnalysis?: TopicAnalysisResult[];
+  speakerAnalysis?: SpeakerAnalysisResult[];
+  dialogAnalysis?: TopicGroup[];
+}) {
   const [state, setState] = useState<UseTranscriptAnalysisState>({
     isAnalyzing: false,
     isSpeakerAnalyzing: false,
     isDialogAnalyzing: false,
     analysisProgress: 0,
-    results: [],
-    speakerResults: [],
-    dialogResults: [],
+    results: initialData?.topicAnalysis || [],
+    speakerResults: initialData?.speakerAnalysis || [],
+    dialogResults: initialData?.dialogAnalysis || [],
     selectedBlockIds: new Set(),
     error: null,
   });
@@ -79,7 +88,8 @@ export function useTranscriptAnalysis() {
       segments: TranscriptSegment[],
       languageCode: string,
       model: string,
-      apiKeys: Record<string, string>
+      apiKeys: Record<string, string>,
+      sessionId?: string
     ) => {
       setState(prev => ({
         ...prev,
@@ -117,6 +127,7 @@ export function useTranscriptAnalysis() {
           language: languageCode,
           model: model || 'gemini',
           apiKeys,
+          sessionId,
         });
 
         const analysisResults: TopicAnalysisResult[] = response.data;
@@ -147,7 +158,8 @@ export function useTranscriptAnalysis() {
     async (
       languageCode: string,
       model: string,
-      apiKeys: Record<string, string>
+      apiKeys: Record<string, string>,
+      sessionId?: string
     ) => {
       const selectedBlocks = state.results.filter(r => r.isSelected);
       
@@ -181,6 +193,7 @@ export function useTranscriptAnalysis() {
           language: languageCode,
           model: model || 'gemini',
           apiKeys,
+          sessionId,
         });
 
         const analysisResults: SpeakerAnalysisResult[] = response.data;
@@ -210,7 +223,8 @@ export function useTranscriptAnalysis() {
       languageCode: string,
       fastModel: string,
       betterModel: string,
-      apiKeys: Record<string, string>
+      apiKeys: Record<string, string>,
+      sessionId?: string
     ) => {
       if (state.speakerResults.length === 0) {
         setState(prev => ({
@@ -235,6 +249,7 @@ export function useTranscriptAnalysis() {
           fastModel,
           betterModel,
           apiKeys,
+          sessionId,
         });
 
         const analysisResults: TopicGroup[] = response.data;

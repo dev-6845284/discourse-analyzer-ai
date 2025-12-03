@@ -3,7 +3,7 @@ import { buildAnalyzeSingleTopicPrompt } from '../../llm_services/prompts';
 import { callGemini, extractJsonFromResponse } from './utils';
 
 /**
- * Phase 2: Analyze each topic group using a better model
+ * Phase 3: Analyze each topic group using a better model
  */
 export async function analyzeTopics(
   groups: TopicGroup[],
@@ -37,7 +37,19 @@ async function analyzeSingleTopic(
   const responseText = await callGemini(prompt, model, apiKeys['gemini']);
   const responseJson = extractJsonFromResponse(responseText);
   
+  // Ensure summaryItems are properly structured with text and timestamp fields
+  const summaryItems = (responseJson.summaryItems || []).map((item: any) => {
+    if (typeof item === 'string') {
+      // Backward compatibility: convert old string format
+      return { text: item, timestamp: 'N/A' };
+    }
+    return {
+      text: item.text || '',
+      timestamp: item.timestamp || 'N/A'
+    };
+  });
+  
   return {
-    summaryItems: responseJson.summaryItems || []
+    summaryItems
   };
 }

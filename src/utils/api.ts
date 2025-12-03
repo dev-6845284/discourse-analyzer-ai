@@ -113,4 +113,20 @@ export const agenticSearch = async (
   }, { signal });
 };
 
+export const createSession = async (sourceUrl: string, sourceType: 'youtube' | 'article' | 'text') => {
+  return api.post('/analysis/sessions', { sourceUrl, sourceType });
+};
+
+export const getSessions = async () => {
+  return api.get('/analysis/sessions');
+};
+
+export const getSession = async (sessionId: string) => {
+  return api.get(`/analysis/sessions/${sessionId}`);
+};
+
+export const updateSessionStep = async (sessionId: string, step: string, data: any, status: string) => {
+  return api.put(`/analysis/sessions/${sessionId}/step`, { step, data, status });
+};
+
 export default api;
