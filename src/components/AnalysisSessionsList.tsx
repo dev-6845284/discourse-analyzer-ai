@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Play, FileText, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Play, FileText, AlertCircle, Clock, CheckCircle, Trash2 } from 'lucide-react';
 import { AnalysisSession } from '../types';
-import { getSessions } from '../utils/api';
+import { getSessions, deleteSession } from '../utils/api';
 
 interface AnalysisSessionsListProps {
   onResume: (session: AnalysisSession) => void;
@@ -43,6 +43,19 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
       setError(err.message || 'Failed to fetch sessions');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await deleteSession(sessionId);
+      setSessions(sessions.filter(s => s._id !== sessionId));
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete session');
     }
   };
 
@@ -119,12 +132,18 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
                   </span>
                 </div>
                 
-                <button
-                  onClick={() => onResume(session)}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors flex-shrink-0 whitespace-nowrap"
-                >
-                  Resume
-                </button>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => onResume(session)}
+                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                  >
+                    Resume
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSession(session._id)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2"
+                  >X</button>
+                </div>
               </div>
 
               {/* Progress Bar */}

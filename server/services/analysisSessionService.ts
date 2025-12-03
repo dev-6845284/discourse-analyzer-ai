@@ -37,3 +37,7 @@ export const updateSessionStatus = async (sessionId: string, status: IAnalysisSe
   }
   return await AnalysisSession.findByIdAndUpdate(sessionId, update, { new: true });
 };
+
+export const deleteSession = async (sessionId: string): Promise<IAnalysisSession | null> => {
+  return await AnalysisSession.findByIdAndDelete(sessionId);
+};

@@ -70,4 +70,25 @@ router.put('/sessions/:id/step', async (req, res) => {
   }
 });
 
+// Delete a session
+router.delete('/sessions/:id', async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const session = await analysisSessionService.getSession(sessionId);
+    
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    if (session.userId !== req.session.user!._id as string) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    await analysisSessionService.deleteSession(sessionId);
+    res.json({ message: 'Session deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting analysis session:', error);
+    res.status(500).json({ message: 'Failed to delete analysis session' });
+  }
+});
+
 export default router;

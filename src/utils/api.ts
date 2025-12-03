@@ -129,4 +129,8 @@ export const updateSessionStep = async (sessionId: string, step: string, data: a
   return api.put(`/analysis/sessions/${sessionId}/step`, { step, data, status });
 };
 
+export const deleteSession = async (sessionId: string) => {
+  return api.delete(`/analysis/sessions/${sessionId}`);
+};
+
 export default api;
