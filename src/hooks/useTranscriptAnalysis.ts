@@ -31,12 +31,29 @@ export interface SpeakerAnalysisResult {
   identifiedSpeakers: string[];
 }
 
+export interface DialogLine {
+  speaker: string;
+  text: string;
+  timestamp: number;
+}
+
+export interface TopicGroup {
+  id: string;
+  title: string;
+  dialogLines: DialogLine[];
+  analysis?: {
+    summaryItems: string[];
+  };
+}
+
 export interface UseTranscriptAnalysisState {
   isAnalyzing: boolean;
   isSpeakerAnalyzing: boolean;
+  isDialogAnalyzing: boolean;
   analysisProgress: number; // 0-100
   results: TopicAnalysisResult[];
   speakerResults: SpeakerAnalysisResult[];
+  dialogResults: TopicGroup[];
   selectedBlockIds: Set<string>;
   error: string | null;
 }
@@ -45,9 +62,11 @@ export function useTranscriptAnalysis() {
   const [state, setState] = useState<UseTranscriptAnalysisState>({
     isAnalyzing: false,
     isSpeakerAnalyzing: false,
+    isDialogAnalyzing: false,
     analysisProgress: 0,
     results: [],
     speakerResults: [],
+    dialogResults: [],
     selectedBlockIds: new Set(),
     error: null,
   });
@@ -184,6 +203,60 @@ export function useTranscriptAnalysis() {
   );
 
   /**
+   * Start dialog analysis (topic segmentation) based on speaker results
+   */
+  const analyzeDialog = useCallback(
+    async (
+      languageCode: string,
+      fastModel: string,
+      betterModel: string,
+      apiKeys: Record<string, string>
+    ) => {
+      if (state.speakerResults.length === 0) {
+        setState(prev => ({
+          ...prev,
+          error: 'No speaker analysis results available for dialog analysis',
+        }));
+        return;
+      }
+
+      setState(prev => ({
+        ...prev,
+        isDialogAnalyzing: true,
+        error: null,
+        dialogResults: [],
+      }));
+
+      try {
+        // Call backend API
+        const response = await api.post('/quotes/analyze-dialog-topics', {
+          dialog: state.speakerResults,
+          language: languageCode,
+          fastModel,
+          betterModel,
+          apiKeys,
+        });
+
+        const analysisResults: TopicGroup[] = response.data;
+
+        setState(prev => ({
+          ...prev,
+          dialogResults: analysisResults,
+          isDialogAnalyzing: false,
+        }));
+      } catch (error: any) {
+        console.error('Dialog analysis error:', error);
+        setState(prev => ({
+          ...prev,
+          isDialogAnalyzing: false,
+          error: error.message || 'Failed to analyze dialog topics',
+        }));
+      }
+    },
+    [state.speakerResults]
+  );
+
+  /**
    * Toggle selection of a block for expensive model analysis
    */
   const toggleBlockSelection = useCallback((blockId: string) => {
@@ -230,6 +303,7 @@ export function useTranscriptAnalysis() {
       ...prev,
       results: [],
       speakerResults: [],
+      dialogResults: [],
       selectedBlockIds: new Set(),
       analysisProgress: 0,
       error: null,
@@ -243,14 +317,27 @@ export function useTranscriptAnalysis() {
     return state.results.filter(r => r.isSelected);
   }, [state.results]);
 
+  /**
+   * Set speaker analysis results directly (for import)
+   */
+  const setSpeakerResults = useCallback((results: SpeakerAnalysisResult[]) => {
+    setState(prev => ({
+      ...prev,
+      speakerResults: results,
+      error: null,
+    }));
+  }, []);
+
   return {
     ...state,
     analyzeTranscript,
     analyzeSpeakers,
+    analyzeDialog,
     toggleBlockSelection,
     clearSelections,
     selectAllBlocks,
     clearAnalysis,
     getSelectedBlocksData,
+    setSpeakerResults,
   };
 }

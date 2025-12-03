@@ -16,6 +16,7 @@ import { fetchArticle } from '../utils/articleExtractor';
 import { getTranscript } from './youtubeService';
 import { extractTranscriptTopics } from './topicExtractorService';
 import { identifySpeakers } from './speakerIdentificationService';
+import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysisService';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -413,6 +414,42 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
     console.error('Error analyzing transcript speakers:', error);
     res.status(500).json({ 
       error: error.message || 'Failed to analyze transcript speakers',
+      details: error.stack 
+    });
+  }
+};
+
+/**
+ * Analyze dialog for topic segmentation and analysis
+ */
+export const analyzeDialogTopics = async (req: Request, res: Response) => {
+  const { dialog, language, fastModel, betterModel, apiKeys } = req.body;
+
+  if (!dialog || !Array.isArray(dialog) || dialog.length === 0) {
+    return res.status(400).json({ error: 'Dialog array is required and must not be empty' });
+  }
+
+  if (!apiKeys || typeof apiKeys !== 'object') {
+    return res.status(400).json({ error: 'API keys are required' });
+  }
+
+  try {
+    console.log(`[DialogAnalysis] Analyzing dialog with ${dialog.length} blocks`);
+    
+    const results = await analyzeDialogTopicsService({
+      dialog,
+      language: language || 'en',
+      fastModel,
+      betterModel,
+      apiKeys,
+    });
+
+    console.log(`[DialogAnalysis] Successfully analyzed ${results.length} topic groups`);
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing dialog topics:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to analyze dialog topics',
       details: error.stack 
     });
   }

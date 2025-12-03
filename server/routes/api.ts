@@ -19,6 +19,7 @@ router.post('/quotes/fetch-article', (req, res) => apiService.fetchArticleConten
 router.post('/quotes/fetch-transcript', (req, res) => apiService.fetchYoutubeTranscript(req, res));
 router.post('/quotes/analyze-transcript-topics', (req, res) => apiService.analyzeTranscriptTopics(req, res));
 router.post('/quotes/analyze-transcript-speakers', (req, res) => apiService.analyzeTranscriptSpeakers(req, res));
+router.post('/quotes/analyze-dialog-topics', (req, res) => apiService.analyzeDialogTopics(req, res));
 router.post('/quotes/improve', (req, res) => apiService.improveSingleQuote(req, res));
 
 // Inject session user info for audit purposes when saving quotes
