@@ -56,3 +56,11 @@ export {
   type GrokExtractQuotesFromArticlePromptParams,
   type GrokImproveQuotePromptParams,
 } from './grok';
+
+// Dialog Analysis prompts
+export {
+  buildInferInitialTopicPrompt,
+  buildProcessChunkPrompt,
+  buildMergeTopicsPrompt,
+  buildAnalyzeSingleTopicPrompt,
+} from './dialogAnalysis';

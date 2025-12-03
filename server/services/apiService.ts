@@ -16,7 +16,7 @@ import { fetchArticle } from '../utils/articleExtractor';
 import { getTranscript } from './youtubeService';
 import { extractTranscriptTopics } from './topicExtractorService';
 import { identifySpeakers } from './speakerIdentificationService';
-import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysisService';
+import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysis';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -368,7 +368,7 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
     
     const results = await extractTranscriptTopics({
       blocks,
-      language: language || 'en',
+      language: language || 'lt',
       model: model || 'gemini',
       apiKeys,
     });
@@ -403,7 +403,7 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
     
     const results = await identifySpeakers({
       blocks,
-      language: language || 'en',
+      language: language || 'lt',
       model: model || 'gemini',
       apiKeys,
     });
@@ -438,7 +438,7 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
     
     const results = await analyzeDialogTopicsService({
       dialog,
-      language: language || 'en',
+      language: language || 'lt',
       fastModel,
       betterModel,
       apiKeys,

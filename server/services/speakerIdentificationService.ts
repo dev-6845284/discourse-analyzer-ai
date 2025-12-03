@@ -38,6 +38,7 @@ Transform the text into a dialogue format, attributing each line to a speaker.
 Identify the Host and any Guests/Speakers. If names are mentioned, use them. Otherwise use "Host", "Speaker 1", etc.
 
 Language of the transcript: ${language}
+Output Language: ${language}
 
 `;
 

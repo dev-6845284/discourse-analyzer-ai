@@ -49,6 +49,23 @@ export type GroundingChunk = {
   source: string;
 };
 
+export interface DialogLine {
+  speaker: string;
+  text: string;
+  timestamp: number; // seconds
+}
+
+export interface TopicAnalysis {
+  summaryItems: string[];
+}
+
+export interface TopicGroup {
+  id: string;
+  title: string;
+  dialogLines: DialogLine[];
+  analysis?: TopicAnalysis;
+}
+
 export interface ArticleRecommendation {
   url: string;
   title: string;

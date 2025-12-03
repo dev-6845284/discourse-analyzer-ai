@@ -36,12 +36,12 @@ export interface TranscriptAnalysisRequest {
  * Creates a prompt for fast topic extraction without speaker identification
  * Tags and summaries are generated in Lithuanian by default
  */
-function createTopicExtractionPrompt(blockText: string): string {
+function createTopicExtractionPrompt(blockText: string, language: string): string {
   return `Analyze the following transcript segment and extract main topics/themes WITHOUT trying to identify speakers or separate different voices.
 
 Focus ONLY on understanding what topics, subjects, or themes are being discussed in this text.
 
-IMPORTANT: Return all tags and main topics in LITHUANIAN language.
+IMPORTANT: Return all tags and main topics in ${language} language.
 
 Return ONLY a valid JSON object with NO markdown formatting, NO code blocks, NO backticks. Return raw JSON:
 {
@@ -99,7 +99,8 @@ function extractJsonFromResponse(text: string): any {
  */
 async function extractTopicsWithGemini(
   apiKey: string,
-  blockText: string
+  blockText: string,
+  language: string
 ): Promise<any> {
   const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
     method: 'POST',
@@ -112,7 +113,7 @@ async function extractTopicsWithGemini(
         {
           parts: [
             {
-              text: createTopicExtractionPrompt(blockText),
+              text: createTopicExtractionPrompt(blockText, language),
             },
           ],
         },
@@ -143,7 +144,8 @@ async function extractTopicsWithGemini(
  */
 async function extractTopicsWithGrok(
   apiKey: string,
-  blockText: string
+  blockText: string,
+  language: string
 ): Promise<any> {
   const response = await fetch('https://api.x.ai/v1/chat/completions', {
     method: 'POST',
@@ -156,7 +158,7 @@ async function extractTopicsWithGrok(
       messages: [
         {
           role: 'user',
-          content: createTopicExtractionPrompt(blockText),
+          content: createTopicExtractionPrompt(blockText, language),
         },
       ],
       temperature: 0.3,
@@ -183,7 +185,8 @@ async function extractTopicsWithGrok(
  */
 async function extractTopicsWithChatGPT(
   apiKey: string,
-  blockText: string
+  blockText: string,
+  language: string
 ): Promise<any> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -196,7 +199,7 @@ async function extractTopicsWithChatGPT(
       messages: [
         {
           role: 'user',
-          content: createTopicExtractionPrompt(blockText),
+          content: createTopicExtractionPrompt(blockText, language),
         },
       ],
       temperature: 0.3,
@@ -227,7 +230,8 @@ export async function extractBlockTopics(
   endTime: number,
   text: string,
   model: string,
-  apiKeys: Record<string, string>
+  apiKeys: Record<string, string>,
+  language: string
 ): Promise<TopicAnalysisResult> {
   try {
     let result: any;
@@ -237,26 +241,26 @@ export async function extractBlockTopics(
       if (!apiKey) {
         throw new Error('Gemini API key not found');
       }
-      result = await extractTopicsWithGemini(apiKey, text);
+      result = await extractTopicsWithGemini(apiKey, text, language);
     } else if (model === 'grok' || model === 'grok-fast') {
       const apiKey = apiKeys['grok'];
       if (!apiKey) {
         throw new Error('Grok API key not found');
       }
-      result = await extractTopicsWithGrok(apiKey, text);
+      result = await extractTopicsWithGrok(apiKey, text, language);
     } else if (model === 'chatgpt') {
       const apiKey = apiKeys['chatgpt'] || apiKeys['openai'];
       if (!apiKey) {
         throw new Error('ChatGPT API key not found');
       }
-      result = await extractTopicsWithChatGPT(apiKey, text);
+      result = await extractTopicsWithChatGPT(apiKey, text, language);
     } else {
       // Default to Gemini
       const apiKey = apiKeys['gemini'];
       if (!apiKey) {
         throw new Error('No API key found for topic extraction');
       }
-      result = await extractTopicsWithGemini(apiKey, text);
+      result = await extractTopicsWithGemini(apiKey, text, language);
     }
 
     return {
@@ -299,7 +303,8 @@ export async function extractTranscriptTopics(
       block.endTime,
       block.text,
       request.model,
-      request.apiKeys
+      request.apiKeys,
+      request.language
     );
     results.push(result);
 

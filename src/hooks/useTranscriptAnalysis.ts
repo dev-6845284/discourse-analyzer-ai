@@ -328,6 +328,23 @@ export function useTranscriptAnalysis() {
     }));
   }, []);
 
+  /**
+   * Set full analysis state directly (for import)
+   */
+  const setFullAnalysisState = useCallback((
+    results: TopicAnalysisResult[],
+    speakerResults: SpeakerAnalysisResult[],
+    dialogResults: TopicGroup[]
+  ) => {
+    setState(prev => ({
+      ...prev,
+      results,
+      speakerResults,
+      dialogResults,
+      error: null,
+    }));
+  }, []);
+
   return {
     ...state,
     analyzeTranscript,
@@ -339,5 +356,6 @@ export function useTranscriptAnalysis() {
     clearAnalysis,
     getSelectedBlocksData,
     setSpeakerResults,
+    setFullAnalysisState,
   };
 }

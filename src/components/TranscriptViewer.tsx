@@ -6,6 +6,7 @@ import { useSearchParams } from '../hooks/useSearchParams';
 import Spinner from './Spinner';
 import { downloadTranscriptJson, downloadTranscriptText, TranscriptData } from '../utils/transcriptStorage';
 import { downloadSpeakerAnalysisJson, parseSpeakerAnalysisFromJson } from '../utils/speakerStorage';
+import { downloadAnalysisJson, parseAnalysisFromJson, FullAnalysisData } from '../utils/analysisStorage';
 
 interface TranscriptSegment {
   start: number;
@@ -57,6 +58,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fullAnalysisInputRef = useRef<HTMLInputElement>(null);
   
   // Get API key info from search params
   const { selectedAI } = useSearchParams();
@@ -199,6 +201,52 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
     fileInputRef.current?.click();
   };
 
+  const handleExportAnalysis = () => {
+    const data: FullAnalysisData = {
+      version: 1,
+      timestamp: new Date().toISOString(),
+      videoId,
+      results: topicAnalysis.results,
+      speakerResults: topicAnalysis.speakerResults,
+      dialogResults: topicAnalysis.dialogResults,
+    };
+    downloadAnalysisJson(data, `analysis_${videoId}`);
+  };
+
+  const handleImportAnalysisClick = () => {
+    fullAnalysisInputRef.current?.click();
+  };
+
+  const handleFullAnalysisFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await parseAnalysisFromJson(file);
+      topicAnalysis.setFullAnalysisState(
+        data.results || [],
+        data.speakerResults || [],
+        data.dialogResults || []
+      );
+      
+      // Switch to the most advanced view available
+      if (data.dialogResults && data.dialogResults.length > 0) {
+        setViewMode('dialog');
+      } else if (data.speakerResults && data.speakerResults.length > 0) {
+        setViewMode('speakers');
+      } else if (data.results && data.results.length > 0) {
+        setViewMode('topics');
+      }
+      
+    } catch (error) {
+      console.error('Failed to import analysis:', error);
+      alert('Failed to import analysis file. Please check the file format.');
+    }
+    
+    // Reset input
+    event.target.value = '';
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -228,6 +276,13 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={fullAnalysisInputRef}
+        onChange={handleFullAnalysisFileChange}
         accept=".json"
         className="hidden"
       />
@@ -358,6 +413,22 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
               >
                 <Upload size={18} />
                 <span className="hidden sm:inline">Import Speakers</span>
+              </button>
+              <button
+                onClick={handleExportAnalysis}
+                className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                title="Export full analysis state"
+              >
+                <Download size={18} />
+                <span className="hidden sm:inline">Export Analysis</span>
+              </button>
+              <button
+                onClick={handleImportAnalysisClick}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                title="Import full analysis state"
+              >
+                <Upload size={18} />
+                <span className="hidden sm:inline">Import Analysis</span>
               </button>
               <button
                 onClick={handleAnalyzeTopics}
