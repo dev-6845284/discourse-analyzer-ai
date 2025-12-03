@@ -9,6 +9,7 @@ import path from 'path';
 import { isAuthenticated } from './middleware/auth';
 import apiRoutes from './routes/api';
 import userRoutes from './routes/users';
+import analysisRoutes from './routes/analysis';
 import connectToDatabase from './db';
 import User from './models/User';
 
@@ -174,6 +175,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/analysis', analysisRoutes);
 app.use('/api', apiRoutes);
 
 // Serve frontend in production

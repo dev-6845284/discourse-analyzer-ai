@@ -17,6 +17,7 @@ import { getTranscript } from './youtubeService';
 import { extractTranscriptTopics } from './topicExtractorService';
 import { identifySpeakers } from './speakerIdentificationService';
 import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysis';
+import { updateSessionStep, updateSessionStatus } from './analysisSessionService';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -330,17 +331,29 @@ export const fetchArticleContent = async (req: Request, res: Response) => {
 };
 
 export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
-  const { url, language } = req.body;
+  const { url, language, sessionId } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
   try {
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'extracting_transcript');
+    }
+
     const transcript = await getTranscript(url, language);
+
+    if (sessionId) {
+      await updateSessionStep(sessionId, 'transcript', transcript, 'extracting_transcript');
+    }
+
     res.json(transcript);
   } catch (error: any) {
     console.error('Error fetching transcript:', error);
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
     const status = error.code === 'CAPTIONS_NOT_FOUND' ? 404 : 
                    error.code === 'VIDEO_RESTRICTED' ? 403 :
                    error.code === 'INVALID_VIDEO_ID' ? 400 : 500;
@@ -353,7 +366,7 @@ export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
  * Groups transcript into 15-minute blocks and extracts topics using fast models
  */
 export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
-  const { blocks, language, model, apiKeys } = req.body;
+  const { blocks, language, model, apiKeys, sessionId } = req.body;
 
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
     return res.status(400).json({ error: 'Blocks array is required and must not be empty' });
@@ -364,6 +377,12 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
   }
 
   try {
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'analyzing_topics');
+      // Save the blocks used for analysis
+      await updateSessionStep(sessionId, 'transcriptBlocks', blocks, 'analyzing_topics');
+    }
+
     console.log(`[TopicAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
     
     const results = await extractTranscriptTopics({
@@ -373,10 +392,17 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
       apiKeys,
     });
 
+    if (sessionId) {
+      await updateSessionStep(sessionId, 'topicAnalysis', results, 'analyzing_topics');
+    }
+
     console.log(`[TopicAnalysis] Successfully analyzed ${results.length} blocks`);
     res.json(results);
   } catch (error: any) {
     console.error('Error analyzing transcript topics:', error);
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
     res.status(500).json({ 
       error: error.message || 'Failed to analyze transcript topics',
       details: error.stack 
@@ -388,7 +414,7 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
  * Analyze YouTube transcript blocks for speaker identification
  */
 export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => {
-  const { blocks, language, model, apiKeys } = req.body;
+  const { blocks, language, model, apiKeys, sessionId } = req.body;
 
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
     return res.status(400).json({ error: 'Blocks array is required and must not be empty' });
@@ -399,6 +425,10 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
   }
 
   try {
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'identifying_speakers');
+    }
+
     console.log(`[SpeakerAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
     
     const results = await identifySpeakers({
@@ -408,10 +438,17 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
       apiKeys,
     });
 
+    if (sessionId) {
+      await updateSessionStep(sessionId, 'speakerAnalysis', results, 'identifying_speakers');
+    }
+
     console.log(`[SpeakerAnalysis] Successfully analyzed ${results.length} blocks`);
     res.json(results);
   } catch (error: any) {
     console.error('Error analyzing transcript speakers:', error);
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
     res.status(500).json({ 
       error: error.message || 'Failed to analyze transcript speakers',
       details: error.stack 
@@ -423,7 +460,7 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
  * Analyze dialog for topic segmentation and analysis
  */
 export const analyzeDialogTopics = async (req: Request, res: Response) => {
-  const { dialog, language, fastModel, betterModel, apiKeys } = req.body;
+  const { dialog, language, fastModel, betterModel, apiKeys, sessionId } = req.body;
 
   if (!dialog || !Array.isArray(dialog) || dialog.length === 0) {
     return res.status(400).json({ error: 'Dialog array is required and must not be empty' });
@@ -434,6 +471,10 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
   }
 
   try {
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'grouping_dialog');
+    }
+
     console.log(`[DialogAnalysis] Analyzing dialog with ${dialog.length} blocks`);
     
     const results = await analyzeDialogTopicsService({
@@ -444,10 +485,17 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
       apiKeys,
     });
 
+    if (sessionId) {
+      await updateSessionStep(sessionId, 'dialogAnalysis', results, 'completed');
+    }
+
     console.log(`[DialogAnalysis] Successfully analyzed ${results.length} topic groups`);
     res.json(results);
   } catch (error: any) {
     console.error('Error analyzing dialog topics:', error);
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
     res.status(500).json({ 
       error: error.message || 'Failed to analyze dialog topics',
       details: error.stack 
