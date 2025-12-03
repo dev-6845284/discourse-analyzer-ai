@@ -20,10 +20,23 @@ export interface TopicAnalysisResult {
   isSelected?: boolean; // For selecting blocks for expensive model analysis
 }
 
+export interface SpeakerAnalysisResult {
+  blockId: string;
+  startTime: number;
+  endTime: number;
+  dialogue: Array<{
+    speaker: string;
+    text: string;
+  }>;
+  identifiedSpeakers: string[];
+}
+
 export interface UseTranscriptAnalysisState {
   isAnalyzing: boolean;
+  isSpeakerAnalyzing: boolean;
   analysisProgress: number; // 0-100
   results: TopicAnalysisResult[];
+  speakerResults: SpeakerAnalysisResult[];
   selectedBlockIds: Set<string>;
   error: string | null;
 }
@@ -31,8 +44,10 @@ export interface UseTranscriptAnalysisState {
 export function useTranscriptAnalysis() {
   const [state, setState] = useState<UseTranscriptAnalysisState>({
     isAnalyzing: false,
+    isSpeakerAnalyzing: false,
     analysisProgress: 0,
     results: [],
+    speakerResults: [],
     selectedBlockIds: new Set(),
     error: null,
   });
@@ -107,6 +122,68 @@ export function useTranscriptAnalysis() {
   );
 
   /**
+   * Start speaker analysis for selected blocks
+   */
+  const analyzeSpeakers = useCallback(
+    async (
+      languageCode: string,
+      model: string,
+      apiKeys: Record<string, string>
+    ) => {
+      const selectedBlocks = state.results.filter(r => r.isSelected);
+      
+      if (selectedBlocks.length === 0) {
+        setState(prev => ({
+          ...prev,
+          error: 'No blocks selected for speaker analysis',
+        }));
+        return;
+      }
+
+      setState(prev => ({
+        ...prev,
+        isSpeakerAnalyzing: true,
+        error: null,
+        speakerResults: [],
+      }));
+
+      try {
+        // Prepare blocks for analysis
+        const blocksForAnalysis = selectedBlocks.map(block => ({
+          blockId: block.blockId,
+          startTime: block.startTime,
+          endTime: block.endTime,
+          text: block.text,
+        }));
+
+        // Call backend API
+        const response = await api.post('/quotes/analyze-transcript-speakers', {
+          blocks: blocksForAnalysis,
+          language: languageCode,
+          model: model || 'gemini',
+          apiKeys,
+        });
+
+        const analysisResults: SpeakerAnalysisResult[] = response.data;
+
+        setState(prev => ({
+          ...prev,
+          speakerResults: analysisResults,
+          isSpeakerAnalyzing: false,
+        }));
+      } catch (error: any) {
+        console.error('Speaker analysis error:', error);
+        setState(prev => ({
+          ...prev,
+          isSpeakerAnalyzing: false,
+          error: error.message || 'Failed to analyze speakers',
+        }));
+      }
+    },
+    [state.results]
+  );
+
+  /**
    * Toggle selection of a block for expensive model analysis
    */
   const toggleBlockSelection = useCallback((blockId: string) => {
@@ -152,6 +229,7 @@ export function useTranscriptAnalysis() {
     setState(prev => ({
       ...prev,
       results: [],
+      speakerResults: [],
       selectedBlockIds: new Set(),
       analysisProgress: 0,
       error: null,
@@ -168,6 +246,7 @@ export function useTranscriptAnalysis() {
   return {
     ...state,
     analyzeTranscript,
+    analyzeSpeakers,
     toggleBlockSelection,
     clearSelections,
     selectAllBlocks,
