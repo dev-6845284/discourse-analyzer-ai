@@ -41,11 +41,12 @@ app.use(
   session({
     secret: sessionSecret,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax',
     },
   })
 );
@@ -124,7 +125,13 @@ app.post('/api/login', async (req, res) => {
       role: userRole,
     };
 
-    res.status(200).json({ user: req.session.user });
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ message: 'Failed to establish session' });
+      }
+      res.status(200).json({ user: req.session.user });
+    });
   } catch (error) {
     res.status(401).json({ message: 'Authentication failed', error });
   }
@@ -154,7 +161,13 @@ app.post('/api/login/password', async (req, res) => {
       role: user.role,
     };
 
-    res.status(200).json({ user: req.session.user });
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ message: 'Failed to establish session' });
+      }
+      res.status(200).json({ user: req.session.user });
+    });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error });
   }
