@@ -223,7 +223,23 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       setIsLoading(true);
       setError(null);
       try {
+        // Log request details
+        const debugInfo = {
+          timestamp: new Date().toISOString(),
+          action: 'FETCH_STORED_QUOTES',
+          queryParams,
+          credentials: 'include'
+        };
+        console.log('[FETCH_QUOTES]', JSON.stringify(debugInfo, null, 2));
+        
         const response = await getStoredQuotes(queryParams);
+        
+        console.log('[FETCH_QUOTES_SUCCESS]', {
+          timestamp: new Date().toISOString(),
+          quotesCount: response.data?.length || 0,
+          status: response.status
+        });
+        
         // Map backend quotes to frontend Quote interface
         const mappedQuotes: Quote[] = response.data.map((q: any) => ({
           id: q._id,
@@ -252,8 +268,23 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           improvedAt: q.improvedAt,
         }));
         setQuotes(mappedQuotes);
-      } catch (err) {
-        console.error('Error fetching stored quotes:', err);
+      } catch (err: any) {
+        const errorInfo = {
+          timestamp: new Date().toISOString(),
+          action: 'FETCH_QUOTES_ERROR',
+          error: err.message,
+          response: {
+            status: err.response?.status,
+            statusText: err.response?.statusText,
+            data: err.response?.data
+          },
+          requestDetails: {
+            url: err.config?.url,
+            method: err.config?.method,
+            withCredentials: err.config?.withCredentials
+          }
+        };
+        console.error('[FETCH_QUOTES_ERROR]', JSON.stringify(errorInfo, null, 2));
         setError('Failed to load stored quotes.');
       } finally {
         setIsLoading(false);

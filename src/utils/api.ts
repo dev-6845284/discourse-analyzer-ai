@@ -16,6 +16,47 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Add request logging interceptor
+api.interceptors.request.use((config) => {
+  console.log('[API_REQUEST]', {
+    timestamp: new Date().toISOString(),
+    url: config.url,
+    method: config.method,
+    baseURL: config.baseURL,
+    withCredentials: config.withCredentials,
+    headers: {
+      hasContentType: !!config.headers?.['Content-Type'],
+      custom: Object.keys(config.headers || {}).filter(k => !['content-type', 'common', 'delete', 'get', 'head', 'post', 'put', 'patch'].includes(k.toLowerCase()))
+    }
+  });
+  return config;
+}, (error) => {
+  console.error('[API_REQUEST_ERROR]', error);
+  return Promise.reject(error);
+});
+
+// Add response logging interceptor
+api.interceptors.response.use((response) => {
+  console.log('[API_RESPONSE]', {
+    timestamp: new Date().toISOString(),
+    url: response.config.url,
+    status: response.status,
+    statusText: response.statusText
+  });
+  return response;
+}, (error) => {
+  console.error('[API_RESPONSE_ERROR]', {
+    timestamp: new Date().toISOString(),
+    url: error.config?.url,
+    method: error.config?.method,
+    status: error.response?.status,
+    statusText: error.response?.statusText,
+    message: error.message,
+    data: error.response?.data
+  });
+  return Promise.reject(error);
+});
+
 export const saveQuote = async (quoteData: any) => {
   return api.post('/quotes', quoteData);
 };

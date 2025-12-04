@@ -7,6 +7,24 @@ import { isAdminOrDev } from '../middleware/admin';
 
 const router = express.Router();
 
+// Logging middleware for all API requests
+router.use((req, res, next) => {
+  console.log('[ROUTE_REQUEST]', {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    path: req.path,
+    sessionID: req.sessionID,
+    hasUser: !!req.session?.user,
+    userEmail: req.session?.user?.email || 'NOT_AUTHENTICATED',
+    headers: {
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      userAgent: req.headers['user-agent']?.substring(0, 50)
+    }
+  });
+  next();
+});
+
 // All API routes are protected
 router.use(isAuthenticated);
 
