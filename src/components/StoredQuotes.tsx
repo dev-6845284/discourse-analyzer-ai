@@ -6,6 +6,7 @@ import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
 import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
 import api, { getStoredQuotes, updateQuote, deleteQuote } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
+import { SUPPORTED_LANGUAGES } from '../constants';
 
 interface StoredQuotesProps {
   selectedPerson: Person | null;
@@ -145,6 +146,64 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: undefined } : q));
   };
 
+  const handleLanguageChange = async (quoteId: string, newLanguageCode: string) => {
+    try {
+      // Find the quote to get its current data
+      const quote = quotes.find(q => q.id === quoteId);
+      if (!quote) return;
+
+      // Find the language name from supported languages
+      const selectedLanguage = SUPPORTED_LANGUAGES.find(lang => lang.code === newLanguageCode);
+      const newLanguageName = selectedLanguage?.name || quote.languageName;
+
+      // Optimistic update
+      setQuotes(prev => prev.map(q => 
+        q.id === quoteId 
+          ? { 
+              ...q, 
+              languageCode: newLanguageCode, 
+              languageName: newLanguageName,
+              metadata: { ...q.metadata, languageCode: newLanguageCode, languageName: newLanguageName } 
+            }
+          : q
+      ));
+
+      // Update on backend
+      const updatePayload: QuoteUpdatePayload = {
+        text: quote.text,
+        analysisContext: quote.analysisContext,
+        sourceUrl: quote.source,
+        date: quote.date,
+        metadata: {
+          ...quote.metadata,
+          languageCode: newLanguageCode,
+          languageName: newLanguageName,
+          title: quote.title,
+          links: quote.links
+        }
+      };
+
+      await updateQuote(quoteId, updatePayload);
+    } catch (err) {
+      console.error('Failed to update quote language:', err);
+      setError('Failed to update quote language.');
+      // Revert optimistic update
+      const quote = quotes.find(q => q.id === quoteId);
+      if (quote) {
+        setQuotes(prev => prev.map(q => 
+          q.id === quoteId 
+            ? { 
+                ...q, 
+                languageCode: quote.languageCode, 
+                languageName: quote.languageName,
+                metadata: { ...q.metadata, languageCode: quote.languageCode, languageName: quote.languageName } 
+              }
+            : q
+        ));
+      }
+    }
+  };
+
   const handleDelete = async (quote: Quote) => {
     if (!window.confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
       return;
@@ -235,7 +294,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onAnalyze={handleAnalyze}
               onImprove={handleImprove}
               onSave={() => {}} // Stored quotes are already saved
-              onLanguageChange={() => {}} // Implement if needed for stored quotes
+              onLanguageChange={handleLanguageChange}
               onAccept={handleAccept}
               onDiscard={handleDiscard}
               onDelete={handleDelete}
