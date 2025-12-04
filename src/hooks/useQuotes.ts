@@ -1,9 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
-import { Quote, AnalysisCategory, AnalysisRating, ExportData, QuoteUpdatePayload, ArticleRecommendation } from '../types';
-import { SUPPORTED_LANGUAGES } from '../constants';
-import { TimePeriodResult } from '../utils/timePeriod';
-import api, { updateQuote, extractFromUrl, agenticSearch } from '../utils/api';
-import { loadFromStorage } from '../utils/localStorage';
+import { useState } from 'react';
+import { useQuoteSearch } from './useQuoteSearch';
+import { useQuoteActions } from './useQuoteActions';
+import { useQuoteExtraction } from './useQuoteExtraction';
 
 // Custom error class for JSON parsing failures from the backend
 export class JsonParsingError extends Error {
@@ -17,437 +15,45 @@ export class JsonParsingError extends Error {
 }
 
 export function useQuotes(handleLogout: () => void) {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [articles, setArticles] = useState<ArticleRecommendation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [rawApiResponseError, setRawApiResponseError] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleCancelSearch = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-      setIsLoading(false);
-      setError('Search cancelled by user.');
-    }
-  }, []);
-
-  const handleLoadQuotes = useCallback((data: ExportData) => {
-    setQuotes(data.quotes);
-    // This is a good place to also set the person's name in the main App component
-    // but for now, we'll just load the quotes.
-  }, []);
-
-  const handleError = (e: any, context: string) => {
-    if (e.response?.status === 401) {
-      setError('Authentication failed. Please log in again.');
-      handleLogout();
-    } else {
-      const errorData = e.response?.data;
-      let message = errorData?.message || e.message;
-
-      // Prepend a user-friendly message for model response errors
-      if (errorData?.errorType === 'ModelResponseError') {
-        message = `The AI model blocked the response. Details: ${message}`;
-      }
-
-      setError(`${context} failed: ${message}`);
-
-      if (errorData?.rawResponse) {
-        setRawApiResponseError(errorData.rawResponse);
-      }
-    }
-  };
-
-  const handleSearch = useCallback(
-    async (
-      selectedAI: string,
-      personName: string,
-      selectedLanguages: string[],
-      resultCount: number,
-      temperature: number,
-      maxQuoteLength: number,
-      timePeriod: TimePeriodResult,
-      filterCategory: AnalysisCategory | 'all',
-      filterRating: AnalysisRating | 'all',
-      sortOrder: 'newest' | 'oldest',
-      isAgentic: boolean = false,
-      agenticMode: 'quotes' | 'articles' = 'quotes'
-    ) => {
-      if (!personName) {
-        setError("Please enter a person's name.");
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-      setRawApiResponseError(null);
-      setArticles([]);
-
-      abortControllerRef.current = new AbortController();
-
-      try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-
-        if (isAgentic) {
-          const response = await agenticSearch(
-            personName,
-            timePeriod,
-            selectedLanguages,
-            { mode: agenticMode },
-            apiKeys,
-            abortControllerRef.current.signal
-          );
-
-          if (response.data.type === 'quotes') {
-            setQuotes(response.data.data as Quote[]);
-          } else if (response.data.type === 'articles') {
-            setArticles(response.data.data as ArticleRecommendation[]);
-            setQuotes([]);
-          }
-        } else {
-          const existingQuotesText = quotes.map((q) => q.text);
-          const response = await api.post('/quotes/search', {
-            model: selectedAI,
-            personName,
-            languages: selectedLanguages,
-            maxQuotes: resultCount,
-            context: existingQuotesText,
-            temperature,
-            maxQuoteLength,
-            timePeriod,
-            category: filterCategory,
-            rating: filterRating,
-            sortBy: sortOrder,
-            apiKeys,
-          }, { signal: abortControllerRef.current.signal });
-
-          const newQuotes = response.data;
-          setQuotes(newQuotes);
-        }
-      } catch (e: any) {
-        if (e.name === 'CanceledError' || e.message === 'canceled') {
-          return;
-        }
-        handleError(e, 'Search');
-      } finally {
-        setIsLoading(false);
-        abortControllerRef.current = null;
-      }
-    },
-    [quotes, handleLogout]
+  const search = useQuoteSearch(handleLogout);
+  const actions = useQuoteActions(
+    search.quotes,
+    search.setQuotes,
+    setError,
+    setRawApiResponseError,
+    handleLogout
   );
-
-  const handleAnalyzeQuote = useCallback(
-    async (quote: Quote, selectedAI: string) => {
-      setQuotes((prev) =>
-        prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: true } : q))
-      );
-      setError(null);
-      setRawApiResponseError(null);
-
-      try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-        const response = await api.post('/quotes/analyze', {
-          model: selectedAI,
-          quoteText: quote.text,
-          quoteLanguageCode: quote.languageCode,
-          quoteLanguageName: quote.languageName,
-          analysisContext: quote.analysisContext,
-          links: quote.links,
-          apiKeys,
-        });
-        const analysis = response.data;
-
-        setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { 
-            ...q, 
-            analysisContext: quote.analysisContext,
-            links: quote.links,
-            draft: { ...q, analysis }, 
-            isAnalyzing: false 
-          } : q))
-        );
-      } catch (e: any) {
-        handleError(e, 'Analysis');
-        setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: false } : q))
-        );
-      }
-    },
-    [handleLogout]
+  const extraction = useQuoteExtraction(
+    search.quotes,
+    search.setQuotes,
+    setError,
+    setRawApiResponseError,
+    handleLogout
   );
-
-  const handleExtractQuotes = useCallback(
-    async (
-      selectedAI: string,
-      personName: string,
-      textToExtract: string,
-      details: { source: string; title: string; date: string; languageCode: string; languageName: string; },
-      onSuccess: () => void
-    ) => {
-      if (!personName) {
-        setError("Please enter a person's name to attribute the extracted quotes.");
-        return;
-      }
-      if (!textToExtract) {
-        setError('Please enter text to extract quotes from.');
-        return;
-      }
-
-      setError(null);
-      setRawApiResponseError(null);
-
-      try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-        const response = await api.post('/quotes/extract', {
-          model: selectedAI,
-          personName,
-          textContent: textToExtract,
-          ...details,
-          apiKeys,
-        });
-        const extractedQuotes = response.data;
-
-        setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
-        onSuccess();
-      } catch (e: any) {
-        handleError(e, 'Extraction');
-      }
-    },
-    [quotes, handleLogout]
-  );
-
-  const handleExtractFromUrl = useCallback(
-    async (
-      selectedAI: string,
-      personName: string,
-      url: string,
-      temperature: number,
-      onStatusChange: (status: string) => void,
-      onSuccess: () => void
-    ) => {
-      if (!personName) {
-        setError("Please enter a person's name to attribute the extracted quotes.");
-        return;
-      }
-      if (!url) {
-        setError('Please enter a URL to extract quotes from.');
-        return;
-      }
-
-      setError(null);
-      setRawApiResponseError(null);
-
-      try {
-        onStatusChange('Fetching article...');
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-        
-        onStatusChange('Extracting quotes from article...');
-        const response = await extractFromUrl(url, personName, selectedAI, temperature, apiKeys || {});
-        
-        const { quotes: extractedQuotes } = response.data;
-
-        if (extractedQuotes && extractedQuotes.length > 0) {
-          setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
-        }
-        
-        onSuccess();
-      } catch (e: any) {
-        handleError(e, 'URL extraction');
-      }
-    },
-    [quotes, handleLogout]
-  );
-
-  const handleAddQuoteManually = useCallback(
-    (
-      personName: string,
-      textToExtract: string,
-      details: {
-        source: string;
-        title: string;
-        date: string;
-        languageCode: string;
-        languageName: string;
-      },
-      onAnalyze: (quote: Quote) => void
-    ) => {
-      if (!textToExtract.trim() || !personName) {
-        setError("Person's name and quote text must be present to add a quote.");
-        return;
-      }
-
-      const trimmedText = textToExtract.trim();
-
-      // Prevent adding duplicate quotes
-      if (quotes.some((q) => q.text === trimmedText)) {
-        setError('This exact quote already exists in the list.');
-        return;
-      }
-
-      const newQuote: Quote = {
-        id: `quote-manual-${Date.now()}`,
-        text: trimmedText,
-        source: details.source,
-        title: details.title || details.source,
-        date: details.date,
-        languageCode: details.languageCode,
-        languageName: details.languageName,
-      };
-
-      setQuotes((prevQuotes) => [newQuote, ...prevQuotes]);
-      setError(null);
-      setRawApiResponseError(null);
-
-      // Immediately analyze the newly added quote
-      onAnalyze(newQuote);
-    },
-    [quotes]
-  );
-
-  const handleUpdateQuoteLanguage = useCallback((quoteId: string, newLanguageCode: string) => {
-    const newLanguageName =
-      SUPPORTED_LANGUAGES.find((lang) => lang.code === newLanguageCode)?.name || '';
-    setQuotes((prevQuotes) =>
-      prevQuotes.map((q) =>
-        q.id === quoteId ? { ...q, languageCode: newLanguageCode, languageName: newLanguageName } : q
-      )
-    );
-  }, []);
-
-  const handleClearQuotes = useCallback(() => {
-    setQuotes([]);
-    setArticles([]);
-  }, []);
-
-  const markQuoteAsStored = useCallback((quoteId: string, dbId?: string) => {
-    setQuotes((prevQuotes) =>
-      prevQuotes.map((q) =>
-        q.id === quoteId ? { ...q, isStored: true, id: dbId || q.id } : q
-      )
-    );
-  }, []);
-
-  const handleImproveQuote = useCallback(
-    async (quote: Quote, selectedAI: string, personName: string) => {
-      if (!personName) {
-        setError("Please enter a person's name to improve quotes.");
-        return;
-      }
-
-      setQuotes((prev) =>
-        prev.map((q) => (q.id === quote.id ? { ...q, isImproving: true } : q))
-      );
-      setError(null);
-      setRawApiResponseError(null);
-
-      try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-        const response = await api.post('/quotes/improve', {
-          model: selectedAI,
-          quote,
-          personName,
-          apiKeys,
-        });
-        const improvedQuote = response.data;
-
-        setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { ...q, draft: { ...q, ...improvedQuote }, isImproving: false } : q))
-        );
-      } catch (e: any) {
-        handleError(e, 'Quote improvement');
-        setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { ...q, isImproving: false } : q))
-        );
-      }
-    },
-    [handleLogout]
-  );
-
-  const handleAcceptQuote = useCallback(async (quote: Quote, selectedAI?: string) => {
-    if (!quote.draft) return;
-
-    // Ensure we reset loading states when merging draft, as the draft might contain
-    // stale loading states copied from the original quote during creation.
-    const updatedQuote = { 
-      ...quote, 
-      ...quote.draft, 
-      draft: undefined,
-      isAnalyzing: false,
-      isImproving: false
-    };
-    setQuotes((prev) => prev.map((q) => (q.id === quote.id ? updatedQuote : q)));
-
-    // If the quote is already stored in the database, persist the changes
-    if (quote.isStored) {
-      try {
-        const updatePayload: QuoteUpdatePayload = {
-          text: updatedQuote.text,
-          analysisContext: updatedQuote.analysisContext,
-          sourceUrl: updatedQuote.source,
-          date: updatedQuote.date,
-          metadata: {
-            ...(updatedQuote.analysis ? { analysis: updatedQuote.analysis } : {}),
-            languageCode: updatedQuote.languageCode,
-            languageName: updatedQuote.languageName,
-            title: updatedQuote.title,
-            links: updatedQuote.links
-          }
-        };
-
-        // Include audit metadata for analysis
-        const auditPayload = {
-          ...updatePayload,
-          ...(selectedAI ? { analyzedByProvider: selectedAI } : {}),
-          analyzedAt: new Date().toISOString()
-        };
-
-        await updateQuote(quote.id, auditPayload);
-      } catch (e: any) {
-        console.error('Failed to persist accepted quote:', e);
-        setError('Failed to save analysis to the server.');
-      }
-    }
-  }, []);
-
-  const handleDiscardQuote = useCallback((quote: Quote) => {
-    setQuotes((prev) =>
-      prev.map((q) => (q.id === quote.id ? { ...q, draft: undefined } : q))
-    );
-  }, []);
-
-  const handleRemoveQuote = useCallback((quote: Quote) => {
-    // Remove the quote entirely from the list (for non-stored quotes)
-    setQuotes((prev) => prev.filter((q) => q.id !== quote.id));
-  }, []);
-
-  const clearError = useCallback(() => {
-    setError(null);
-    setRawApiResponseError(null);
-  }, []);
 
   return {
-    quotes,
-    articles,
-    isLoading,
-    error,
+    quotes: search.quotes,
+    articles: search.articles,
+    isLoading: search.isLoading,
+    error: error || search.error,
     rawApiResponseError,
-    handleSearch,
-    handleCancelSearch,
-    handleAnalyzeQuote,
-    handleExtractQuotes,
-    handleExtractFromUrl,
-    handleAddQuoteManually,
-    handleUpdateQuoteLanguage,
-    handleClearQuotes,
-    handleImproveQuote,
-    handleAcceptQuote,
-    handleDiscardQuote,
-    handleRemoveQuote,
-    clearError,
-    handleLoadQuotes,
-    markQuoteAsStored
+    handleSearch: search.handleSearch,
+    handleCancelSearch: search.handleCancelSearch,
+    handleAnalyzeQuote: actions.handleAnalyzeQuote,
+    handleExtractQuotes: extraction.handleExtractQuotes,
+    handleExtractFromUrl: extraction.handleExtractFromUrl,
+    handleAddQuoteManually: extraction.handleAddQuoteManually,
+    handleUpdateQuoteLanguage: extraction.handleUpdateQuoteLanguage,
+    handleClearQuotes: search.handleClearQuotes,
+    handleImproveQuote: actions.handleImproveQuote,
+    handleAcceptQuote: actions.handleAcceptQuote,
+    handleDiscardQuote: actions.handleDiscardQuote,
+    handleRemoveQuote: actions.handleRemoveQuote,
+    clearError: search.clearError,
+    handleLoadQuotes: extraction.handleLoadQuotes,
+    markQuoteAsStored: extraction.markQuoteAsStored
   };
 }
