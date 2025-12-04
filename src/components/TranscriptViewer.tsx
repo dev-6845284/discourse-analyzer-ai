@@ -1,19 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Copy, Download, Search as SearchIcon, Zap, ChevronDown, ChevronUp, Check, FileJson, Upload } from 'lucide-react';
 import { useTranscriptAnalysis } from '../hooks/useTranscriptAnalysis';
-import TopicTagCloud from './TopicTagCloud';
 import { useSearchParams } from '../hooks/useSearchParams';
-import Spinner from './Spinner';
 import { downloadTranscriptJson, downloadTranscriptText, TranscriptData } from '../utils/transcriptStorage';
 import { downloadSpeakerAnalysisJson, parseSpeakerAnalysisFromJson } from '../utils/speakerStorage';
 import { downloadAnalysisJson, parseAnalysisFromJson, FullAnalysisData } from '../utils/analysisStorage';
 import { createSession, updateSessionStep } from '../utils/api';
-
-interface TranscriptSegment {
-  start: number;
-  duration: number;
-  text: string;
-}
+import { TranscriptSegment, formatTimestamp, parseTimestamp, constructFormattedTranscript } from '../utils/transcriptHelpers';
+import TranscriptViewHeader from './TranscriptViewer/TranscriptViewHeader';
+import TranscriptSearchBar from './TranscriptViewer/TranscriptSearchBar';
+import TranscriptSegmentList from './TranscriptViewer/TranscriptSegmentList';
+import TopicAnalysisView from './TranscriptViewer/TopicAnalysisView';
+import SpeakerAnalysisView from './TranscriptViewer/SpeakerAnalysisView';
+import DialogAnalysisView from './TranscriptViewer/DialogAnalysisView';
+import ViewModeTabs from './TranscriptViewer/ViewModeTabs';
+import TranscriptFooter from './TranscriptViewer/TranscriptFooter';
 
 interface TranscriptViewerProps {
   isOpen: boolean;
@@ -29,39 +29,6 @@ interface TranscriptViewerProps {
     dialogAnalysis?: any[];
   };
   onSessionCreated?: (sessionId: string) => void;
-}
-
-/**
- * Formats seconds as HH:MM:SS timestamp
- */
-function formatTimestamp(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-/**
- * Converts timestamp string (HH:MM:SS or N/A) to seconds
- */
-function parseTimestamp(timestamp: string): number | null {
-  if (timestamp === 'N/A' || !timestamp) return null;
-  const parts = timestamp.split(':');
-  if (parts.length !== 3) return null;
-  const hours = parseInt(parts[0], 10);
-  const minutes = parseInt(parts[1], 10);
-  const secs = parseInt(parts[2], 10);
-  if (isNaN(hours) || isNaN(minutes) || isNaN(secs)) return null;
-  return hours * 3600 + minutes * 60 + secs;
-}
-
-/**
- * Constructs formatted transcript text with timestamps
- */
-function constructFormattedTranscript(segments: TranscriptSegment[]): string {
-  return segments
-    .map(segment => `[${formatTimestamp(segment.start)}] ${segment.text}`)
-    .join('\n');
 }
 
 export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
@@ -83,12 +50,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
   });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredSegments, setFilteredSegments] = useState<TranscriptSegment[]>(segments);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   const [highlightedDialogLineId, setHighlightedDialogLineId] = useState<string | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dialogLineRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -158,7 +123,6 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredSegments(segments);
-      setHighlightedIndex(null);
       return;
     }
 
@@ -166,18 +130,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
       segment.text.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredSegments(filtered);
-    setHighlightedIndex(filtered.length > 0 ? 0 : null);
   }, [searchTerm, segments]);
-
-  // Scroll to highlighted segment
-  useEffect(() => {
-    if (highlightedIndex !== null && segmentRefs.current[highlightedIndex]) {
-      segmentRefs.current[highlightedIndex]?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
-  }, [highlightedIndex]);
 
   const handleCopyText = () => {
     navigator.clipboard.writeText(formattedText);
@@ -474,611 +427,102 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
         className="hidden"
       />
       <div className="bg-gray-900 rounded-xl shadow-2xl flex flex-col w-full max-w-4xl h-[90vh] border border-gray-700">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700 flex-shrink-0">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-white">YouTube Transcript</h2>
-            <div className="mt-2 flex gap-4 text-sm text-gray-400">
-              <span>
-                Video ID: <span className="text-gray-300 font-mono">{videoId}</span>
-              </span>
-              <span>
-                Language: <span className="text-gray-300">{languageCode}</span>
-              </span>
-              {isAutoGenerated && (
-                <span className="text-amber-400 flex items-center gap-1">
-                  ⚠️ Auto-generated captions
-                </span>
-              )}
-              {currentSessionId ? (
-                <span className="text-green-400 flex items-center gap-1 ml-4">
-                  <Check size={14} /> Saved to DB
-                </span>
-              ) : (
-                <button
-                  onClick={handleSaveSession}
-                  disabled={isCreatingSession}
-                  className="ml-4 px-3 py-1 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 rounded text-xs border border-cyan-600/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Save to DB
-                </button>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg"
-            title="Close"
-          >
-            <X size={24} />
-          </button>
-        </div>
+        <TranscriptViewHeader
+          videoId={videoId}
+          languageCode={languageCode}
+          isAutoGenerated={isAutoGenerated}
+          currentSessionId={currentSessionId}
+          isCreatingSession={isCreatingSession}
+          onClose={onClose}
+          onSaveSession={handleSaveSession}
+        />
 
-        {/* View Mode Tabs */}
-        <div className="flex gap-2 p-4 border-b border-gray-700 flex-shrink-0 bg-gray-800/30">
-          <button
-            onClick={() => setViewMode('transcript')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              viewMode === 'transcript'
-                ? 'bg-cyan-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Transcript
-          </button>
-          <button
-            onClick={() => {
-              if (topicAnalysis.results.length === 0) {
-                handleAnalyzeTopics();
-              } else {
-                setViewMode('topics');
-              }
-            }}
-            disabled={topicAnalysis.isAnalyzing}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              viewMode === 'topics'
-                ? 'bg-cyan-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50'
-            }`}
-          >
-            <Zap size={16} />
-            Topics {topicAnalysis.results.length > 0 && `(${topicAnalysis.results.length})`}
-          </button>
-          <button
-            onClick={() => setViewMode('speakers')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              viewMode === 'speakers'
-                ? 'bg-cyan-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Speakers {topicAnalysis.speakerResults.length > 0 && `(${topicAnalysis.speakerResults.length})`}
-          </button>
-          <button
-            onClick={() => setViewMode('dialog')}
-            disabled={topicAnalysis.speakerResults.length === 0}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              viewMode === 'dialog'
-                ? 'bg-cyan-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50'
-            }`}
-          >
-            Dialog Analysis {topicAnalysis.dialogResults.length > 0 && `(${topicAnalysis.dialogResults.length})`}
-          </button>
-        </div>
+        <ViewModeTabs
+          viewMode={viewMode}
+          topicResultsCount={topicAnalysis.results.length}
+          speakerResultsCount={topicAnalysis.speakerResults.length}
+          dialogResultsCount={topicAnalysis.dialogResults.length}
+          isAnalyzing={topicAnalysis.isAnalyzing}
+          onViewModeChange={setViewMode}
+          onAnalyzeTopics={handleAnalyzeTopics}
+        />
 
         {/* Transcript View */}
         {viewMode === 'transcript' && (
           <>
-            {/* Search and Actions Bar */}
-            <div className="flex gap-3 p-4 border-b border-gray-700 flex-shrink-0">
-              <div className="flex-1 relative">
-                <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search in transcript..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
-                />
-              </div>
-              <button
-                onClick={handleCopyText}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                title="Copy all text to clipboard"
-              >
-                <Copy size={18} />
-                <span className="hidden sm:inline">Copy</span>
-              </button>
-              <button
-                onClick={handleDownloadTranscript}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                title="Download transcript as text file"
-              >
-                <Download size={18} />
-                <span className="hidden sm:inline">Download TXT</span>
-              </button>
-              <button
-                onClick={handleDownloadJSON}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                title="Download transcript as JSON for re-import"
-              >
-                <FileJson size={18} />
-                <span className="hidden sm:inline">Download JSON</span>
-              </button>
-              <button
-                onClick={handleImportSpeakersClick}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                title="Import previously analyzed speakers data"
-              >
-                <Upload size={18} />
-                <span className="hidden sm:inline">Import Speakers</span>
-              </button>
-              <button
-                onClick={handleExportAnalysis}
-                className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                title="Export full analysis state"
-              >
-                <Download size={18} />
-                <span className="hidden sm:inline">Export Analysis</span>
-              </button>
-              <button
-                onClick={handleImportAnalysisClick}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                title="Import full analysis state"
-              >
-                <Upload size={18} />
-                <span className="hidden sm:inline">Import Analysis</span>
-              </button>
-              <button
-                onClick={handleAnalyzeTopics}
-                disabled={topicAnalysis.isAnalyzing}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Analyze topics in transcript"
-              >
-                {topicAnalysis.isAnalyzing ? (
-                  <Spinner />
-                ) : (
-                  <Zap size={18} />
-                )}
-                <span className="hidden sm:inline">Analyze Topics</span>
-              </button>
-            </div>
+            <TranscriptSearchBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onCopyText={handleCopyText}
+              onDownloadTranscript={handleDownloadTranscript}
+              onDownloadJSON={handleDownloadJSON}
+              onImportSpeakers={handleImportSpeakersClick}
+              onExportAnalysis={handleExportAnalysis}
+              onImportAnalysis={handleImportAnalysisClick}
+              onAnalyzeTopics={handleAnalyzeTopics}
+              isAnalyzing={topicAnalysis.isAnalyzing}
+            />
 
-            {/* Main Transcript Area */}
-            <div
-              ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto p-6 bg-gray-800/30"
-            >
-              {filteredSegments.length > 0 ? (
-                <div className="space-y-3 font-mono text-sm">
-                  {filteredSegments.map((segment, index) => {
-                    const isHighlighted = searchTerm && segment.text.toLowerCase().includes(searchTerm.toLowerCase());
-                    const displayIndex = segments.indexOf(segment);
+            <TranscriptSegmentList
+              segments={segments}
+              searchTerm={searchTerm}
+              onSegmentClick={handleSegmentClick}
+              segmentRefs={segmentRefs}
+            />
 
-                    return (
-                      <div
-                        key={displayIndex}
-                        ref={(el) => {
-                          if (el !== null) {
-                            segmentRefs.current[index] = el;
-                          }
-                        }}
-                        onClick={() => handleSegmentClick(segment.start)}
-                        className={`p-3 rounded-lg border transition-all cursor-pointer group ${
-                          isHighlighted
-                            ? 'bg-blue-900/40 border-blue-500 text-blue-100'
-                            : 'bg-gray-800/40 border-gray-700 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
-                        }`}
-                      >
-                        <div className="flex gap-3">
-                          <span className="text-blue-400 font-bold flex-shrink-0 min-w-fit group-hover:text-blue-300">
-                            [{formatTimestamp(segment.start)}]
-                          </span>
-                          <span className="flex-1 leading-relaxed break-words">{segment.text}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <p>
-                    {searchTerm
-                      ? `No results found for "${searchTerm}"`
-                      : 'No transcript segments available'}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer Info */}
-            <div className="border-t border-gray-700 px-6 py-3 bg-gray-800/50 text-xs text-gray-400 flex-shrink-0">
-              <span>
-                Showing {filteredSegments.length} of {segments.length} segments
-                {searchTerm && ` (searched for "${searchTerm}")`}
-              </span>
-            </div>
+            <TranscriptFooter
+              filteredSegmentsCount={filteredSegments.length}
+              totalSegmentsCount={segments.length}
+              searchTerm={searchTerm}
+            />
           </>
         )}
 
         {/* Topic Analysis View */}
         {viewMode === 'topics' && (
-          <>
-            {topicAnalysis.isAnalyzing && (
-              <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center">
-                  <Spinner />
-                  <p className="mt-4 text-gray-300">
-                    Analyzing topics... {Math.round(topicAnalysis.analysisProgress)}%
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!topicAnalysis.isAnalyzing && topicAnalysis.results.length > 0 && (
-              <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-gray-300">
-                    Found <strong>{topicAnalysis.results.length}</strong> transcript blocks with topics
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={topicAnalysis.selectAllBlocks}
-                      className="text-xs px-3 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50"
-                    >
-                      Select All
-                    </button>
-                    <button
-                      onClick={topicAnalysis.clearSelections}
-                      className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-
-                {topicAnalysis.results.map(block => (
-                  <div
-                    key={block.blockId}
-                    className="bg-gray-800/60 border border-gray-700 rounded-lg overflow-hidden hover:border-gray-600 transition-colors"
-                  >
-                    {/* Block Header */}
-                    <div
-                      onClick={() => toggleBlockExpand(block.blockId)}
-                      className="p-4 cursor-pointer hover:bg-gray-800/80 transition-colors flex items-center justify-between"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              topicAnalysis.toggleBlockSelection(block.blockId);
-                            }}
-                            className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                              block.isSelected
-                                ? 'bg-green-600 border-green-500'
-                                : 'border-gray-500 hover:border-gray-400'
-                            }`}
-                          >
-                            {block.isSelected && <Check size={16} className="text-white" />}
-                          </button>
-                          <span className="font-mono text-sm text-blue-400">
-                            {formatTimestamp(block.startTime)} - {formatTimestamp(block.endTime)}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSegmentClick(block.startTime);
-                            }}
-                            className="text-xs px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50"
-                          >
-                            Jump to Video
-                          </button>
-                        </div>
-                        <p className="text-sm text-gray-300 line-clamp-2">{block.summary}</p>
-                      </div>
-                      {expandedBlocks.has(block.blockId) ? (
-                        <ChevronUp size={20} className="text-gray-400 ml-2" />
-                      ) : (
-                        <ChevronDown size={20} className="text-gray-400 ml-2" />
-                      )}
-                    </div>
-
-                    {/* Block Content */}
-                    {expandedBlocks.has(block.blockId) && (
-                      <div className="p-4 border-t border-gray-700 bg-gray-900/50 space-y-4">
-                        <TopicTagCloud tags={block.tags} mainTopics={block.mainTopics} />
-                        <div className="mt-3 pt-3 border-t border-gray-700">
-                          <p className="text-xs text-gray-400 mb-2 font-semibold">Block Text:</p>
-                          <p className="text-xs text-gray-400 line-clamp-4">{block.text}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {topicAnalysis.selectedBlockIds.size > 0 && (
-                  <div className="sticky bottom-0 p-4 bg-gray-900 border-t border-gray-700 rounded-lg mt-4">
-                    <p className="text-sm text-gray-300 mb-2">
-                      <strong>{topicAnalysis.selectedBlockIds.size}</strong> blocks selected for detailed analysis
-                    </p>
-                    <button
-                      onClick={handleAnalyzeSpeakers}
-                      disabled={topicAnalysis.isSpeakerAnalyzing}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      {topicAnalysis.isSpeakerAnalyzing ? <Spinner /> : <Zap size={18} />}
-                      Analyze Selected Blocks (Identify Speakers)
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!topicAnalysis.isAnalyzing && topicAnalysis.error && (
-              <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center text-red-400">
-                  <p>Error analyzing topics:</p>
-                  <p className="text-sm text-red-300 mt-2">{topicAnalysis.error}</p>
-                </div>
-              </div>
-            )}
-          </>
+          <TopicAnalysisView
+            isAnalyzing={topicAnalysis.isAnalyzing}
+            analysisProgress={topicAnalysis.analysisProgress}
+            results={topicAnalysis.results}
+            error={topicAnalysis.error}
+            selectedBlockIds={topicAnalysis.selectedBlockIds}
+            isSpeakerAnalyzing={topicAnalysis.isSpeakerAnalyzing}
+            onToggleBlockExpand={toggleBlockExpand}
+            onToggleBlockSelection={topicAnalysis.toggleBlockSelection}
+            onSelectAllBlocks={topicAnalysis.selectAllBlocks}
+            onClearSelections={topicAnalysis.clearSelections}
+            onSegmentClick={handleSegmentClick}
+            onAnalyzeSpeakers={handleAnalyzeSpeakers}
+            expandedBlocks={expandedBlocks}
+          />
         )}
 
         {/* Speaker Analysis View */}
         {viewMode === 'speakers' && (
-          <>
-            {topicAnalysis.isSpeakerAnalyzing && (
-              <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center">
-                  <Spinner />
-                  <p className="mt-4 text-gray-300">
-                    Identifying speakers...
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!topicAnalysis.isSpeakerAnalyzing && topicAnalysis.speakerResults.length === 0 && (
-              <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center text-gray-400">
-                  <p className="mb-4">No speaker analysis data available.</p>
-                  <button
-                    onClick={handleImportSpeakersClick}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-                  >
-                    <Upload size={18} />
-                    Import Analysis JSON
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {!topicAnalysis.isSpeakerAnalyzing && topicAnalysis.speakerResults.length > 0 && (
-              <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-gray-300">
-                    Analyzed <strong>{topicAnalysis.speakerResults.length}</strong> blocks
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAnalyzeDialog}
-                      className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
-                    >
-                      <Zap size={12} />
-                      Analyze Dialog Topics
-                    </button>
-                    <button
-                      onClick={handleImportSpeakersClick}
-                      className="text-xs px-3 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 flex items-center gap-1"
-                    >
-                      <Upload size={12} />
-                      Import
-                    </button>
-                    <button
-                      onClick={handleExportSpeakers}
-                      className="text-xs px-3 py-1 bg-emerald-600/30 text-emerald-300 rounded hover:bg-emerald-600/50 flex items-center gap-1"
-                    >
-                      <Download size={12} />
-                      Export JSON
-                    </button>
-                    <button
-                      onClick={() => topicAnalysis.clearAnalysis()}
-                      className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
-                    >
-                      Clear Analysis
-                    </button>
-                  </div>
-                </div>
-
-                {topicAnalysis.speakerResults.map(block => (
-                  <div
-                    key={block.blockId}
-                    className="bg-gray-800/60 border border-gray-700 rounded-lg overflow-hidden"
-                  >
-                    <div className="p-3 bg-gray-900/50 border-b border-gray-700 flex justify-between items-center">
-                      <span className="font-mono text-sm text-blue-400">
-                        {formatTimestamp(block.startTime)} - {formatTimestamp(block.endTime)}
-                      </span>
-                      <div className="flex gap-2">
-                        {block.identifiedSpeakers.map(speaker => (
-                          <span key={speaker} className="text-xs px-2 py-1 bg-gray-700 rounded-full text-gray-300">
-                            {speaker}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 space-y-4">
-                      {block.dialogue.map((line, idx) => (
-                        <div key={idx} className="flex gap-4">
-                          <div className="w-32 flex-shrink-0 text-right">
-                            <span className="text-sm font-bold text-purple-400 block truncate" title={line.speaker}>
-                              {line.speaker}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-gray-300 leading-relaxed">{line.text}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {!topicAnalysis.isSpeakerAnalyzing && topicAnalysis.error && (
-               <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center text-red-400">
-                  <p>Error analyzing speakers:</p>
-                  <p className="text-sm text-red-300 mt-2">{topicAnalysis.error}</p>
-                </div>
-              </div>
-            )}
-          </>
+          <SpeakerAnalysisView
+            isSpeakerAnalyzing={topicAnalysis.isSpeakerAnalyzing}
+            speakerResults={topicAnalysis.speakerResults}
+            error={topicAnalysis.error}
+            onAnalyzeDialog={handleAnalyzeDialog}
+            onImportSpeakers={handleImportSpeakersClick}
+            onExportSpeakers={handleExportSpeakers}
+            onClearAnalysis={topicAnalysis.clearAnalysis}
+          />
         )}
 
         {/* Dialog Analysis View */}
         {viewMode === 'dialog' && (
-          <>
-            {topicAnalysis.isDialogAnalyzing && (
-              <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center">
-                  <Spinner />
-                  <p className="mt-4 text-gray-300">
-                    Analyzing dialog topics...
-                  </p>
-                  <p className="text-sm text-gray-400 mt-2">This may take a while.</p>
-                </div>
-              </div>
-            )}
-
-            {!topicAnalysis.isDialogAnalyzing && topicAnalysis.dialogResults.length === 0 && (
-              <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center text-gray-400">
-                  <p className="mb-4">No dialog analysis data available.</p>
-                  <button
-                    onClick={handleAnalyzeDialog}
-                    disabled={topicAnalysis.speakerResults.length === 0}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors disabled:opacity-50"
-                  >
-                    <Zap size={18} />
-                    Start Dialog Analysis
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {!topicAnalysis.isDialogAnalyzing && topicAnalysis.dialogResults.length > 0 && (
-              <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <p className="text-gray-300">
-                    Identified <strong>{topicAnalysis.dialogResults.length}</strong> topic groups
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => topicAnalysis.clearAnalysis()}
-                      className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
-                    >
-                      Clear Analysis
-                    </button>
-                  </div>
-                </div>
-
-                {topicAnalysis.dialogResults.map(group => (
-                  <div
-                    key={group.id}
-                    className="bg-gray-800/60 border border-gray-700 rounded-lg overflow-hidden"
-                  >
-                    <div className="p-4 bg-gray-900/50 border-b border-gray-700">
-                      <h3 className="text-lg font-bold text-white mb-2">{group.title}</h3>
-                      {group.analysis && (
-                        <div className="bg-gray-800/50 p-3 rounded border border-gray-700/50">
-                          <ul className="list-disc list-inside space-y-2">
-                            {group.analysis.summaryItems.map((item, idx) => (
-                              <li
-                                key={idx}
-                                onClick={() => handleSummaryItemClick(group.id, item.timestamp, group.dialogLines)}
-                                className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors flex items-start"
-                              >
-                                <span className="text-gray-400 font-mono text-xs mr-2 mt-0.5 group-hover:text-cyan-400 transition-colors shrink-0">[{item.timestamp}]</span>
-                                {item.importance !== undefined && (
-                                  <div className="flex flex-col w-16 mr-3 mt-1 shrink-0" title={`Importance: ${item.importance}`}>
-                                    <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
-                                      <div 
-                                        className={`h-full rounded-full ${
-                                          item.importance >= 0.8 ? 'bg-red-500' :
-                                          item.importance >= 0.5 ? 'bg-yellow-500' :
-                                          'bg-green-500'
-                                        }`}
-                                        style={{ width: `${item.importance * 100}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-[10px] text-gray-500 text-right leading-none mt-0.5">{item.importance.toFixed(2)}</span>
-                                  </div>
-                                )}
-                                <span className="group-hover:underline">{item.text}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
-                      {group.dialogLines.map((line, idx) => {
-                        const lineId = `${group.id}-${idx}-${line.timestamp}`;
-                        const isHighlighted = highlightedDialogLineId === lineId;
-                        return (
-                          <div
-                            key={idx}
-                            ref={(el) => {
-                              if (el) {
-                                dialogLineRefs.current.set(lineId, el);
-                              }
-                            }}
-                            className={`flex gap-4 text-sm p-2 rounded transition-all ${
-                              isHighlighted
-                                ? 'bg-cyan-900/50 border border-cyan-500/50 shadow-lg shadow-cyan-500/20'
-                                : 'hover:bg-gray-700/30'
-                            }`}
-                          >
-                            <div className="w-24 flex-shrink-0 text-right">
-                              <span className={`font-mono text-xs block ${
-                                isHighlighted ? 'text-cyan-400 font-bold' : 'text-gray-500'
-                              }`}>
-                                {formatTimestamp(line.timestamp)}
-                              </span>
-                              <span className={`font-bold block truncate ${
-                                isHighlighted ? 'text-cyan-300' : 'text-purple-400'
-                              }`} title={line.speaker}>
-                                {line.speaker}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <p className={isHighlighted ? 'text-white' : 'text-gray-300'}>{line.text}</p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!topicAnalysis.isDialogAnalyzing && topicAnalysis.error && (
-               <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-                <div className="text-center text-red-400">
-                  <p>Error analyzing dialog:</p>
-                  <p className="text-sm text-red-300 mt-2">{topicAnalysis.error}</p>
-                </div>
-              </div>
-            )}
-          </>
+          <DialogAnalysisView
+            isDialogAnalyzing={topicAnalysis.isDialogAnalyzing}
+            dialogResults={topicAnalysis.dialogResults}
+            speakerResults={topicAnalysis.speakerResults}
+            error={topicAnalysis.error}
+            highlightedDialogLineId={highlightedDialogLineId}
+            dialogLineRefs={dialogLineRefs}
+            onSummaryItemClick={handleSummaryItemClick}
+            onClearAnalysis={topicAnalysis.clearAnalysis}
+            onAnalyzeDialog={handleAnalyzeDialog}
+          />
         )}
       </div>
     </div>
