@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import helmet from 'helmet';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
@@ -36,6 +37,7 @@ app.use(async (req, res, next) => {
 });
 
 const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const mongoUri = process.env.MONGODB_URI;
 
 // Session middleware with detailed logging
 app.use((req, res, next) => {
@@ -49,19 +51,36 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  session({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax',
+// Configure session store
+const sessionConfig: session.SessionOptions = {
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax',
+  },
+};
+
+// Use MongoDB store if connection string is available, otherwise use memory store with warning
+if (mongoUri) {
+  console.log('[SESSION_STORE] Configuring MongoDB session store');
+  sessionConfig.store = MongoStore.create({
+    mongoUrl: mongoUri,
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60, // 24 hours
+    touchAfter: 24 * 3600, // Lazy session update
+    crypto: {
+      secret: sessionSecret,
     },
-  })
-);
+  }) as any;
+} else {
+  console.warn('[SESSION_STORE] WARNING: Using in-memory session store. This is NOT suitable for production!');
+}
+
+app.use(session(sessionConfig));
 
 // Log after session middleware
 app.use((req, res, next) => {
