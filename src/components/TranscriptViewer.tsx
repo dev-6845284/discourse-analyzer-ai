@@ -9,6 +9,7 @@ import DialogAnalysisView from './TranscriptViewer/DialogAnalysisView';
 import ViewModeTabs from './TranscriptViewer/ViewModeTabs';
 import TranscriptFooter from './TranscriptViewer/TranscriptFooter';
 import { TranscriptSegment } from '../utils/transcriptHelpers';
+import { promoteSession } from '../utils/api';
 
 interface TranscriptViewerProps {
   isOpen: boolean;
@@ -66,8 +67,41 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     handleImportAnalysisClick,
     handleFullAnalysisFileChange,
     handleFileChange,
-    handleSaveSession
+    handleSaveSession,
+    selectedStatements,
+    isSelectionMode,
+    setIsSelectionMode,
+    handleToggleSelection,
+    handleGroupChange,
+    selectedLanguage,
+    setSelectedLanguage,
   } = useTranscriptViewer(props);
+
+  const handlePromote = async () => {
+    if (!currentSessionId) return;
+    
+    const groups = new Map<number, string[]>();
+    selectedStatements.forEach((groupId, statementId) => {
+      if (!groups.has(groupId)) {
+        groups.set(groupId, []);
+      }
+      groups.get(groupId)!.push(statementId);
+    });
+    
+    const quoteGroups = Array.from(groups.entries()).map(([groupId, statementIds]) => ({
+      groupId,
+      statementIds
+    }));
+    
+    try {
+      await promoteSession(currentSessionId, quoteGroups, selectedLanguage);
+      alert('Successfully promoted to quotes!');
+      onClose();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to promote quotes.');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -183,6 +217,19 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onSummaryItemClick={handleSummaryItemClick}
             onClearAnalysis={topicAnalysis.clearAnalysis}
             onAnalyzeDialog={handleAnalyzeDialog}
+            isSelectionMode={isSelectionMode}
+            selectedStatements={selectedStatements}
+            onToggleSelection={handleToggleSelection}
+            onGroupChange={handleGroupChange}
+            onPromote={handlePromote}
+            onStartSelection={() => setIsSelectionMode(true)}
+            onCancelSelection={() => {
+              setIsSelectionMode(false);
+              // Optionally clear selection?
+              // setSelectedStatements(new Map()); 
+            }}
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
           />
         )}
       </div>

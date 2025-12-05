@@ -174,4 +174,12 @@ export const deleteSession = async (sessionId: string) => {
   return api.delete(`/analysis/sessions/${sessionId}`);
 };
 
+export const promoteSession = async (sessionId: string, quoteGroups: any[], languageCode?: string) => {
+  return api.post('/analysis/promote', { sessionId, quoteGroups, languageCode });
+};
+
+export const getContentAnalysis = async (id: string) => {
+  return api.get(`/analysis/content/${id}`);
+};
+
 export default api;

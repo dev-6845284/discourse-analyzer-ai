@@ -35,6 +35,15 @@ interface DialogAnalysisViewProps {
   onSummaryItemClick: (groupId: string, timestamp: string, groupDialogLines: DialogLine[]) => void;
   onClearAnalysis: () => void;
   onAnalyzeDialog: () => void;
+  isSelectionMode?: boolean;
+  selectedStatements?: Map<string, number>;
+  onToggleSelection?: (statementId: string, groupId: number) => void;
+  onGroupChange?: (statementId: string, newGroupId: number) => void;
+  onPromote?: () => void;
+  onCancelSelection?: () => void;
+  onStartSelection?: () => void;
+  selectedLanguage?: string;
+  onLanguageChange?: (lang: string) => void;
 }
 
 export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
@@ -47,6 +56,15 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   onSummaryItemClick,
   onClearAnalysis,
   onAnalyzeDialog,
+  isSelectionMode = false,
+  selectedStatements,
+  onToggleSelection,
+  onGroupChange,
+  onPromote,
+  onCancelSelection,
+  onStartSelection,
+  selectedLanguage = 'en',
+  onLanguageChange,
 }) => {
   if (isDialogAnalyzing) {
     return (
@@ -92,11 +110,68 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-6">
+      {isSelectionMode && (
+        <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur p-4 -mx-6 -mt-6 mb-6 border-b border-cyan-700/50 flex justify-between items-center shadow-lg">
+          <div className="flex items-center gap-4">
+            <span className="text-cyan-300 font-bold">
+              Selected: {selectedStatements?.size || 0} statements
+            </span>
+            <span className="text-gray-400 text-sm">
+              Group items with the same number to merge them into one quote.
+            </span>
+          </div>
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <label htmlFor="language-select" className="text-sm text-gray-400">Language:</label>
+              <select
+                id="language-select"
+                value={selectedLanguage}
+                onChange={(e) => onLanguageChange?.(e.target.value)}
+                className="bg-gray-800 text-gray-300 text-sm rounded border border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+              >
+                <option value="en">English</option>
+                <option value="lt">Lithuanian</option>
+                <option value="ru">Russian</option>
+                <option value="de">German</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="pl">Polish</option>
+                <option value="uk">Ukrainian</option>
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={onCancelSelection} 
+                className="px-3 py-1.5 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={onPromote} 
+                disabled={!selectedStatements || selectedStatements.size === 0}
+                className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-900/20"
+              >
+                Promote to Quotes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <p className="text-gray-300">
           Identified <strong>{dialogResults.length}</strong> topic groups
         </p>
         <div className="flex gap-2">
+          {!isSelectionMode && (
+            <button
+              onClick={onStartSelection}
+              className="text-xs px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-600/50 rounded hover:bg-cyan-600/30 transition-colors"
+            >
+              Select Quotes
+            </button>
+          )}
           <button
             onClick={onClearAnalysis}
             className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
@@ -116,12 +191,40 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
             {group.analysis && (
               <div className="bg-gray-800/50 p-3 rounded border border-gray-700/50">
                 <ul className="list-disc list-inside space-y-2">
-                  {group.analysis.summaryItems.map((item, idx) => (
+                  {group.analysis.summaryItems.map((item, idx) => {
+                    const statementId = `${group.id}:${idx}`;
+                    const isSelected = selectedStatements?.has(statementId);
+                    const groupId = selectedStatements?.get(statementId) || 1;
+
+                    return (
                     <li
                       key={idx}
                       onClick={() => onSummaryItemClick(group.id, item.timestamp, group.dialogLines)}
                       className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors flex items-start"
                     >
+                      {isSelectionMode && (
+                        <div className="mr-2 flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected} 
+                            onChange={() => onToggleSelection?.(statementId, groupId)}
+                            className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
+                          />
+                          {isSelected && (
+                            <div className="flex items-center bg-gray-700 rounded px-1 border border-gray-600">
+                              <button 
+                                onClick={() => onGroupChange?.(statementId, Math.max(1, groupId - 1))}
+                                className="px-1 hover:text-white text-gray-400 text-xs"
+                              >&lt;</button>
+                              <span className="text-xs font-mono w-5 text-center text-cyan-300 font-bold">{groupId}</span>
+                              <button 
+                                onClick={() => onGroupChange?.(statementId, groupId + 1)}
+                                className="px-1 hover:text-white text-gray-400 text-xs"
+                              >&gt;</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <span className="text-gray-400 font-mono text-xs mr-2 mt-0.5 group-hover:text-cyan-400 transition-colors shrink-0">[{item.timestamp}]</span>
                       {item.importance !== undefined && (
                         <div className="flex flex-col w-16 mr-3 mt-1 shrink-0" title={`Importance: ${item.importance}`}>
@@ -140,7 +243,8 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                       )}
                       <span className="group-hover:underline">{item.text}</span>
                     </li>
-                  ))}
+                  );
+                  })}
                 </ul>
               </div>
             )}

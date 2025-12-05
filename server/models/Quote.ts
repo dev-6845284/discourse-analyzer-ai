@@ -8,6 +8,9 @@ export interface IQuote extends Document {
   tags: string[];
   context?: string;
   analysisContext?: string;
+  contentAnalysisId?: mongoose.Types.ObjectId;
+  originIds?: string[];
+  isDeprecated?: boolean;
   foundBy?: string;
   improvedBy?: string;
   analyzedBy?: string;
@@ -37,6 +40,9 @@ const QuoteSchema: Schema = new Schema(
     tags: { type: [String], index: true },
     context: { type: String },
     analysisContext: { type: String },
+    contentAnalysisId: { type: Schema.Types.ObjectId, ref: 'ContentAnalysis', index: true },
+    originIds: { type: [String], index: true },
+    isDeprecated: { type: Boolean, default: false },
     foundBy: { type: String },
     improvedBy: { type: String },
     analyzedBy: { type: String },

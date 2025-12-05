@@ -31,7 +31,7 @@ const QuoteLinksDisplay: React.FC<QuoteLinksDisplayProps> = ({ links }) => {
           title={link.url}
         >
           <span className="uppercase text-[10px] font-bold opacity-70">
-            {link.type === 'quote' ? 'Source' : 'Ref'}
+            {link.type === 'quote' ? 'Source' : (link.title && /^\[\d+\]$/.test(link.title) ? '' : 'Ref')}
           </span>
           <span className="max-w-[150px] truncate">
             {link.title || new URL(link.url).hostname}

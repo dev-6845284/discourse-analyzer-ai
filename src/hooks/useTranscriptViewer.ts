@@ -42,6 +42,13 @@ export const useTranscriptViewer = ({
   const [highlightedDialogLineId, setHighlightedDialogLineId] = useState<string | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  
+  // Selection state for promotion
+  const [selectedStatements, setSelectedStatements] = useState<Map<string, number>>(new Map());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [lastUsedGroupId, setLastUsedGroupId] = useState(1);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(languageCode || 'en');
+
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dialogLineRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +61,25 @@ export const useTranscriptViewer = ({
   const topicAnalysis = useTranscriptAnalysis(initialSessionData);
 
   const formattedText = constructFormattedTranscript(segments);
+
+  const handleToggleSelection = (statementId: string, _groupId: number) => {
+    const newMap = new Map(selectedStatements);
+    if (newMap.has(statementId)) {
+      newMap.delete(statementId);
+    } else {
+      newMap.set(statementId, lastUsedGroupId);
+    }
+    setSelectedStatements(newMap);
+  };
+
+  const handleGroupChange = (statementId: string, newGroupId: number) => {
+    const newMap = new Map(selectedStatements);
+    if (newMap.has(statementId)) {
+      newMap.set(statementId, newGroupId);
+      setSelectedStatements(newMap);
+      setLastUsedGroupId(newGroupId);
+    }
+  };
 
   /**
    * Ensure a session exists and transcript is saved before analysis
@@ -426,6 +452,13 @@ export const useTranscriptViewer = ({
     handleImportAnalysisClick,
     handleFullAnalysisFileChange,
     handleFileChange,
-    handleSaveSession
+    handleSaveSession,
+    selectedStatements,
+    isSelectionMode,
+    setIsSelectionMode,
+    handleToggleSelection,
+    handleGroupChange,
+    selectedLanguage,
+    setSelectedLanguage,
   };
 };
