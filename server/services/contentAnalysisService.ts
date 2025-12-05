@@ -172,6 +172,7 @@ export const promoteSession = async (sessionId: string, quoteGroups: QuoteGroupI
         title: contentAnalysis.title || 'YouTube Video',
         languageCode: contentAnalysis.languageCode,
         languageName: contentAnalysis.languageName,
+        analysisGroupId: group.groupId,
         links
       }
     });
