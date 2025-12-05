@@ -20,15 +20,17 @@ export type AnalysisResult = {
 };
 
 export interface Quote {
-  id: string;
+  id?: string;
+  _id?: string;
   text: string;
-  source: string;
-  title: string;
-  date: string;
-  languageCode: string;
-  languageName: string;
+  source?: string;
+  title?: string;
+  date?: string;
+  languageCode?: string;
+  languageName?: string;
   analysisContext?: string;
   links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+  person?: string | Person; // Can be ID string or full Person object
   metadata?: {
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
     [key: string]: any;
@@ -39,6 +41,9 @@ export interface Quote {
   personName?: string;
   isStored?: boolean;
   draft?: Partial<Quote>;
+  contentAnalysisId?: string;
+  originIds?: string[];
+  isDeprecated?: boolean;
   // Audit fields
   savedByUser?: string;
   savedByName?: string;

@@ -44,6 +44,8 @@ interface DialogAnalysisViewProps {
   onStartSelection?: () => void;
   selectedLanguage?: string;
   onLanguageChange?: (lang: string) => void;
+  lockedGroupId?: number;
+  isEditing?: boolean;
 }
 
 export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
@@ -65,8 +67,20 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   onStartSelection,
   selectedLanguage = 'en',
   onLanguageChange,
+  lockedGroupId,
+  isEditing,
 }) => {
   const [analysisLanguage, setAnalysisLanguage] = React.useState(selectedLanguage);
+
+  // Debug log
+  React.useEffect(() => {
+    console.log('[DialogAnalysisView] State:', {
+      isSelectionMode,
+      selectedStatementsSize: selectedStatements?.size,
+      selectedStatements: Array.from(selectedStatements?.entries() || []),
+      lockedGroupId,
+    });
+  }, [isSelectionMode, selectedStatements, lockedGroupId]);
 
   if (isDialogAnalyzing) {
     return (
@@ -208,7 +222,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
               </select>
             </div>
           )}
-          {!isSelectionMode && (
+          {!isSelectionMode && !isEditing && (
             <button
               onClick={onStartSelection}
               className="text-xs px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-600/50 rounded hover:bg-cyan-600/30 transition-colors"
@@ -254,7 +268,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                             onChange={() => onToggleSelection?.(statementId, groupId)}
                             className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
                           />
-                          {isSelected && (
+                          {isSelected && !lockedGroupId && (
                             <div className="flex items-center bg-gray-700 rounded px-1 border border-gray-600">
                               <button 
                                 onClick={() => onGroupChange?.(statementId, Math.max(1, groupId - 1))}

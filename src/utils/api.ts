@@ -182,4 +182,8 @@ export const getContentAnalysis = async (id: string) => {
   return api.get(`/analysis/content/${id}`);
 };
 
+export const updateQuoteSource = async (quoteId: string, contentAnalysisId: string, statementIds: string[]) => {
+  return api.post('/analysis/update-quote-source', { quoteId, contentAnalysisId, statementIds });
+};
+
 export default api;

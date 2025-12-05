@@ -138,4 +138,18 @@ router.get('/content/:id', async (req, res) => {
   }
 });
 
+// Update source for a single quote
+router.post('/update-quote-source', async (req, res) => {
+  try {
+    const { quoteId, contentAnalysisId, statementIds } = req.body;
+    const userId = req.session.user!._id as string;
+    
+    const result = await contentAnalysisService.updateQuoteSource(quoteId, contentAnalysisId, statementIds, userId);
+    res.json(result);
+  } catch (error) {
+    console.error('Error updating quote source:', error);
+    res.status(500).json({ message: 'Failed to update quote source' });
+  }
+});
+
 export default router;

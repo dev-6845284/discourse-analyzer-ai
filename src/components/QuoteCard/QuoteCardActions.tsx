@@ -1,5 +1,5 @@
 import React from 'react';
-import { Quote } from '../types';
+import { Quote } from '../../types';
 import Spinner from '../Spinner';
 
 interface QuoteCardActionsProps {
@@ -16,6 +16,7 @@ interface QuoteCardActionsProps {
   onDiscard: () => void;
   onDelete: () => void;
   onRemove: () => void;
+  onEditSource?: () => void;
 }
 
 const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
@@ -32,6 +33,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   onDiscard,
   onDelete,
   onRemove,
+  onEditSource,
 }) => {
   return (
     <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
@@ -87,6 +89,19 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
               </svg>
             )}
           </button>
+
+          {onEditSource && (
+            <button
+              onClick={onEditSource}
+              disabled={isBusy}
+              className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Edit Source Statements"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          )}
 
           {!hideSaveButton && (
             <button

@@ -289,6 +289,90 @@ export const updateQuotes = async (contentAnalysisId: string, quoteGroups: Quote
   return { newQuotes, deprecatedQuotes };
 };
 
+export const updateQuoteSource = async (quoteId: string, contentAnalysisId: string, statementIds: string[], userId: string) => {
+  const contentAnalysis = await ContentAnalysis.findById(contentAnalysisId);
+  if (!contentAnalysis) {
+    throw new Error('ContentAnalysis not found');
+  }
+
+  const quote = await Quote.findById(quoteId);
+  if (!quote) {
+    throw new Error('Quote not found');
+  }
+
+  // Check if statementIds are different
+  const currentOriginIds = (quote.originIds || []).sort().join(',');
+  const newOriginIds = [...statementIds].sort().join(',');
+
+  if (currentOriginIds === newOriginIds) {
+    return quote; // No change
+  }
+
+  // Deprecate old quote
+  quote.isDeprecated = true;
+  await quote.save();
+
+  // Create new quote
+  const statements = statementIds.map(id => findStatement(contentAnalysis.dialogAnalysis, id)).filter(s => s !== null);
+  
+  if (statements.length === 0) {
+     throw new Error('No valid statements found');
+  }
+
+  const text = statements.map((s, idx) => {
+    let timestamp = s!.item.timestamp || '00:00:00';
+    if (timestamp.split(':').length === 2) {
+      timestamp = `00:${timestamp}`;
+    }
+    return `[${timestamp}] [${idx + 1}] ${s!.item.text}`;
+  }).join('\n');
+
+  // Keep same person as original quote
+  const personId = quote.person;
+
+  // Generate Links
+  const links = [
+    { url: contentAnalysis.sourceUrl, title: 'Source Video', type: 'context' }
+  ];
+
+  statements.forEach((s, idx) => {
+    if (s && s.item.timestamp) {
+      const parts = s.item.timestamp.split(':');
+      let seconds = 0;
+      if (parts.length === 3) {
+        seconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+      } else if (parts.length === 2) {
+        seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+      }
+      
+      const separator = contentAnalysis.sourceUrl.includes('?') ? '&' : '?';
+      const url = `${contentAnalysis.sourceUrl}${separator}t=${seconds}`;
+      links.push({ url, title: `[${idx + 1}]`, type: 'context' });
+    }
+  });
+
+  const newQuote = await Quote.create({
+    text,
+    person: personId,
+    sourceUrl: contentAnalysis.sourceUrl,
+    date: contentAnalysis.createdAt,
+    contentAnalysisId: contentAnalysis._id,
+    originIds: statementIds,
+    analyzedBy: 'AI',
+    analyzedAt: new Date(),
+    savedByUser: userId,
+    savedAt: new Date(),
+    metadata: {
+      ...quote.metadata,
+      links
+    }
+  });
+
+  return newQuote;
+};
+
 export const getContentAnalysis = async (id: string) => {
   return ContentAnalysis.findById(id);
 };
+
+

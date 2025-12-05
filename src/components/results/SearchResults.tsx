@@ -18,6 +18,7 @@ interface SearchResultsProps {
   onAccept: (quote: Quote) => void;
   onDiscard: (quote: Quote) => void;
   onRemove: (quote: Quote) => void;
+  onEditSource?: (quote: Quote) => void;
   clearError: () => void;
 }
 
@@ -36,6 +37,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onAccept,
   onDiscard,
   onRemove,
+  onEditSource,
   clearError,
 }) => {
   return (

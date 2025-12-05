@@ -17,6 +17,10 @@ export interface TranscriptData {
     speakerAnalysis?: any[];
     dialogAnalysis?: any[];
   };
+  editQuoteId?: string;
+  contentAnalysisId?: string;
+  initialSelectedStatements?: Map<string, number>;
+  lockedGroupId?: number;
 }
 
 export function useUIState() {

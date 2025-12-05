@@ -94,6 +94,9 @@ export const getQuotes = async (req: Request, res: Response) => {
     
     const query: any = {};
 
+    // Exclude deprecated quotes by default
+    query.isDeprecated = { $ne: true };
+
     // Person filter
     if (personId) {
       query.person = personId;

@@ -12,9 +12,10 @@ interface StoredQuotesProps {
   selectedPerson: Person | null;
   selectedAI: string;
   isApiKeySet: boolean;
+  onEditSource?: (quote: Quote) => void;
 }
 
-const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet }) => {
+const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -254,6 +255,10 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           analysisContext: q.analysisContext,
           links: q.metadata?.links,
           metadata: q.metadata,
+          // New fields for edit functionality
+          contentAnalysisId: q.contentAnalysisId,
+          originIds: q.originIds,
+          isDeprecated: q.isDeprecated,
           // Audit fields
           savedByUser: q.savedByUser,
           savedByName: q.savedByName,
@@ -329,6 +334,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onAccept={handleAccept}
               onDiscard={handleDiscard}
               onDelete={handleDelete}
+              onEditSource={onEditSource}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
             />
