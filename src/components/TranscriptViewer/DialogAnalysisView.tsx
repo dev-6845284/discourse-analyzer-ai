@@ -34,7 +34,7 @@ interface DialogAnalysisViewProps {
   dialogLineRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   onSummaryItemClick: (groupId: string, timestamp: string, groupDialogLines: DialogLine[]) => void;
   onClearAnalysis: () => void;
-  onAnalyzeDialog: () => void;
+  onAnalyzeDialog: (languageCode?: string) => void;
   isSelectionMode?: boolean;
   selectedStatements?: Map<string, number>;
   onToggleSelection?: (statementId: string, groupId: number) => void;
@@ -66,6 +66,8 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   selectedLanguage = 'en',
   onLanguageChange,
 }) => {
+  const [analysisLanguage, setAnalysisLanguage] = React.useState(selectedLanguage);
+
   if (isDialogAnalyzing) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-800/30">
@@ -96,8 +98,29 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
       <div className="flex-1 flex items-center justify-center bg-gray-800/30">
         <div className="text-center text-gray-400">
           <p className="mb-4">No dialog analysis data available.</p>
+          
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <label htmlFor="analysis-language-select" className="text-sm text-gray-400">Analysis Language:</label>
+            <select
+              id="analysis-language-select"
+              value={analysisLanguage}
+              onChange={(e) => setAnalysisLanguage(e.target.value)}
+              className="bg-gray-800 text-gray-300 text-sm rounded border border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+            >
+              <option value="en">English</option>
+              <option value="lt">Lithuanian</option>
+              <option value="ru">Russian</option>
+              <option value="de">German</option>
+              <option value="fr">French</option>
+              <option value="es">Spanish</option>
+              <option value="it">Italian</option>
+              <option value="pl">Polish</option>
+              <option value="uk">Ukrainian</option>
+            </select>
+          </div>
+
           <button
-            onClick={onAnalyzeDialog}
+            onClick={() => onAnalyzeDialog(analysisLanguage)}
             disabled={speakerResults.length === 0}
             className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors disabled:opacity-50"
           >
@@ -163,7 +186,28 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
         <p className="text-gray-300">
           Identified <strong>{dialogResults.length}</strong> topic groups
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {!isSelectionMode && (
+            <div className="flex items-center gap-2 mr-2">
+              <label htmlFor="view-language-select" className="text-xs text-gray-400">Language:</label>
+              <select
+                id="view-language-select"
+                value={selectedLanguage}
+                onChange={(e) => onLanguageChange?.(e.target.value)}
+                className="bg-gray-800 text-gray-300 text-xs rounded border border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+              >
+                <option value="en">English</option>
+                <option value="lt">Lithuanian</option>
+                <option value="ru">Russian</option>
+                <option value="de">German</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="pl">Polish</option>
+                <option value="uk">Ukrainian</option>
+              </select>
+            </div>
+          )}
           {!isSelectionMode && (
             <button
               onClick={onStartSelection}

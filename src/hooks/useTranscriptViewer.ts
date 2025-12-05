@@ -220,7 +220,11 @@ export const useTranscriptViewer = ({
     setViewMode('speakers');
   };
 
-  const handleAnalyzeDialog = async () => {
+  const handleAnalyzeDialog = async (overrideLanguage?: string) => {
+    if (overrideLanguage) {
+      setSelectedLanguage(overrideLanguage);
+    }
+
     // Get API keys from localStorage
     const apiKeys: Record<string, string> = {};
     try {
@@ -237,7 +241,7 @@ export const useTranscriptViewer = ({
     const sId = await ensureSession();
 
     await topicAnalysis.analyzeDialog(
-      languageCode,
+      overrideLanguage || languageCode,
       'gemini-2.0-flash-exp', // Fast model
       'gemini-2.5-flash',       // Better model
       apiKeys,

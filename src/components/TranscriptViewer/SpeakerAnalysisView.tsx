@@ -20,10 +20,12 @@ interface SpeakerAnalysisViewProps {
   isSpeakerAnalyzing: boolean;
   speakerResults: SpeakerBlock[];
   error: string | null;
-  onAnalyzeDialog: () => void;
+  onAnalyzeDialog: (languageCode?: string) => void;
   onImportSpeakers: () => void;
   onExportSpeakers: () => void;
   onClearAnalysis: () => void;
+  selectedLanguage?: string;
+  onLanguageChange?: (lang: string) => void;
 }
 
 export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
@@ -34,6 +36,8 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   onImportSpeakers,
   onExportSpeakers,
   onClearAnalysis,
+  selectedLanguage = 'en',
+  onLanguageChange,
 }) => {
   if (isSpeakerAnalyzing) {
     return (
@@ -82,9 +86,28 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
         <p className="text-gray-300">
           Analyzed <strong>{speakerResults.length}</strong> blocks
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2 mr-2">
+            <label htmlFor="speaker-language-select" className="text-xs text-gray-400">Language:</label>
+            <select
+              id="speaker-language-select"
+              value={selectedLanguage}
+              onChange={(e) => onLanguageChange?.(e.target.value)}
+              className="bg-gray-800 text-gray-300 text-xs rounded border border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+            >
+              <option value="en">English</option>
+              <option value="lt">Lithuanian</option>
+              <option value="ru">Russian</option>
+              <option value="de">German</option>
+              <option value="fr">French</option>
+              <option value="es">Spanish</option>
+              <option value="it">Italian</option>
+              <option value="pl">Polish</option>
+              <option value="uk">Ukrainian</option>
+            </select>
+          </div>
           <button
-            onClick={onAnalyzeDialog}
+            onClick={() => onAnalyzeDialog(selectedLanguage)}
             className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
           >
             <Zap size={12} />

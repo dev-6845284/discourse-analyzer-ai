@@ -206,6 +206,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onImportSpeakers={handleImportSpeakersClick}
             onExportSpeakers={handleExportSpeakers}
             onClearAnalysis={topicAnalysis.clearAnalysis}
+            selectedLanguage={selectedLanguage}
+            onLanguageChange={setSelectedLanguage}
           />
         )}
 
