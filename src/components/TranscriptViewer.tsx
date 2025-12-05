@@ -25,6 +25,7 @@ interface TranscriptViewerProps {
     dialogAnalysis?: any[];
   };
   onSessionCreated?: (sessionId: string) => void;
+  onPromoteSuccess?: () => void;
 }
 
 export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
@@ -96,6 +97,9 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     try {
       await promoteSession(currentSessionId, quoteGroups, selectedLanguage);
       alert('Successfully promoted to quotes!');
+      if (props.onPromoteSuccess) {
+        props.onPromoteSuccess();
+      }
       onClose();
     } catch (error) {
       console.error(error);

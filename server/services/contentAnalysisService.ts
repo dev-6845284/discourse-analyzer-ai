@@ -81,6 +81,26 @@ export const promoteSession = async (sessionId: string, quoteGroups: QuoteGroupI
   const languageCode = overrideLanguageCode || session.transcript?.languageCode || 'en';
   const languageName = getLanguageName(languageCode);
 
+  // Apply selections to dialogAnalysis
+  if (rest.dialogAnalysis) {
+    const selectionMap = new Map<string, number>();
+    quoteGroups.forEach(g => {
+      g.statementIds.forEach(sid => selectionMap.set(sid, g.groupId));
+    });
+
+    rest.dialogAnalysis.forEach((group: any) => {
+      if (group.analysis && group.analysis.summaryItems) {
+        group.analysis.summaryItems.forEach((item: any, index: number) => {
+          const statementId = `${group.id}:${index}`;
+          if (selectionMap.has(statementId)) {
+            item.isSelected = true;
+            item.groupId = selectionMap.get(statementId);
+          }
+        });
+      }
+    });
+  }
+
   const contentAnalysis = await ContentAnalysis.create({
     ...rest,
     userId, // Ensure ownership is correct or transferred

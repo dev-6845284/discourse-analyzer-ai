@@ -129,6 +129,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'search' | 'people' | 'users' | 'sessions'>('search');
   const [resultsTab, setResultsTab] = useState<'new' | 'stored'>('new');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [sessionsRefreshTrigger, setSessionsRefreshTrigger] = useState(0);
   const [extractionStatus, setExtractionStatus] = useState<string>('');
   const [extractionLanguage, setExtractionLanguage] = useState<string>('lt');
   const [extractionError, setExtractionError] = useState<string | null>(null);
@@ -448,7 +449,10 @@ const App: React.FC = () => {
               userRole={user.role}
             >
               {activeTab === 'sessions' ? (
-                <AnalysisSessionsList onResume={handleResumeSession} />
+                <AnalysisSessionsList 
+                  onResume={handleResumeSession} 
+                  refreshTrigger={sessionsRefreshTrigger}
+                />
               ) : activeTab === 'people' ? (
                 <div className="bg-gray-100 rounded-lg h-[calc(100vh-200px)] overflow-hidden text-gray-900">
                   <PersonManager
@@ -703,6 +707,7 @@ const App: React.FC = () => {
               sessionId={transcriptData.sessionId}
               initialSessionData={transcriptData.initialSessionData}
               onSessionCreated={updateTranscriptSessionId}
+              onPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
             />
           )}
         </div>

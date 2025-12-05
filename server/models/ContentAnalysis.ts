@@ -133,7 +133,9 @@ const ContentAnalysisSchema: Schema = new Schema({
       summaryItems: [{
         text: String,
         timestamp: String,
-        importance: Number
+        importance: Number,
+        isSelected: Boolean,
+        groupId: Number
       }]
     }
   }]

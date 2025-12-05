@@ -5,6 +5,7 @@ import { getSessions, deleteSession } from '../utils/api';
 
 interface AnalysisSessionsListProps {
   onResume: (session: AnalysisSession) => void;
+  refreshTrigger?: number;
 }
 
 const ANALYSIS_STAGES = [
@@ -26,14 +27,14 @@ const STAGE_ORDER: { [key: string]: number } = {
   'failed': -1,
 };
 
-export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onResume }) => {
+export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onResume, refreshTrigger }) => {
   const [sessions, setSessions] = useState<AnalysisSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchSessions = async () => {
     try {

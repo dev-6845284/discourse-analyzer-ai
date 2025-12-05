@@ -59,6 +59,8 @@ export interface SummaryItem {
   text: string;
   timestamp: string; // Format: "HH:MM:SS" or "N/A"
   importance: number; // decimal, 0.1–1.0
+  isSelected?: boolean;
+  groupId?: number;
 }
 
 export interface TopicAnalysis {
