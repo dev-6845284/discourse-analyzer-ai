@@ -593,6 +593,60 @@ class GeminiService implements LlmService {
       throw new Error("An unknown error occurred while improving the quote.");
     }
   }
+
+  public async generateContent(
+    apiKey: string,
+    params: {
+      model: string;
+      prompt: string;
+      temperature?: number;
+      metadata?: Record<string, any>;
+      logId?: string;
+      sessionId?: string;
+    }
+  ): Promise<string> {
+    const { model, prompt, temperature, metadata, logId, sessionId } = params;
+
+    if (!apiKey) throw new Error("Gemini API key is missing.");
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Removed appendLogRequestPayload to prevent polluting the main log entry with internal prompts.
+    // The prompt is already logged in the model interaction below.
+
+    const requestDetails = {
+      model,
+      contents: prompt,
+      config: typeof temperature === 'number' ? { temperature } : undefined,
+    };
+
+    const interactionId = sessionId && logId
+      ? addModelInteractionLog(sessionId, logId, {
+          provider: 'Google',
+          model,
+          operation: 'generateContent',
+          requestPayload: requestDetails,
+          metadata,
+        })
+      : null;
+
+    let response: GenerateContentResponse;
+    let responseSnapshot: any;
+    let capturedError: any;
+
+    try {
+      response = await ai.models.generateContent(requestDetails);
+      responseSnapshot = response;
+    } catch (error) {
+      capturedError = error;
+      throw error;
+    } finally {
+      if (interactionId && sessionId && logId) {
+        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+      }
+    }
+
+    return getValidatedResponseText(response, 'processing prompt');
+  }
 }
 
 export default new GeminiService();

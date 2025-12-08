@@ -106,7 +106,7 @@ export interface ExportData {
   quotes: Quote[];
 }
 
-export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote' | 'agenticSearch';
+export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote' | 'agenticSearch' | 'analyze-dialog-topics';
 
 export interface LogErrorDetails {
   message: string;

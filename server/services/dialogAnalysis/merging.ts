@@ -1,6 +1,7 @@
 import { TopicGroup } from '../../types';
 import { buildMergeTopicsPrompt } from '../../llm_services/prompts';
-import { callGemini, extractJsonFromResponse } from './utils';
+import geminiService from '../../llm_services/geminiService';
+import { extractJsonFromResponse } from './utils';
 
 /**
  * Phase 2: Merge adjacent topic groups that discuss the same broader topic
@@ -9,15 +10,26 @@ export async function mergeTopics(
   groups: TopicGroup[],
   language: string,
   model: string,
-  apiKeys: Record<string, string>
+  apiKeys: Record<string, string>,
+  sessionId?: string,
+  logId?: string
 ): Promise<TopicGroup[]> {
   if (groups.length <= 1) return groups;
+
+  const totalLinesBefore = groups.reduce((sum, g) => sum + g.dialogLines.length, 0);
+  console.log(`[DialogAnalysis] Merging: Starting with ${groups.length} groups (${totalLinesBefore} total lines)...`);
 
   // Prepare the list of topics for the model
   const prompt = buildMergeTopicsPrompt(groups, language);
 
   try {
-    const responseText = await callGemini(prompt, model, apiKeys['gemini']);
+    const responseText = await geminiService.generateContent(apiKeys['gemini'], {
+      model,
+      prompt,
+      sessionId,
+      logId,
+      metadata: { task: 'dialog-analysis', stage: 'merge-topics' },
+    });
     const responseJson = extractJsonFromResponse(responseText);
     
     if (!responseJson.groups || !Array.isArray(responseJson.groups)) {
@@ -62,11 +74,17 @@ export async function mergeTopics(
       newGroups.push(newGroup);
     }
 
-    // Check if we missed any groups (fallback)
+    // Check if we missed any groups (fallback) - THIS IS CRITICAL FOR DATA INTEGRITY
+    const missedIndices: number[] = [];
     for (let i = 0; i < groups.length; i++) {
       if (!processedIndices.has(i)) {
+        missedIndices.push(i);
         newGroups.push(groups[i]);
       }
+    }
+    
+    if (missedIndices.length > 0) {
+      console.warn(`[DialogAnalysis] WARNING: ${missedIndices.length} groups not in merge response. Added as-is: ${missedIndices.join(', ')}`);
     }
 
     // Sort by timestamp of first line to maintain order
@@ -76,7 +94,17 @@ export async function mergeTopics(
       return timeA - timeB;
     });
 
-    return newGroups.filter(g => g.dialogLines.length > 0);
+    const newGroupsFiltered = newGroups.filter(g => g.dialogLines.length > 0);
+    const totalLinesAfter = newGroupsFiltered.reduce((sum, g) => sum + g.dialogLines.length, 0);
+    
+    // CRITICAL: Verify no data loss during merge
+    if (totalLinesBefore !== totalLinesAfter) {
+      console.error(`[DialogAnalysis] ERROR: Data loss during merge! Before: ${totalLinesBefore} lines, After: ${totalLinesAfter} lines. Difference: ${totalLinesBefore - totalLinesAfter}`);
+    } else {
+      console.log(`[DialogAnalysis] Merge complete: ${groups.length} groups → ${newGroupsFiltered.length} groups (${totalLinesAfter} lines preserved)`);
+    }
+
+    return newGroupsFiltered;
 
   } catch (error) {
     console.error('[DialogAnalysis] Error merging topics:', error);

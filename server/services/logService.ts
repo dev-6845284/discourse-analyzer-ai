@@ -39,6 +39,23 @@ const safeClone = <T>(payload: T): T => {
   }
 };
 
+const extractLlmResponseForLogging = (payload: any): any => {
+  if (!payload) {
+    return payload;
+  }
+
+  if (!Array.isArray(payload.candidates)) {
+    return safeClone(payload);
+  }
+
+  return {
+    candidates: payload.candidates.map((candidate: any) => ({
+      content: candidate?.content,
+      finishReason: candidate?.finishReason,
+    })),
+  };
+};
+
 const ensureSessionLogs = (sessionId: string): LogEntry[] => {
   if (!logs.has(sessionId)) {
     logs.set(sessionId, []);
@@ -80,7 +97,7 @@ export const updateLogEntry = (
 ): void => {
   const entry = findEntry(sessionId, id);
   if (entry) {
-    entry.responsePayload = safeClone(responsePayload);
+    entry.responsePayload = extractLlmResponseForLogging(responsePayload);
     entry.error = normalizeError(error);
   }
 };
@@ -141,7 +158,7 @@ export const completeModelInteractionLog = (
   if (!interaction) return;
 
   if (responsePayload !== undefined) {
-    interaction.responsePayload = safeClone(responsePayload);
+    interaction.responsePayload = extractLlmResponseForLogging(responsePayload);
   }
 
   interaction.error = normalizeError(error);

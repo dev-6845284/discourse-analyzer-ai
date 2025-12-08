@@ -1,188 +1,140 @@
 import { DialogLine, TopicGroup } from '../../types';
-import { buildInferInitialTopicPrompt, buildProcessChunkPrompt } from '../../llm_services/prompts';
-import { callGemini, extractJsonFromResponse } from './utils';
-
-interface SegmentationResponse {
-  dialogToAdd: DialogLine[];
-  dialogForNextTopic: DialogLine[];
-  newTopic: boolean;
-  newTopicTitle: string;
-}
+import { inferInitialTopic, processChunk, SegmentationResponse } from './segmentationLlm';
 
 /**
- * Phase 1: Segment dialog into topic groups using a fast model
+ * Segments a dialog into topic groups using an LLM-based approach.
+ * 
+ * @param allLines - Array of dialog lines to be analyzed.
+ * @param language - Language of the dialog.
+ * @param fastModel - Fast LLM model to use for chunk processing.
+ * @param betterModel - Better LLM model to use for initial topic inference.
+ * @param apiKeys - API keys for accessing the LLM service.
+ * @param sessionId - Optional session ID for logging.
+ * @param logId - Optional log ID for logging.
+ * @returns A promise that resolves to an array of topic groups.
  */
 export async function segmentTopics(
   allLines: DialogLine[],
   language: string,
-  model: string,
-  apiKeys: Record<string, string>
+  fastModel: string,
+  betterModel: string,
+  apiKeys: Record<string, string>,
+  sessionId?: string,
+  logId?: string
 ): Promise<TopicGroup[]> {
   const groups: TopicGroup[] = [];
   
-  // 1. Initial topic detection (first 10 mins)
+  // 1. Initial topic detection (first 10 minutes of dialog)
   const initialChunkDuration = 10 * 60; // 600 seconds
   const startTime = allLines[0].timestamp;
-  
+
+  // Find the index of the first line beyond the initial chunk duration
   let currentChunkEndIndex = allLines.findIndex(l => l.timestamp > startTime + initialChunkDuration);
   if (currentChunkEndIndex === -1) currentChunkEndIndex = allLines.length;
 
+  // Split the dialog into the initial chunk and the remaining lines
   const initialLines = allLines.slice(0, currentChunkEndIndex);
   let remainingLines = allLines.slice(currentChunkEndIndex);
 
-  // Infer initial topic
+  // Infer the initial topic using the better model
   console.log('[DialogAnalysis] Inferring initial topic from first 10 minutes...');
-  const initialTitle = await inferInitialTopic(initialLines, language, model, apiKeys);
+  const initialTitle = await inferInitialTopic(initialLines, language, betterModel, apiKeys, sessionId, logId);
   console.log(`[DialogAnalysis] Initial topic identified: "${initialTitle}"`);
   
+  // Create the first topic group with the initial lines
   let currentGroup: TopicGroup = {
     id: `topic-${Date.now()}-0`,
     title: initialTitle,
     dialogLines: [...initialLines]
   };
 
-  // 2. Incremental processing (5 min chunks)
+  // 2. Incremental processing of remaining lines in 5-minute chunks using the fast model
   const chunkDuration = 5 * 60; // 300 seconds
   let chunkIndex = 0;
 
   console.log(`[DialogAnalysis] Processing remaining ${remainingLines.length} lines in 5-minute chunks...`);
 
   while (remainingLines.length > 0) {
-    // Get next chunk
+    // Get the next chunk of lines based on the chunk duration
     const chunkStartTime = remainingLines[0].timestamp;
     let chunkEndIndex = remainingLines.findIndex(l => l.timestamp > chunkStartTime + chunkDuration);
-    if (chunkEndIndex === -1) chunkEndIndex = remainingLines.length;
+    
+    // If no lines are found beyond the chunk duration, take all remaining lines
+    if (chunkEndIndex === -1) {
+      chunkEndIndex = remainingLines.length;
+    }
 
     const chunkLines = remainingLines.slice(0, chunkEndIndex);
     remainingLines = remainingLines.slice(chunkEndIndex);
 
     if (chunkLines.length === 0) break;
 
-    console.log(`[DialogAnalysis] Processing chunk ${chunkIndex + 1} (${chunkLines.length} lines)...`);
+    console.log(`[DialogAnalysis] Processing chunk ${chunkIndex + 1} (${chunkLines.length} lines, remaining: ${remainingLines.length})...`);
 
-    // Decide if new topic
-    const decision = await processChunk(
-      chunkLines,
-      currentGroup,
-      language,
-      model,
-      apiKeys
-    );
+    // Send the chunk to the LLM to decide if a new topic should start
+    let decision: SegmentationResponse;
+    try {
+      decision = await processChunk(
+        chunkLines,
+        currentGroup,
+        language,
+        fastModel, // Use the fast model for chunk processing
+        apiKeys,
+        sessionId,
+        logId
+      );
+    } catch (error) {
+      console.error(`[DialogAnalysis] Error processing chunk ${chunkIndex + 1}:`, error);
+      console.warn(`[DialogAnalysis] Falling back to appending all lines to current topic.`);
+      decision = {
+        dialogToAdd: chunkLines,
+        dialogForNextTopic: [],
+        newTopic: false,
+        newTopicTitle: ''
+      };
+    }
 
+    // Log the decision made by the LLM
     if (decision.newTopic) {
       console.log(`[DialogAnalysis] New topic detected: "${decision.newTopicTitle}"`);
     } else {
       console.log(`[DialogAnalysis] Continuing current topic: "${currentGroup.title}"`);
     }
 
-    // Apply decision
-    // Append dialogToAdd to current group
+    // Apply the decision to update the current group or create a new one
     if (decision.dialogToAdd && decision.dialogToAdd.length > 0) {
       currentGroup.dialogLines.push(...decision.dialogToAdd);
     }
 
     if (decision.newTopic) {
-      // Finish current group
+      // Finish the current group and start a new one
       if (currentGroup.dialogLines.length > 0) {
         groups.push(currentGroup);
       }
 
-      // Start new group
       currentGroup = {
         id: `topic-${Date.now()}-${++chunkIndex}`,
         title: decision.newTopicTitle || 'New Topic',
         dialogLines: decision.dialogForNextTopic || []
       };
+
+      // Warn if no lines are provided for the new topic
+      if (!decision.dialogForNextTopic || decision.dialogForNextTopic.length === 0) {
+        console.warn(`[DialogAnalysis] WARNING: New topic detected but no dialogForNextTopic lines provided. Check model response.`);
+      }
     } else {
-      // If not a new topic, but we have dialogForNextTopic (which shouldn't happen if newTopic is false, 
-      // but let's handle it just in case or treat it as part of current if the model messed up)
-      // The prompt instructions say: "dialogForNextTopic": [/* lines that belong to a new topic, if transition detected */]
-      // So if newTopic is false, dialogForNextTopic should be empty.
-      // If the model returns lines in dialogForNextTopic but says newTopic: false, we'll just append them to current.
+      // If no new topic, append all lines to the current group
       if (decision.dialogForNextTopic && decision.dialogForNextTopic.length > 0) {
-         currentGroup.dialogLines.push(...decision.dialogForNextTopic);
+        console.warn(`[DialogAnalysis] Note: dialogForNextTopic has ${decision.dialogForNextTopic.length} lines even though newTopic=false. Adding to current topic to prevent data loss.`);
+        currentGroup.dialogLines.push(...decision.dialogForNextTopic);
       }
     }
   }
 
-  // Push the last group
+  // Push the last group to the result
   if (currentGroup.dialogLines.length > 0) {
     groups.push(currentGroup);
   }
 
   return groups;
-}
-
-async function inferInitialTopic(
-  lines: DialogLine[],
-  language: string,
-  model: string,
-  apiKeys: Record<string, string>
-): Promise<string> {
-  const prompt = buildInferInitialTopicPrompt(lines, language);
-
-  const response = await callGemini(prompt, model, apiKeys['gemini']);
-  return response.trim();
-}
-
-async function processChunk(
-  chunkLines: DialogLine[],
-  currentGroup: TopicGroup,
-  language: string,
-  model: string,
-  apiKeys: Record<string, string>
-): Promise<SegmentationResponse> {
-  const prompt = buildProcessChunkPrompt(chunkLines, currentGroup, language);
-
-  const responseText = await callGemini(prompt, model, apiKeys['gemini']);
-  const responseJson = extractJsonFromResponse(responseText);
-
-  return {
-    dialogToAdd: mapLinesToOriginal(responseJson.dialogToAdd, chunkLines),
-    dialogForNextTopic: mapLinesToOriginal(responseJson.dialogForNextTopic, chunkLines),
-    newTopic: responseJson.newTopic,
-    newTopicTitle: responseJson.newTopicTitle
-  };
-}
-
-function mapLinesToOriginal(returnedLines: any[], originalLines: DialogLine[]): DialogLine[] {
-  if (!returnedLines || returnedLines.length === 0) return [];
-  
-  // This is a fuzzy matching problem. 
-  // For simplicity, we assume the model returns lines in order.
-  // We'll try to find the corresponding lines in originalLines.
-  
-  // If the model returns the exact text, we can match.
-  // If the model hallucinates or slightly changes text, it's hard.
-  
-  // Strategy:
-  // If returnedLines contains X lines, we assume they correspond to some lines in originalLines.
-  // Since we are splitting a chunk, `dialogToAdd` should be the start of `originalLines`, and `dialogForNextTopic` should be the rest.
-  // So we just need to know the COUNT of lines in `dialogToAdd`.
-  
-  // Let's assume the model respects the order.
-  // We can just count how many lines are in `dialogToAdd` and slice `originalLines`.
-  // But we should verify if `newTopic` is true.
-  
-  // Actually, relying on the model to return the full text of lines is expensive and error-prone.
-  // But I must follow the user's "Model response format" requirement.
-  
-  // I will try to match the text.
-  const result: DialogLine[] = [];
-  let searchStartIndex = 0;
-  
-  for (const retLine of returnedLines) {
-    const textToMatch = retLine.text?.trim();
-    if (!textToMatch) continue;
-    
-    // Find this line in originalLines starting from searchStartIndex
-    const foundIndex = originalLines.findIndex((l, idx) => idx >= searchStartIndex && l.text.includes(textToMatch)); // simple includes check
-    
-    if (foundIndex !== -1) {
-      result.push(originalLines[foundIndex]);
-      searchStartIndex = foundIndex + 1;
-    }
-  }
-  
-  return result;
 }

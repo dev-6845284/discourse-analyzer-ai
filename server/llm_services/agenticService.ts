@@ -9,7 +9,7 @@ import {
 } from '../types';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { extractJson } from './utils';
-import { getValidatedResponseText } from './geniniService';
+import { getValidatedResponseText } from './geminiService';
 import { buildPlanningPrompt, buildSynthesisPrompt } from './prompts/agentic';
 import { callChatGptAPI, CHATGPT_MODEL, CHATGPT_FORMATTER_MODEL, CHAT_GPT_MINI } from './chatGptService';
 

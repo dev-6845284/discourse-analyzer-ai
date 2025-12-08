@@ -66,4 +66,16 @@ export interface LlmService {
     logId: string,
     sessionId: string
   ): Promise<Partial<Quote>>;
+
+  generateContent(
+    apiKey: string,
+    params: {
+      model: string;
+      prompt: string;
+      temperature?: number;
+      metadata?: Record<string, any>;
+      logId?: string;
+      sessionId?: string;
+    }
+  ): Promise<string>;
 }

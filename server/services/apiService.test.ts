@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as apiService from './apiService';
-import geminiService from '../llm_services/geniniService';
+import geminiService from '../llm_services/geminiService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
 import * as logService from './logService';
@@ -8,7 +8,7 @@ import { postProcessResponse } from './responseProcessor';
 import { JsonParsingError, ModelResponseError } from '../types';
 import { createQuoteFixture } from '../testUtils/quoteFactory';
 
-jest.mock('../llm_services/geniniService');
+jest.mock('../llm_services/geminiService');
 jest.mock('../llm_services/chatGptService');
 jest.mock('../llm_services/grokService');
 jest.mock('./logService');

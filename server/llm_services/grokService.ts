@@ -443,6 +443,89 @@ class GrokService implements LlmService {
       throw new Error("An unknown error occurred while improving the quote.");
     }
   }
+
+  public async generateContent(
+    apiKey: string,
+    params: {
+      model: string;
+      prompt: string;
+      temperature?: number;
+      metadata?: Record<string, any>;
+      logId?: string;
+      sessionId?: string;
+    }
+  ): Promise<string> {
+    if (!apiKey) throw new Error("Grok API key is missing.");
+
+    const { model, prompt, temperature, metadata, logId, sessionId } = params;
+    const messages = [{ role: 'user', content: prompt }];
+
+    if (sessionId && logId) {
+      appendLogRequestPayload(sessionId, logId, { prompt });
+    }
+
+    const requestDetails = {
+      url: `${GROK_API_BASE_URL}/chat/completions`,
+      method: 'POST',
+      body: {
+        model: model || GROK_MODEL,
+        messages,
+        temperature: typeof temperature === 'number' ? temperature : 0.7,
+      },
+    };
+
+    const interactionId = sessionId && logId
+      ? addModelInteractionLog(sessionId, logId, {
+          provider: 'xAI',
+          model: requestDetails.body.model,
+          operation: 'chat.completions',
+          requestPayload: requestDetails,
+          metadata,
+        })
+      : null;
+
+    let responseSnapshot: any;
+    let capturedError: any;
+
+    try {
+      const response = await fetch(requestDetails.url, {
+        method: requestDetails.method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(requestDetails.body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        const apiError = new Error(`Grok API request failed: ${response.status} ${response.statusText}. ${errorText}`);
+        (apiError as any).rawResponse = { status: response.status, statusText: response.statusText, body: errorText };
+        (apiError as any).name = 'GrokApiError';
+        capturedError = apiError;
+        throw apiError;
+      }
+
+      const data = await response.json();
+      responseSnapshot = { status: response.status, body: data };
+
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error('Grok API returned empty content.');
+      }
+
+      return content;
+    } catch (error) {
+      if (!capturedError) {
+        capturedError = error;
+      }
+      throw error;
+    } finally {
+      if (interactionId && sessionId && logId) {
+        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+      }
+    }
+  }
 }
 
 export default new GrokService();

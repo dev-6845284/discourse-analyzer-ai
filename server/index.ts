@@ -68,9 +68,10 @@ const sessionConfig: session.SessionOptions = {
 // Use MongoDB store if connection string is available, otherwise use memory store with warning
 if (mongoUri) {
   console.log('[SESSION_STORE] Configuring MongoDB session store');
+  const collectionSuffix = process.env.DB_COLLECTION_SUFFIX || '';
   sessionConfig.store = MongoStore.create({
     mongoUrl: mongoUri,
-    collectionName: 'sessions',
+    collectionName: `sessions${collectionSuffix}`,
     ttl: 24 * 60 * 60, // 24 hours
     touchAfter: 24 * 3600, // Lazy session update
     crypto: {

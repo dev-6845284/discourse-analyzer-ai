@@ -679,6 +679,93 @@ class ChatGptService implements LlmService {
       throw new Error("An unknown error occurred while improving the quote.");
     }
   }
+
+  public async generateContent(
+    apiKey: string,
+    params: {
+      model: string;
+      prompt: string;
+      temperature?: number;
+      metadata?: Record<string, any>;
+      logId?: string;
+      sessionId?: string;
+    }
+  ): Promise<string> {
+    if (!apiKey) throw new Error("OpenAI API key is missing.");
+
+    const { model, prompt, temperature, metadata, logId, sessionId } = params;
+
+    if (sessionId && logId) {
+      appendLogRequestPayload(sessionId, logId, { prompt });
+    }
+
+    const requestBody: any = {
+      model: model || CHATGPT_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+    };
+
+    if (typeof temperature === 'number') {
+      requestBody.temperature = temperature;
+    }
+
+    const requestDetails = {
+      url: `${OPENAI_API_BASE_URL}/chat/completions`,
+      method: 'POST',
+      body: requestBody,
+    };
+
+    const interactionId = sessionId && logId
+      ? addModelInteractionLog(sessionId, logId, {
+          provider: 'OpenAI',
+          model: requestBody.model,
+          operation: 'chat.completions',
+          requestPayload: requestDetails,
+          metadata,
+        })
+      : null;
+
+    let responseSnapshot: any;
+    let capturedError: any;
+
+    try {
+      const response = await fetch(requestDetails.url, {
+        method: requestDetails.method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(requestDetails.body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        const apiError = new Error(`ChatGPT API request failed: ${response.status} ${response.statusText}. ${errorText}`);
+        (apiError as any).rawResponse = { status: response.status, statusText: response.statusText, body: errorText };
+        (apiError as any).name = 'ChatGptApiError';
+        capturedError = apiError;
+        throw apiError;
+      }
+
+      const data = await response.json();
+      responseSnapshot = { status: response.status, body: data };
+
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error('ChatGPT API returned empty content.');
+      }
+
+      return content;
+    } catch (error) {
+      if (!capturedError) {
+        capturedError = error;
+      }
+      throw error;
+    } finally {
+      if (interactionId && sessionId && logId) {
+        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+      }
+    }
+  }
 }
 
 export default new ChatGptService();

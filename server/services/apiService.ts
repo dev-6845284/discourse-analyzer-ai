@@ -5,7 +5,7 @@ import {
   ModelResponseError,
   JsonParsingError,
 } from '../types';
-import geminiService from '../llm_services/geniniService';
+import geminiService from '../llm_services/geminiService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
 import agenticService from '../llm_services/agenticService';
@@ -482,7 +482,16 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'API keys are required' });
   }
 
+  let logId: string | undefined;
   try {
+    // Create log entry for this API call
+    logId = addLogEntry(req.session.id || sessionId || 'unknown', 'analyze-dialog-topics', {
+      dialogBlockCount: dialog.length,
+      language: language || 'lt',
+      fastModel,
+      betterModel,
+    });
+
     if (sessionId) {
       await updateSessionStatus(sessionId, 'grouping_dialog');
     }
@@ -495,6 +504,8 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
       fastModel,
       betterModel,
       apiKeys,
+      sessionId: req.session.id || sessionId,
+      logId,
     });
 
     if (sessionId) {
@@ -502,12 +513,27 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
     }
 
     console.log(`[DialogAnalysis] Successfully analyzed ${results.length} topic groups`);
+    
+    // Update log entry with response
+    if (logId) {
+      updateLogEntry(req.session.id || sessionId || 'unknown', logId, {
+        topicGroupCount: results.length,
+        totalLinesAnalyzed: results.reduce((sum, g) => sum + g.dialogLines.length, 0),
+      });
+    }
+
     res.json(results);
   } catch (error: any) {
     console.error('Error analyzing dialog topics:', error);
     if (sessionId) {
       await updateSessionStatus(sessionId, 'failed', error.message);
     }
+    
+    // Update log entry with error
+    if (logId) {
+      updateLogEntry(req.session.id || sessionId || 'unknown', logId, undefined, error);
+    }
+
     res.status(500).json({ 
       error: error.message || 'Failed to analyze dialog topics',
       details: error.stack 

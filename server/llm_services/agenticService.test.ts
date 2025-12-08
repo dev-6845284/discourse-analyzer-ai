@@ -1,13 +1,13 @@
 import agenticService from './agenticService';
 import { GoogleGenAI } from '@google/genai';
 import * as logService from '../services/logService';
-import * as geminiService from './geniniService';
+import * as geminiService from './geminiService';
 import { AgenticSearchOptions } from '../types';
 import { extractJson } from './utils';
 
 jest.mock('@google/genai');
 jest.mock('../services/logService');
-jest.mock('./geniniService');
+jest.mock('./geminiService');
 jest.mock('./chatGptService');
 jest.mock('./utils', () => ({
   extractJson: jest.fn(),

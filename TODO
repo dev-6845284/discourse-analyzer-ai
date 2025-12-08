@@ -1,0 +1,21 @@
+
+# Instruction for AI model: 
+## - do not suggest new sentedences, only current in progress
+## - you may suggest improvements to existing sentences
+
+Todo:
+  Transcription analysis:
+    Normalize GUI flows:
+      [] Session stage
+      [] Promoted stage
+    Dialog analysys improvements:
+      [] Edit list of speakers
+      [] Allow update speaker
+      [] Identify key act
+      [] Allow save session state multiple times
+      [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
+  TickTok videos:
+    [] Load from URL
+  Bugs:
+    [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
+    [] When determining intial dialog theme, that analyzed dialog is skipped and statements not extract, only topic!
