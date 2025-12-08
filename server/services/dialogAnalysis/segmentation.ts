@@ -25,7 +25,7 @@ export async function segmentTopics(
   const groups: TopicGroup[] = [];
   
   // 1. Initial topic detection (first 10 minutes of dialog)
-  const initialChunkDuration = 10 * 60; // 600 seconds
+  const initialChunkDuration = 3 * 60; // 180 seconds
   const startTime = allLines[0].timestamp;
 
   // Find the index of the first line beyond the initial chunk duration

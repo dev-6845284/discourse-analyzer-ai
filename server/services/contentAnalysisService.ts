@@ -4,7 +4,7 @@ import ContentAnalysis, { IContentAnalysis } from '../models/ContentAnalysis';
 import Quote, { IQuote } from '../models/Quote';
 import Person, { IPerson } from '../models/Person';
 import { TopicGroup } from '../types';
-import { getLanguageName } from '../utils/languages';
+import { mapLanguageName } from '../utils/languages';
 
 interface QuoteGroupInput {
   groupId: number;
@@ -79,7 +79,7 @@ export const promoteSession = async (sessionId: string, quoteGroups: QuoteGroupI
   const { _id, status, ...rest } = contentAnalysisData as any;
   
   const languageCode = overrideLanguageCode || session.transcript?.languageCode || 'en';
-  const languageName = getLanguageName(languageCode);
+  const languageName = mapLanguageName(languageCode);
 
   // Apply selections to dialogAnalysis
   if (rest.dialogAnalysis) {
@@ -267,7 +267,7 @@ export const updateQuotes = async (contentAnalysisId: string, quoteGroups: Quote
         metadata: {
           title: contentAnalysis.title || 'YouTube Video',
           languageCode: contentAnalysis.transcript.languageCode,
-          languageName: getLanguageName(contentAnalysis.transcript.languageCode),
+          languageName: mapLanguageName(contentAnalysis.transcript.languageCode),
           links
         }
       });

@@ -63,4 +63,5 @@ export {
   buildProcessChunkPrompt,
   buildMergeTopicsPrompt,
   buildAnalyzeSingleTopicPrompt,
+  buildSpeakerIdentificationPrompt,
 } from './dialogAnalysis';

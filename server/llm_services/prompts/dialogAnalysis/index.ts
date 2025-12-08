@@ -1,3 +1,4 @@
+export * from './speakerIdentification';
 import { DialogLine, TopicGroup } from '../../../types';
 import { formatTimestamp } from '../../../utils/formatters';
 import { mapLanguageName } from '../../../utils/languages'; // <-- new import

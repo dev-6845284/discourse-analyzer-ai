@@ -1,6 +1,9 @@
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
+import chatGptService from '../llm_services/chatGptService';
+import geminiService from '../llm_services/geminiService';
+import grokService from '../llm_services/grokService';
+import { buildSpeakerIdentificationPrompt } from '../llm_services/prompts';
+import { extractJson } from '../llm_services/utils';
 
 export interface SpeakerAnalysisResult {
   blockId: string;
@@ -26,117 +29,6 @@ export interface SpeakerAnalysisRequest {
 }
 
 /**
- * Creates a prompt for speaker identification
- */
-function createSpeakerIdentificationPrompt(
-  blockText: string,
-  previousContext: string | null,
-  language: string
-): string {
-  let prompt = `Analyze the following transcript segment and identify the speakers.
-Transform the text into a dialogue format, attributing each line to a speaker.
-Identify the Host and any Guests/Speakers. If names are mentioned, use them. Otherwise use "Host", "Speaker 1", etc.
-
-Language of the transcript: ${language}
-Output Language: ${language}
-
-`;
-
-  if (previousContext) {
-    prompt += `CONTEXT FROM PREVIOUS SEGMENT (Use this to maintain speaker continuity):
-${previousContext}
-
-`;
-  }
-
-  prompt += `TRANSCRIPT SEGMENT TO ANALYZE:
-${blockText}
-
-OUTPUT FORMAT:
-Return ONLY a valid JSON object with the following structure:
-{
-  "dialogue": [
-    { "speaker": "Name or Role", "text": "Spoken text" },
-    { "speaker": "Name or Role", "text": "Spoken text" }
-  ],
-  "identifiedSpeakers": ["List", "of", "unique", "speakers"]
-}
-
-IMPORTANT:
-- Preserve the original meaning and content.
-- Do not summarize, keep the dialogue as close to original as possible but cleaned up.
-- Return ONLY JSON.
-`;
-
-  return prompt;
-}
-
-/**
- * Extracts JSON from response
- */
-function extractJsonFromResponse(text: string): any {
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      try {
-        return JSON.parse(jsonMatch[1].trim());
-      } catch (innerError) {
-        // Continue to next check
-      }
-    }
-    const objectMatch = text.match(/\{[\s\S]*\}/);
-    if (objectMatch) {
-      try {
-        return JSON.parse(objectMatch[0]);
-      } catch (innerError) {
-        // Continue
-      }
-    }
-    throw new Error('No valid JSON found in response');
-  }
-}
-
-/**
- * Identifies speakers using Gemini
- */
-async function identifySpeakersWithGemini(
-  prompt: string,
-  apiKey: string
-): Promise<any> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  const text = response.text();
-  
-  return extractJsonFromResponse(text);
-}
-
-/**
- * Identifies speakers using OpenAI
- */
-async function identifySpeakersWithOpenAI(
-  prompt: string,
-  apiKey: string
-): Promise<any> {
-  const openai = new OpenAI({ apiKey });
-  
-  const completion = await openai.chat.completions.create({
-    messages: [{ role: 'user', content: prompt }],
-    model: 'gpt-4o-mini',
-    response_format: { type: 'json_object' },
-  });
-
-  const content = completion.choices[0].message.content;
-  if (!content) throw new Error('Empty response from OpenAI');
-  
-  return JSON.parse(content);
-}
-
-/**
  * Main function to identify speakers in transcript blocks
  */
 export async function identifySpeakers(
@@ -147,18 +39,41 @@ export async function identifySpeakers(
   let previousContext: string | null = null;
 
   for (const block of blocks) {
-    const prompt = createSpeakerIdentificationPrompt(block.text, previousContext, language);
+    const prompt = buildSpeakerIdentificationPrompt(block.text, previousContext, language);
     
     let result: any;
     try {
+      let responseText: string;
+
       if (model === 'chatgpt' && apiKeys.chatgpt) {
-        result = await identifySpeakersWithOpenAI(prompt, apiKeys.chatgpt);
+        responseText = await chatGptService.generateContent(apiKeys.chatgpt, {
+          model: 'gpt-4o-mini',
+          prompt,
+          temperature: 0,
+        });
+      } else if (model === 'grok' && apiKeys.grok) {
+        responseText = await grokService.generateContent(apiKeys.grok, {
+          model: 'grok-2-latest',
+          prompt,
+          temperature: 0,
+        });
       } else {
         // Default to Gemini
         const apiKey = apiKeys.gemini || process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error('Gemini API key is missing');
-        result = await identifySpeakersWithGemini(prompt, apiKey);
+        
+        responseText = await geminiService.generateContent(apiKey, {
+          model: 'gemini-1.5-flash',
+          prompt,
+          temperature: 0,
+        });
       }
+
+      const jsonText = extractJson(responseText);
+      if (!jsonText) {
+        throw new Error('No valid JSON found in response');
+      }
+      result = JSON.parse(jsonText);
 
       const analysisResult: SpeakerAnalysisResult = {
         blockId: block.blockId,
@@ -172,8 +87,10 @@ export async function identifySpeakers(
 
       // Update context for next block
       // Take the last 3 lines of dialogue
-      const lastLines = result.dialogue.slice(-3);
-      previousContext = lastLines.map((l: any) => `${l.speaker}: ${l.text}`).join('\n');
+      if (result.dialogue && Array.isArray(result.dialogue)) {
+        const lastLines = result.dialogue.slice(-3);
+        previousContext = lastLines.map((l: any) => `${l.speaker}: ${l.text}`).join('\n');
+      }
 
     } catch (error) {
       console.error(`Error analyzing block ${block.blockId}:`, error);
