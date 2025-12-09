@@ -52,7 +52,9 @@ export type GroundingChunk = {
 export interface DialogLine {
   speaker: string;
   text: string;
-  timestamp: number; // seconds
+  timestamp: number; // seconds (start time)
+  endTime?: number; // seconds (end time)
+  timingMismatch?: boolean; // true if timing was fuzzy-matched and may be inaccurate
 }
 
 export interface SummaryItem {

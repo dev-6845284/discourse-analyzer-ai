@@ -3,25 +3,21 @@ import { DialogLine } from '../../types';
 
 /**
  * Flattens the block-based speaker analysis result into a linear list of dialog lines with timestamps.
- * Interpolates timestamps for lines within a block.
+ * Uses actual timestamps from speaker identification (not interpolated).
  */
 export function flattenDialog(blocks: SpeakerAnalysisResult[]): DialogLine[] {
   const flatLines: DialogLine[] = [];
 
   for (const block of blocks) {
-    const duration = block.endTime - block.startTime;
-    const linesInBlock = block.dialogue.length;
-    
-    if (linesInBlock === 0) continue;
+    if (block.dialogue.length === 0) continue;
 
-    // Simple linear interpolation for timestamps
-    const timePerLine = duration / linesInBlock;
-
-    block.dialogue.forEach((line, index) => {
+    block.dialogue.forEach((line) => {
       flatLines.push({
         speaker: line.speaker,
         text: line.text,
-        timestamp: block.startTime + (index * timePerLine)
+        timestamp: line.startTime, // Use actual start time
+        endTime: line.endTime,     // Preserve end time
+        timingMismatch: line.timingMismatch, // Preserve mismatch indicator
       });
     });
   }

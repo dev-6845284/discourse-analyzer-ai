@@ -8,6 +8,12 @@ export interface TranscriptSegment {
   text: string;
 }
 
+export interface SegmentTiming {
+  start: number;
+  end: number;
+  text: string;
+}
+
 export interface TranscriptBlock {
   blockId: string;
   startTime: number;
@@ -16,6 +22,7 @@ export interface TranscriptBlock {
   segments: TranscriptSegment[];
   text: string;
   segmentIndices: number[]; // Original indices in the segments array
+  segmentTiming: SegmentTiming[]; // Structured timing data for speaker identification
 }
 
 /**
@@ -97,6 +104,13 @@ export function groupTranscriptByTime(
       }
 
       const blockText = formattedParts.join('\n');
+
+      // Build structured segment timing data for speaker identification
+      const segmentTiming: SegmentTiming[] = blockSegments.map(seg => ({
+        start: seg.start,
+        end: seg.start + seg.duration,
+        text: seg.text,
+      }));
       
       blocks.push({
         blockId: `block-${blockNumber}`,
@@ -106,6 +120,7 @@ export function groupTranscriptByTime(
         segments: blockSegments,
         text: blockText,
         segmentIndices,
+        segmentTiming,
       });
 
       blockNumber++;

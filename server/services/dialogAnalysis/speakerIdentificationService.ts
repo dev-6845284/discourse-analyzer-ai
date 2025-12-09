@@ -4,15 +4,21 @@ import grokService from '../../llm_services/grokService';
 import { buildSpeakerIdentificationPrompt } from '../../llm_services/prompts';
 import { extractJson } from '../../llm_services/utils';
 import { addModelInteractionLog, completeModelInteractionLog } from '../logService';
+import { SegmentTiming } from './transcriptGrouper';
+
+export interface SpeakerDialogueLine {
+  speaker: string;
+  text: string;
+  startTime: number; // Precise start time in seconds
+  endTime: number;   // Precise end time in seconds
+  timingMismatch?: boolean; // True if timing was fuzzy-matched
+}
 
 export interface SpeakerAnalysisResult {
   blockId: string;
   startTime: number;
   endTime: number;
-  dialogue: Array<{
-    speaker: string;
-    text: string;
-  }>;
+  dialogue: SpeakerDialogueLine[];
   identifiedSpeakers: string[]; // List of unique speakers found in this block
 }
 
@@ -22,12 +28,120 @@ export interface SpeakerAnalysisRequest {
     startTime: number;
     endTime: number;
     text: string;
+    segmentTiming: SegmentTiming[]; // Structured timing data
   }>;
   language: string;
   model: string;
   apiKeys: Record<string, string>;
   sessionId?: string;
   logId?: string;
+}
+
+/**
+ * Fuzzy match LLM dialogue output to original segment timing.
+ * Returns dialogue lines with accurate timing from source segments.
+ */
+function matchDialogueToTiming(
+  rawDialogue: Array<{ speaker: string; text: string; startTime?: number; endTime?: number }>,
+  segmentTiming: SegmentTiming[],
+  blockStartTime: number,
+  blockEndTime: number
+): SpeakerDialogueLine[] {
+  if (!rawDialogue || rawDialogue.length === 0) {
+    return [];
+  }
+
+  const result: SpeakerDialogueLine[] = [];
+  let usedSegmentIndices = new Set<number>();
+
+  for (const line of rawDialogue) {
+    let bestMatch: SegmentTiming | null = null;
+    let bestMatchIndex = -1;
+    let bestScore = 0;
+    let timingMismatch = false;
+
+    // First, try to use LLM-provided timing if within bounds
+    if (line.startTime !== undefined && line.endTime !== undefined) {
+      const llmStart = line.startTime;
+      const llmEnd = line.endTime;
+      
+      // Validate LLM timing is within block bounds
+      if (llmStart >= blockStartTime && llmEnd <= blockEndTime + 1) {
+        // Find the segment that best matches this timing
+        for (let i = 0; i < segmentTiming.length; i++) {
+          if (usedSegmentIndices.has(i)) continue;
+          
+          const seg = segmentTiming[i];
+          // Check if segment overlaps with LLM timing
+          const overlap = Math.min(llmEnd, seg.end) - Math.max(llmStart, seg.start);
+          const segDuration = seg.end - seg.start;
+          
+          if (overlap > 0) {
+            const score = overlap / segDuration;
+            if (score > bestScore) {
+              bestScore = score;
+              bestMatch = seg;
+              bestMatchIndex = i;
+            }
+          }
+        }
+      }
+    }
+
+    // If no good match from LLM timing, try text-based fuzzy matching
+    if (!bestMatch || bestScore < 0.3) {
+      const lineWords = line.text.toLowerCase().split(/\s+/).slice(0, 5); // First 5 words
+      
+      for (let i = 0; i < segmentTiming.length; i++) {
+        if (usedSegmentIndices.has(i)) continue;
+        
+        const seg = segmentTiming[i];
+        const segWords = seg.text.toLowerCase().split(/\s+/);
+        
+        // Count matching words
+        let matchCount = 0;
+        for (const word of lineWords) {
+          if (segWords.some(sw => sw.includes(word) || word.includes(sw))) {
+            matchCount++;
+          }
+        }
+        
+        const score = lineWords.length > 0 ? matchCount / lineWords.length : 0;
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = seg;
+          bestMatchIndex = i;
+          timingMismatch = true; // Mark as fuzzy-matched
+        }
+      }
+    }
+
+    if (bestMatch && bestMatchIndex >= 0) {
+      usedSegmentIndices.add(bestMatchIndex);
+      result.push({
+        speaker: line.speaker,
+        text: line.text,
+        startTime: bestMatch.start,
+        endTime: bestMatch.end,
+        timingMismatch: timingMismatch || bestScore < 0.5,
+      });
+    } else {
+      // Fallback: interpolate timing
+      const lineIndex = result.length;
+      const duration = blockEndTime - blockStartTime;
+      const timePerLine = duration / rawDialogue.length;
+      
+      result.push({
+        speaker: line.speaker,
+        text: line.text,
+        startTime: blockStartTime + (lineIndex * timePerLine),
+        endTime: blockStartTime + ((lineIndex + 1) * timePerLine),
+        timingMismatch: true, // Definitely a mismatch since we're interpolating
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -41,7 +155,7 @@ export async function identifySpeakers(
   let previousContext: string | null = null;
 
   for (const block of blocks) {
-    const prompt = buildSpeakerIdentificationPrompt(block.text, previousContext, language);
+    const prompt = buildSpeakerIdentificationPrompt(block.text, block.segmentTiming, previousContext, language);
     
     // Determine provider and model name for logging
     let provider: string;
@@ -108,11 +222,25 @@ export async function identifySpeakers(
       }
       result = JSON.parse(jsonText);
 
+      // Match LLM dialogue output to original segment timing with fuzzy matching
+      const matchedDialogue = matchDialogueToTiming(
+        result.dialogue,
+        block.segmentTiming,
+        block.startTime,
+        block.endTime
+      );
+
+      // Count timing mismatches for logging
+      const mismatchCount = matchedDialogue.filter(d => d.timingMismatch).length;
+      if (mismatchCount > 0) {
+        console.log(`[SpeakerIdentification] Block ${block.blockId}: ${mismatchCount}/${matchedDialogue.length} lines had timing mismatches`);
+      }
+
       const analysisResult: SpeakerAnalysisResult = {
         blockId: block.blockId,
         startTime: block.startTime,
         endTime: block.endTime,
-        dialogue: result.dialogue,
+        dialogue: matchedDialogue,
         identifiedSpeakers: result.identifiedSpeakers,
       };
 
@@ -120,9 +248,9 @@ export async function identifySpeakers(
 
       // Update context for next block
       // Take the last 3 lines of dialogue
-      if (result.dialogue && Array.isArray(result.dialogue)) {
-        const lastLines = result.dialogue.slice(-3);
-        previousContext = lastLines.map((l: any) => `${l.speaker}: ${l.text}`).join('\n');
+      if (matchedDialogue && Array.isArray(matchedDialogue)) {
+        const lastLines = matchedDialogue.slice(-3);
+        previousContext = lastLines.map((l: SpeakerDialogueLine) => `${l.speaker}: ${l.text}`).join('\n');
       }
 
     } catch (error) {
@@ -132,12 +260,28 @@ export async function identifySpeakers(
       }
       console.error(`[SpeakerIdentification] Error analyzing block ${block.blockId}:`, error);
       
-      // Push a fallback result
+      // Push a fallback result with timing from segments
+      const fallbackDialogue: SpeakerDialogueLine[] = block.segmentTiming.length > 0
+        ? block.segmentTiming.map(seg => ({
+            speaker: 'Unknown',
+            text: seg.text,
+            startTime: seg.start,
+            endTime: seg.end,
+            timingMismatch: false,
+          }))
+        : [{
+            speaker: 'Unknown',
+            text: block.text,
+            startTime: block.startTime,
+            endTime: block.endTime,
+            timingMismatch: true,
+          }];
+
       results.push({
         blockId: block.blockId,
         startTime: block.startTime,
         endTime: block.endTime,
-        dialogue: [{ speaker: 'Unknown', text: block.text }],
+        dialogue: fallbackDialogue,
         identifiedSpeakers: ['Unknown'],
       });
       previousContext = null; // Reset context on error

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { TranscriptSegment } from '../utils/transcriptGrouper';
+import { TranscriptSegment } from '../utils/transcriptHelpers';
 import api from '../utils/api';
 
 export interface WeightedTag {
@@ -26,14 +26,19 @@ export interface TopicAnalysisResult {
   isSelected?: boolean; // For selecting blocks for expensive model analysis
 }
 
+export interface SpeakerDialogueLine {
+  speaker: string;
+  text: string;
+  startTime: number;
+  endTime: number;
+  timingMismatch?: boolean;
+}
+
 export interface SpeakerAnalysisResult {
   blockId: string;
   startTime: number;
   endTime: number;
-  dialogue: Array<{
-    speaker: string;
-    text: string;
-  }>;
+  dialogue: SpeakerDialogueLine[];
   identifiedSpeakers: string[];
 }
 
@@ -41,6 +46,8 @@ export interface DialogLine {
   speaker: string;
   text: string;
   timestamp: number;
+  endTime?: number;
+  timingMismatch?: boolean;
 }
 
 export interface TopicGroup {
@@ -168,12 +175,13 @@ export function useTranscriptAnalysis(initialData?: {
       }));
 
       try {
-        // Prepare blocks for analysis
+        // Prepare blocks for analysis - include segmentTiming for accurate timing
         const blocksForAnalysis = selectedBlocks.map(block => ({
           blockId: block.blockId,
           startTime: block.startTime,
           endTime: block.endTime,
           text: block.text,
+          segmentTiming: block.segmentTiming || [], // Include structured timing data
         }));
 
         // Call backend API
