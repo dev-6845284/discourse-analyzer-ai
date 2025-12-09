@@ -70,6 +70,10 @@ const findEntry = (sessionId: string, entryId: string): LogEntry | undefined => 
 };
 
 export const addLogEntry = (sessionId: string, command: LogCommand, requestPayload: any): string => {
+  if (!sessionId) {
+    console.warn('[LOG_SERVICE] Attempted to add log entry without sessionId. Using "unknown" session.');
+    sessionId = 'unknown';
+  }
   const sessionLogs = ensureSessionLogs(sessionId);
 
   const id = uuidv4();
@@ -95,6 +99,9 @@ export const updateLogEntry = (
   responsePayload?: any,
   error?: any
 ): void => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, id);
   if (entry) {
     entry.responsePayload = extractLlmResponseForLogging(responsePayload);
@@ -103,6 +110,9 @@ export const updateLogEntry = (
 };
 
 export const appendLogRequestPayload = (sessionId: string, id: string, payloadToAppend: Record<string, any>): void => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, id);
   if (entry) {
     entry.requestPayload = { ...entry.requestPayload, ...safeClone(payloadToAppend) };
@@ -122,6 +132,9 @@ export const addModelInteractionLog = (
   logId: string,
   interaction: ModelInteractionInput
 ): string | null => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, logId);
   if (!entry) return null;
 
@@ -151,6 +164,9 @@ export const completeModelInteractionLog = (
   error?: any
 ): void => {
   if (!interactionId) return;
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, logId);
   if (!entry || !entry.modelInteractions) return;
 
@@ -170,6 +186,9 @@ export const getLogs = (
   page: number,
   pageSize: number
 ): { logs: LogEntry[]; total: number; pages: number } => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const sessionLogs = logs.get(sessionId) || [];
   const sortedLogs = [...sessionLogs].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()

@@ -56,7 +56,7 @@ app.use((req, res, next) => {
 const sessionConfig: session.SessionOptions = {
   secret: sessionSecret,
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true, // Changed to true to ensure session ID is generated for all visitors
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,

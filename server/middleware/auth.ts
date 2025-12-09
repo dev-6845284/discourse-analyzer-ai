@@ -32,14 +32,23 @@ export const isAuthenticated = (
 
   if (process.env.BYPASS_AUTH === 'true') {
     console.log('[AUTH_BYPASS] BYPASS_AUTH is enabled');
-    if (!req.session.user) {
+    if (!req.session.user || !req.session.user._id) {
       req.session.user = {
+        _id: '000000000000000000000000', // Default ID for local developer
         email: 'developer@example.com',
         name: 'Local Developer',
         picture: '',
         role: 'admin'
       };
-      console.log('[AUTH_BYPASS] Created developer user');
+      console.log('[AUTH_BYPASS] Created/Updated developer user');
+      
+      // Save session to ensure cookie is set and session ID persists
+      return req.session.save((err) => {
+        if (err) {
+          console.error('[AUTH_BYPASS] Error saving session:', err);
+        }
+        next();
+      });
     }
     return next();
   }

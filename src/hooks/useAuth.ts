@@ -51,6 +51,12 @@ export function useAuth() {
 
   const checkUserSession = useCallback(async () => {
     if (shouldBypassAuth()) {
+      // Even if bypassing auth, we should try to hit the backend to establish a session cookie
+      try {
+        await api.get('/user');
+      } catch (e) {
+        console.warn('Failed to establish session with backend in bypass mode', e);
+      }
       setUser(getDefaultLocalUser());
       setIsAuthLoading(false);
       return;
