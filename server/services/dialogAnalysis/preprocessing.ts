@@ -1,4 +1,4 @@
-import { SpeakerAnalysisResult } from '../speakerIdentificationService';
+import { SpeakerAnalysisResult } from './speakerIdentificationService';
 import { DialogLine } from '../../types';
 
 /**

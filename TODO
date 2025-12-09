@@ -9,6 +9,9 @@ Todo:
       [] Session stage
       [] Promoted stage
     Dialog analysys improvements:
+      [] When grouping text for initial text grouping, in the group of 5min, join texts by 30s part chunks and provide timestamps
+      [] when identifying speakers, output with timestamps, do overlap for 30-45s of previous analysed part
+      [] when analyzing dialog into topics, provide timestamps for each line
       [] Edit list of speakers
       [] Allow update speaker
       [] Identify key act

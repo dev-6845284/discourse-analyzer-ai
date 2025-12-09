@@ -4,6 +4,9 @@ export * from './types';
 // Shared prompt sections
 export * from './shared';
 
+// Topic Extraction prompts
+export * from './topicExtraction';
+
 // Fetch Quotes prompts (ChatGPT - two-stage)
 export {
   buildFetchQuotesResearchPrompt,

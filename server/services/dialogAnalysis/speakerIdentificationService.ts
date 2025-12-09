@@ -1,9 +1,9 @@
-
-import chatGptService from '../llm_services/chatGptService';
-import geminiService from '../llm_services/geminiService';
-import grokService from '../llm_services/grokService';
-import { buildSpeakerIdentificationPrompt } from '../llm_services/prompts';
-import { extractJson } from '../llm_services/utils';
+import chatGptService from '../../llm_services/chatGptService';
+import geminiService from '../../llm_services/geminiService';
+import grokService from '../../llm_services/grokService';
+import { buildSpeakerIdentificationPrompt } from '../../llm_services/prompts';
+import { extractJson } from '../../llm_services/utils';
+import { addModelInteractionLog, completeModelInteractionLog } from '../logService';
 
 export interface SpeakerAnalysisResult {
   blockId: string;
@@ -26,6 +26,8 @@ export interface SpeakerAnalysisRequest {
   language: string;
   model: string;
   apiKeys: Record<string, string>;
+  sessionId?: string;
+  logId?: string;
 }
 
 /**
@@ -34,13 +36,39 @@ export interface SpeakerAnalysisRequest {
 export async function identifySpeakers(
   request: SpeakerAnalysisRequest
 ): Promise<SpeakerAnalysisResult[]> {
-  const { blocks, language, model, apiKeys } = request;
+  const { blocks, language, model, apiKeys, sessionId, logId } = request;
   const results: SpeakerAnalysisResult[] = [];
   let previousContext: string | null = null;
 
   for (const block of blocks) {
     const prompt = buildSpeakerIdentificationPrompt(block.text, previousContext, language);
     
+    // Determine provider and model name for logging
+    let provider: string;
+    let modelName: string;
+    if (model === 'chatgpt' && apiKeys.chatgpt) {
+      provider = 'chatgpt';
+      modelName = 'gpt-4o-mini';
+    } else if (model === 'grok' && apiKeys.grok) {
+      provider = 'grok';
+      modelName = 'grok-2-latest';
+    } else {
+      provider = 'gemini';
+      modelName = 'gemini-1.5-flash';
+    }
+
+    // Log the LLM request
+    let interactionId: string | null = null;
+    if (sessionId && logId) {
+      interactionId = addModelInteractionLog(sessionId, logId, {
+        provider,
+        model: modelName,
+        operation: 'speaker-identification',
+        requestPayload: { prompt, blockId: block.blockId },
+        metadata: { blockId: block.blockId, startTime: block.startTime, endTime: block.endTime },
+      });
+    }
+
     let result: any;
     try {
       let responseText: string;
@@ -69,6 +97,11 @@ export async function identifySpeakers(
         });
       }
 
+      // Log successful response
+      if (sessionId && logId) {
+        completeModelInteractionLog(sessionId, logId, interactionId, { responseText });
+      }
+
       const jsonText = extractJson(responseText);
       if (!jsonText) {
         throw new Error('No valid JSON found in response');
@@ -93,9 +126,13 @@ export async function identifySpeakers(
       }
 
     } catch (error) {
-      console.error(`Error analyzing block ${block.blockId}:`, error);
-      // Push error result or continue?
-      // Let's push a fallback result
+      // Log the error
+      if (sessionId && logId) {
+        completeModelInteractionLog(sessionId, logId, interactionId, undefined, error);
+      }
+      console.error(`[SpeakerIdentification] Error analyzing block ${block.blockId}:`, error);
+      
+      // Push a fallback result
       results.push({
         blockId: block.blockId,
         startTime: block.startTime,

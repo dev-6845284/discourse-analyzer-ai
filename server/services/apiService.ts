@@ -14,8 +14,8 @@ import { LlmService } from '../llm_services/LlmService';
 import { postProcessResponse } from './responseProcessor';
 import { fetchArticle } from '../utils/articleExtractor';
 import { getTranscript } from './youtubeService';
-import { extractTranscriptTopics } from './topicExtractorService';
-import { identifySpeakers } from './speakerIdentificationService';
+import { extractTranscriptTopics } from './dialogAnalysis/topicExtractorService';
+import { identifySpeakers } from './dialogAnalysis/speakerIdentificationService';
 import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysis';
 import { updateSessionStep, updateSessionStatus, createSession } from './analysisSessionService';
 
@@ -436,9 +436,16 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
     return res.status(400).json({ error: 'API keys are required' });
   }
 
+  let logId: string | undefined;
+
   try {
     if (sessionId) {
       await updateSessionStatus(sessionId, 'identifying_speakers');
+      logId = addLogEntry(sessionId, 'identify-speakers', {
+        blocksCount: blocks.length,
+        language,
+        model
+      });
     }
 
     console.log(`[SpeakerAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
@@ -448,9 +455,14 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
       language: language || 'lt',
       model: model || 'gemini',
       apiKeys,
+      sessionId,
+      logId,
     });
 
     if (sessionId) {
+      if (logId) {
+        updateLogEntry(sessionId, logId, { resultsCount: results.length });
+      }
       await updateSessionStep(sessionId, 'speakerAnalysis', results, 'identifying_speakers');
     }
 
@@ -459,6 +471,9 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
   } catch (error: any) {
     console.error('Error analyzing transcript speakers:', error);
     if (sessionId) {
+      if (logId) {
+        updateLogEntry(sessionId, logId, undefined, error);
+      }
       await updateSessionStatus(sessionId, 'failed', error.message);
     }
     res.status(500).json({ 

@@ -1,4 +1,4 @@
-import { SpeakerAnalysisResult } from '../speakerIdentificationService';
+import { SpeakerAnalysisResult } from './speakerIdentificationService';
 import { TopicGroup } from '../../types';
 import { flattenDialog } from './preprocessing';
 import { segmentTopics } from './segmentation';
