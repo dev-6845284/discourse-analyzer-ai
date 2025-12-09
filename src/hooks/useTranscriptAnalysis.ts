@@ -101,11 +101,7 @@ export function useTranscriptAnalysis(initialData?: {
       }));
 
       try {
-        // Group segments into blocks
-        const { groupTranscriptByTime } = await import('../utils/transcriptGrouper');
-        const blocks = groupTranscriptByTime(segments, 15, 'preview');
-
-        if (blocks.length === 0) {
+        if (segments.length === 0) {
           setState(prev => ({
             ...prev,
             isAnalyzing: false,
@@ -114,17 +110,9 @@ export function useTranscriptAnalysis(initialData?: {
           return;
         }
 
-        // Prepare blocks for analysis
-        const blocksForAnalysis = blocks.map(block => ({
-          blockId: block.blockId,
-          startTime: block.startTime,
-          endTime: block.endTime,
-          text: block.text,
-        }));
-
-        // Call backend API
+        // Call backend API with raw segments
         const response = await api.post('/quotes/analyze-transcript-topics', {
-          blocks: blocksForAnalysis,
+          segments,
           language: languageCode,
           model: model || 'gemini',
           apiKeys,

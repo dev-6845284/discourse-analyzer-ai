@@ -4,6 +4,7 @@ import {
   JsonParsingError,
   AnalysisCategory,
   AnalysisRating,
+  TopicAnalysisResult,
 } from '../types';
 import { extractJson } from './utils';
 import {
@@ -12,6 +13,7 @@ import {
   buildGrokExtractQuotesFromTextPrompt,
   buildGrokExtractQuotesFromArticlePrompt,
   buildGrokImproveQuotePrompt,
+  createTopicExtractionPrompt,
 } from './prompts';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { LlmService } from './LlmService';
@@ -441,6 +443,36 @@ class GrokService implements LlmService {
         throw error;
       }
       throw new Error("An unknown error occurred while improving the quote.");
+    }
+  }
+
+  public async extractTopics(
+    apiKey: string,
+    text: string,
+    language: string,
+    temperature: number,
+    logId?: string,
+    sessionId?: string
+  ): Promise<TopicAnalysisResult> {
+    const prompt = createTopicExtractionPrompt(text, language);
+    
+    const responseText = await this.generateContent(apiKey, {
+      model: GROK_MODEL,
+      prompt,
+      temperature,
+      logId,
+      sessionId,
+      metadata: { stage: 'extraction', task: 'extractTopics' }
+    });
+
+    const jsonString = extractJson(responseText);
+    if (!jsonString) {
+      throw new JsonParsingError("Could not find JSON in response", responseText);
+    }
+    try {
+      return JSON.parse(jsonString) as TopicAnalysisResult;
+    } catch (e) {
+      throw new JsonParsingError("Failed to parse JSON", responseText);
     }
   }
 

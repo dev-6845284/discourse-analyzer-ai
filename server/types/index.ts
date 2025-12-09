@@ -161,3 +161,20 @@ export class ModelResponseError extends Error {
     this.name = 'ModelResponseError';
   }
 }
+
+export interface WeightedTag {
+  tag: string;
+  relevance: number; // 0-1, how relevant to main topics
+  importance: number; // 0-1, how important/prominent
+  frequency: number; // How many times mentioned (raw count)
+}
+
+export interface TopicAnalysisResult {
+  blockId?: string;
+  startTime?: number;
+  endTime?: number;
+  text?: string;
+  mainTopics: string[]; // Top 3-5 main topics
+  tags: WeightedTag[]; // All extracted tags with weights
+  summary: string; // Brief 1-2 sentence summary of block content
+}

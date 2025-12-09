@@ -3,6 +3,7 @@ import {
   AnalysisResult,
   AnalysisCategory,
   AnalysisRating,
+  TopicAnalysisResult,
 } from '../types';
 
 export interface LlmService {
@@ -78,4 +79,13 @@ export interface LlmService {
       sessionId?: string;
     }
   ): Promise<string>;
+
+  extractTopics(
+    apiKey: string,
+    text: string,
+    language: string,
+    temperature: number,
+    logId?: string,
+    sessionId?: string
+  ): Promise<TopicAnalysisResult>;
 }

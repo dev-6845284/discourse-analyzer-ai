@@ -373,15 +373,17 @@ export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
   }
 };
 
+import { groupTranscriptByTime } from './dialogAnalysis/transcriptGrouper';
+
 /**
  * Analyze YouTube transcript for topics and generate tag clouds
  * Groups transcript into 15-minute blocks and extracts topics using fast models
  */
 export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
-  const { blocks, language, model, apiKeys, sessionId } = req.body;
+  const { segments, language, model, apiKeys, sessionId } = req.body;
 
-  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
-    return res.status(400).json({ error: 'Blocks array is required and must not be empty' });
+  if (!segments || !Array.isArray(segments) || segments.length === 0) {
+    return res.status(400).json({ error: 'Segments array is required and must not be empty' });
   }
 
   if (!apiKeys || typeof apiKeys !== 'object') {
@@ -389,6 +391,9 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
   }
 
   try {
+    // Group segments into blocks on the backend
+    const blocks = groupTranscriptByTime(segments, 5);
+
     if (sessionId) {
       await updateSessionStatus(sessionId, 'analyzing_topics');
       // Save the blocks used for analysis
