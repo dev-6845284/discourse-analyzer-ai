@@ -2,6 +2,11 @@ import express from 'express';
 import * as analysisSessionService from '../services/analysisSessionService';
 import * as contentAnalysisService from '../services/contentAnalysisService';
 import { isAuthenticated } from '../middleware/auth';
+import { extractTranscriptTopics } from '../services/dialogAnalysis/topicExtractorService';
+import { identifySpeakers } from '../services/dialogAnalysis/speakerIdentificationService';
+import { analyzeDialogTopics as analyzeDialogTopicsService } from '../services/dialogAnalysis';
+import { groupTranscriptByTime } from '../services/dialogAnalysis/transcriptGrouper';
+import { addLogEntry, updateLogEntry } from '../services/logService';
 
 const router = express.Router();
 
@@ -149,6 +154,244 @@ router.post('/update-quote-source', async (req, res) => {
   } catch (error) {
     console.error('Error updating quote source:', error);
     res.status(500).json({ message: 'Failed to update quote source' });
+  }
+});
+
+// ============================
+// Session-based Analysis Endpoints
+// ============================
+
+// Analyze topics from session transcript (Step 1)
+router.post('/sessions/:id/analyze-topics', async (req, res) => {
+  const sessionId = req.params.id;
+  const { language, model, apiKeys } = req.body;
+
+  try {
+    // Get session and verify ownership
+    const session = await analysisSessionService.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    if (session.userId !== req.session.user!._id as string) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Get transcript from session
+    const transcriptData = await analysisSessionService.getSessionTranscript(sessionId);
+    if (!transcriptData || !transcriptData.segments || transcriptData.segments.length === 0) {
+      return res.status(400).json({ message: 'Session has no transcript data. Save transcript first.' });
+    }
+
+    if (!apiKeys || typeof apiKeys !== 'object') {
+      return res.status(400).json({ message: 'API keys are required' });
+    }
+
+    // Update status
+    await analysisSessionService.updateSessionStatus(sessionId, 'analyzing_topics');
+
+    // Group segments into blocks
+    const blocks = groupTranscriptByTime(transcriptData.segments, 5);
+
+    // Save the blocks used for analysis
+    await analysisSessionService.updateSessionStep(sessionId, 'transcriptBlocks', blocks, 'analyzing_topics');
+
+    console.log(`[TopicAnalysis] Session ${sessionId}: Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
+
+    const results = await extractTranscriptTopics({
+      blocks,
+      language: language || transcriptData.languageCode || 'lt',
+      model: model || 'gemini',
+      apiKeys,
+    });
+
+    await analysisSessionService.updateSessionStep(sessionId, 'topicAnalysis', results, 'analyzing_topics');
+
+    console.log(`[TopicAnalysis] Session ${sessionId}: Successfully analyzed ${results.length} blocks`);
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing transcript topics:', error);
+    await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
+    res.status(500).json({
+      message: error.message || 'Failed to analyze transcript topics',
+      details: error.stack
+    });
+  }
+});
+
+// Update selected block IDs for speaker analysis
+router.put('/sessions/:id/selected-blocks', async (req, res) => {
+  const sessionId = req.params.id;
+  const { selectedBlockIds } = req.body;
+
+  try {
+    const session = await analysisSessionService.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    if (session.userId !== req.session.user!._id as string) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    if (!Array.isArray(selectedBlockIds)) {
+      return res.status(400).json({ message: 'selectedBlockIds must be an array' });
+    }
+
+    const updatedSession = await analysisSessionService.updateSelectedBlockIds(sessionId, selectedBlockIds);
+    res.json({ selectedBlockIds: updatedSession?.selectedBlockIds || [] });
+  } catch (error) {
+    console.error('Error updating selected blocks:', error);
+    res.status(500).json({ message: 'Failed to update selected blocks' });
+  }
+});
+
+// Analyze speakers from session data (Step 2)
+router.post('/sessions/:id/analyze-speakers', async (req, res) => {
+  const sessionId = req.params.id;
+  const { language, model, apiKeys } = req.body;
+
+  let logId: string | undefined;
+
+  try {
+    // Get session and verify ownership
+    const session = await analysisSessionService.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    if (session.userId !== req.session.user!._id as string) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Get topic analysis data from session
+    const analysisData = await analysisSessionService.getSessionTopicAnalysis(sessionId);
+    if (!analysisData || !analysisData.topicAnalysis || analysisData.topicAnalysis.length === 0) {
+      return res.status(400).json({ message: 'Session has no topic analysis data. Run topic analysis first.' });
+    }
+
+    if (!analysisData.selectedBlockIds || analysisData.selectedBlockIds.length === 0) {
+      return res.status(400).json({ message: 'No blocks selected for speaker analysis. Select blocks first.' });
+    }
+
+    if (!apiKeys || typeof apiKeys !== 'object') {
+      return res.status(400).json({ message: 'API keys are required' });
+    }
+
+    // Filter blocks to only include selected ones
+    const selectedBlocks = analysisData.transcriptBlocks.filter(block => 
+      analysisData.selectedBlockIds.includes(block.blockId)
+    );
+
+    if (selectedBlocks.length === 0) {
+      return res.status(400).json({ message: 'No matching blocks found for selected IDs' });
+    }
+
+    await analysisSessionService.updateSessionStatus(sessionId, 'identifying_speakers');
+    logId = addLogEntry(sessionId, 'identify-speakers', {
+      blocksCount: selectedBlocks.length,
+      language,
+      model
+    });
+
+    console.log(`[SpeakerAnalysis] Session ${sessionId}: Analyzing ${selectedBlocks.length} transcript blocks with model: ${model || 'gemini'}`);
+
+    const results = await identifySpeakers({
+      blocks: selectedBlocks,
+      language: language || 'lt',
+      model: model || 'gemini',
+      apiKeys,
+      sessionId,
+      logId,
+    });
+
+    if (logId) {
+      updateLogEntry(sessionId, logId, { resultsCount: results.length });
+    }
+    await analysisSessionService.updateSessionStep(sessionId, 'speakerAnalysis', results, 'identifying_speakers');
+
+    console.log(`[SpeakerAnalysis] Session ${sessionId}: Successfully analyzed ${results.length} blocks`);
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing transcript speakers:', error);
+    if (logId) {
+      updateLogEntry(sessionId, logId, undefined, error);
+    }
+    await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
+    res.status(500).json({
+      message: error.message || 'Failed to analyze transcript speakers',
+      details: error.stack
+    });
+  }
+});
+
+// Analyze dialog topics from session data (Step 3)
+router.post('/sessions/:id/analyze-dialog', async (req, res) => {
+  const sessionId = req.params.id;
+  const { language, fastModel, betterModel, apiKeys } = req.body;
+
+  let logId: string | undefined;
+
+  try {
+    // Get session and verify ownership
+    const session = await analysisSessionService.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    if (session.userId !== req.session.user!._id as string) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Get speaker analysis data from session
+    const speakerData = await analysisSessionService.getSessionSpeakerAnalysis(sessionId);
+    if (!speakerData || !speakerData.speakerAnalysis || speakerData.speakerAnalysis.length === 0) {
+      return res.status(400).json({ message: 'Session has no speaker analysis data. Run speaker analysis first.' });
+    }
+
+    if (!apiKeys || typeof apiKeys !== 'object') {
+      return res.status(400).json({ message: 'API keys are required' });
+    }
+
+    logId = addLogEntry(req.session.id || sessionId, 'analyze-dialog-topics', {
+      dialogBlockCount: speakerData.speakerAnalysis.length,
+      language: language || 'lt',
+      fastModel,
+      betterModel,
+    });
+
+    await analysisSessionService.updateSessionStatus(sessionId, 'grouping_dialog');
+
+    console.log(`[DialogAnalysis] Session ${sessionId}: Analyzing dialog with ${speakerData.speakerAnalysis.length} blocks`);
+
+    const results = await analyzeDialogTopicsService({
+      dialog: speakerData.speakerAnalysis,
+      language: language || 'lt',
+      fastModel,
+      betterModel,
+      apiKeys,
+      sessionId: req.session.id || sessionId,
+      logId,
+    });
+
+    await analysisSessionService.updateSessionStep(sessionId, 'dialogAnalysis', results, 'completed');
+
+    console.log(`[DialogAnalysis] Session ${sessionId}: Successfully analyzed ${results.length} topic groups`);
+
+    if (logId) {
+      updateLogEntry(req.session.id || sessionId, logId, {
+        topicGroupCount: results.length,
+        totalLinesAnalyzed: results.reduce((sum, g) => sum + g.dialogLines.length, 0),
+      });
+    }
+
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing dialog topics:', error);
+    if (logId) {
+      updateLogEntry(req.session.id || sessionId, logId, undefined, error);
+    }
+    await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
+    res.status(500).json({
+      message: error.message || 'Failed to analyze dialog topics',
+      details: error.stack
+    });
   }
 });
 

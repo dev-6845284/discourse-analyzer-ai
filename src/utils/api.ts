@@ -186,4 +186,37 @@ export const updateQuoteSource = async (quoteId: string, contentAnalysisId: stri
   return api.post('/analysis/update-quote-source', { quoteId, contentAnalysisId, statementIds });
 };
 
+// Session-based analysis endpoints
+export const analyzeSessionTopics = async (
+  sessionId: string, 
+  language: string, 
+  model: string, 
+  apiKeys: Record<string, string>
+) => {
+  return api.post(`/analysis/sessions/${sessionId}/analyze-topics`, { language, model, apiKeys });
+};
+
+export const saveSelectedBlocks = async (sessionId: string, selectedBlockIds: string[]) => {
+  return api.put(`/analysis/sessions/${sessionId}/selected-blocks`, { selectedBlockIds });
+};
+
+export const analyzeSessionSpeakers = async (
+  sessionId: string,
+  language: string,
+  model: string,
+  apiKeys: Record<string, string>
+) => {
+  return api.post(`/analysis/sessions/${sessionId}/analyze-speakers`, { language, model, apiKeys });
+};
+
+export const analyzeSessionDialog = async (
+  sessionId: string,
+  language: string,
+  fastModel: string,
+  betterModel: string,
+  apiKeys: Record<string, string>
+) => {
+  return api.post(`/analysis/sessions/${sessionId}/analyze-dialog`, { language, fastModel, betterModel, apiKeys });
+};
+
 export default api;

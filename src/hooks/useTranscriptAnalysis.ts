@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react';
 import { TranscriptSegment } from '../utils/transcriptHelpers';
-import api from '../utils/api';
+import { 
+  analyzeSessionTopics, 
+  saveSelectedBlocks, 
+  analyzeSessionSpeakers, 
+  analyzeSessionDialog 
+} from '../utils/api';
 
 export interface WeightedTag {
   tag: string;
@@ -99,6 +104,7 @@ export function useTranscriptAnalysis(initialData?: {
 
   /**
    * Start topic analysis for transcript blocks
+   * Now uses session-based API - sessionId is required and transcript must already be saved to session
    */
   const analyzeTranscript = useCallback(
     async (
@@ -108,6 +114,15 @@ export function useTranscriptAnalysis(initialData?: {
       apiKeys: Record<string, string>,
       sessionId?: string
     ) => {
+      if (!sessionId) {
+        setState(prev => ({
+          ...prev,
+          isAnalyzing: false,
+          error: 'Session ID is required for topic analysis',
+        }));
+        return;
+      }
+
       setState(prev => ({
         ...prev,
         isAnalyzing: true,
@@ -117,23 +132,13 @@ export function useTranscriptAnalysis(initialData?: {
       }));
 
       try {
-        if (segments.length === 0) {
-          setState(prev => ({
-            ...prev,
-            isAnalyzing: false,
-            error: 'No transcript segments to analyze',
-          }));
-          return;
-        }
-
-        // Call backend API with raw segments
-        const response = await api.post('/quotes/analyze-transcript-topics', {
-          segments,
-          language: languageCode,
-          model: model || 'gemini',
-          apiKeys,
+        // Call session-based backend API - backend reads transcript from session
+        const response = await analyzeSessionTopics(
           sessionId,
-        });
+          languageCode,
+          model || 'gemini',
+          apiKeys
+        );
 
         const analysisResults: TopicAnalysisResult[] = response.data;
 
@@ -148,7 +153,7 @@ export function useTranscriptAnalysis(initialData?: {
         setState(prev => ({
           ...prev,
           isAnalyzing: false,
-          error: error.message || 'Failed to analyze transcript',
+          error: error.response?.data?.message || error.message || 'Failed to analyze transcript',
           analysisProgress: 0,
         }));
       }
@@ -158,6 +163,7 @@ export function useTranscriptAnalysis(initialData?: {
 
   /**
    * Start speaker analysis for selected blocks
+   * Now uses session-based API - saves selected block IDs to session, backend reads data from session
    */
   const analyzeSpeakers = useCallback(
     async (
@@ -166,6 +172,14 @@ export function useTranscriptAnalysis(initialData?: {
       apiKeys: Record<string, string>,
       sessionId?: string
     ) => {
+      if (!sessionId) {
+        setState(prev => ({
+          ...prev,
+          error: 'Session ID is required for speaker analysis',
+        }));
+        return;
+      }
+
       const selectedBlocks = state.results.filter(r => r.isSelected);
       
       if (selectedBlocks.length === 0) {
@@ -184,23 +198,17 @@ export function useTranscriptAnalysis(initialData?: {
       }));
 
       try {
-        // Prepare blocks for analysis - include segmentTiming for accurate timing
-        const blocksForAnalysis = selectedBlocks.map(block => ({
-          blockId: block.blockId,
-          startTime: block.startTime,
-          endTime: block.endTime,
-          text: block.text,
-          segmentTiming: block.segmentTiming || [], // Include structured timing data
-        }));
+        // First, save selected block IDs to session
+        const selectedBlockIds = selectedBlocks.map(block => block.blockId);
+        await saveSelectedBlocks(sessionId, selectedBlockIds);
 
-        // Call backend API
-        const response = await api.post('/quotes/analyze-transcript-speakers', {
-          blocks: blocksForAnalysis,
-          language: languageCode,
-          model: model || 'gemini',
-          apiKeys,
+        // Call session-based backend API - backend reads selected blocks from session
+        const response = await analyzeSessionSpeakers(
           sessionId,
-        });
+          languageCode,
+          model || 'gemini',
+          apiKeys
+        );
 
         const analysisResults: SpeakerAnalysisResult[] = response.data;
 
@@ -214,7 +222,7 @@ export function useTranscriptAnalysis(initialData?: {
         setState(prev => ({
           ...prev,
           isSpeakerAnalyzing: false,
-          error: error.message || 'Failed to analyze speakers',
+          error: error.response?.data?.message || error.message || 'Failed to analyze speakers',
         }));
       }
     },
@@ -223,6 +231,7 @@ export function useTranscriptAnalysis(initialData?: {
 
   /**
    * Start dialog analysis (topic segmentation) based on speaker results
+   * Now uses session-based API - backend reads speaker analysis from session
    */
   const analyzeDialog = useCallback(
     async (
@@ -232,6 +241,16 @@ export function useTranscriptAnalysis(initialData?: {
       apiKeys: Record<string, string>,
       sessionId?: string
     ) => {
+      if (!sessionId) {
+        setState(prev => ({
+          ...prev,
+          error: 'Session ID is required for dialog analysis',
+        }));
+        return;
+      }
+
+      // Note: We no longer need to check state.speakerResults since backend reads from session
+      // But we keep this check for immediate UI feedback
       if (state.speakerResults.length === 0) {
         setState(prev => ({
           ...prev,
@@ -248,15 +267,14 @@ export function useTranscriptAnalysis(initialData?: {
       }));
 
       try {
-        // Call backend API
-        const response = await api.post('/quotes/analyze-dialog-topics', {
-          dialog: state.speakerResults,
-          language: languageCode,
+        // Call session-based backend API - backend reads speaker analysis from session
+        const response = await analyzeSessionDialog(
+          sessionId,
+          languageCode,
           fastModel,
           betterModel,
-          apiKeys,
-          sessionId,
-        });
+          apiKeys
+        );
 
         const analysisResults: TopicGroup[] = response.data;
 
@@ -270,7 +288,7 @@ export function useTranscriptAnalysis(initialData?: {
         setState(prev => ({
           ...prev,
           isDialogAnalyzing: false,
-          error: error.message || 'Failed to analyze dialog topics',
+          error: error.response?.data?.message || error.message || 'Failed to analyze dialog topics',
         }));
       }
     },

@@ -132,7 +132,6 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
       if (props.onPromoteSuccess) {
         props.onPromoteSuccess();
       }
-      onClose();
     } catch (error) {
       console.error('[handlePromote] Error:', error);
       alert('Failed to promote quotes: ' + (error instanceof Error ? error.message : String(error)));

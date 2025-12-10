@@ -25,6 +25,11 @@ export interface IAnalysisSession extends Document {
     startTime: number;
     endTime: number;
     text: string;
+    segmentTiming: Array<{
+      start: number;
+      end: number;
+      text: string;
+    }>;
   }>;
   
   // Step 2: Topic Analysis
@@ -43,6 +48,9 @@ export interface IAnalysisSession extends Document {
     summary: string;
   }>;
   
+  // Step 2.5: Selected block IDs for speaker analysis
+  selectedBlockIds: string[];
+  
   // Step 3: Speaker Identification
   speakerAnalysis: Array<{
     blockId: string;
@@ -51,6 +59,9 @@ export interface IAnalysisSession extends Document {
     dialogue: Array<{
       speaker: string;
       text: string;
+      startTime: number;
+      endTime: number;
+      timingMismatch?: boolean;
     }>;
     identifiedSpeakers: string[];
   }>;
@@ -88,7 +99,12 @@ const AnalysisSessionSchema: Schema = new Schema({
     blockId: String,
     startTime: Number,
     endTime: Number,
-    text: String
+    text: String,
+    segmentTiming: [{
+      start: Number,
+      end: Number,
+      text: String
+    }]
   }],
   
   topicAnalysis: [{
@@ -106,13 +122,18 @@ const AnalysisSessionSchema: Schema = new Schema({
     summary: String
   }],
   
+  selectedBlockIds: [String],
+  
   speakerAnalysis: [{
     blockId: String,
     startTime: Number,
     endTime: Number,
     dialogue: [{
       speaker: String,
-      text: String
+      text: String,
+      startTime: Number,
+      endTime: Number,
+      timingMismatch: Boolean
     }],
     identifiedSpeakers: [String]
   }],
