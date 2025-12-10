@@ -384,6 +384,116 @@ export function useTranscriptAnalysis(initialData?: {
     }));
   }, []);
 
+  /**
+   * Rename a speaker globally across all blocks
+   * Returns the updated speakerResults for saving
+   */
+  const renameSpeaker = useCallback((oldName: string, newName: string): SpeakerAnalysisResult[] => {
+    let updatedResults: SpeakerAnalysisResult[] = [];
+    setState(prev => {
+      updatedResults = prev.speakerResults.map(block => ({
+        ...block,
+        identifiedSpeakers: block.identifiedSpeakers.map(s => s === oldName ? newName : s),
+        dialogue: block.dialogue.map(line =>
+          line.speaker === oldName ? { ...line, speaker: newName } : line
+        ),
+      }));
+      return {
+        ...prev,
+        speakerResults: updatedResults,
+      };
+    });
+    return updatedResults;
+  }, []);
+
+  /**
+   * Add a new speaker globally (to all blocks' identifiedSpeakers list)
+   * Returns the updated speakerResults for saving
+   */
+  const addSpeaker = useCallback((speakerName: string): SpeakerAnalysisResult[] => {
+    let updatedResults: SpeakerAnalysisResult[] = [];
+    setState(prev => {
+      updatedResults = prev.speakerResults.map(block => ({
+        ...block,
+        identifiedSpeakers: block.identifiedSpeakers.includes(speakerName)
+          ? block.identifiedSpeakers
+          : [...block.identifiedSpeakers, speakerName],
+      }));
+      return {
+        ...prev,
+        speakerResults: updatedResults,
+      };
+    });
+    return updatedResults;
+  }, []);
+
+  /**
+   * Remove a speaker globally (only if not used in any dialogue lines)
+   * Returns the updated speakerResults for saving, or null if speaker is in use
+   */
+  const removeSpeaker = useCallback((speakerName: string): SpeakerAnalysisResult[] | null => {
+    // Check if speaker is used in any dialogue line
+    const isUsed = state.speakerResults.some(block =>
+      block.dialogue.some(line => line.speaker === speakerName)
+    );
+    if (isUsed) {
+      return null; // Cannot remove speaker that is in use
+    }
+
+    let updatedResults: SpeakerAnalysisResult[] = [];
+    setState(prev => {
+      updatedResults = prev.speakerResults.map(block => ({
+        ...block,
+        identifiedSpeakers: block.identifiedSpeakers.filter(s => s !== speakerName),
+      }));
+      return {
+        ...prev,
+        speakerResults: updatedResults,
+      };
+    });
+    return updatedResults;
+  }, [state.speakerResults]);
+
+  /**
+   * Update speaker for a specific dialogue line
+   * Returns the updated speakerResults for saving
+   */
+  const updateLineSpeaker = useCallback((blockId: string, lineIndex: number, newSpeaker: string): SpeakerAnalysisResult[] => {
+    let updatedResults: SpeakerAnalysisResult[] = [];
+    setState(prev => {
+      updatedResults = prev.speakerResults.map(block =>
+        block.blockId === blockId
+          ? {
+              ...block,
+              dialogue: block.dialogue.map((line, idx) =>
+                idx === lineIndex ? { ...line, speaker: newSpeaker } : line
+              ),
+              // Add new speaker to identifiedSpeakers if not already present
+              identifiedSpeakers: block.identifiedSpeakers.includes(newSpeaker)
+                ? block.identifiedSpeakers
+                : [...block.identifiedSpeakers, newSpeaker],
+            }
+          : block
+      );
+      return {
+        ...prev,
+        speakerResults: updatedResults,
+      };
+    });
+    return updatedResults;
+  }, []);
+
+  /**
+   * Get all unique speakers across all blocks
+   */
+  const getAllSpeakers = useCallback((): string[] => {
+    const speakers = new Set<string>();
+    state.speakerResults.forEach(block => {
+      block.identifiedSpeakers.forEach(s => speakers.add(s));
+    });
+    return Array.from(speakers).sort();
+  }, [state.speakerResults]);
+
   return {
     ...state,
     analyzeTranscript,
@@ -396,5 +506,10 @@ export function useTranscriptAnalysis(initialData?: {
     getSelectedBlocksData,
     setSpeakerResults,
     setFullAnalysisState,
+    renameSpeaker,
+    addSpeaker,
+    removeSpeaker,
+    updateLineSpeaker,
+    getAllSpeakers,
   };
 }

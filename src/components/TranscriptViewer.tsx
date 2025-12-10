@@ -81,6 +81,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     setSelectedLanguage,
     getStepStatuses,
     handleStartStep,
+    handleRenameSpeaker,
+    handleAddSpeaker,
+    handleRemoveSpeaker,
+    handleUpdateLineSpeaker,
   } = useTranscriptViewer(props);
 
   const handlePromote = async () => {
@@ -250,6 +254,10 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onClearAnalysis={topicAnalysis.clearAnalysis}
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
+            onRenameSpeaker={handleRenameSpeaker}
+            onAddSpeaker={handleAddSpeaker}
+            onRemoveSpeaker={handleRemoveSpeaker}
+            onUpdateLineSpeaker={handleUpdateLineSpeaker}
           />
         )}
 

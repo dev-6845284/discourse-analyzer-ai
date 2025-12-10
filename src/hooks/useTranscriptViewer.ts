@@ -495,6 +495,42 @@ export const useTranscriptViewer = ({
     return steps;
   };
 
+  // Speaker editing handlers with auto-save
+  const saveSpeakerResults = async (results: any[]) => {
+    if (!currentSessionId) return;
+    try {
+      await updateSessionStep(currentSessionId, 'speakerAnalysis', results, 'identifying_speakers');
+    } catch (error) {
+      console.error('Failed to save speaker results:', error);
+    }
+  };
+
+  const handleRenameSpeaker = async (oldName: string, newName: string) => {
+    if (!newName.trim() || oldName === newName) return;
+    const updatedResults = topicAnalysis.renameSpeaker(oldName, newName.trim());
+    await saveSpeakerResults(updatedResults);
+  };
+
+  const handleAddSpeaker = async (speakerName: string) => {
+    if (!speakerName.trim()) return;
+    const updatedResults = topicAnalysis.addSpeaker(speakerName.trim());
+    await saveSpeakerResults(updatedResults);
+  };
+
+  const handleRemoveSpeaker = async (speakerName: string): Promise<boolean> => {
+    const updatedResults = topicAnalysis.removeSpeaker(speakerName);
+    if (updatedResults === null) {
+      return false; // Speaker is in use, cannot remove
+    }
+    await saveSpeakerResults(updatedResults);
+    return true;
+  };
+
+  const handleUpdateLineSpeaker = async (blockId: string, lineIndex: number, newSpeaker: string) => {
+    const updatedResults = topicAnalysis.updateLineSpeaker(blockId, lineIndex, newSpeaker);
+    await saveSpeakerResults(updatedResults);
+  };
+
   return {
     viewMode,
     setViewMode,
@@ -536,6 +572,10 @@ export const useTranscriptViewer = ({
     contentAnalysisId,
     editQuoteId,
     getStepStatuses,
+    handleRenameSpeaker,
+    handleAddSpeaker,
+    handleRemoveSpeaker,
+    handleUpdateLineSpeaker,
     handleStartStep: (step: 'transcript' | 'topics' | 'speakers' | 'dialog') => {
       switch (step) {
         case 'topics':

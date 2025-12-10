@@ -1,5 +1,5 @@
-import React from 'react';
-import { Upload, Download, Zap } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Upload, Download, Zap, Edit2, Check, X, Plus, Trash2 } from 'lucide-react';
 import { formatTimestamp } from '../../utils/transcriptHelpers';
 import Spinner from '../Spinner';
 
@@ -30,6 +30,10 @@ interface SpeakerAnalysisViewProps {
   onClearAnalysis: () => void;
   selectedLanguage?: string;
   onLanguageChange?: (lang: string) => void;
+  onRenameSpeaker?: (oldName: string, newName: string) => Promise<void>;
+  onAddSpeaker?: (speakerName: string) => Promise<void>;
+  onRemoveSpeaker?: (speakerName: string) => Promise<boolean>;
+  onUpdateLineSpeaker?: (blockId: string, lineIndex: number, newSpeaker: string) => Promise<void>;
 }
 
 export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
@@ -42,7 +46,77 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   onClearAnalysis,
   selectedLanguage = 'en',
   onLanguageChange,
+  onRenameSpeaker,
+  onAddSpeaker,
+  onRemoveSpeaker,
+  onUpdateLineSpeaker,
 }) => {
+  const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newSpeakerName, setNewSpeakerName] = useState('');
+  const [removeError, setRemoveError] = useState<string | null>(null);
+
+  // Get all unique speakers across all blocks
+  const allSpeakers = useMemo(() => {
+    const speakers = new Set<string>();
+    speakerResults.forEach(block => {
+      block.identifiedSpeakers.forEach(s => speakers.add(s));
+    });
+    return Array.from(speakers).sort();
+  }, [speakerResults]);
+
+  // Check if a speaker is used in any dialogue line
+  const isSpeakerUsed = (speakerName: string) => {
+    return speakerResults.some(block =>
+      block.dialogue.some(line => line.speaker === speakerName)
+    );
+  };
+
+  const handleStartEdit = (speaker: string) => {
+    setEditingSpeaker(speaker);
+    setEditValue(speaker);
+    setRemoveError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSpeaker(null);
+    setEditValue('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingSpeaker && editValue.trim() && editValue !== editingSpeaker) {
+      await onRenameSpeaker?.(editingSpeaker, editValue.trim());
+    }
+    setEditingSpeaker(null);
+    setEditValue('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
+  const handleAddSpeaker = async () => {
+    if (newSpeakerName.trim()) {
+      await onAddSpeaker?.(newSpeakerName.trim());
+      setNewSpeakerName('');
+      setIsAddingNew(false);
+    }
+  };
+
+  const handleRemoveSpeaker = async (speakerName: string) => {
+    setRemoveError(null);
+    const success = await onRemoveSpeaker?.(speakerName);
+    if (!success) {
+      setRemoveError(`Cannot remove "${speakerName}" - speaker is used in dialogue lines`);
+      setTimeout(() => setRemoveError(null), 3000);
+    }
+  };
+
   if (isSpeakerAnalyzing) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-800/30">
@@ -140,6 +214,118 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
         </div>
       </div>
 
+      {/* Global Speakers Editor */}
+      <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-gray-300">Identified Speakers ({allSpeakers.length})</h4>
+          {!isAddingNew && (
+            <button
+              onClick={() => setIsAddingNew(true)}
+              className="text-xs px-2 py-1 bg-green-600/30 text-green-300 rounded hover:bg-green-600/50 flex items-center gap-1"
+            >
+              <Plus size={12} />
+              Add Speaker
+            </button>
+          )}
+        </div>
+        
+        {removeError && (
+          <div className="text-xs text-red-400 mb-2 p-2 bg-red-900/20 rounded">
+            {removeError}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {allSpeakers.map(speaker => (
+            <div key={speaker} className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1">
+              {editingSpeaker === speaker ? (
+                <>
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    className="text-xs bg-gray-800 text-white px-2 py-0.5 rounded border border-gray-600 focus:border-cyan-500 focus:outline-none w-32"
+                  />
+                  <button
+                    onClick={handleSaveEdit}
+                    className="text-green-400 hover:text-green-300 p-0.5"
+                    title="Save (Enter)"
+                  >
+                    <Check size={14} />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-400 hover:text-gray-300 p-0.5"
+                    title="Cancel (Escape)"
+                  >
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-300">{speaker}</span>
+                  <button
+                    onClick={() => handleStartEdit(speaker)}
+                    className="text-gray-500 hover:text-cyan-400 p-0.5"
+                    title="Rename speaker"
+                  >
+                    <Edit2 size={12} />
+                  </button>
+                  {!isSpeakerUsed(speaker) && (
+                    <button
+                      onClick={() => handleRemoveSpeaker(speaker)}
+                      className="text-gray-500 hover:text-red-400 p-0.5"
+                      title="Remove speaker (unused)"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+          
+          {isAddingNew && (
+            <div className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1">
+              <input
+                type="text"
+                value={newSpeakerName}
+                onChange={(e) => setNewSpeakerName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddSpeaker();
+                  if (e.key === 'Escape') {
+                    setIsAddingNew(false);
+                    setNewSpeakerName('');
+                  }
+                }}
+                placeholder="Speaker name..."
+                autoFocus
+                className="text-xs bg-gray-800 text-white px-2 py-0.5 rounded border border-gray-600 focus:border-cyan-500 focus:outline-none w-32"
+              />
+              <button
+                onClick={handleAddSpeaker}
+                className="text-green-400 hover:text-green-300 p-0.5"
+                title="Add (Enter)"
+              >
+                <Check size={14} />
+              </button>
+              <button
+                onClick={() => {
+                  setIsAddingNew(false);
+                  setNewSpeakerName('');
+                }}
+                className="text-gray-400 hover:text-gray-300 p-0.5"
+                title="Cancel (Escape)"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {speakerResults.map(block => (
         <div
           key={block.blockId}
@@ -177,8 +363,18 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   <div className="font-mono text-blue-400/60">
                     {line.endTime !== undefined ? formatTimestamp(line.endTime) : '—'}
                   </div>
-                  <div className="text-purple-400 font-semibold truncate" title={line.speaker}>
-                    {line.speaker}
+                  <div>
+                    <select
+                      value={line.speaker}
+                      onChange={(e) => onUpdateLineSpeaker?.(block.blockId, idx, e.target.value)}
+                      className="text-xs bg-gray-800 text-purple-400 font-semibold rounded border border-gray-600 px-2 py-1 focus:border-cyan-500 focus:outline-none w-full cursor-pointer hover:bg-gray-700"
+                    >
+                      {allSpeakers.map(speaker => (
+                        <option key={speaker} value={speaker}>
+                          {speaker}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="text-gray-300 flex items-center gap-2">
                     <span className="flex-1">{line.text}</span>
