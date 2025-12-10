@@ -1,6 +1,5 @@
 import React from 'react';
-import { Copy, Download, Search as SearchIcon, FileJson, Upload, Zap } from 'lucide-react';
-import Spinner from '../Spinner';
+import { Copy, Download, Search as SearchIcon, FileJson, Upload } from 'lucide-react';
 
 interface TranscriptSearchBarProps {
   searchTerm: string;
@@ -11,8 +10,7 @@ interface TranscriptSearchBarProps {
   onImportSpeakers: () => void;
   onExportAnalysis: () => void;
   onImportAnalysis: () => void;
-  onAnalyzeTopics: () => void;
-  isAnalyzing: boolean;
+  hasAnalysisData: boolean; // True if any analysis step has data
 }
 
 export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
@@ -24,8 +22,7 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
   onImportSpeakers,
   onExportAnalysis,
   onImportAnalysis,
-  onAnalyzeTopics,
-  isAnalyzing,
+  hasAnalysisData,
 }) => {
   return (
     <div className="flex gap-3 p-4 border-b border-gray-700 flex-shrink-0 flex-wrap">
@@ -71,14 +68,16 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
         <Upload size={18} />
         <span className="hidden sm:inline">Import Speakers</span>
       </button>
-      <button
-        onClick={onExportAnalysis}
-        className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        title="Export full analysis state"
-      >
-        <Download size={18} />
-        <span className="hidden sm:inline">Export Analysis</span>
-      </button>
+      {hasAnalysisData && (
+        <button
+          onClick={onExportAnalysis}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          title="Export full analysis state"
+        >
+          <Download size={18} />
+          <span className="hidden sm:inline">Export Analysis</span>
+        </button>
+      )}
       <button
         onClick={onImportAnalysis}
         className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -86,19 +85,6 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
       >
         <Upload size={18} />
         <span className="hidden sm:inline">Import Analysis</span>
-      </button>
-      <button
-        onClick={onAnalyzeTopics}
-        disabled={isAnalyzing}
-        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        title="Analyze topics in transcript"
-      >
-        {isAnalyzing ? (
-          <Spinner />
-        ) : (
-          <Zap size={18} />
-        )}
-        <span className="hidden sm:inline">Analyze Topics</span>
       </button>
     </div>
   );

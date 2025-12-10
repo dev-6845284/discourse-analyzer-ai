@@ -441,9 +441,58 @@ export const useTranscriptViewer = ({
         alert('Failed to save all data to database. Session created but some data may not be saved.');
       }
     } catch (error) {
-      console.error('Failed to create session:', error);
+        console.error('Failed to create session:', error);
       alert('Failed to save session to database.');
     }
+  };
+
+  // Build step statuses for step progress bar
+  const getStepStatuses = () => {
+    const steps = [
+      {
+        step: 'transcript' as const,
+        status: segments.length > 0 ? 'completed' as const : 'pending' as const,
+        resultCount: segments.length,
+        label: 'Transcription',
+      },
+      {
+        step: 'topics' as const,
+        status: topicAnalysis.isAnalyzing 
+          ? 'processing' as const 
+          : topicAnalysis.error && topicAnalysis.results.length === 0
+            ? 'error' as const
+            : topicAnalysis.results.length > 0 
+              ? 'completed' as const 
+              : 'pending' as const,
+        resultCount: topicAnalysis.results.length,
+        label: 'Groups',
+      },
+      {
+        step: 'speakers' as const,
+        status: topicAnalysis.isSpeakerAnalyzing 
+          ? 'processing' as const 
+          : topicAnalysis.error && topicAnalysis.speakerResults.length === 0 && topicAnalysis.results.length > 0
+            ? 'error' as const
+            : topicAnalysis.speakerResults.length > 0 
+              ? 'completed' as const 
+              : 'pending' as const,
+        resultCount: topicAnalysis.speakerResults.length,
+        label: 'Speakers',
+      },
+      {
+        step: 'dialog' as const,
+        status: topicAnalysis.isDialogAnalyzing 
+          ? 'processing' as const 
+          : topicAnalysis.error && topicAnalysis.dialogResults.length === 0 && topicAnalysis.speakerResults.length > 0
+            ? 'error' as const
+            : topicAnalysis.dialogResults.length > 0 
+              ? 'completed' as const 
+              : 'pending' as const,
+        resultCount: topicAnalysis.dialogResults.length,
+        label: 'Statements',
+      },
+    ];
+    return steps;
   };
 
   return {
@@ -486,5 +535,19 @@ export const useTranscriptViewer = ({
     setSelectedLanguage,
     contentAnalysisId,
     editQuoteId,
+    getStepStatuses,
+    handleStartStep: (step: 'transcript' | 'topics' | 'speakers' | 'dialog') => {
+      switch (step) {
+        case 'topics':
+          handleAnalyzeTopics();
+          break;
+        case 'speakers':
+          handleAnalyzeSpeakers();
+          break;
+        case 'dialog':
+          handleAnalyzeDialog();
+          break;
+      }
+    },
   };
 };
