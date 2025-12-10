@@ -1,5 +1,138 @@
 import { Request, Response } from 'express';
 import Person from '../models/Person';
+import { 
+  calculateNameSimilarity, 
+  normalizeName, 
+  DEFAULT_SIMILARITY_THRESHOLD,
+  SimilarityMatch 
+} from '../utils/nameMatching';
+
+export interface PersonSimilarityMatch extends SimilarityMatch {
+  personId: string;
+  aliases: string[];
+}
+
+/**
+ * Find persons with similar names using fuzzy matching.
+ * Searches both name and aliases fields.
+ * 
+ * @param searchName The name to search for
+ * @param threshold Similarity threshold (default 0.85)
+ * @returns Array of matching persons with similarity scores, sorted by similarity
+ */
+export const findSimilarPersons = async (
+  searchName: string,
+  threshold = DEFAULT_SIMILARITY_THRESHOLD
+): Promise<PersonSimilarityMatch[]> => {
+  const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
+  
+  // Get all persons - we need to do similarity matching in memory
+  // For large datasets, consider adding a normalizedName field to the schema
+  const allPersons = await Person.find({})
+    .select('name aliases')
+    .maxTimeMS(timeout);
+
+  const matches: PersonSimilarityMatch[] = [];
+
+  for (const person of allPersons) {
+    // Check similarity with the main name
+    const nameSimilarity = calculateNameSimilarity(searchName, person.name);
+    
+    // Check similarity with aliases
+    let bestAliasSimilarity = 0;
+    let bestAliasMatch = '';
+    for (const alias of person.aliases || []) {
+      const aliasSimilarity = calculateNameSimilarity(searchName, alias);
+      if (aliasSimilarity > bestAliasSimilarity) {
+        bestAliasSimilarity = aliasSimilarity;
+        bestAliasMatch = alias;
+      }
+    }
+
+    // Use the best similarity score
+    const bestSimilarity = Math.max(nameSimilarity, bestAliasSimilarity);
+    const matchedName = nameSimilarity >= bestAliasSimilarity ? person.name : bestAliasMatch;
+    const normalizedSearch = normalizeName(searchName);
+    const isExact = normalizeName(matchedName) === normalizedSearch;
+
+    if (bestSimilarity >= threshold || isExact) {
+      matches.push({
+        personId: person._id.toString(),
+        name: person.name,
+        aliases: person.aliases || [],
+        similarity: bestSimilarity,
+        isExact,
+      });
+    }
+  }
+
+  // Sort by similarity (highest first), with exact matches at the top
+  return matches.sort((a, b) => {
+    if (a.isExact && !b.isExact) return -1;
+    if (!a.isExact && b.isExact) return 1;
+    return b.similarity - a.similarity;
+  });
+};
+
+/**
+ * Find a single best matching person, or null if no match above threshold.
+ * 
+ * @param searchName The name to search for
+ * @param threshold Similarity threshold (default 0.85)
+ * @returns The best matching person or null
+ */
+export const findBestMatchingPerson = async (
+  searchName: string,
+  threshold = DEFAULT_SIMILARITY_THRESHOLD
+): Promise<PersonSimilarityMatch | null> => {
+  const matches = await findSimilarPersons(searchName, threshold);
+  return matches.length > 0 ? matches[0] : null;
+};
+
+/**
+ * Get or create a person by name, reusing existing person if similar name exists.
+ * 
+ * @param name The person's name
+ * @param threshold Similarity threshold for matching (default 0.85)
+ * @returns The existing or newly created person document
+ */
+export const getOrCreatePersonByName = async (
+  name: string,
+  threshold = DEFAULT_SIMILARITY_THRESHOLD
+): Promise<{ person: any; isNew: boolean; matchedVia?: string }> => {
+  // First, try to find a similar existing person
+  const match = await findBestMatchingPerson(name, threshold);
+  
+  if (match) {
+    const person = await Person.findById(match.personId);
+    if (person) {
+      // If the name is slightly different but similar, add it as an alias
+      const normalizedSearch = normalizeName(name);
+      const normalizedName = normalizeName(person.name);
+      const aliasesNormalized = (person.aliases || []).map(normalizeName);
+      
+      if (normalizedSearch !== normalizedName && !aliasesNormalized.includes(normalizedSearch)) {
+        // Add the new name variation as an alias if it's not already there
+        if (!person.aliases.includes(name)) {
+          person.aliases.push(name);
+          await person.save();
+        }
+      }
+      
+      return { 
+        person, 
+        isNew: false, 
+        matchedVia: match.isExact ? 'exact' : 'similar' 
+      };
+    }
+  }
+  
+  // No match found, create new person
+  const newPerson = new Person({ name, aliases: [] });
+  await newPerson.save();
+  
+  return { person: newPerson, isNew: true };
+};
 
 export const createPerson = async (req: Request, res: Response) => {
   try {

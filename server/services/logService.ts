@@ -1,5 +1,5 @@
 import { LogEntry, LogErrorDetails, ModelInteractionLog, LogCommand } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const logs = new Map<string, LogEntry[]>();
 const MAX_LOG_ENTRIES_PER_SESSION = 1000; // To prevent unbounded memory usage
@@ -76,7 +76,7 @@ export const addLogEntry = (sessionId: string, command: LogCommand, requestPaylo
   }
   const sessionLogs = ensureSessionLogs(sessionId);
 
-  const id = uuidv4();
+  const id = randomUUID();
   const entry: LogEntry = {
     id,
     timestamp: new Date().toISOString(),
@@ -139,7 +139,7 @@ export const addModelInteractionLog = (
   if (!entry) return null;
 
   const interactionEntry: ModelInteractionLog = {
-    id: uuidv4(),
+    id: randomUUID(),
     timestamp: new Date().toISOString(),
     provider: interaction.provider,
     model: interaction.model,

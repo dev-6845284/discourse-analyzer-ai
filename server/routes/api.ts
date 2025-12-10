@@ -72,4 +72,23 @@ router.post('/people', (req, res) => personService.createPerson(req, res));
 router.put('/people/:id', (req, res) => personService.updatePerson(req, res));
 router.delete('/people/:id', (req, res) => personService.deletePerson(req, res));
 
+// Find similar persons by name (for deduplication)
+router.get('/people/find-similar', async (req, res) => {
+  try {
+    const { name, threshold } = req.query;
+    
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: 'Name parameter is required' });
+    }
+    
+    const similarityThreshold = threshold ? parseFloat(threshold as string) : undefined;
+    const matches = await personService.findSimilarPersons(name, similarityThreshold);
+    
+    res.json({ matches });
+  } catch (error: any) {
+    console.error('Error finding similar persons:', error);
+    res.status(500).json({ error: 'Failed to find similar persons', details: error.message });
+  }
+});
+
 export default router;

@@ -56,7 +56,13 @@ export interface IAnalysisSession extends Document {
     blockId: string;
     startTime: number;
     endTime: number;
+    speakers: Array<{
+      id: string;
+      name: string;
+    }>;
     dialogue: Array<{
+      id: string;
+      speakerId: string;
       speaker: string;
       text: string;
       startTime: number;
@@ -128,7 +134,13 @@ const AnalysisSessionSchema: Schema = new Schema({
     blockId: String,
     startTime: Number,
     endTime: Number,
+    speakers: [{
+      id: String,
+      name: String
+    }],
     dialogue: [{
+      id: String,
+      speakerId: String,
       speaker: String,
       text: String,
       startTime: Number,

@@ -2,8 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { Upload, Download, Zap, Edit2, Check, X, Plus, Trash2 } from 'lucide-react';
 import { formatTimestamp } from '../../utils/transcriptHelpers';
 import Spinner from '../Spinner';
+import { PersonSimilarityMatch } from '../../utils/api';
+
+interface Speaker {
+  id: string;
+  name: string;
+}
 
 interface DialogLine {
+  id: string;
+  speakerId: string;
   speaker: string;
   text: string;
   startTime?: number;
@@ -16,6 +24,7 @@ interface SpeakerBlock {
   blockId: string;
   startTime: number;
   endTime: number;
+  speakers?: Speaker[];
   identifiedSpeakers: string[];
   dialogue: DialogLine[];
 }
@@ -30,10 +39,11 @@ interface SpeakerAnalysisViewProps {
   onClearAnalysis: () => void;
   selectedLanguage?: string;
   onLanguageChange?: (lang: string) => void;
-  onRenameSpeaker?: (oldName: string, newName: string) => Promise<void>;
-  onAddSpeaker?: (speakerName: string) => Promise<void>;
-  onRemoveSpeaker?: (speakerName: string) => Promise<boolean>;
-  onUpdateLineSpeaker?: (blockId: string, lineIndex: number, newSpeaker: string) => Promise<void>;
+  onRenameSpeaker?: (speakerId: string, newName: string) => Promise<void>;
+  onAddSpeaker?: (speakerName: string, existingPerson?: { personId: string; name: string }) => Promise<void>;
+  onCheckSimilarPersons?: (speakerName: string) => Promise<PersonSimilarityMatch[]>;
+  onRemoveSpeaker?: (speakerId: string) => Promise<boolean>;
+  onUpdateLineSpeaker?: (blockId: string, lineId: string, newSpeakerId: string) => Promise<void>;
 }
 
 export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
@@ -48,6 +58,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   onLanguageChange,
   onRenameSpeaker,
   onAddSpeaker,
+  onCheckSimilarPersons,
   onRemoveSpeaker,
   onUpdateLineSpeaker,
 }) => {
@@ -56,26 +67,28 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newSpeakerName, setNewSpeakerName] = useState('');
   const [removeError, setRemoveError] = useState<string | null>(null);
+  const [similarMatches, setSimilarMatches] = useState<PersonSimilarityMatch[]>([]);
+  const [isCheckingMatches, setIsCheckingMatches] = useState(false);
 
-  // Get all unique speakers across all blocks
+  // Get all unique speakers across all blocks (as Speaker objects with id and name)
   const allSpeakers = useMemo(() => {
-    const speakers = new Set<string>();
+    const speakerMap = new Map<string, Speaker>();
     speakerResults.forEach(block => {
-      block.identifiedSpeakers.forEach(s => speakers.add(s));
+      block.speakers?.forEach(s => speakerMap.set(s.id, s));
     });
-    return Array.from(speakers).sort();
+    return Array.from(speakerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [speakerResults]);
 
   // Check if a speaker is used in any dialogue line
-  const isSpeakerUsed = (speakerName: string) => {
+  const isSpeakerUsed = (speakerId: string) => {
     return speakerResults.some(block =>
-      block.dialogue.some(line => line.speaker === speakerName)
+      block.dialogue.some(line => line.speakerId === speakerId)
     );
   };
 
-  const handleStartEdit = (speaker: string) => {
-    setEditingSpeaker(speaker);
-    setEditValue(speaker);
+  const handleStartEdit = (speakerId: string, speakerName: string) => {
+    setEditingSpeaker(speakerId);
+    setEditValue(speakerName);
     setRemoveError(null);
   };
 
@@ -85,7 +98,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   };
 
   const handleSaveEdit = async () => {
-    if (editingSpeaker && editValue.trim() && editValue !== editingSpeaker) {
+    if (editingSpeaker && editValue.trim()) {
       await onRenameSpeaker?.(editingSpeaker, editValue.trim());
     }
     setEditingSpeaker(null);
@@ -101,18 +114,55 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   };
 
   const handleAddSpeaker = async () => {
-    if (newSpeakerName.trim()) {
-      await onAddSpeaker?.(newSpeakerName.trim());
-      setNewSpeakerName('');
-      setIsAddingNew(false);
+    if (!newSpeakerName.trim()) return;
+
+    // Check for similar existing persons first
+    if (onCheckSimilarPersons) {
+      setIsCheckingMatches(true);
+      try {
+        const matches = await onCheckSimilarPersons(newSpeakerName.trim());
+        if (matches.length > 0) {
+          // Show matches for user confirmation
+          setSimilarMatches(matches);
+          setIsCheckingMatches(false);
+          return; // Don't add yet, wait for user selection
+        }
+      } catch (error) {
+        console.error('Error checking similar persons:', error);
+      }
+      setIsCheckingMatches(false);
     }
+
+    // No matches found, add as new speaker
+    await onAddSpeaker?.(newSpeakerName.trim());
+    setNewSpeakerName('');
+    setIsAddingNew(false);
+    setSimilarMatches([]);
   };
 
-  const handleRemoveSpeaker = async (speakerName: string) => {
+  const handleSelectExistingPerson = async (match: PersonSimilarityMatch) => {
+    await onAddSpeaker?.(newSpeakerName.trim(), { personId: match.personId, name: match.name });
+    setNewSpeakerName('');
+    setIsAddingNew(false);
+    setSimilarMatches([]);
+  };
+
+  const handleCreateNewSpeaker = async () => {
+    await onAddSpeaker?.(newSpeakerName.trim());
+    setNewSpeakerName('');
+    setIsAddingNew(false);
+    setSimilarMatches([]);
+  };
+
+  const handleCancelSimilarSelection = () => {
+    setSimilarMatches([]);
+  };
+
+  const handleRemoveSpeaker = async (speaker: Speaker) => {
     setRemoveError(null);
-    const success = await onRemoveSpeaker?.(speakerName);
+    const success = await onRemoveSpeaker?.(speaker.id);
     if (!success) {
-      setRemoveError(`Cannot remove "${speakerName}" - speaker is used in dialogue lines`);
+      setRemoveError(`Cannot remove "${speaker.name}" - speaker is used in dialogue lines`);
       setTimeout(() => setRemoveError(null), 3000);
     }
   };
@@ -237,8 +287,8 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
 
         <div className="flex flex-wrap gap-2">
           {allSpeakers.map(speaker => (
-            <div key={speaker} className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1">
-              {editingSpeaker === speaker ? (
+            <div key={speaker.id} className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1">
+              {editingSpeaker === speaker.id ? (
                 <>
                   <input
                     type="text"
@@ -265,15 +315,15 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="text-xs text-gray-300">{speaker}</span>
+                  <span className="text-xs text-gray-300">{speaker.name}</span>
                   <button
-                    onClick={() => handleStartEdit(speaker)}
+                    onClick={() => handleStartEdit(speaker.id, speaker.name)}
                     className="text-gray-500 hover:text-cyan-400 p-0.5"
                     title="Rename speaker"
                   >
                     <Edit2 size={12} />
                   </button>
-                  {!isSpeakerUsed(speaker) && (
+                  {!isSpeakerUsed(speaker.id) && (
                     <button
                       onClick={() => handleRemoveSpeaker(speaker)}
                       className="text-gray-500 hover:text-red-400 p-0.5"
@@ -298,32 +348,90 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   if (e.key === 'Escape') {
                     setIsAddingNew(false);
                     setNewSpeakerName('');
+                    setSimilarMatches([]);
                   }
                 }}
                 placeholder="Speaker name..."
                 autoFocus
-                className="text-xs bg-gray-800 text-white px-2 py-0.5 rounded border border-gray-600 focus:border-cyan-500 focus:outline-none w-32"
+                disabled={isCheckingMatches}
+                className="text-xs bg-gray-800 text-white px-2 py-0.5 rounded border border-gray-600 focus:border-cyan-500 focus:outline-none w-32 disabled:opacity-50"
               />
-              <button
-                onClick={handleAddSpeaker}
-                className="text-green-400 hover:text-green-300 p-0.5"
-                title="Add (Enter)"
-              >
-                <Check size={14} />
-              </button>
-              <button
-                onClick={() => {
-                  setIsAddingNew(false);
-                  setNewSpeakerName('');
-                }}
-                className="text-gray-400 hover:text-gray-300 p-0.5"
-                title="Cancel (Escape)"
-              >
-                <X size={14} />
-              </button>
+              {isCheckingMatches ? (
+                <span className="text-xs text-gray-400 px-2">Checking...</span>
+              ) : (
+                <>
+                  <button
+                    onClick={handleAddSpeaker}
+                    className="text-green-400 hover:text-green-300 p-0.5"
+                    title="Add (Enter)"
+                  >
+                    <Check size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsAddingNew(false);
+                      setNewSpeakerName('');
+                      setSimilarMatches([]);
+                    }}
+                    className="text-gray-400 hover:text-gray-300 p-0.5"
+                    title="Cancel (Escape)"
+                  >
+                    <X size={14} />
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
+
+        {/* Similar persons confirmation dialog */}
+        {similarMatches.length > 0 && (
+          <div className="mt-2 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+            <p className="text-sm text-yellow-200 mb-2">
+              Similar existing persons found for "{newSpeakerName}":
+            </p>
+            <div className="space-y-2">
+              {similarMatches.map(match => (
+                <div
+                  key={match.personId}
+                  className="flex items-center justify-between bg-gray-800/50 rounded p-2"
+                >
+                  <div className="flex-1">
+                    <span className="text-sm text-gray-200">{match.name}</span>
+                    <span className="text-xs text-gray-400 ml-2">
+                      ({Math.round(match.similarity * 100)}% match{match.isExact && ', exact'})
+                    </span>
+                    {match.aliases.length > 0 && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Aliases: {match.aliases.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleSelectExistingPerson(match)}
+                    className="text-xs px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded"
+                  >
+                    Use this
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={handleCreateNewSpeaker}
+                className="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded"
+              >
+                Create new "{newSpeakerName}" anyway
+              </button>
+              <button
+                onClick={handleCancelSimilarSelection}
+                className="text-xs px-3 py-1 text-gray-400 hover:text-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {speakerResults.map(block => (
@@ -355,8 +463,8 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             
             {/* Dialogue rows */}
             <div className="space-y-1">
-              {block.dialogue.map((line, idx) => (
-                <div key={idx} className="grid grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-700/30 rounded px-2 transition-colors">
+              {block.dialogue.map((line) => (
+                <div key={line.id} className="grid grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-700/30 rounded px-2 transition-colors">
                   <div className="font-mono text-blue-400">
                     {line.startTime !== undefined ? formatTimestamp(line.startTime) : '—'}
                   </div>
@@ -365,13 +473,13 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   </div>
                   <div>
                     <select
-                      value={line.speaker}
-                      onChange={(e) => onUpdateLineSpeaker?.(block.blockId, idx, e.target.value)}
+                      value={line.speakerId}
+                      onChange={(e) => onUpdateLineSpeaker?.(block.blockId, line.id, e.target.value)}
                       className="text-xs bg-gray-800 text-purple-400 font-semibold rounded border border-gray-600 px-2 py-1 focus:border-cyan-500 focus:outline-none w-full cursor-pointer hover:bg-gray-700"
                     >
                       {allSpeakers.map(speaker => (
-                        <option key={speaker} value={speaker}>
-                          {speaker}
+                        <option key={speaker.id} value={speaker.id}>
+                          {speaker.name}
                         </option>
                       ))}
                     </select>

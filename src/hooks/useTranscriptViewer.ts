@@ -505,20 +505,37 @@ export const useTranscriptViewer = ({
     }
   };
 
-  const handleRenameSpeaker = async (oldName: string, newName: string) => {
-    if (!newName.trim() || oldName === newName) return;
-    const updatedResults = topicAnalysis.renameSpeaker(oldName, newName.trim());
+  const handleRenameSpeaker = async (speakerId: string, newName: string) => {
+    if (!newName.trim()) return;
+    const updatedResults = topicAnalysis.renameSpeaker(speakerId, newName.trim());
     await saveSpeakerResults(updatedResults);
   };
 
-  const handleAddSpeaker = async (speakerName: string) => {
+  /**
+   * Check for similar existing persons before adding a new speaker.
+   * Returns matches for user confirmation, or empty array if no matches.
+   */
+  const checkSimilarPersonsBeforeAdd = async (speakerName: string) => {
+    if (!speakerName.trim()) return [];
+    return topicAnalysis.checkSimilarPersonsForSpeaker(speakerName.trim());
+  };
+
+  /**
+   * Add a speaker, optionally using an existing person if confirmed by user.
+   * @param speakerName The speaker name to add
+   * @param existingPerson Optional existing person to use instead of creating new
+   */
+  const handleAddSpeaker = async (
+    speakerName: string, 
+    existingPerson?: { personId: string; name: string }
+  ) => {
     if (!speakerName.trim()) return;
-    const updatedResults = topicAnalysis.addSpeaker(speakerName.trim());
+    const updatedResults = topicAnalysis.addSpeaker(speakerName.trim(), existingPerson);
     await saveSpeakerResults(updatedResults);
   };
 
-  const handleRemoveSpeaker = async (speakerName: string): Promise<boolean> => {
-    const updatedResults = topicAnalysis.removeSpeaker(speakerName);
+  const handleRemoveSpeaker = async (speakerId: string): Promise<boolean> => {
+    const updatedResults = topicAnalysis.removeSpeaker(speakerId);
     if (updatedResults === null) {
       return false; // Speaker is in use, cannot remove
     }
@@ -526,8 +543,8 @@ export const useTranscriptViewer = ({
     return true;
   };
 
-  const handleUpdateLineSpeaker = async (blockId: string, lineIndex: number, newSpeaker: string) => {
-    const updatedResults = topicAnalysis.updateLineSpeaker(blockId, lineIndex, newSpeaker);
+  const handleUpdateLineSpeaker = async (blockId: string, lineId: string, newSpeakerId: string) => {
+    const updatedResults = topicAnalysis.updateLineSpeaker(blockId, lineId, newSpeakerId);
     await saveSpeakerResults(updatedResults);
   };
 
@@ -574,6 +591,7 @@ export const useTranscriptViewer = ({
     getStepStatuses,
     handleRenameSpeaker,
     handleAddSpeaker,
+    checkSimilarPersonsBeforeAdd,
     handleRemoveSpeaker,
     handleUpdateLineSpeaker,
     handleStartStep: (step: 'transcript' | 'topics' | 'speakers' | 'dialog') => {

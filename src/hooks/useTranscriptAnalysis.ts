@@ -4,7 +4,9 @@ import {
   analyzeSessionTopics, 
   saveSelectedBlocks, 
   analyzeSessionSpeakers, 
-  analyzeSessionDialog 
+  analyzeSessionDialog,
+  findSimilarPersons,
+  PersonSimilarityMatch
 } from '../utils/api';
 
 export interface WeightedTag {
@@ -27,6 +29,13 @@ export interface SummaryItem {
   importance: number; // decimal, 0.1–1.0
 }
 
+export interface Speaker {
+  id: string;   // Unique ID (UUID or existing Person ID)
+  name: string; // Display name
+  personId?: string; // Reference to existing Person record if matched
+  isExistingPerson?: boolean; // True if matched to existing person
+}
+
 export interface TopicAnalysisResult {
   blockId: string;
   startTime: number;
@@ -40,7 +49,9 @@ export interface TopicAnalysisResult {
 }
 
 export interface SpeakerDialogueLine {
-  speaker: string;
+  id: string;        // Unique line ID
+  speakerId: string; // Reference to Speaker.id
+  speaker: string;   // Speaker name (for display)
   text: string;
   startTime: number;
   endTime: number;
@@ -53,7 +64,8 @@ export interface SpeakerAnalysisResult {
   startTime: number;
   endTime: number;
   dialogue: SpeakerDialogueLine[];
-  identifiedSpeakers: string[];
+  speakers: Speaker[];          // Array of speaker objects with IDs
+  identifiedSpeakers: string[]; // List of speaker names (backwards compatibility)
 }
 
 export interface DialogLine {
@@ -335,7 +347,7 @@ export function useTranscriptAnalysis(initialData?: {
   }, []);
 
   /**
-   * Clear analysis results
+   * Clear all analysis results
    */
   const clearAnalysis = useCallback(() => {
     setState(prev => ({
@@ -345,6 +357,41 @@ export function useTranscriptAnalysis(initialData?: {
       dialogResults: [],
       selectedBlockIds: new Set(),
       analysisProgress: 0,
+      error: null,
+    }));
+  }, []);
+
+  /**
+   * Clear only topic/statement analysis results
+   */
+  const clearTopicAnalysis = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      results: [],
+      selectedBlockIds: new Set(),
+      analysisProgress: 0,
+      error: null,
+    }));
+  }, []);
+
+  /**
+   * Clear only speaker analysis results
+   */
+  const clearSpeakerAnalysis = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      speakerResults: [],
+      error: null,
+    }));
+  }, []);
+
+  /**
+   * Clear only dialog/group analysis results
+   */
+  const clearDialogAnalysis = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      dialogResults: [],
       error: null,
     }));
   }, []);
@@ -385,19 +432,24 @@ export function useTranscriptAnalysis(initialData?: {
   }, []);
 
   /**
-   * Rename a speaker globally across all blocks
+   * Rename a speaker by ID globally across all blocks
    * Returns the updated speakerResults for saving
    */
-  const renameSpeaker = useCallback((oldName: string, newName: string): SpeakerAnalysisResult[] => {
+  const renameSpeaker = useCallback((speakerId: string, newName: string): SpeakerAnalysisResult[] => {
     let updatedResults: SpeakerAnalysisResult[] = [];
     setState(prev => {
-      updatedResults = prev.speakerResults.map(block => ({
-        ...block,
-        identifiedSpeakers: block.identifiedSpeakers.map(s => s === oldName ? newName : s),
-        dialogue: block.dialogue.map(line =>
-          line.speaker === oldName ? { ...line, speaker: newName } : line
-        ),
-      }));
+      updatedResults = prev.speakerResults.map(block => {
+        const speaker = block.speakers?.find(s => s.id === speakerId);
+        const oldName = speaker?.name || '';
+        return {
+          ...block,
+          speakers: block.speakers?.map(s => s.id === speakerId ? { ...s, name: newName } : s) || [],
+          identifiedSpeakers: block.identifiedSpeakers.map(s => s === oldName ? newName : s),
+          dialogue: block.dialogue.map(line =>
+            line.speakerId === speakerId ? { ...line, speaker: newName } : line
+          ),
+        };
+      });
       return {
         ...prev,
         speakerResults: updatedResults,
@@ -407,18 +459,47 @@ export function useTranscriptAnalysis(initialData?: {
   }, []);
 
   /**
-   * Add a new speaker globally (to all blocks' identifiedSpeakers list)
+   * Check if there are similar existing persons for a speaker name.
+   * Returns array of matches for user confirmation, or empty array if no matches.
+   */
+  const checkSimilarPersonsForSpeaker = useCallback(async (speakerName: string): Promise<PersonSimilarityMatch[]> => {
+    try {
+      const response = await findSimilarPersons(speakerName);
+      return response.data.matches || [];
+    } catch (error) {
+      console.error('Error checking for similar persons:', error);
+      return [];
+    }
+  }, []);
+
+  /**
+   * Add a new speaker globally (to all blocks' speakers list)
+   * If existingPerson is provided, uses that person's ID instead of creating a new one.
    * Returns the updated speakerResults for saving
    */
-  const addSpeaker = useCallback((speakerName: string): SpeakerAnalysisResult[] => {
+  const addSpeaker = useCallback((
+    speakerName: string, 
+    existingPerson?: { personId: string; name: string }
+  ): SpeakerAnalysisResult[] => {
+    const speakerId = existingPerson?.personId || crypto.randomUUID();
+    const displayName = existingPerson?.name || speakerName;
     let updatedResults: SpeakerAnalysisResult[] = [];
     setState(prev => {
-      updatedResults = prev.speakerResults.map(block => ({
-        ...block,
-        identifiedSpeakers: block.identifiedSpeakers.includes(speakerName)
-          ? block.identifiedSpeakers
-          : [...block.identifiedSpeakers, speakerName],
-      }));
+      updatedResults = prev.speakerResults.map(block => {
+        const speakerExists = block.speakers?.some(s => s.name === displayName || s.id === speakerId) || 
+                             block.identifiedSpeakers.includes(displayName);
+        if (speakerExists) return block;
+        return {
+          ...block,
+          speakers: [...(block.speakers || []), { 
+            id: speakerId, 
+            name: displayName,
+            personId: existingPerson?.personId,
+            isExistingPerson: !!existingPerson 
+          }],
+          identifiedSpeakers: [...block.identifiedSpeakers, displayName],
+        };
+      });
       return {
         ...prev,
         speakerResults: updatedResults,
@@ -428,13 +509,13 @@ export function useTranscriptAnalysis(initialData?: {
   }, []);
 
   /**
-   * Remove a speaker globally (only if not used in any dialogue lines)
+   * Remove a speaker by ID globally (only if not used in any dialogue lines)
    * Returns the updated speakerResults for saving, or null if speaker is in use
    */
-  const removeSpeaker = useCallback((speakerName: string): SpeakerAnalysisResult[] | null => {
+  const removeSpeaker = useCallback((speakerId: string): SpeakerAnalysisResult[] | null => {
     // Check if speaker is used in any dialogue line
     const isUsed = state.speakerResults.some(block =>
-      block.dialogue.some(line => line.speaker === speakerName)
+      block.dialogue.some(line => line.speakerId === speakerId)
     );
     if (isUsed) {
       return null; // Cannot remove speaker that is in use
@@ -442,10 +523,16 @@ export function useTranscriptAnalysis(initialData?: {
 
     let updatedResults: SpeakerAnalysisResult[] = [];
     setState(prev => {
-      updatedResults = prev.speakerResults.map(block => ({
-        ...block,
-        identifiedSpeakers: block.identifiedSpeakers.filter(s => s !== speakerName),
-      }));
+      updatedResults = prev.speakerResults.map(block => {
+        const speakerToRemove = block.speakers?.find(s => s.id === speakerId);
+        return {
+          ...block,
+          speakers: block.speakers?.filter(s => s.id !== speakerId) || [],
+          identifiedSpeakers: speakerToRemove 
+            ? block.identifiedSpeakers.filter(s => s !== speakerToRemove.name)
+            : block.identifiedSpeakers,
+        };
+      });
       return {
         ...prev,
         speakerResults: updatedResults,
@@ -455,26 +542,22 @@ export function useTranscriptAnalysis(initialData?: {
   }, [state.speakerResults]);
 
   /**
-   * Update speaker for a specific dialogue line
+   * Update speaker for a specific dialogue line by line ID
    * Returns the updated speakerResults for saving
    */
-  const updateLineSpeaker = useCallback((blockId: string, lineIndex: number, newSpeaker: string): SpeakerAnalysisResult[] => {
+  const updateLineSpeaker = useCallback((blockId: string, lineId: string, newSpeakerId: string): SpeakerAnalysisResult[] => {
     let updatedResults: SpeakerAnalysisResult[] = [];
     setState(prev => {
-      updatedResults = prev.speakerResults.map(block =>
-        block.blockId === blockId
-          ? {
-              ...block,
-              dialogue: block.dialogue.map((line, idx) =>
-                idx === lineIndex ? { ...line, speaker: newSpeaker } : line
-              ),
-              // Add new speaker to identifiedSpeakers if not already present
-              identifiedSpeakers: block.identifiedSpeakers.includes(newSpeaker)
-                ? block.identifiedSpeakers
-                : [...block.identifiedSpeakers, newSpeaker],
-            }
-          : block
-      );
+      updatedResults = prev.speakerResults.map(block => {
+        if (block.blockId !== blockId) return block;
+        const newSpeaker = block.speakers?.find(s => s.id === newSpeakerId);
+        return {
+          ...block,
+          dialogue: block.dialogue.map(line =>
+            line.id === lineId ? { ...line, speakerId: newSpeakerId, speaker: newSpeaker?.name || '' } : line
+          ),
+        };
+      });
       return {
         ...prev,
         speakerResults: updatedResults,
@@ -484,14 +567,14 @@ export function useTranscriptAnalysis(initialData?: {
   }, []);
 
   /**
-   * Get all unique speakers across all blocks
+   * Get all unique speakers across all blocks (as Speaker objects)
    */
-  const getAllSpeakers = useCallback((): string[] => {
-    const speakers = new Set<string>();
+  const getAllSpeakers = useCallback((): Speaker[] => {
+    const speakerMap = new Map<string, Speaker>();
     state.speakerResults.forEach(block => {
-      block.identifiedSpeakers.forEach(s => speakers.add(s));
+      block.speakers?.forEach(s => speakerMap.set(s.id, s));
     });
-    return Array.from(speakers).sort();
+    return Array.from(speakerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [state.speakerResults]);
 
   return {
@@ -503,11 +586,15 @@ export function useTranscriptAnalysis(initialData?: {
     clearSelections,
     selectAllBlocks,
     clearAnalysis,
+    clearTopicAnalysis,
+    clearSpeakerAnalysis,
+    clearDialogAnalysis,
     getSelectedBlocksData,
     setSpeakerResults,
     setFullAnalysisState,
     renameSpeaker,
     addSpeaker,
+    checkSimilarPersonsForSpeaker,
     removeSpeaker,
     updateLineSpeaker,
     getAllSpeakers,

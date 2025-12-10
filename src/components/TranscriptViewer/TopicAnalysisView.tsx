@@ -16,6 +16,7 @@ interface TopicAnalysisViewProps {
   onToggleBlockSelection: (blockId: string) => void;
   onSelectAllBlocks: () => void;
   onClearSelections: () => void;
+  onClearAnalysis: () => void;
   onSegmentClick: (start: number) => void;
   onAnalyzeSpeakers: () => void;
   expandedBlocks: Set<string>;
@@ -32,6 +33,7 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
   onToggleBlockSelection,
   onSelectAllBlocks,
   onClearSelections,
+  onClearAnalysis,
   onSegmentClick,
   onAnalyzeSpeakers,
   expandedBlocks,
@@ -81,7 +83,13 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
             onClick={onClearSelections}
             className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
           >
-            Clear
+            Clear Selections
+          </button>
+          <button
+            onClick={onClearAnalysis}
+            className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+          >
+            Clear Analysis
           </button>
         </div>
       </div>

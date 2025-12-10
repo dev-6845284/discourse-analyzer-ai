@@ -5,9 +5,20 @@ import { buildSpeakerIdentificationPrompt } from '../../llm_services/prompts';
 import { extractJson } from '../../llm_services/utils';
 import { addModelInteractionLog, completeModelInteractionLog } from '../logService';
 import { SegmentTiming } from './transcriptGrouper';
+import { randomUUID } from 'crypto';
+import { findBestMatchingPerson, PersonSimilarityMatch } from '../personService';
+
+export interface Speaker {
+  id: string;   // Unique ID (UUID or existing Person ID)
+  name: string; // Display name
+  personId?: string; // Reference to existing Person record if matched
+  isExistingPerson?: boolean; // True if matched to existing person
+}
 
 export interface SpeakerDialogueLine {
-  speaker: string;
+  id: string;       // Unique line ID
+  speakerId: string; // Reference to Speaker.id
+  speaker: string;  // Speaker name (for backwards compatibility and display)
   text: string;
   startTime: number; // Precise start time in seconds
   endTime: number;   // Precise end time in seconds
@@ -19,7 +30,8 @@ export interface SpeakerAnalysisResult {
   startTime: number;
   endTime: number;
   dialogue: SpeakerDialogueLine[];
-  identifiedSpeakers: string[]; // List of unique speakers found in this block
+  speakers: Speaker[]; // Array of speaker objects with IDs
+  identifiedSpeakers: string[]; // List of unique speaker names (backwards compatibility)
 }
 
 export interface SpeakerAnalysisRequest {
@@ -45,7 +57,8 @@ function matchDialogueToTiming(
   rawDialogue: Array<{ speaker: string; text: string; startTime?: number; endTime?: number }>,
   segmentTiming: SegmentTiming[],
   blockStartTime: number,
-  blockEndTime: number
+  blockEndTime: number,
+  speakerMap: Map<string, string> // name -> id mapping
 ): SpeakerDialogueLine[] {
   if (!rawDialogue || rawDialogue.length === 0) {
     return [];
@@ -119,6 +132,8 @@ function matchDialogueToTiming(
     if (bestMatch && bestMatchIndex >= 0) {
       usedSegmentIndices.add(bestMatchIndex);
       result.push({
+        id: randomUUID(),
+        speakerId: speakerMap.get(line.speaker) || '',
         speaker: line.speaker,
         text: line.text,
         startTime: bestMatch.start,
@@ -132,6 +147,8 @@ function matchDialogueToTiming(
       const timePerLine = duration / rawDialogue.length;
       
       result.push({
+        id: randomUUID(),
+        speakerId: speakerMap.get(line.speaker) || '',
         speaker: line.speaker,
         text: line.text,
         startTime: blockStartTime + (lineIndex * timePerLine),
@@ -222,12 +239,40 @@ export async function identifySpeakers(
       }
       result = JSON.parse(jsonText);
 
+      // Create speaker objects with IDs from identified speaker names
+      // Check for existing similar persons in the database first
+      const speakerMap = new Map<string, string>();
+      const speakers: Speaker[] = [];
+      
+      for (const name of (result.identifiedSpeakers || [])) {
+        // Try to find an existing similar person
+        const existingPerson = await findBestMatchingPerson(name);
+        
+        if (existingPerson) {
+          // Reuse existing person's ID and name
+          speakerMap.set(name, existingPerson.personId);
+          speakers.push({
+            id: existingPerson.personId,
+            name: existingPerson.name, // Use the canonical name from database
+            personId: existingPerson.personId,
+            isExistingPerson: true,
+          });
+          console.log(`[SpeakerIdentification] Matched "${name}" to existing person "${existingPerson.name}" (similarity: ${existingPerson.similarity.toFixed(2)})`);
+        } else {
+          // Create new speaker with random UUID
+          const id = randomUUID();
+          speakerMap.set(name, id);
+          speakers.push({ id, name, isExistingPerson: false });
+        }
+      }
+
       // Match LLM dialogue output to original segment timing with fuzzy matching
       const matchedDialogue = matchDialogueToTiming(
         result.dialogue,
         block.segmentTiming,
         block.startTime,
-        block.endTime
+        block.endTime,
+        speakerMap
       );
 
       // Count timing mismatches for logging
@@ -241,6 +286,7 @@ export async function identifySpeakers(
         startTime: block.startTime,
         endTime: block.endTime,
         dialogue: matchedDialogue,
+        speakers: speakers,
         identifiedSpeakers: result.identifiedSpeakers,
       };
 
@@ -260,9 +306,15 @@ export async function identifySpeakers(
       }
       console.error(`[SpeakerIdentification] Error analyzing block ${block.blockId}:`, error);
       
+      // Create fallback speaker
+      const unknownSpeakerId = randomUUID();
+      const fallbackSpeakers: Speaker[] = [{ id: unknownSpeakerId, name: 'Unknown' }];
+      
       // Push a fallback result with timing from segments
       const fallbackDialogue: SpeakerDialogueLine[] = block.segmentTiming.length > 0
-        ? block.segmentTiming.map(seg => ({
+        ? block.segmentTiming.map((seg, idx) => ({
+            id: randomUUID(),
+            speakerId: unknownSpeakerId,
             speaker: 'Unknown',
             text: seg.text,
             startTime: seg.start,
@@ -270,6 +322,8 @@ export async function identifySpeakers(
             timingMismatch: false,
           }))
         : [{
+            id: randomUUID(),
+            speakerId: unknownSpeakerId,
             speaker: 'Unknown',
             text: block.text,
             startTime: block.startTime,
@@ -282,6 +336,7 @@ export async function identifySpeakers(
         startTime: block.startTime,
         endTime: block.endTime,
         dialogue: fallbackDialogue,
+        speakers: fallbackSpeakers,
         identifiedSpeakers: ['Unknown'],
       });
       previousContext = null; // Reset context on error

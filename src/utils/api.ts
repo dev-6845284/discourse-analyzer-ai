@@ -219,4 +219,21 @@ export const analyzeSessionDialog = async (
   return api.post(`/analysis/sessions/${sessionId}/analyze-dialog`, { language, fastModel, betterModel, apiKeys });
 };
 
+// Person similarity search
+export interface PersonSimilarityMatch {
+  personId: string;
+  name: string;
+  aliases: string[];
+  similarity: number;
+  isExact: boolean;
+}
+
+export const findSimilarPersons = async (name: string, threshold?: number) => {
+  const params: Record<string, string> = { name };
+  if (threshold !== undefined) {
+    params.threshold = threshold.toString();
+  }
+  return api.get<{ matches: PersonSimilarityMatch[] }>('/people/find-similar', { params });
+};
+
 export default api;

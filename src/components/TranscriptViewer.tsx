@@ -83,6 +83,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     handleStartStep,
     handleRenameSpeaker,
     handleAddSpeaker,
+    checkSimilarPersonsBeforeAdd,
     handleRemoveSpeaker,
     handleUpdateLineSpeaker,
   } = useTranscriptViewer(props);
@@ -236,6 +237,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onToggleBlockSelection={topicAnalysis.toggleBlockSelection}
             onSelectAllBlocks={topicAnalysis.selectAllBlocks}
             onClearSelections={topicAnalysis.clearSelections}
+            onClearAnalysis={topicAnalysis.clearTopicAnalysis}
             onSegmentClick={handleSegmentClick}
             onAnalyzeSpeakers={handleAnalyzeSpeakers}
             expandedBlocks={expandedBlocks}
@@ -251,11 +253,12 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onAnalyzeDialog={handleAnalyzeDialog}
             onImportSpeakers={handleImportSpeakersClick}
             onExportSpeakers={handleExportSpeakers}
-            onClearAnalysis={topicAnalysis.clearAnalysis}
+            onClearAnalysis={topicAnalysis.clearSpeakerAnalysis}
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
             onRenameSpeaker={handleRenameSpeaker}
             onAddSpeaker={handleAddSpeaker}
+            onCheckSimilarPersons={checkSimilarPersonsBeforeAdd}
             onRemoveSpeaker={handleRemoveSpeaker}
             onUpdateLineSpeaker={handleUpdateLineSpeaker}
           />
@@ -271,7 +274,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             highlightedDialogLineId={highlightedDialogLineId}
             dialogLineRefs={dialogLineRefs}
             onSummaryItemClick={handleSummaryItemClick}
-            onClearAnalysis={topicAnalysis.clearAnalysis}
+            onClearAnalysis={topicAnalysis.clearDialogAnalysis}
             onAnalyzeDialog={handleAnalyzeDialog}
             isSelectionMode={isSelectionMode}
             selectedStatements={selectedStatements}
