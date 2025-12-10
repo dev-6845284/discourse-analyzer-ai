@@ -138,8 +138,27 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
             <div className="p-4 border-t border-gray-700 bg-gray-900/50 space-y-4">
               <TopicTagCloud tags={block.tags} mainTopics={block.mainTopics} />
               <div className="mt-3 pt-3 border-t border-gray-700">
-                <p className="text-xs text-gray-400 mb-2 font-semibold">Block Text:</p>
-                <p className="text-xs text-gray-400 line-clamp-4">{block.text}</p>
+                <p className="text-xs text-gray-400 mb-2 font-semibold">Segments:</p>
+                {block.segments && block.segments.length > 0 ? (
+                  <div className="space-y-2 text-xs">
+                    {block.segments.map((segment, idx) => (
+                      <div key={idx} className="flex gap-3">
+                        <span className="font-mono text-blue-400 flex-shrink-0 w-12">
+                          {formatTimestamp(segment.timestamp)}
+                        </span>
+                        {segment.endTime !== undefined && (
+                          <span className="font-mono text-blue-400/60 flex-shrink-0">→ {formatTimestamp(segment.endTime)}</span>
+                        )}
+                        <span className="text-gray-400 flex-1">{segment.text}</span>
+                        {segment.timingMismatch && (
+                          <span className="text-amber-400 flex-shrink-0" title="Timing was fuzzy-matched">⚠</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 line-clamp-4">{block.text || '(No segment data)'}</p>
+                )}
               </div>
             </div>
           )}

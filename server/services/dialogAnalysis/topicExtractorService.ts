@@ -14,6 +14,11 @@ export interface TranscriptAnalysisRequest {
     startTime: number;
     endTime: number;
     text: string;
+    segmentTiming?: Array<{
+      start: number;
+      end: number;
+      text: string;
+    }>;
   }>;
   language: string;
   model: string;
@@ -30,7 +35,8 @@ export async function extractBlockTopics(
   text: string,
   model: string,
   apiKeys: Record<string, string>,
-  language: string
+  language: string,
+  segmentTiming?: Array<{ start: number; end: number; text: string }>
 ): Promise<TopicAnalysisResult> {
   try {
     let result: TopicAnalysisResult;
@@ -62,12 +68,20 @@ export async function extractBlockTopics(
       result = await geminiService.extractTopics(apiKey, text, language, 0.3);
     }
 
+    // Convert segmentTiming to segments array format
+    const segments = segmentTiming?.map(seg => ({
+      timestamp: seg.start,
+      endTime: seg.end,
+      text: seg.text,
+    })) || [];
+
     return {
       ...result,
       blockId,
       startTime,
       endTime,
       text,
+      segments,
     };
   } catch (error: any) {
     console.error(`Error extracting topics for block ${blockId}:`, error);
@@ -80,6 +94,7 @@ export async function extractBlockTopics(
       mainTopics: [],
       tags: [],
       summary: 'Error analyzing block',
+      segments: [],
     };
   }
 }
@@ -101,7 +116,8 @@ export async function extractTranscriptTopics(
       block.text,
       request.model,
       request.apiKeys,
-      request.language
+      request.language,
+      block.segmentTiming
     );
     results.push(result);
 

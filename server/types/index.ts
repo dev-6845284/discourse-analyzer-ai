@@ -171,11 +171,19 @@ export interface WeightedTag {
   frequency: number; // How many times mentioned (raw count)
 }
 
+export interface SegmentItem {
+  timestamp: number; // seconds from start
+  endTime?: number; // optional end time
+  text: string;
+  timingMismatch?: boolean; // true if timing was fuzzy-matched
+}
+
 export interface TopicAnalysisResult {
   blockId?: string;
   startTime?: number;
   endTime?: number;
   text?: string;
+  segments?: SegmentItem[]; // Structured segments with separated timestamps
   mainTopics: string[]; // Top 3-5 main topics
   tags: WeightedTag[]; // All extracted tags with weights
   summary: string; // Brief 1-2 sentence summary of block content

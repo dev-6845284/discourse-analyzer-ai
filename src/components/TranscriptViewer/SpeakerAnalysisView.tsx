@@ -6,6 +6,10 @@ import Spinner from '../Spinner';
 interface DialogLine {
   speaker: string;
   text: string;
+  startTime?: number;
+  endTime?: number;
+  timestamp?: string;
+  timingMismatch?: boolean;
 }
 
 interface SpeakerBlock {
@@ -154,19 +158,37 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             </div>
           </div>
           
-          <div className="p-4 space-y-4">
-            {block.dialogue.map((line, idx) => (
-              <div key={idx} className="flex gap-4">
-                <div className="w-32 flex-shrink-0 text-right">
-                  <span className="text-sm font-bold text-purple-400 block truncate" title={line.speaker}>
+          <div className="p-4">
+            {/* Table header */}
+            <div className="grid grid-cols-[80px_80px_150px_1fr] gap-3 mb-3 pb-3 border-b border-gray-700 text-xs font-semibold text-gray-400">
+              <div>Start</div>
+              <div>End</div>
+              <div>Speaker</div>
+              <div>Text</div>
+            </div>
+            
+            {/* Dialogue rows */}
+            <div className="space-y-1">
+              {block.dialogue.map((line, idx) => (
+                <div key={idx} className="grid grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-700/30 rounded px-2 transition-colors">
+                  <div className="font-mono text-blue-400">
+                    {line.startTime !== undefined ? formatTimestamp(line.startTime) : '—'}
+                  </div>
+                  <div className="font-mono text-blue-400/60">
+                    {line.endTime !== undefined ? formatTimestamp(line.endTime) : '—'}
+                  </div>
+                  <div className="text-purple-400 font-semibold truncate" title={line.speaker}>
                     {line.speaker}
-                  </span>
+                  </div>
+                  <div className="text-gray-300 flex items-center gap-2">
+                    <span className="flex-1">{line.text}</span>
+                    {line.timingMismatch && (
+                      <span className="text-amber-400 flex-shrink-0" title="Timing was fuzzy-matched">⚠</span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-gray-300 leading-relaxed">{line.text}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       ))}

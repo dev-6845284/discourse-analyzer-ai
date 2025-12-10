@@ -9,6 +9,13 @@ export interface WeightedTag {
   frequency: number;
 }
 
+export interface SegmentItem {
+  timestamp: number; // seconds from start
+  endTime?: number; // optional end time
+  text: string;
+  timingMismatch?: boolean; // true if timing was fuzzy-matched
+}
+
 export interface SummaryItem {
   text: string;
   timestamp: string; // Format: "HH:MM:SS" or "N/A"
@@ -19,7 +26,8 @@ export interface TopicAnalysisResult {
   blockId: string;
   startTime: number;
   endTime: number;
-  text: string;
+  text?: string; // deprecated: use segments instead
+  segments?: SegmentItem[]; // structured segments with separated timestamps
   mainTopics: string[];
   tags: WeightedTag[];
   summary: string;
@@ -32,6 +40,7 @@ export interface SpeakerDialogueLine {
   startTime: number;
   endTime: number;
   timingMismatch?: boolean;
+  timestamp?: string; // Formatted time for display (e.g., "HH:MM:SS")
 }
 
 export interface SpeakerAnalysisResult {
