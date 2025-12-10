@@ -51,7 +51,7 @@ const getStepStyles = (
   isActive: boolean,
   canNavigate: boolean
 ): string => {
-  const baseStyles = 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200';
+  const baseStyles = 'flex items-center justify-center gap-1 px-2 py-2 rounded-lg font-medium transition-all duration-200';
   
   if (isActive) {
     return `${baseStyles} bg-cyan-600 text-white shadow-lg shadow-cyan-600/20`;
@@ -155,12 +155,9 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
               {/* Step icon */}
               {getStepIcon(step.step)}
               
-              {/* Step label */}
-              <span className="hidden sm:inline">{step.label}</span>
-              
-              {/* Result count */}
+              {/* Result count as badge */}
               {step.resultCount !== undefined && step.resultCount > 0 && (
-                <span className="text-xs opacity-75">({step.resultCount})</span>
+                <span className="text-xs opacity-75 ml-0.5">({step.resultCount})</span>
               )}
               
               {/* Status indicator */}
