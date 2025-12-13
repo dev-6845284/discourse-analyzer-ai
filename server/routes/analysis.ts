@@ -314,7 +314,7 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
     }
 
     await analysisSessionService.updateSessionStatus(sessionId, 'identifying_speakers');
-    logId = addLogEntry(sessionId, 'identify-speakers', {
+    logId = addLogEntry(req.session.id!, 'identify-speakers', {
       blocksCount: selectedBlocks.length,
       language,
       model
@@ -327,12 +327,12 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
       language: language || 'lt',
       model: model || 'gemini',
       apiKeys,
-      sessionId,
+      sessionId: req.session.id!,
       logId,
     });
 
     if (logId) {
-      updateLogEntry(sessionId, logId, { resultsCount: results.length });
+      updateLogEntry(req.session.id!, logId, { resultsCount: results.length });
     }
     await analysisSessionService.updateSessionStep(sessionId, 'speakerAnalysis', results, 'identifying_speakers');
 
@@ -341,7 +341,7 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
   } catch (error: any) {
     console.error('Error analyzing transcript speakers:', error);
     if (logId) {
-      updateLogEntry(sessionId, logId, undefined, error);
+      updateLogEntry(req.session.id!, logId, undefined, error);
     }
     await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
     res.status(500).json({
@@ -378,7 +378,7 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
       return res.status(400).json({ message: 'API keys are required' });
     }
 
-    logId = addLogEntry(req.session.id || sessionId, 'analyze-dialog-topics', {
+    logId = addLogEntry(req.session.id!, 'analyze-dialog-topics', {
       dialogBlockCount: speakerData.speakerAnalysis.length,
       language: language || 'lt',
       fastModel,
@@ -395,7 +395,7 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
       fastModel,
       betterModel,
       apiKeys,
-      sessionId: req.session.id || sessionId,
+      sessionId: req.session.id!,
       logId,
     });
 
@@ -404,7 +404,7 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
     console.log(`[DialogAnalysis] Session ${sessionId}: Successfully analyzed ${results.length} topic groups`);
 
     if (logId) {
-      updateLogEntry(req.session.id || sessionId, logId, {
+      updateLogEntry(req.session.id!, logId, {
         topicGroupCount: results.length,
         totalLinesAnalyzed: results.reduce((sum, g) => sum + g.dialogLines.length, 0),
       });
@@ -414,7 +414,7 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
   } catch (error: any) {
     console.error('Error analyzing dialog topics:', error);
     if (logId) {
-      updateLogEntry(req.session.id || sessionId, logId, undefined, error);
+      updateLogEntry(req.session.id!, logId, undefined, error);
     }
     await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
     res.status(500).json({

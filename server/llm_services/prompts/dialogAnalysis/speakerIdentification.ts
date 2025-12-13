@@ -32,6 +32,16 @@ Identify the Host and any Guests/Speakers. If names are mentioned, use them. Oth
 IMPORTANT: You MUST include the startTime and endTime (in seconds) for each dialogue line.
 Use the segment timing information provided to assign accurate timestamps.
 
+TRANSCRIPTION QUALITY NOTE:
+The source transcription may contain spelling mistakes, missing punctuation, inconsistent casing, repeated words, or broken formatting.
+You MUST lightly edit the dialogue text to improve readability:
+- Fix obvious spelling/typos when you are confident.
+- Add/repair punctuation, capitalization, and spacing.
+- Remove accidental duplicated words (e.g., "the the") and obvious ASR artifacts.
+- Keep disfluencies only if they seem intentional/meaningful; otherwise you may remove stutters like "I-I-I".
+- Preserve proper nouns, technical terms, and names; do NOT guess unknown names—keep as-is if uncertain.
+- Do NOT add new information, do NOT paraphrase, and do NOT change meaning. Keep wording as close to the original as possible, just cleaned.
+
 Language of the transcript: ${language}
 Output Language: ${language}
 
@@ -67,8 +77,8 @@ Return ONLY a valid JSON object with the following structure:
 
 IMPORTANT:
 - startTime and endTime are in SECONDS (not MM:SS format). Use the segment timing provided above.
-- Preserve the original meaning and content.
-- Do not summarize, keep the dialogue as close to original as possible but cleaned up.
+- Preserve the original meaning and content; only apply spelling/formatting cleanup as described.
+- Do not summarize. Do not invent missing words. If something is unclear/garbled, keep it minimal and faithful.
 - Return ONLY JSON.
 `;
 

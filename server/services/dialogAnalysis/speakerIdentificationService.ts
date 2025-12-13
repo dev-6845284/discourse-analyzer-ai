@@ -6,24 +6,49 @@ import { extractJson } from '../../llm_services/utils';
 import { addModelInteractionLog, completeModelInteractionLog } from '../logService';
 import { SegmentTiming } from './transcriptGrouper';
 import { randomUUID } from 'crypto';
-import { findBestMatchingPerson, PersonSimilarityMatch } from '../personService';
+import { findBestMatchingPerson } from '../personService';
 import { withPseudonymIfGeneric } from '../../utils/pseudonym';
+import { calculateNameSimilarity, normalizeName } from '../../utils/nameMatching';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Temperature for LLM calls - 0 for deterministic output */
+const LLM_TEMPERATURE = 0;
+
+/** Number of dialogue lines to pass as context to next block */
+const CONTEXT_LINES_COUNT = 5;
+
+/** Default similarity threshold for cross-block speaker matching */
+const DEFAULT_SPEAKER_SIMILARITY_THRESHOLD = 0.85;
+
+/** Model configurations */
+const MODEL_CONFIG = {
+  chatgpt: { provider: 'chatgpt', model: 'gpt-4o-mini' },
+  grok: { provider: 'grok', model: 'grok-2-latest' },
+  gemini: { provider: 'gemini', model: 'gemini-1.5-flash' },
+} as const;
+
+// ============================================================================
+// Interfaces
+// ============================================================================
 
 export interface Speaker {
-  id: string;   // Unique ID (UUID or existing Person ID)
-  name: string; // Display name
-  personId?: string; // Reference to existing Person record if matched
-  isExistingPerson?: boolean; // True if matched to existing person
+  id: string;
+  name: string;
+  personId?: string;
+  isExistingPerson?: boolean;
 }
 
 export interface SpeakerDialogueLine {
-  id: string;       // Unique line ID
-  speakerId: string; // Reference to Speaker.id
-  speaker: string;  // Speaker name (for backwards compatibility and display)
+  id: string;
+  speakerId: string;
+  speaker: string;
   text: string;
-  startTime: number; // Precise start time in seconds
-  endTime: number;   // Precise end time in seconds
-  timingMismatch?: boolean; // True if timing was fuzzy-matched
+  startTime: number;
+  endTime: number;
+  timingMismatch?: boolean;
 }
 
 export interface SpeakerAnalysisResult {
@@ -31,8 +56,9 @@ export interface SpeakerAnalysisResult {
   startTime: number;
   endTime: number;
   dialogue: SpeakerDialogueLine[];
-  speakers: Speaker[]; // Array of speaker objects with IDs
-  identifiedSpeakers: string[]; // List of unique speaker names (backwards compatibility)
+  speakers: Speaker[];
+  /** List of unique speaker names (derived from speakers array) */
+  identifiedSpeakers: string[];
 }
 
 export interface SpeakerAnalysisRequest {
@@ -41,14 +67,92 @@ export interface SpeakerAnalysisRequest {
     startTime: number;
     endTime: number;
     text: string;
-    segmentTiming: SegmentTiming[]; // Structured timing data
+    segmentTiming: SegmentTiming[];
   }>;
   language: string;
   model: string;
   apiKeys: Record<string, string>;
   sessionId?: string;
   logId?: string;
+  /** Similarity threshold for cross-block speaker matching (default: 0.85) */
+  speakerSimilarityThreshold?: number;
 }
+
+/** Context passed between blocks for speaker continuity */
+interface BlockContext {
+  /** Last N dialogue lines for LLM context */
+  lastLines: Array<{ speaker: string; text: string }>;
+  /** Accumulated speakers from previous blocks */
+  knownSpeakers: Speaker[];
+}
+
+/** Internal speaker registry for cross-block tracking */
+interface SpeakerRegistry {
+  speakers: Map<string, Speaker>; // normalized name -> Speaker
+  threshold: number;
+}
+
+// ============================================================================
+// Speaker Registry Functions
+// ============================================================================
+
+/**
+ * Create a new speaker registry for tracking speakers across blocks
+ */
+function createSpeakerRegistry(threshold: number): SpeakerRegistry {
+  return {
+    speakers: new Map(),
+    threshold,
+  };
+}
+
+/**
+ * Find an existing speaker in the registry using fuzzy name matching
+ */
+function findSpeakerInRegistry(
+  registry: SpeakerRegistry,
+  name: string
+): Speaker | null {
+  const normalizedInput = normalizeName(name);
+  
+  // First check for exact normalized match
+  if (registry.speakers.has(normalizedInput)) {
+    return registry.speakers.get(normalizedInput)!;
+  }
+  
+  // Check fuzzy similarity against all registered speakers
+  let bestMatch: Speaker | null = null;
+  let bestSimilarity = 0;
+  
+  for (const [, speaker] of registry.speakers) {
+    const similarity = calculateNameSimilarity(name, speaker.name);
+    if (similarity >= registry.threshold && similarity > bestSimilarity) {
+      bestSimilarity = similarity;
+      bestMatch = speaker;
+    }
+  }
+  
+  return bestMatch;
+}
+
+/**
+ * Register a speaker in the registry
+ */
+function registerSpeaker(registry: SpeakerRegistry, speaker: Speaker): void {
+  const normalizedName = normalizeName(speaker.name);
+  registry.speakers.set(normalizedName, speaker);
+}
+
+/**
+ * Get all speakers from the registry as an array
+ */
+function getAllSpeakers(registry: SpeakerRegistry): Speaker[] {
+  return Array.from(registry.speakers.values());
+}
+
+// ============================================================================
+// Timing Matching
+// ============================================================================
 
 /**
  * Fuzzy match LLM dialogue output to original segment timing.
@@ -59,34 +163,36 @@ function matchDialogueToTiming(
   segmentTiming: SegmentTiming[],
   blockStartTime: number,
   blockEndTime: number,
-  speakerMap: Map<string, string> // name -> id mapping
+  speakerIdMap: Map<string, string>
 ): SpeakerDialogueLine[] {
   if (!rawDialogue || rawDialogue.length === 0) {
     return [];
   }
 
   const result: SpeakerDialogueLine[] = [];
-  let usedSegmentIndices = new Set<number>();
+  const usedSegmentIndices = new Set<number>();
+  const segmentCount = segmentTiming.length;
+  const dialogueCount = rawDialogue.length;
+  const blockDuration = blockEndTime - blockStartTime;
+  const timePerLine = blockDuration / dialogueCount;
 
-  for (const line of rawDialogue) {
+  for (let lineIndex = 0; lineIndex < dialogueCount; lineIndex++) {
+    const line = rawDialogue[lineIndex];
     let bestMatch: SegmentTiming | null = null;
     let bestMatchIndex = -1;
     let bestScore = 0;
     let timingMismatch = false;
 
-    // First, try to use LLM-provided timing if within bounds
+    // Try to use LLM-provided timing if within bounds
     if (line.startTime !== undefined && line.endTime !== undefined) {
       const llmStart = line.startTime;
       const llmEnd = line.endTime;
       
-      // Validate LLM timing is within block bounds
       if (llmStart >= blockStartTime && llmEnd <= blockEndTime + 1) {
-        // Find the segment that best matches this timing
-        for (let i = 0; i < segmentTiming.length; i++) {
+        for (let i = 0; i < segmentCount; i++) {
           if (usedSegmentIndices.has(i)) continue;
           
           const seg = segmentTiming[i];
-          // Check if segment overlaps with LLM timing
           const overlap = Math.min(llmEnd, seg.end) - Math.max(llmStart, seg.start);
           const segDuration = seg.end - seg.start;
           
@@ -102,17 +208,17 @@ function matchDialogueToTiming(
       }
     }
 
-    // If no good match from LLM timing, try text-based fuzzy matching
+    // Fallback to text-based fuzzy matching if LLM timing is poor
     if (!bestMatch || bestScore < 0.3) {
-      const lineWords = line.text.toLowerCase().split(/\s+/).slice(0, 5); // First 5 words
+      const lineWords = line.text.toLowerCase().split(/\s+/).slice(0, 5);
+      const lineWordCount = lineWords.length;
       
-      for (let i = 0; i < segmentTiming.length; i++) {
+      for (let i = 0; i < segmentCount; i++) {
         if (usedSegmentIndices.has(i)) continue;
         
         const seg = segmentTiming[i];
         const segWords = seg.text.toLowerCase().split(/\s+/);
         
-        // Count matching words
         let matchCount = 0;
         for (const word of lineWords) {
           if (segWords.some(sw => sw.includes(word) || word.includes(sw))) {
@@ -120,21 +226,23 @@ function matchDialogueToTiming(
           }
         }
         
-        const score = lineWords.length > 0 ? matchCount / lineWords.length : 0;
+        const score = lineWordCount > 0 ? matchCount / lineWordCount : 0;
         if (score > bestScore) {
           bestScore = score;
           bestMatch = seg;
           bestMatchIndex = i;
-          timingMismatch = true; // Mark as fuzzy-matched
+          timingMismatch = true;
         }
       }
     }
+
+    const speakerId = speakerIdMap.get(line.speaker) || '';
 
     if (bestMatch && bestMatchIndex >= 0) {
       usedSegmentIndices.add(bestMatchIndex);
       result.push({
         id: randomUUID(),
-        speakerId: speakerMap.get(line.speaker) || '',
+        speakerId,
         speaker: line.speaker,
         text: line.text,
         startTime: bestMatch.start,
@@ -143,18 +251,14 @@ function matchDialogueToTiming(
       });
     } else {
       // Fallback: interpolate timing
-      const lineIndex = result.length;
-      const duration = blockEndTime - blockStartTime;
-      const timePerLine = duration / rawDialogue.length;
-      
       result.push({
         id: randomUUID(),
-        speakerId: speakerMap.get(line.speaker) || '',
+        speakerId,
         speaker: line.speaker,
         text: line.text,
         startTime: blockStartTime + (lineIndex * timePerLine),
         endTime: blockStartTime + ((lineIndex + 1) * timePerLine),
-        timingMismatch: true, // Definitely a mismatch since we're interpolating
+        timingMismatch: true,
       });
     }
   }
@@ -162,31 +266,220 @@ function matchDialogueToTiming(
   return result;
 }
 
+// ============================================================================
+// Context Building
+// ============================================================================
+
 /**
- * Main function to identify speakers in transcript blocks
+ * Build context string for LLM prompt including known speakers
+ */
+function buildContextForPrompt(context: BlockContext | null): string | null {
+  if (!context) return null;
+  
+  const parts: string[] = [];
+  
+  // Add known speakers list
+  if (context.knownSpeakers.length > 0) {
+    const speakerNames = context.knownSpeakers.map(s => s.name).join(', ');
+    parts.push(`IDENTIFIED SPEAKERS SO FAR: ${speakerNames}`);
+  }
+  
+  // Add last dialogue lines
+  if (context.lastLines.length > 0) {
+    parts.push('LAST LINES FROM PREVIOUS SEGMENT:');
+    for (const line of context.lastLines) {
+      parts.push(`${line.speaker}: ${line.text}`);
+    }
+  }
+  
+  return parts.length > 0 ? parts.join('\n') : null;
+}
+
+/**
+ * Extract context from processed dialogue for next block
+ */
+function extractContextFromDialogue(
+  dialogue: SpeakerDialogueLine[],
+  allSpeakers: Speaker[]
+): BlockContext {
+  const lastLines = dialogue.slice(-CONTEXT_LINES_COUNT).map(d => ({
+    speaker: d.speaker,
+    text: d.text,
+  }));
+  
+  return {
+    lastLines,
+    knownSpeakers: allSpeakers,
+  };
+}
+
+// ============================================================================
+// LLM Service Selection
+// ============================================================================
+
+/**
+ * Get LLM configuration based on model and available API keys
+ */
+function getLlmConfig(
+  model: string,
+  apiKeys: Record<string, string>
+): { provider: string; modelName: string; apiKey: string } {
+  if (model === 'chatgpt' && apiKeys.chatgpt) {
+    return {
+      provider: MODEL_CONFIG.chatgpt.provider,
+      modelName: MODEL_CONFIG.chatgpt.model,
+      apiKey: apiKeys.chatgpt,
+    };
+  }
+  
+  if (model === 'grok' && apiKeys.grok) {
+    return {
+      provider: MODEL_CONFIG.grok.provider,
+      modelName: MODEL_CONFIG.grok.model,
+      apiKey: apiKeys.grok,
+    };
+  }
+  
+  const geminiKey = apiKeys.gemini || process.env.GEMINI_API_KEY;
+  if (!geminiKey) {
+    throw new Error('Gemini API key is missing');
+  }
+  
+  return {
+    provider: MODEL_CONFIG.gemini.provider,
+    modelName: MODEL_CONFIG.gemini.model,
+    apiKey: geminiKey,
+  };
+}
+
+/**
+ * Call the appropriate LLM service
+ */
+async function callLlmService(
+  provider: string,
+  apiKey: string,
+  modelName: string,
+  prompt: string
+): Promise<string> {
+  const options = { model: modelName, prompt, temperature: LLM_TEMPERATURE };
+  
+  switch (provider) {
+    case 'chatgpt':
+      return chatGptService.generateContent(apiKey, options);
+    case 'grok':
+      return grokService.generateContent(apiKey, options);
+    case 'gemini':
+    default:
+      return geminiService.generateContent(apiKey, options);
+  }
+}
+
+// ============================================================================
+// Speaker Processing
+// ============================================================================
+
+/**
+ * Process identified speakers from LLM response, matching against registry
+ */
+async function processIdentifiedSpeakers(
+  identifiedNames: string[],
+  registry: SpeakerRegistry,
+  sessionId: string | undefined,
+  blockId: string,
+  blockStartTime: number
+): Promise<{ speakers: Speaker[]; speakerIdMap: Map<string, string> }> {
+  const speakers: Speaker[] = [];
+  const speakerIdMap = new Map<string, string>();
+  const processedNames = new Set<string>();
+  
+  for (const rawName of identifiedNames) {
+    // Apply pseudonym to generic names
+    const displayName = withPseudonymIfGeneric(
+      rawName,
+      `${sessionId || ''}:${blockId}:${blockStartTime}`
+    );
+    
+    // Skip if already processed in this block (handles duplicates from LLM)
+    if (processedNames.has(displayName)) continue;
+    processedNames.add(displayName);
+    
+    // Check registry for existing speaker (cross-block continuity)
+    const existingInRegistry = findSpeakerInRegistry(registry, displayName);
+    if (existingInRegistry) {
+      speakers.push(existingInRegistry);
+      speakerIdMap.set(displayName, existingInRegistry.id);
+      console.log(`[SpeakerIdentification] Reusing speaker "${existingInRegistry.name}" for "${displayName}" (cross-block match)`);
+      continue;
+    }
+    
+    // Check database for existing person
+    const existingPerson = await findBestMatchingPerson(displayName);
+    
+    if (existingPerson) {
+      const speaker: Speaker = {
+        id: existingPerson.personId,
+        name: existingPerson.name,
+        personId: existingPerson.personId,
+        isExistingPerson: true,
+      };
+      speakers.push(speaker);
+      speakerIdMap.set(displayName, speaker.id);
+      registerSpeaker(registry, speaker);
+      console.log(`[SpeakerIdentification] Matched "${displayName}" to existing person "${existingPerson.name}" (similarity: ${existingPerson.similarity.toFixed(2)})`);
+    } else {
+      // Create new speaker
+      const speaker: Speaker = {
+        id: randomUUID(),
+        name: displayName,
+        isExistingPerson: false,
+      };
+      speakers.push(speaker);
+      speakerIdMap.set(displayName, speaker.id);
+      registerSpeaker(registry, speaker);
+    }
+  }
+  
+  return { speakers, speakerIdMap };
+}
+
+// ============================================================================
+// Main Export
+// ============================================================================
+
+/**
+ * Main function to identify speakers in transcript blocks.
+ * Processes blocks sequentially, maintaining speaker continuity across blocks.
  */
 export async function identifySpeakers(
   request: SpeakerAnalysisRequest
 ): Promise<SpeakerAnalysisResult[]> {
-  const { blocks, language, model, apiKeys, sessionId, logId } = request;
+  const {
+    blocks,
+    language,
+    model,
+    apiKeys,
+    sessionId,
+    logId,
+    speakerSimilarityThreshold = DEFAULT_SPEAKER_SIMILARITY_THRESHOLD,
+  } = request;
+  
+  // Initialize results and tracking structures
   const results: SpeakerAnalysisResult[] = [];
-  let previousContext: string | null = null;
-  // Determine provider and model name for logging
-  let provider: string;
-  let modelName: string;
-  if (model === 'chatgpt' && apiKeys.chatgpt) {
-    provider = 'chatgpt';
-    modelName = 'gpt-4o-mini';
-  } else if (model === 'grok' && apiKeys.grok) {
-    provider = 'grok';
-    modelName = 'grok-2-latest';
-  } else {
-    provider = 'gemini';
-    modelName = 'gemini-1.5-flash';
-  }
-
+  const registry = createSpeakerRegistry(speakerSimilarityThreshold);
+  let blockContext: BlockContext | null = null;
+  
+  // Get LLM configuration once before the loop
+  const llmConfig = getLlmConfig(model, apiKeys);
+  const { provider, modelName, apiKey } = llmConfig;
+  
   for (const block of blocks) {
-    const prompt = buildSpeakerIdentificationPrompt(block.text, block.segmentTiming, previousContext, language);
+    const contextString = buildContextForPrompt(blockContext);
+    const prompt = buildSpeakerIdentificationPrompt(
+      block.text,
+      block.segmentTiming,
+      contextString,
+      language
+    );
     
     // Log the LLM request
     let interactionId: string | null = null;
@@ -200,36 +493,11 @@ export async function identifySpeakers(
       });
     }
 
-    let result: any;
     try {
-      let responseText: string;
-
-      if (model === 'chatgpt' && apiKeys.chatgpt) {
-        responseText = await chatGptService.generateContent(apiKeys.chatgpt, {
-          model: 'gpt-4o-mini',
-          prompt,
-          temperature: 0,
-        });
-      } else if (model === 'grok' && apiKeys.grok) {
-        responseText = await grokService.generateContent(apiKeys.grok, {
-          model: 'grok-2-latest',
-          prompt,
-          temperature: 0,
-        });
-      } else {
-        // Default to Gemini
-        const apiKey = apiKeys.gemini || process.env.GEMINI_API_KEY;
-        if (!apiKey) throw new Error('Gemini API key is missing');
-        
-        responseText = await geminiService.generateContent(apiKey, {
-          model: 'gemini-1.5-flash',
-          prompt,
-          temperature: 0,
-        });
-      }
-
+      const responseText = await callLlmService(provider, apiKey, modelName, prompt);
+      
       // Log successful response
-      if (sessionId && logId) {
+      if (sessionId && logId && interactionId) {
         completeModelInteractionLog(sessionId, logId, interactionId, { responseText });
       }
 
@@ -237,85 +505,70 @@ export async function identifySpeakers(
       if (!jsonText) {
         throw new Error('No valid JSON found in response');
       }
-      result = JSON.parse(jsonText);
-
-      // Create speaker objects with IDs from identified speaker names
-      // Check for existing similar persons in the database first
-      const speakerMap = new Map<string, string>();
-      const speakers: Speaker[] = [];
       
-      for (const name of (result.identifiedSpeakers || [])) {
-        // Augment generic placeholder names with a deterministic pseudonym to keep them distinct
-        const displayName = withPseudonymIfGeneric(name, `${sessionId || ''}:${block.blockId}:${block.startTime}`);
-        // Try to find an existing similar person
-        const existingPerson = await findBestMatchingPerson(displayName);
-        
-        if (existingPerson) {
-          // Reuse existing person's ID and name
-          speakerMap.set(displayName, existingPerson.personId);
-          speakers.push({
-            id: existingPerson.personId,
-            name: existingPerson.name, // Use the canonical name from database
-            personId: existingPerson.personId,
-            isExistingPerson: true,
-          });
-          console.log(`[SpeakerIdentification] Matched "${displayName}" to existing person "${existingPerson.name}" (similarity: ${existingPerson.similarity.toFixed(2)})`);
-        } else {
-          // Create new speaker with random UUID
-          const id = randomUUID();
-          speakerMap.set(displayName, id);
-          speakers.push({ id, name: displayName, isExistingPerson: false });
-        }
-      }
+      const llmResult = JSON.parse(jsonText);
+      const identifiedNames: string[] = llmResult.identifiedSpeakers || [];
+      
+      // Process speakers with registry for cross-block continuity
+      const { speakers, speakerIdMap } = await processIdentifiedSpeakers(
+        identifiedNames,
+        registry,
+        sessionId,
+        block.blockId,
+        block.startTime
+      );
 
-      // Match LLM dialogue output to original segment timing with fuzzy matching
+      // Match dialogue to timing
       const matchedDialogue = matchDialogueToTiming(
-        result.dialogue,
+        llmResult.dialogue || [],
         block.segmentTiming,
         block.startTime,
         block.endTime,
-        speakerMap
+        speakerIdMap
       );
 
-      // Count timing mismatches for logging
+      // Log timing mismatches
       const mismatchCount = matchedDialogue.filter(d => d.timingMismatch).length;
       if (mismatchCount > 0) {
         console.log(`[SpeakerIdentification] Block ${block.blockId}: ${mismatchCount}/${matchedDialogue.length} lines had timing mismatches`);
       }
 
+      // Build result for this block
       const analysisResult: SpeakerAnalysisResult = {
         blockId: block.blockId,
         startTime: block.startTime,
         endTime: block.endTime,
         dialogue: matchedDialogue,
-        speakers: speakers,
-        identifiedSpeakers: result.identifiedSpeakers,
+        speakers,
+        identifiedSpeakers: speakers.map(s => s.name),
       };
 
       results.push(analysisResult);
 
-      // Update context for next block
-      // Take the last 3 lines of dialogue
-      if (matchedDialogue && Array.isArray(matchedDialogue)) {
-        const lastLines = matchedDialogue.slice(-3);
-        previousContext = lastLines.map((l: SpeakerDialogueLine) => `${l.speaker}: ${l.text}`).join('\n');
-      }
+      // Update context for next block (includes all known speakers)
+      blockContext = extractContextFromDialogue(matchedDialogue, getAllSpeakers(registry));
 
     } catch (error) {
       // Log the error
-      if (sessionId && logId) {
+      if (sessionId && logId && interactionId) {
         completeModelInteractionLog(sessionId, logId, interactionId, undefined, error);
       }
       console.error(`[SpeakerIdentification] Error analyzing block ${block.blockId}:`, error);
       
       // Create fallback speaker
+      const unknownName = withPseudonymIfGeneric(
+        'Unknown',
+        `${sessionId || ''}:${block.blockId}:${block.startTime}`
+      );
       const unknownSpeakerId = randomUUID();
-      const unknownName = withPseudonymIfGeneric('Unknown', `${sessionId || ''}:${block.blockId}:${block.startTime}`);
-      const fallbackSpeakers: Speaker[] = [{ id: unknownSpeakerId, name: unknownName }];
+      const fallbackSpeaker: Speaker = { id: unknownSpeakerId, name: unknownName };
       
-      // Push a fallback result with timing from segments
+      // Register fallback speaker for continuity
+      registerSpeaker(registry, fallbackSpeaker);
+      
+      // Build fallback dialogue
       const fallbackDialogue: SpeakerDialogueLine[] = block.segmentTiming.length > 0
-        ? block.segmentTiming.map((seg, idx) => ({
+        ? block.segmentTiming.map(seg => ({
             id: randomUUID(),
             speakerId: unknownSpeakerId,
             speaker: unknownName,
@@ -339,10 +592,12 @@ export async function identifySpeakers(
         startTime: block.startTime,
         endTime: block.endTime,
         dialogue: fallbackDialogue,
-        speakers: fallbackSpeakers,
+        speakers: [fallbackSpeaker],
         identifiedSpeakers: [unknownName],
       });
-      previousContext = null; // Reset context on error
+      
+      // Update context even on error for continuity
+      blockContext = extractContextFromDialogue(fallbackDialogue, getAllSpeakers(registry));
     }
   }
 
