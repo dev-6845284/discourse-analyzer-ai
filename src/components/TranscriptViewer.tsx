@@ -87,6 +87,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     handleRemoveSpeaker,
     handleUpdateLineSpeaker,
     handleMergeSpeakers,
+    handleLinkSpeakerToPerson,
+    handleUnlinkSpeakerFromPerson,
   } = useTranscriptViewer(props);
 
   const handlePromote = async () => {
@@ -112,9 +114,49 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
       groups.get(groupId)!.push(statementId);
     });
     
+    // Helper to find dominant speaker's personId for a group of statements
+    const findDominantSpeakerPersonId = (statementIds: string[]): string | undefined => {
+      // Extract topic group IDs from statement IDs
+      const topicGroupIds = [...new Set(statementIds.map(id => id.split(':')[0]))];
+      
+      // Count speakers across matching dialog groups
+      const speakerCounts = new Map<string, number>();
+      topicAnalysis.dialogResults.forEach((group: any) => {
+        if (topicGroupIds.includes(group.id)) {
+          group.dialogLines?.forEach((line: any) => {
+            const count = speakerCounts.get(line.speaker) || 0;
+            speakerCounts.set(line.speaker, count + 1);
+          });
+        }
+      });
+      
+      // Find speaker with most lines
+      let dominantSpeaker = '';
+      let maxCount = 0;
+      speakerCounts.forEach((count, speaker) => {
+        if (count > maxCount) {
+          maxCount = count;
+          dominantSpeaker = speaker;
+        }
+      });
+      
+      if (!dominantSpeaker) return undefined;
+      
+      // Find if this speaker has a linked personId in speakerResults
+      for (const block of topicAnalysis.speakerResults) {
+        const speaker = block.speakers?.find((s: any) => s.name === dominantSpeaker);
+        if (speaker?.personId) {
+          return speaker.personId;
+        }
+      }
+      
+      return undefined;
+    };
+    
     const quoteGroups = Array.from(groups.entries()).map(([groupId, statementIds]) => ({
       groupId,
-      statementIds
+      statementIds,
+      personId: findDominantSpeakerPersonId(statementIds), // Pass linked personId if available
     }));
     
     console.log('[handlePromote] Quote groups:', quoteGroups);
@@ -263,6 +305,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onRemoveSpeaker={handleRemoveSpeaker}
             onUpdateLineSpeaker={handleUpdateLineSpeaker}
             onMergeSpeakers={handleMergeSpeakers}
+            onLinkSpeakerToPerson={handleLinkSpeakerToPerson}
+            onUnlinkSpeakerFromPerson={handleUnlinkSpeakerFromPerson}
           />
         )}
 

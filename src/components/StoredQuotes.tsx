@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
@@ -20,19 +20,23 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Filter state
-  const { filters, queryParams, hasActiveFilters, updateFilter, resetFilters } = useStoredQuoteFilters();
-  const [personFilterName, setPersonFilterName] = useState('');
-  const [selectedFilterPerson, setSelectedFilterPerson] = useState<Person | null>(null);
+  const overrides = useMemo(() => {
+    return selectedPerson ? { personId: selectedPerson._id } : {};
+  }, [selectedPerson]);
 
-  // Sync selectedPerson prop with filter state on mount
+  // Filter state
+  const { filters, queryParams, hasActiveFilters, updateFilter, resetFilters } = useStoredQuoteFilters(overrides);
+  const [personFilterName, setPersonFilterName] = useState(selectedPerson?.name || '');
+  const [selectedFilterPerson, setSelectedFilterPerson] = useState<Person | null>(selectedPerson);
+
+  // Sync selectedPerson prop with filter state
   useEffect(() => {
-    if (selectedPerson) {
+    if (selectedPerson && selectedPerson._id !== filters.personId) {
       setPersonFilterName(selectedPerson.name);
       setSelectedFilterPerson(selectedPerson);
       updateFilter('personId', selectedPerson._id || '');
     }
-  }, []); // Only on mount
+  }, [selectedPerson, filters.personId, updateFilter]);
 
   const handlePersonSelect = useCallback((person: Person | null) => {
     setSelectedFilterPerson(person);
@@ -58,12 +62,13 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         links: quote.links,
         apiKeys,
       });
-      const analysis = response.data;
+      // Server now returns AuditResult
+      const audit = response.data;
       setQuotes(prev => prev.map(q => q.id === quote.id ? { 
         ...q, 
         analysisContext: quote.analysisContext,
         links: quote.links,
-        draft: { ...q, analysis }, 
+        draft: { ...q, audit }, 
         isAnalyzing: false 
       } : q));
     } catch (err) {
@@ -118,7 +123,9 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         sourceUrl: updatedQuoteData.source,
         date: updatedQuoteData.date,
         metadata: {
+            // Support both legacy analysis and new audit
             ...(updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {}),
+            ...(updatedQuoteData.audit ? { audit: updatedQuoteData.audit } : {}),
             languageCode: updatedQuoteData.languageCode,
             languageName: updatedQuoteData.languageName,
             title: updatedQuoteData.title,
@@ -251,6 +258,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           languageCode: q.metadata?.languageCode || 'en',
           languageName: q.metadata?.languageName || 'English',
           analysis: q.metadata?.analysis,
+          audit: q.metadata?.audit,
           personName: q.person?.name,
           analysisContext: q.analysisContext,
           links: q.metadata?.links,

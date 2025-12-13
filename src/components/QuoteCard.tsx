@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Quote, AnalysisCategory, AnalysisResult } from '../types';
+import { Quote, AnalysisCategory, AnalysisResult, AuditCategory } from '../types';
 import AnalysisReport from './AnalysisReport';
-import { RATING_ORDER } from '../constants';
+import { RATING_ORDER, SEVERITY_ORDER } from '../constants';
 import QuoteTextDisplay from './QuoteCard/QuoteTextDisplay';
 import AuditMetadata from './QuoteCard/AuditMetadata';
 import QuoteLinksDisplay from './QuoteCard/QuoteLinksDisplay';
@@ -56,15 +56,22 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   );
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkType, setNewLinkType] = useState<'quote' | 'context'>('context');
-  const [selectedCategories, setSelectedCategories] = useState<AnalysisCategory[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<(AnalysisCategory | AuditCategory)[]>([]);
 
   // Sync state with props when quote updates
   React.useEffect(() => {
     setAnalysisContext(quote.analysisContext || '');
     setLinks(initializeLinksWithSelection(quote.links || quote.metadata?.links || []));
     
-    // Initialize selected categories when draft analysis is available
-    if (quote.draft?.analysis) {
+    // Initialize selected categories when draft audit/analysis is available
+    if (quote.draft?.audit) {
+      // New audit format
+      const initialSelection = (Object.entries(quote.draft.audit.categories) as [AuditCategory, any][])
+        .filter(([_, detail]) => SEVERITY_ORDER[detail.severity] >= SEVERITY_ORDER['MEDIUM'])
+        .map(([category]) => category);
+      setSelectedCategories(initialSelection);
+    } else if (quote.draft?.analysis) {
+      // Legacy analysis format
       const initialSelection = (Object.entries(quote.draft.analysis) as [AnalysisCategory, any][])
         .filter(([_, detail]) => RATING_ORDER[detail.rating] >= RATING_ORDER['Medium'])
         .map(([category]) => category);
@@ -180,12 +187,20 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       
       {!isCollapsed && (
         <>
-          {displayQuote.analysis && (
+          {displayQuote.audit && (
+            <AnalysisReport 
+              audit={displayQuote.audit} 
+              selectable={hasDraft}
+              selectedCategories={selectedCategories as AuditCategory[]}
+              onToggleCategory={handleToggleCategory as (category: AuditCategory) => void}
+            />
+          )}
+          {!displayQuote.audit && displayQuote.analysis && (
             <AnalysisReport 
               analysis={displayQuote.analysis} 
               selectable={hasDraft}
-              selectedCategories={selectedCategories}
-              onToggleCategory={handleToggleCategory}
+              selectedCategories={selectedCategories as AnalysisCategory[]}
+              onToggleCategory={handleToggleCategory as (category: AnalysisCategory) => void}
             />
           )}
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { loadFromStorage, saveToStorage } from '../utils/localStorage';
 import { STORAGE_KEYS, FILTER_DEBOUNCE_MS } from '../config/app.config';
-import { AnalysisRating } from '../types';
+import { AnalysisRating, SeverityLevel } from '../types';
 
 export type SortField = 'savedAt' | 'analyzedAt' | 'improvedAt' | 'date';
 export type SortOrder = 'newest' | 'oldest';
@@ -19,7 +19,7 @@ export interface StoredQuoteFilters {
   improvedAtTo: string;
   isAnalyzed: 'all' | 'true' | 'false';
   isImproved: 'all' | 'true' | 'false';
-  rating: AnalysisRating | 'all';
+  rating: SeverityLevel | AnalysisRating | 'all';
   language: string;
   provider: string;
   sortField: SortField;
@@ -40,26 +40,24 @@ const DEFAULT_FILTERS: StoredQuoteFilters = {
   isAnalyzed: 'all',
   isImproved: 'all',
   rating: 'all',
-  language: 'lt', // Lithuanian default
+  language: 'all',
   provider: 'all',
   sortField: 'savedAt',
   sortOrder: 'newest',
 };
 
-export function useStoredQuoteFilters() {
-  const [filters, setFilters] = useState<StoredQuoteFilters>(DEFAULT_FILTERS);
-  const [debouncedText, setDebouncedText] = useState<string>('');
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Load from localStorage on mount
-  useEffect(() => {
+export function useStoredQuoteFilters(initialOverrides?: Partial<StoredQuoteFilters>) {
+  const [filters, setFilters] = useState<StoredQuoteFilters>(() => {
     const saved = loadFromStorage<StoredQuoteFilters>(STORAGE_KEYS.STORED_QUOTE_FILTERS);
-    if (saved) {
-      // Merge with defaults to handle any missing keys from older saved versions
-      setFilters({ ...DEFAULT_FILTERS, ...saved });
-      setDebouncedText(saved.text || '');
-    }
-  }, []);
+    return {
+      ...DEFAULT_FILTERS,
+      ...(saved || {}),
+      ...(initialOverrides || {})
+    };
+  });
+  
+  const [debouncedText, setDebouncedText] = useState<string>(filters.text);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce text filter changes
   useEffect(() => {

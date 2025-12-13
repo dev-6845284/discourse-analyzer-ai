@@ -161,17 +161,35 @@ export const getQuotes = async (req: Request, res: Response) => {
       query.analyzedByProvider = provider;
     }
 
-    // Rating filter - filter by highest rating in analysis.ratings
-    // Valid ratings: None, Low, Medium, High, Severe
-    const validRatings = ['None', 'Low', 'Medium', 'High', 'Severe'];
-    if (rating && typeof rating === 'string' && validRatings.includes(rating)) {
-      // Match quotes where any category in metadata.analysis has the specified rating
-      query.$or = [
-        { 'metadata.analysis.Populism.rating': rating },
-        { 'metadata.analysis.Fact Twisting.rating': rating },
-        { 'metadata.analysis.Lies & False Claims.rating': rating },
-        { 'metadata.analysis.Inflammatory Language.rating': rating },
-      ];
+    // Rating/Severity filter - support both legacy analysis and new audit structure
+    // Legacy ratings: None, Low, Medium, High, Severe (title-case)
+    // New severity levels: NONE, LOW, MEDIUM, HIGH, SEVERE (uppercase)
+    const legacyRatings = ['None', 'Low', 'Medium', 'High', 'Severe'];
+    const newSeverityLevels = ['NONE', 'LOW', 'MEDIUM', 'HIGH', 'SEVERE'];
+    
+    if (rating && typeof rating === 'string') {
+      // Normalize to uppercase for comparison
+      const upperRating = rating.toUpperCase();
+      const titleRating = rating.charAt(0).toUpperCase() + rating.slice(1).toLowerCase();
+      
+      if (newSeverityLevels.includes(upperRating) || legacyRatings.includes(titleRating)) {
+        // Match quotes where any category has the specified severity/rating
+        // Support both legacy analysis structure and new audit structure
+        query.$or = [
+          // Legacy analysis structure (title-case ratings)
+          { 'metadata.analysis.Populism.rating': titleRating },
+          { 'metadata.analysis.Fact Twisting.rating': titleRating },
+          { 'metadata.analysis.Lies & False Claims.rating': titleRating },
+          { 'metadata.analysis.Inflammatory Language.rating': titleRating },
+          // New audit structure (uppercase severity)
+          { 'metadata.audit.categories.Verifiable Falsehood.severity': upperRating },
+          { 'metadata.audit.categories.Misleading Framing.severity': upperRating },
+          { 'metadata.audit.categories.Reality Inversion.severity': upperRating },
+          { 'metadata.audit.categories.Responsibility Shifting.severity': upperRating },
+          { 'metadata.audit.categories.Unsupported Assertion.severity': upperRating },
+          { 'metadata.audit.categories.Narrative Control / Propaganda.severity': upperRating },
+        ];
+      }
     }
 
     // Analyzed status filter

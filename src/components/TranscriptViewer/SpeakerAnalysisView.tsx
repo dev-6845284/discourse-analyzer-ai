@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Upload, Download, Zap, Edit2, Check, X, Plus, Trash2, GitMerge } from 'lucide-react';
+import { Upload, Download, Zap, Edit2, Check, X, Plus, Trash2, GitMerge, Link2 } from 'lucide-react';
 import { formatTimestamp } from '../../utils/transcriptHelpers';
 import Spinner from '../Spinner';
 import { PersonSimilarityMatch } from '../../utils/api';
+import { SpeakerPersonLinkModal } from './SpeakerPersonLinkModal';
 
 interface Speaker {
   id: string;
   name: string;
+  personId?: string;
+  personName?: string;
 }
 
 interface DialogLine {
@@ -45,6 +48,8 @@ interface SpeakerAnalysisViewProps {
   onRemoveSpeaker?: (speakerId: string) => Promise<boolean>;
   onUpdateLineSpeaker?: (blockId: string, lineId: string, newSpeakerId: string) => Promise<void>;
   onMergeSpeakers?: (speakerIdsToMerge: string[], targetSpeakerId: string) => Promise<boolean>;
+  onLinkSpeakerToPerson?: (speakerId: string, personId: string, personName: string) => Promise<void>;
+  onUnlinkSpeakerFromPerson?: (speakerId: string) => Promise<void>;
 }
 
 export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
@@ -63,6 +68,8 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   onRemoveSpeaker,
   onUpdateLineSpeaker,
   onMergeSpeakers,
+  onLinkSpeakerToPerson,
+  onUnlinkSpeakerFromPerson,
 }) => {
   const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -77,6 +84,9 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [targetSpeakerId, setTargetSpeakerId] = useState<string | null>(null);
   const [isMerging, setIsMerging] = useState(false);
+
+  // Link-to-person state
+  const [speakerToLink, setSpeakerToLink] = useState<Speaker | null>(null);
 
   // Get all unique speakers across all blocks (as Speaker objects with id and name)
   const allSpeakers = useMemo(() => {
@@ -395,7 +405,30 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                     className="w-3 h-3 rounded border-gray-600 text-orange-500 focus:ring-orange-500 cursor-pointer"
                     title="Select for merge"
                   />
-                  <span className="text-xs text-gray-300">{speaker.name}</span>
+                  {/* Person link indicator */}
+                  {speaker.personId ? (
+                    <button
+                      onClick={() => setSpeakerToLink(speaker)}
+                      className="text-cyan-400 hover:text-cyan-300 p-0.5"
+                      title={`Linked to: ${speaker.personName || 'Person'}`}
+                    >
+                      <Link2 size={12} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSpeakerToLink(speaker)}
+                      className="text-gray-600 hover:text-cyan-400 p-0.5"
+                      title="Link to Person record"
+                    >
+                      <Link2 size={12} />
+                    </button>
+                  )}
+                  <span className={`text-xs ${speaker.personId ? 'text-cyan-300' : 'text-gray-300'}`}>
+                    {speaker.name}
+                    {speaker.personId && speaker.personName && speaker.personName !== speaker.name && (
+                      <span className="text-gray-500 ml-1">({speaker.personName})</span>
+                    )}
+                  </span>
                   <button
                     onClick={() => handleStartEdit(speaker.id, speaker.name)}
                     className="text-gray-500 hover:text-cyan-400 p-0.5"
@@ -646,6 +679,23 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Speaker-to-Person Link Modal */}
+      {speakerToLink && onLinkSpeakerToPerson && onUnlinkSpeakerFromPerson && (
+        <SpeakerPersonLinkModal
+          speaker={speakerToLink}
+          onClose={() => setSpeakerToLink(null)}
+          onLink={async (speakerId, personId, personName) => {
+            await onLinkSpeakerToPerson(speakerId, personId, personName);
+          }}
+          onUnlink={async (speakerId) => {
+            await onUnlinkSpeakerFromPerson(speakerId);
+          }}
+          onCreateAndLink={async (speakerId, personData) => {
+            // This is handled inside the modal by creating a person first
+          }}
+        />
       )}
     </div>
   );

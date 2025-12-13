@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Quote, QuoteUpdatePayload } from '../types';
+import { Quote, QuoteUpdatePayload, AuditResult } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import api, { updateQuote, extractFromUrl } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
@@ -30,14 +30,15 @@ export function useQuoteActions(
           links: quote.links,
           apiKeys,
         });
-        const analysis = response.data;
+        // Server now returns AuditResult instead of AnalysisResult
+        const audit: AuditResult = response.data;
 
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { 
             ...q, 
             analysisContext: quote.analysisContext,
             links: quote.links,
-            draft: { ...q, analysis }, 
+            draft: { ...q, audit }, 
             isAnalyzing: false 
           } : q))
         );
@@ -107,7 +108,9 @@ export function useQuoteActions(
           sourceUrl: updatedQuote.source,
           date: updatedQuote.date,
           metadata: {
+            // Support both legacy analysis and new audit
             ...(updatedQuote.analysis ? { analysis: updatedQuote.analysis } : {}),
+            ...(updatedQuote.audit ? { audit: updatedQuote.audit } : {}),
             languageCode: updatedQuote.languageCode,
             languageName: updatedQuote.languageName,
             title: updatedQuote.title,

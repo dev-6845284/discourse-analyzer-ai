@@ -59,6 +59,8 @@ export interface IAnalysisSession extends Document {
     speakers: Array<{
       id: string;
       name: string;
+      personId?: string;    // Reference to existing Person record
+      personName?: string;  // Cached Person name for display
     }>;
     dialogue: Array<{
       id: string;
@@ -136,7 +138,9 @@ const AnalysisSessionSchema: Schema = new Schema({
     endTime: Number,
     speakers: [{
       id: String,
-      name: String
+      name: String,
+      personId: String,    // Reference to existing Person record
+      personName: String   // Cached Person name for display
     }],
     dialogue: [{
       id: String,

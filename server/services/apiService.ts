@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   Quote,
   AnalysisResult,
+  AuditResult,
   ModelResponseError,
   JsonParsingError,
 } from '../types';
@@ -134,9 +135,9 @@ export const analyzeQuote = async (req: Request, res: Response) => {
 
   try {
     const { service, apiKey } = getService(model, apiKeys);
-    const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
-    updateLogEntry(req.session.id!, logId, analysis);
-    res.json(analysis);
+    const auditResult = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
+    updateLogEntry(req.session.id!, logId, auditResult);
+    res.json(auditResult);
   } catch (error: any) {
     console.error('Error analyzing quote:', error);
     updateLogEntry(req.session.id!, logId, undefined, error);

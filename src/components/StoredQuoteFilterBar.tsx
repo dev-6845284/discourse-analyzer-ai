@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StoredQuoteFilters, SortField, SortOrder } from '../hooks/useStoredQuoteFilters';
-import { AnalysisRating, Person } from '../types';
+import { AnalysisRating, SeverityLevel, Person } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { usePeople } from '../hooks/usePeople';
 
@@ -12,14 +12,15 @@ const AI_PROVIDERS = [
   { value: 'chatgpt', label: 'ChatGPT' },
 ];
 
-// Rating options for filtering
-const RATING_OPTIONS: { value: AnalysisRating | 'all'; label: string }[] = [
+// Rating/Severity options for filtering (supports both legacy and new formats)
+// Values use uppercase to match new SeverityLevel, server normalizes for legacy
+const RATING_OPTIONS: { value: SeverityLevel | 'all'; label: string }[] = [
   { value: 'all', label: 'All Ratings' },
-  { value: 'None', label: 'None' },
-  { value: 'Low', label: 'Low' },
-  { value: 'Medium', label: 'Medium' },
-  { value: 'High', label: 'High' },
-  { value: 'Severe', label: 'Severe' },
+  { value: 'NONE', label: 'None' },
+  { value: 'LOW', label: 'Low' },
+  { value: 'MEDIUM', label: 'Medium' },
+  { value: 'HIGH', label: 'High' },
+  { value: 'SEVERE', label: 'Severe' },
 ];
 
 // Language options - extend SUPPORTED_LANGUAGES with 'all' option

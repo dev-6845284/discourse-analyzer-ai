@@ -1,4 +1,6 @@
-import { AnalysisCategory, AnalysisRating } from '../../types';
+import { AnalysisCategory, AnalysisRating, AuditCategory, SeverityLevel, Verdict, AuditResult } from '../../types';
+
+export { AuditCategory, SeverityLevel, Verdict, AuditResult };
 
 /**
  * Time period for filtering quotes

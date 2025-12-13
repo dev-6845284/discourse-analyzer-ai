@@ -1,6 +1,7 @@
 import {
   Quote,
   AnalysisResult,
+  AuditResult,
   AnalysisCategory,
   AnalysisRating,
   TopicAnalysisResult,
@@ -33,7 +34,7 @@ export interface LlmService {
     sessionId: string,
     analysisContext?: string,
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
-  ): Promise<AnalysisResult>;
+  ): Promise<AuditResult>;
 
   extractQuotesFromText(
     apiKey: string,

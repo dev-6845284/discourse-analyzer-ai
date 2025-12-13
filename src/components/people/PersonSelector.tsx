@@ -5,9 +5,13 @@ import { Person } from '../../types';
 interface PersonSelectorProps {
   value: string;
   onChange: (name: string) => void;
+  /** Optional callback that receives the full Person object when selected from the list */
+  onSelectPerson?: (person: Person) => void;
+  /** Placeholder text */
+  placeholder?: string;
 }
 
-export const PersonSelector: React.FC<PersonSelectorProps> = ({ value, onChange }) => {
+export const PersonSelector: React.FC<PersonSelectorProps> = ({ value, onChange, onSelectPerson, placeholder }) => {
   const { people, fetchPeople, isLoading } = usePeople();
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -46,6 +50,7 @@ export const PersonSelector: React.FC<PersonSelectorProps> = ({ value, onChange 
 
   const handleSelect = (person: Person) => {
     onChange(person.name);
+    onSelectPerson?.(person);
     setIsOpen(false);
   };
 
@@ -57,7 +62,7 @@ export const PersonSelector: React.FC<PersonSelectorProps> = ({ value, onChange 
         onChange={handleInputChange}
         onFocus={handleFocus}
         className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-        placeholder="e.g., Albert Einstein"
+        placeholder={placeholder || "e.g., Albert Einstein"}
         autoComplete="off"
       />
       {isOpen && (

@@ -1,3 +1,4 @@
+// Legacy categories - kept for migration compatibility
 export enum AnalysisCategory {
   Populism = "Populism",
   FactTwisting = "Fact Twisting",
@@ -5,19 +6,53 @@ export enum AnalysisCategory {
   InflammatoryLanguage = "Inflammatory Language",
 }
 
+// New strict audit categories
+export enum AuditCategory {
+  VerifiableFalsehood = "Verifiable Falsehood",
+  MisleadingFraming = "Misleading Framing",
+  RealityInversion = "Reality Inversion",
+  ResponsibilityShifting = "Responsibility Shifting",
+  UnsupportedAssertion = "Unsupported Assertion",
+  NarrativeControl = "Narrative Control / Propaganda",
+}
+
+// Legacy rating type - kept for migration compatibility
 export type AnalysisRating = "None" | "Low" | "Medium" | "High" | "Severe";
 
+// New severity levels (uppercase in data)
+export type SeverityLevel = "NONE" | "LOW" | "MEDIUM" | "HIGH" | "SEVERE";
+
+// Verdict types for audit conclusions
+export type Verdict = "TRUE" | "FALSE" | "MISLEADING" | "MANIPULATIVE" | "UNFOUNDED";
+
+// Legacy analysis detail - kept for migration compatibility
 export interface AnalysisDetail {
   rating: AnalysisRating;
   justification: string;
 }
 
+// New audit detail with severity and evidence
+export interface AuditDetail {
+  severity: SeverityLevel;
+  evidence: string;
+}
+
+// Legacy analysis result - kept for migration compatibility
 // FIX: Changed from an interface to a mapped type. This improves type safety and inference
 // when indexing the object with a variable of type AnalysisCategory, fixing errors in
 // App.tsx and AnalysisReport.tsx.
 export type AnalysisResult = {
   [key in AnalysisCategory]?: AnalysisDetail;
 };
+
+// New audit result with verdict and rationale
+export interface AuditResult {
+  verdict: Verdict;
+  rationale: string;
+  categories: {
+    [key in AuditCategory]: AuditDetail;
+  };
+}
 
 export interface Quote {
   id?: string;
@@ -35,7 +70,10 @@ export interface Quote {
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }>;
     [key: string]: any;
   };
+  /** @deprecated Use audit instead */
   analysis?: AnalysisResult;
+  /** New strict audit result */
+  audit?: AuditResult;
   isAnalyzing?: boolean;
   isImproving?: boolean;
   personName?: string;

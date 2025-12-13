@@ -554,6 +554,22 @@ export const useTranscriptViewer = ({
     return result !== null;
   };
 
+  /**
+   * Link a speaker to an existing Person record
+   */
+  const handleLinkSpeakerToPerson = async (speakerId: string, personId: string, personName: string) => {
+    const updatedResults = topicAnalysis.linkSpeakerToPerson(speakerId, personId, personName);
+    await saveSpeakerResults(updatedResults);
+  };
+
+  /**
+   * Unlink a speaker from its Person record
+   */
+  const handleUnlinkSpeakerFromPerson = async (speakerId: string) => {
+    const updatedResults = topicAnalysis.unlinkSpeakerFromPerson(speakerId);
+    await saveSpeakerResults(updatedResults);
+  };
+
   return {
     viewMode,
     setViewMode,
@@ -601,6 +617,8 @@ export const useTranscriptViewer = ({
     handleRemoveSpeaker,
     handleUpdateLineSpeaker,
     handleMergeSpeakers,
+    handleLinkSpeakerToPerson,
+    handleUnlinkSpeakerFromPerson,
     handleStartStep: (step: 'transcript' | 'topics' | 'speakers' | 'dialog') => {
       switch (step) {
         case 'topics':

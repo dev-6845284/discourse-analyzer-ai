@@ -1,6 +1,7 @@
 import {
   Quote,
   AnalysisResult,
+  AuditResult,
   JsonParsingError,
   AnalysisCategory,
   AnalysisRating,
@@ -191,7 +192,7 @@ class GrokService implements LlmService {
     sessionId: string,
     analysisContext?: string,
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
-  ): Promise<AnalysisResult> {
+  ): Promise<AuditResult> {
     if (!apiKey) throw new Error("Grok API key is missing.");
 
     try {

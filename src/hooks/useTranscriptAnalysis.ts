@@ -34,6 +34,7 @@ export interface Speaker {
   id: string;   // Unique ID (UUID or existing Person ID)
   name: string; // Display name
   personId?: string; // Reference to existing Person record if matched
+  personName?: string; // Cached Person name for display
   isExistingPerson?: boolean; // True if matched to existing person
 }
 
@@ -568,6 +569,52 @@ export function useTranscriptAnalysis(initialData?: {
   }, []);
 
   /**
+   * Link a speaker to an existing Person record
+   * Returns the updated speakerResults for saving
+   */
+  const linkSpeakerToPerson = useCallback((speakerId: string, personId: string, personName: string): SpeakerAnalysisResult[] => {
+    let updatedResults: SpeakerAnalysisResult[] = [];
+    setState(prev => {
+      updatedResults = prev.speakerResults.map(block => ({
+        ...block,
+        speakers: block.speakers?.map(s => 
+          s.id === speakerId 
+            ? { ...s, personId, personName, isExistingPerson: true } 
+            : s
+        ) || [],
+      }));
+      return {
+        ...prev,
+        speakerResults: updatedResults,
+      };
+    });
+    return updatedResults;
+  }, []);
+
+  /**
+   * Unlink a speaker from its Person record
+   * Returns the updated speakerResults for saving
+   */
+  const unlinkSpeakerFromPerson = useCallback((speakerId: string): SpeakerAnalysisResult[] => {
+    let updatedResults: SpeakerAnalysisResult[] = [];
+    setState(prev => {
+      updatedResults = prev.speakerResults.map(block => ({
+        ...block,
+        speakers: block.speakers?.map(s => 
+          s.id === speakerId 
+            ? { ...s, personId: undefined, personName: undefined, isExistingPerson: false } 
+            : s
+        ) || [],
+      }));
+      return {
+        ...prev,
+        speakerResults: updatedResults,
+      };
+    });
+    return updatedResults;
+  }, []);
+
+  /**
    * Get all unique speakers across all blocks (as Speaker objects)
    */
   const getAllSpeakers = useCallback((): Speaker[] => {
@@ -644,6 +691,8 @@ export function useTranscriptAnalysis(initialData?: {
     checkSimilarPersonsForSpeaker,
     removeSpeaker,
     updateLineSpeaker,
+    linkSpeakerToPerson,
+    unlinkSpeakerFromPerson,
     getAllSpeakers,
     mergeSpeakers,
   };

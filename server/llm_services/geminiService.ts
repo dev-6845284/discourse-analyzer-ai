@@ -2,6 +2,7 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import {
   Quote,
   AnalysisResult,
+  AuditResult,
   GroundingChunk,
   ModelResponseError,
   JsonParsingError,
@@ -206,7 +207,7 @@ class GeminiService implements LlmService {
     sessionId: string,
     analysisContext?: string,
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
-  ): Promise<AnalysisResult> {
+  ): Promise<AuditResult> {
       if (!apiKey) throw new Error("Gemini API key is missing.");
       const ai = new GoogleGenAI({ apiKey });
       
