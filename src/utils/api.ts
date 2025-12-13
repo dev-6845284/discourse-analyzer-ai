@@ -219,6 +219,14 @@ export const analyzeSessionDialog = async (
   return api.post(`/analysis/sessions/${sessionId}/analyze-dialog`, { language, fastModel, betterModel, apiKeys });
 };
 
+export const mergeSpeakers = async (
+  sessionId: string,
+  speakerIdsToMerge: string[],
+  targetSpeakerId: string
+) => {
+  return api.post(`/analysis/sessions/${sessionId}/merge-speakers`, { speakerIdsToMerge, targetSpeakerId });
+};
+
 // Person similarity search
 export interface PersonSimilarityMatch {
   personId: string;

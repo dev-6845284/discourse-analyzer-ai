@@ -93,3 +93,94 @@ export const getSessionSpeakerAnalysis = async (sessionId: string): Promise<{
 export const deleteSession = async (sessionId: string): Promise<IAnalysisSession | null> => {
   return await AnalysisSession.findByIdAndDelete(sessionId);
 };
+
+/**
+ * Merge multiple speakers into a single target speaker.
+ * Updates all dialogue lines to reference the target speaker and removes merged speakers.
+ * Preserves existing Person links from the target speaker.
+ */
+export const mergeSpeakers = async (
+  sessionId: string,
+  speakerIdsToMerge: string[],
+  targetSpeakerId: string
+): Promise<IAnalysisSession | null> => {
+  const session = await AnalysisSession.findById(sessionId);
+  if (!session || !session.speakerAnalysis) {
+    return null;
+  }
+
+  // Validate that targetSpeakerId is in the merge list
+  if (!speakerIdsToMerge.includes(targetSpeakerId)) {
+    throw new Error('Target speaker ID must be one of the speakers to merge');
+  }
+
+  // Get IDs to remove (all except target)
+  const idsToRemove = speakerIdsToMerge.filter(id => id !== targetSpeakerId);
+
+  // Find target speaker globally across all blocks to get their full info
+  let targetSpeaker: any = null;
+  for (const block of session.speakerAnalysis) {
+    const found = (block as any).speakers?.find((s: any) => s.id === targetSpeakerId);
+    if (found) {
+      targetSpeaker = found;
+      break;
+    }
+  }
+
+  if (!targetSpeaker) {
+    throw new Error('Target speaker not found in any block');
+  }
+
+  const targetName = targetSpeaker.name;
+
+  // Update each block's speakerAnalysis
+  const updatedSpeakerAnalysis = session.speakerAnalysis.map((block: any) => {
+    // Update dialogue lines: change speakerId to target for all merged speakers
+    const updatedDialogue = block.dialogue.map((line: any) => {
+      if (idsToRemove.includes(line.speakerId)) {
+        return {
+          ...line,
+          speakerId: targetSpeakerId,
+          speaker: targetName,
+        };
+      }
+      return line;
+    });
+
+    // Check if target speaker exists in this block
+    const hasTargetSpeaker = block.speakers?.some((s: any) => s.id === targetSpeakerId);
+    
+    // Remove merged speakers from speakers array (keep target)
+    let updatedSpeakers = block.speakers?.filter((s: any) => !idsToRemove.includes(s.id)) || [];
+    
+    // If target speaker wasn't in this block but we have dialogue lines that now reference it, add it
+    if (!hasTargetSpeaker && updatedDialogue.some((line: any) => line.speakerId === targetSpeakerId)) {
+      updatedSpeakers = [...updatedSpeakers, { ...targetSpeaker }];
+    }
+
+    // Update identifiedSpeakers (remove names of merged speakers, ensure target name is present)
+    const removedNames = block.speakers
+      ?.filter((s: any) => idsToRemove.includes(s.id))
+      .map((s: any) => s.name) || [];
+    let updatedIdentifiedSpeakers = block.identifiedSpeakers.filter(
+      (name: string) => !removedNames.includes(name)
+    );
+    
+    // Ensure target name is in identifiedSpeakers if there are dialogue lines for it
+    if (!updatedIdentifiedSpeakers.includes(targetName) && 
+        updatedDialogue.some((line: any) => line.speakerId === targetSpeakerId)) {
+      updatedIdentifiedSpeakers = [...updatedIdentifiedSpeakers, targetName];
+    }
+
+    return {
+      ...block,
+      dialogue: updatedDialogue,
+      speakers: updatedSpeakers,
+      identifiedSpeakers: updatedIdentifiedSpeakers,
+    };
+  });
+
+  // Save the updated speaker analysis
+  session.speakerAnalysis = updatedSpeakerAnalysis;
+  return await session.save();
+};

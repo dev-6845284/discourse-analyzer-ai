@@ -548,6 +548,12 @@ export const useTranscriptViewer = ({
     await saveSpeakerResults(updatedResults);
   };
 
+  const handleMergeSpeakers = async (speakerIdsToMerge: string[], targetSpeakerId: string): Promise<boolean> => {
+    if (!currentSessionId) return false;
+    const result = await topicAnalysis.mergeSpeakers(speakerIdsToMerge, targetSpeakerId, currentSessionId);
+    return result !== null;
+  };
+
   return {
     viewMode,
     setViewMode,
@@ -594,6 +600,7 @@ export const useTranscriptViewer = ({
     checkSimilarPersonsBeforeAdd,
     handleRemoveSpeaker,
     handleUpdateLineSpeaker,
+    handleMergeSpeakers,
     handleStartStep: (step: 'transcript' | 'topics' | 'speakers' | 'dialog') => {
       switch (step) {
         case 'topics':

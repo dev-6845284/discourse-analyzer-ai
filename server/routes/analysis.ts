@@ -97,6 +97,35 @@ router.delete('/sessions/:id', async (req, res) => {
   }
 });
 
+// Merge multiple speakers into one
+router.post('/sessions/:id/merge-speakers', async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const { speakerIdsToMerge, targetSpeakerId } = req.body;
+    
+    const session = await analysisSessionService.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    if (session.userId !== req.session.user!._id as string) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    if (!Array.isArray(speakerIdsToMerge) || speakerIdsToMerge.length < 2) {
+      return res.status(400).json({ message: 'At least 2 speaker IDs are required for merging' });
+    }
+    if (!targetSpeakerId || !speakerIdsToMerge.includes(targetSpeakerId)) {
+      return res.status(400).json({ message: 'Target speaker ID must be one of the speakers to merge' });
+    }
+
+    const updatedSession = await analysisSessionService.mergeSpeakers(sessionId, speakerIdsToMerge, targetSpeakerId);
+    res.json(updatedSession?.speakerAnalysis || []);
+  } catch (error: any) {
+    console.error('Error merging speakers:', error);
+    res.status(500).json({ message: error.message || 'Failed to merge speakers' });
+  }
+});
+
 // Promote session to content analysis
 router.post('/promote', async (req, res) => {
   try {

@@ -7,6 +7,7 @@ import { addModelInteractionLog, completeModelInteractionLog } from '../logServi
 import { SegmentTiming } from './transcriptGrouper';
 import { randomUUID } from 'crypto';
 import { findBestMatchingPerson, PersonSimilarityMatch } from '../personService';
+import { withPseudonymIfGeneric } from '../../utils/pseudonym';
 
 export interface Speaker {
   id: string;   // Unique ID (UUID or existing Person ID)
@@ -170,24 +171,23 @@ export async function identifySpeakers(
   const { blocks, language, model, apiKeys, sessionId, logId } = request;
   const results: SpeakerAnalysisResult[] = [];
   let previousContext: string | null = null;
+  // Determine provider and model name for logging
+  let provider: string;
+  let modelName: string;
+  if (model === 'chatgpt' && apiKeys.chatgpt) {
+    provider = 'chatgpt';
+    modelName = 'gpt-4o-mini';
+  } else if (model === 'grok' && apiKeys.grok) {
+    provider = 'grok';
+    modelName = 'grok-2-latest';
+  } else {
+    provider = 'gemini';
+    modelName = 'gemini-1.5-flash';
+  }
 
   for (const block of blocks) {
     const prompt = buildSpeakerIdentificationPrompt(block.text, block.segmentTiming, previousContext, language);
     
-    // Determine provider and model name for logging
-    let provider: string;
-    let modelName: string;
-    if (model === 'chatgpt' && apiKeys.chatgpt) {
-      provider = 'chatgpt';
-      modelName = 'gpt-4o-mini';
-    } else if (model === 'grok' && apiKeys.grok) {
-      provider = 'grok';
-      modelName = 'grok-2-latest';
-    } else {
-      provider = 'gemini';
-      modelName = 'gemini-1.5-flash';
-    }
-
     // Log the LLM request
     let interactionId: string | null = null;
     if (sessionId && logId) {
@@ -245,24 +245,26 @@ export async function identifySpeakers(
       const speakers: Speaker[] = [];
       
       for (const name of (result.identifiedSpeakers || [])) {
+        // Augment generic placeholder names with a deterministic pseudonym to keep them distinct
+        const displayName = withPseudonymIfGeneric(name, `${sessionId || ''}:${block.blockId}:${block.startTime}`);
         // Try to find an existing similar person
-        const existingPerson = await findBestMatchingPerson(name);
+        const existingPerson = await findBestMatchingPerson(displayName);
         
         if (existingPerson) {
           // Reuse existing person's ID and name
-          speakerMap.set(name, existingPerson.personId);
+          speakerMap.set(displayName, existingPerson.personId);
           speakers.push({
             id: existingPerson.personId,
             name: existingPerson.name, // Use the canonical name from database
             personId: existingPerson.personId,
             isExistingPerson: true,
           });
-          console.log(`[SpeakerIdentification] Matched "${name}" to existing person "${existingPerson.name}" (similarity: ${existingPerson.similarity.toFixed(2)})`);
+          console.log(`[SpeakerIdentification] Matched "${displayName}" to existing person "${existingPerson.name}" (similarity: ${existingPerson.similarity.toFixed(2)})`);
         } else {
           // Create new speaker with random UUID
           const id = randomUUID();
-          speakerMap.set(name, id);
-          speakers.push({ id, name, isExistingPerson: false });
+          speakerMap.set(displayName, id);
+          speakers.push({ id, name: displayName, isExistingPerson: false });
         }
       }
 
@@ -308,14 +310,15 @@ export async function identifySpeakers(
       
       // Create fallback speaker
       const unknownSpeakerId = randomUUID();
-      const fallbackSpeakers: Speaker[] = [{ id: unknownSpeakerId, name: 'Unknown' }];
+      const unknownName = withPseudonymIfGeneric('Unknown', `${sessionId || ''}:${block.blockId}:${block.startTime}`);
+      const fallbackSpeakers: Speaker[] = [{ id: unknownSpeakerId, name: unknownName }];
       
       // Push a fallback result with timing from segments
       const fallbackDialogue: SpeakerDialogueLine[] = block.segmentTiming.length > 0
         ? block.segmentTiming.map((seg, idx) => ({
             id: randomUUID(),
             speakerId: unknownSpeakerId,
-            speaker: 'Unknown',
+            speaker: unknownName,
             text: seg.text,
             startTime: seg.start,
             endTime: seg.end,
@@ -324,7 +327,7 @@ export async function identifySpeakers(
         : [{
             id: randomUUID(),
             speakerId: unknownSpeakerId,
-            speaker: 'Unknown',
+            speaker: unknownName,
             text: block.text,
             startTime: block.startTime,
             endTime: block.endTime,
@@ -337,7 +340,7 @@ export async function identifySpeakers(
         endTime: block.endTime,
         dialogue: fallbackDialogue,
         speakers: fallbackSpeakers,
-        identifiedSpeakers: ['Unknown'],
+        identifiedSpeakers: [unknownName],
       });
       previousContext = null; // Reset context on error
     }

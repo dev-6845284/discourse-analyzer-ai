@@ -6,6 +6,7 @@ import {
   analyzeSessionSpeakers, 
   analyzeSessionDialog,
   findSimilarPersons,
+  mergeSpeakers as mergeSpeakersApi,
   PersonSimilarityMatch
 } from '../utils/api';
 
@@ -577,6 +578,52 @@ export function useTranscriptAnalysis(initialData?: {
     return Array.from(speakerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [state.speakerResults]);
 
+  /**
+   * Merge multiple speakers into a single target speaker.
+   * Calls the backend API, updates local state with the result.
+   * Returns updated speakerResults on success.
+   */
+  const mergeSpeakers = useCallback(async (
+    speakerIdsToMerge: string[],
+    targetSpeakerId: string,
+    sessionId?: string
+  ): Promise<SpeakerAnalysisResult[] | null> => {
+    if (!sessionId) {
+      console.error('Session ID is required for merging speakers');
+      return null;
+    }
+    if (speakerIdsToMerge.length < 2) {
+      console.error('At least 2 speakers are required for merging');
+      return null;
+    }
+    if (!speakerIdsToMerge.includes(targetSpeakerId)) {
+      console.error('Target speaker must be one of the speakers to merge');
+      return null;
+    }
+
+    try {
+      const response = await mergeSpeakersApi(sessionId, speakerIdsToMerge, targetSpeakerId);
+      const updatedResults: SpeakerAnalysisResult[] = response.data;
+      console.log('[mergeSpeakers] API response:', updatedResults);
+      console.log('[mergeSpeakers] Number of blocks:', updatedResults?.length);
+      setState(prev => {
+        console.log('[mergeSpeakers] Previous speakerResults:', prev.speakerResults?.length);
+        return {
+          ...prev,
+          speakerResults: updatedResults,
+        };
+      });
+      return updatedResults;
+    } catch (error: any) {
+      console.error('Error merging speakers:', error);
+      setState(prev => ({
+        ...prev,
+        error: error.response?.data?.message || error.message || 'Failed to merge speakers',
+      }));
+      return null;
+    }
+  }, []);
+
   return {
     ...state,
     analyzeTranscript,
@@ -598,5 +645,6 @@ export function useTranscriptAnalysis(initialData?: {
     removeSpeaker,
     updateLineSpeaker,
     getAllSpeakers,
+    mergeSpeakers,
   };
 }

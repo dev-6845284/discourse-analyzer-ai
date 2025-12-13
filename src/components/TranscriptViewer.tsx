@@ -86,6 +86,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     checkSimilarPersonsBeforeAdd,
     handleRemoveSpeaker,
     handleUpdateLineSpeaker,
+    handleMergeSpeakers,
   } = useTranscriptViewer(props);
 
   const handlePromote = async () => {
@@ -261,6 +262,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onCheckSimilarPersons={checkSimilarPersonsBeforeAdd}
             onRemoveSpeaker={handleRemoveSpeaker}
             onUpdateLineSpeaker={handleUpdateLineSpeaker}
+            onMergeSpeakers={handleMergeSpeakers}
           />
         )}
 

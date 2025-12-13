@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Upload, Download, Zap, Edit2, Check, X, Plus, Trash2 } from 'lucide-react';
+import { Upload, Download, Zap, Edit2, Check, X, Plus, Trash2, GitMerge } from 'lucide-react';
 import { formatTimestamp } from '../../utils/transcriptHelpers';
 import Spinner from '../Spinner';
 import { PersonSimilarityMatch } from '../../utils/api';
@@ -44,6 +44,7 @@ interface SpeakerAnalysisViewProps {
   onCheckSimilarPersons?: (speakerName: string) => Promise<PersonSimilarityMatch[]>;
   onRemoveSpeaker?: (speakerId: string) => Promise<boolean>;
   onUpdateLineSpeaker?: (blockId: string, lineId: string, newSpeakerId: string) => Promise<void>;
+  onMergeSpeakers?: (speakerIdsToMerge: string[], targetSpeakerId: string) => Promise<boolean>;
 }
 
 export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
@@ -61,6 +62,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   onCheckSimilarPersons,
   onRemoveSpeaker,
   onUpdateLineSpeaker,
+  onMergeSpeakers,
 }) => {
   const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -69,6 +71,12 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [similarMatches, setSimilarMatches] = useState<PersonSimilarityMatch[]>([]);
   const [isCheckingMatches, setIsCheckingMatches] = useState(false);
+  
+  // Merge-related state
+  const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [targetSpeakerId, setTargetSpeakerId] = useState<string | null>(null);
+  const [isMerging, setIsMerging] = useState(false);
 
   // Get all unique speakers across all blocks (as Speaker objects with id and name)
   const allSpeakers = useMemo(() => {
@@ -166,6 +174,52 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
       setTimeout(() => setRemoveError(null), 3000);
     }
   };
+
+  // Merge handlers
+  const toggleSpeakerSelection = (speakerId: string) => {
+    setSelectedForMerge(prev => {
+      const next = new Set(prev);
+      if (next.has(speakerId)) {
+        next.delete(speakerId);
+      } else {
+        next.add(speakerId);
+      }
+      return next;
+    });
+  };
+
+  const handleOpenMergeModal = () => {
+    if (selectedForMerge.size < 2) return;
+    // Default to first selected speaker as target
+    setTargetSpeakerId(Array.from(selectedForMerge)[0]);
+    setShowMergeModal(true);
+  };
+
+  const handleCancelMerge = () => {
+    setShowMergeModal(false);
+    setTargetSpeakerId(null);
+  };
+
+  const handleConfirmMerge = async () => {
+    if (!targetSpeakerId || selectedForMerge.size < 2) return;
+    setIsMerging(true);
+    try {
+      const success = await onMergeSpeakers?.(Array.from(selectedForMerge), targetSpeakerId);
+      if (success) {
+        setSelectedForMerge(new Set());
+        setShowMergeModal(false);
+        setTargetSpeakerId(null);
+      }
+    } catch (error) {
+      console.error('Error merging speakers:', error);
+    } finally {
+      setIsMerging(false);
+    }
+  };
+
+  const selectedSpeakers = useMemo(() => {
+    return allSpeakers.filter(s => selectedForMerge.has(s.id));
+  }, [allSpeakers, selectedForMerge]);
 
   if (isSpeakerAnalyzing) {
     return (
@@ -268,15 +322,34 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
       <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-gray-300">Identified Speakers ({allSpeakers.length})</h4>
-          {!isAddingNew && (
-            <button
-              onClick={() => setIsAddingNew(true)}
-              className="text-xs px-2 py-1 bg-green-600/30 text-green-300 rounded hover:bg-green-600/50 flex items-center gap-1"
-            >
-              <Plus size={12} />
-              Add Speaker
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {selectedForMerge.size >= 2 && (
+              <button
+                onClick={handleOpenMergeModal}
+                className="text-xs px-2 py-1 bg-orange-600/30 text-orange-300 rounded hover:bg-orange-600/50 flex items-center gap-1"
+              >
+                <GitMerge size={12} />
+                Merge Selected ({selectedForMerge.size})
+              </button>
+            )}
+            {selectedForMerge.size > 0 && (
+              <button
+                onClick={() => setSelectedForMerge(new Set())}
+                className="text-xs px-2 py-1 text-gray-400 hover:text-gray-300"
+              >
+                Clear Selection
+              </button>
+            )}
+            {!isAddingNew && (
+              <button
+                onClick={() => setIsAddingNew(true)}
+                className="text-xs px-2 py-1 bg-green-600/30 text-green-300 rounded hover:bg-green-600/50 flex items-center gap-1"
+              >
+                <Plus size={12} />
+                Add Speaker
+              </button>
+            )}
+          </div>
         </div>
         
         {removeError && (
@@ -287,7 +360,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
 
         <div className="flex flex-wrap gap-2">
           {allSpeakers.map(speaker => (
-            <div key={speaker.id} className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1">
+            <div key={speaker.id} className={`flex items-center gap-1 rounded-lg px-2 py-1 ${selectedForMerge.has(speaker.id) ? 'bg-orange-700/30 border border-orange-600/50' : 'bg-gray-700/50'}`}>
               {editingSpeaker === speaker.id ? (
                 <>
                   <input
@@ -315,6 +388,13 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                 </>
               ) : (
                 <>
+                  <input
+                    type="checkbox"
+                    checked={selectedForMerge.has(speaker.id)}
+                    onChange={() => toggleSpeakerSelection(speaker.id)}
+                    className="w-3 h-3 rounded border-gray-600 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                    title="Select for merge"
+                  />
                   <span className="text-xs text-gray-300">{speaker.name}</span>
                   <button
                     onClick={() => handleStartEdit(speaker.id, speaker.name)}
@@ -496,6 +576,77 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
           </div>
         </div>
       ))}
+
+      {/* Merge Confirmation Modal */}
+      {showMergeModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <GitMerge size={20} className="text-orange-400" />
+              Merge Speakers
+            </h3>
+            
+            <p className="text-sm text-gray-300 mb-4">
+              You are about to merge <strong>{selectedSpeakers.length}</strong> speakers into one. 
+              All dialogue lines will be reassigned to the selected target speaker.
+            </p>
+
+            <div className="mb-4">
+              <p className="text-xs text-gray-400 mb-2">Speakers to merge:</p>
+              <div className="flex flex-wrap gap-1">
+                {selectedSpeakers.map(s => (
+                  <span key={s.id} className="text-xs px-2 py-1 bg-gray-700 rounded text-gray-300">
+                    {s.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="text-xs text-gray-400 mb-2 block">Keep speaker as:</label>
+              <select
+                value={targetSpeakerId || ''}
+                onChange={(e) => setTargetSpeakerId(e.target.value)}
+                className="w-full bg-gray-700 text-white text-sm rounded border border-gray-600 px-3 py-2 focus:border-orange-500 focus:outline-none"
+              >
+                {selectedSpeakers.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Other speakers will be removed and their lines reassigned to this speaker.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelMerge}
+                disabled={isMerging}
+                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmMerge}
+                disabled={isMerging || !targetSpeakerId}
+                className="px-4 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-500 disabled:opacity-50 flex items-center gap-2"
+              >
+                {isMerging ? (
+                  <>
+                    <Spinner />
+                    Merging...
+                  </>
+                ) : (
+                  <>
+                    <GitMerge size={14} />
+                    Confirm Merge
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
