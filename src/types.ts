@@ -29,10 +29,10 @@ export interface Quote {
   languageCode?: string;
   languageName?: string;
   analysisContext?: string;
-  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+  links?: Array<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }>;
   person?: string | Person; // Can be ID string or full Person object
   metadata?: {
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }>;
     [key: string]: any;
   };
   analysis?: AnalysisResult;

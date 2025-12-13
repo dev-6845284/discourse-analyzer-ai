@@ -4,6 +4,7 @@ interface LinkData {
   url: string;
   title?: string;
   type: 'quote' | 'context';
+  selected?: boolean;
 }
 
 interface AdvancedAnalysisSectionProps {
@@ -18,6 +19,9 @@ interface AdvancedAnalysisSectionProps {
   onNewLinkTypeChange: (value: 'quote' | 'context') => void;
   onAddLink: () => void;
   onRemoveLink: (index: number) => void;
+  onToggleLinkSelection: (index: number) => void;
+  onSelectAllLinks: () => void;
+  onDeselectAllLinks: () => void;
 }
 
 const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
@@ -32,7 +36,14 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
   onNewLinkTypeChange,
   onAddLink,
   onRemoveLink,
+  onToggleLinkSelection,
+  onSelectAllLinks,
+  onDeselectAllLinks,
 }) => {
+  const selectedCount = links.filter(l => l.selected !== false).length;
+  const allSelected = selectedCount === links.length;
+  const noneSelected = selectedCount === 0;
+
   return (
     <div className="mt-4 border-t border-gray-700/50 pt-2">
       <button
@@ -56,25 +67,67 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Fact-Checking Links</label>
-            <div className="space-y-2">
-              {links.map((link, index) => (
-                <div key={index} className="flex items-center gap-2 text-xs bg-gray-800 p-1.5 rounded border border-gray-700">
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] uppercase ${
-                      link.type === 'quote' ? 'bg-blue-900 text-blue-300' : 'bg-purple-900 text-purple-300'
-                    }`}
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs text-gray-400">Fact-Checking Links</label>
+              {links.length > 0 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={onSelectAllLinks}
+                    disabled={allSelected}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                   >
-                    {link.type}
-                  </span>
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 truncate flex-1 hover:underline">
-                    {link.url}
-                  </a>
-                  <button onClick={() => onRemoveLink(index)} className="text-red-400 hover:text-red-300 px-1">
-                    ×
+                    Select All
+                  </button>
+                  <span className="text-gray-600">|</span>
+                  <button
+                    onClick={onDeselectAllLinks}
+                    disabled={noneSelected}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                  >
+                    Deselect All
                   </button>
                 </div>
-              ))}
+              )}
+            </div>
+            <div className="space-y-2">
+              {links.map((link, index) => {
+                const isSelected = link.selected !== false;
+                return (
+                  <div 
+                    key={index} 
+                    className={`flex items-center gap-2 text-xs bg-gray-800 p-1.5 rounded border border-gray-700 ${
+                      !isSelected ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onToggleLinkSelection(index)}
+                      className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-700 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] uppercase ${
+                        link.type === 'quote' ? 'bg-blue-900 text-blue-300' : 'bg-purple-900 text-purple-300'
+                      }`}
+                    >
+                      {link.type}
+                    </span>
+                    <a 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className={`text-cyan-400 truncate flex-1 hover:underline ${
+                        !isSelected ? 'line-through text-gray-500' : ''
+                      }`}
+                    >
+                      {link.url}
+                    </a>
+                    <button onClick={() => onRemoveLink(index)} className="text-red-400 hover:text-red-300 px-1">
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
 
               <div className="flex gap-2">
                 <input

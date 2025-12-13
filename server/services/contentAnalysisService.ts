@@ -133,9 +133,9 @@ export const promoteSession = async (sessionId: string, quoteGroups: QuoteGroupI
       personId = person._id.toString();
     }
 
-    // Generate Links
-    const links = [
-      { url: session.sourceUrl, title: 'Source Video', type: 'context' }
+    // Generate Links - YouTube timestamp links are unselected by default (just time references)
+    const links: Array<{ url: string; title: string; type: 'quote' | 'context'; selected?: boolean }> = [
+      { url: session.sourceUrl, title: 'Source Video', type: 'context', selected: false }
     ];
 
     statements.forEach((s, idx) => {
@@ -151,7 +151,7 @@ export const promoteSession = async (sessionId: string, quoteGroups: QuoteGroupI
         // Append timestamp to URL (assuming YouTube format ?t=X)
         const separator = session.sourceUrl.includes('?') ? '&' : '?';
         const url = `${session.sourceUrl}${separator}t=${seconds}`;
-        links.push({ url, title: `[${idx + 1}]`, type: 'context' });
+        links.push({ url, title: `[${idx + 1}]`, type: 'context', selected: false });
       }
     });
     
@@ -231,9 +231,9 @@ export const updateQuotes = async (contentAnalysisId: string, quoteGroups: Quote
         personId = person._id.toString();
       }
 
-      // Generate Links
-      const links = [
-        { url: contentAnalysis.sourceUrl, title: 'Source Video', type: 'context' }
+      // Generate Links - YouTube timestamp links are unselected by default (just time references)
+      const links: Array<{ url: string; title: string; type: 'quote' | 'context'; selected?: boolean }> = [
+        { url: contentAnalysis.sourceUrl, title: 'Source Video', type: 'context', selected: false }
       ];
 
       statements.forEach((s, idx) => {
@@ -249,7 +249,7 @@ export const updateQuotes = async (contentAnalysisId: string, quoteGroups: Quote
           // Append timestamp to URL (assuming YouTube format ?t=X)
           const separator = contentAnalysis.sourceUrl.includes('?') ? '&' : '?';
           const url = `${contentAnalysis.sourceUrl}${separator}t=${seconds}`;
-          links.push({ url, title: `[${idx + 1}]`, type: 'context' });
+          links.push({ url, title: `[${idx + 1}]`, type: 'context', selected: false });
         }
       });
 
@@ -330,9 +330,9 @@ export const updateQuoteSource = async (quoteId: string, contentAnalysisId: stri
   // Keep same person as original quote
   const personId = quote.person;
 
-  // Generate Links
-  const links = [
-    { url: contentAnalysis.sourceUrl, title: 'Source Video', type: 'context' }
+  // Generate Links - YouTube timestamp links are unselected by default (just time references)
+  const links: Array<{ url: string; title: string; type: 'quote' | 'context'; selected?: boolean }> = [
+    { url: contentAnalysis.sourceUrl, title: 'Source Video', type: 'context', selected: false }
   ];
 
   statements.forEach((s, idx) => {
@@ -347,7 +347,7 @@ export const updateQuoteSource = async (quoteId: string, contentAnalysisId: stri
       
       const separator = contentAnalysis.sourceUrl.includes('?') ? '&' : '?';
       const url = `${contentAnalysis.sourceUrl}${separator}t=${seconds}`;
-      links.push({ url, title: `[${idx + 1}]`, type: 'context' });
+      links.push({ url, title: `[${idx + 1}]`, type: 'context', selected: false });
     }
   });
 

@@ -7,6 +7,7 @@ import AuditMetadata from './QuoteCard/AuditMetadata';
 import QuoteLinksDisplay from './QuoteCard/QuoteLinksDisplay';
 import AdvancedAnalysisSection from './QuoteCard/AdvancedAnalysisSection';
 import QuoteCardActions from './QuoteCard/QuoteCardActions';
+import { isYouTubeUrl } from '../utils/urlHelpers';
 
 interface QuoteCardProps {
   quote: Quote;
@@ -41,7 +42,18 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [isSaved, setIsSaved] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analysisContext, setAnalysisContext] = useState(quote.analysisContext || '');
-  const [links, setLinks] = useState<{ url: string; title?: string; type: 'quote' | 'context' }[]>(quote.links || quote.metadata?.links || []);
+  
+  // Initialize links with selection state - YouTube links are unchecked by default
+  const initializeLinksWithSelection = (inputLinks: typeof links) => {
+    return inputLinks.map(link => ({
+      ...link,
+      selected: link.selected !== undefined ? link.selected : !isYouTubeUrl(link.url)
+    }));
+  };
+  
+  const [links, setLinks] = useState<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }[]>(
+    initializeLinksWithSelection(quote.links || quote.metadata?.links || [])
+  );
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkType, setNewLinkType] = useState<'quote' | 'context'>('context');
   const [selectedCategories, setSelectedCategories] = useState<AnalysisCategory[]>([]);
@@ -49,7 +61,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Sync state with props when quote updates
   React.useEffect(() => {
     setAnalysisContext(quote.analysisContext || '');
-    setLinks(quote.links || quote.metadata?.links || []);
+    setLinks(initializeLinksWithSelection(quote.links || quote.metadata?.links || []));
     
     // Initialize selected categories when draft analysis is available
     if (quote.draft?.analysis) {
@@ -72,7 +84,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   const handleAddLink = () => {
     if (newLinkUrl) {
-      setLinks([...links, { url: newLinkUrl, type: newLinkType }]);
+      // New links are selected by default (user explicitly added them)
+      setLinks([...links, { url: newLinkUrl, type: newLinkType, selected: true }]);
       setNewLinkUrl('');
     }
   };
@@ -81,8 +94,24 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setLinks(links.filter((_, i) => i !== index));
   };
 
+  const handleToggleLinkSelection = (index: number) => {
+    setLinks(links.map((link, i) => 
+      i === index ? { ...link, selected: link.selected === false ? true : false } : link
+    ));
+  };
+
+  const handleSelectAllLinks = () => {
+    setLinks(links.map(link => ({ ...link, selected: true })));
+  };
+
+  const handleDeselectAllLinks = () => {
+    setLinks(links.map(link => ({ ...link, selected: false })));
+  };
+
   const handleAnalyze = () => {
-    onAnalyze({ ...quote, analysisContext, links });
+    // Only include selected links for analysis
+    const selectedLinks = links.filter(link => link.selected !== false);
+    onAnalyze({ ...quote, analysisContext, links: selectedLinks });
   };
 
   const handleToggleCategory = (category: AnalysisCategory) => {
@@ -190,6 +219,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               onNewLinkTypeChange={setNewLinkType}
               onAddLink={handleAddLink}
               onRemoveLink={handleRemoveLink}
+              onToggleLinkSelection={handleToggleLinkSelection}
+              onSelectAllLinks={handleSelectAllLinks}
+              onDeselectAllLinks={handleDeselectAllLinks}
             />
           )}
 
