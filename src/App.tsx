@@ -11,6 +11,7 @@ import ApiKeySettingsModal from './components/ApiKeySettingsModal';
 import LogViewer from './components/LogViewer';
 import TranscriptViewer from './components/TranscriptViewer';
 import TranscriptImporter from './components/TranscriptImporter';
+import { SrtTranscriptImporter } from './components/SrtTranscriptImporter';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
 import { saveQuote, fetchArticle, getSession, getContentAnalysis } from './utils/api';
 import { ExportData, Quote, Person, AnalysisSession } from './types';
@@ -600,6 +601,10 @@ const App: React.FC = () => {
                     extractionError={extractionError}
                   />
                   <TranscriptImporter
+                    onImport={handleImportTranscript}
+                    isLoading={isExtracting}
+                  />
+                  <SrtTranscriptImporter
                     onImport={handleImportTranscript}
                     isLoading={isExtracting}
                   />
