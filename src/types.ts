@@ -1,3 +1,4 @@
+// Legacy categories - kept for migration compatibility
 export enum AnalysisCategory {
   Populism = "Populism",
   FactTwisting = "Fact Twisting",
@@ -5,13 +6,38 @@ export enum AnalysisCategory {
   InflammatoryLanguage = "Inflammatory Language",
 }
 
+// New strict audit categories
+export enum AuditCategory {
+  VerifiableFalsehood = "Verifiable Falsehood",
+  MisleadingFraming = "Misleading Framing",
+  RealityInversion = "Reality Inversion",
+  ResponsibilityShifting = "Responsibility Shifting",
+  UnsupportedAssertion = "Unsupported Assertion",
+  NarrativeControl = "Narrative Control / Propaganda",
+}
+
+// Legacy rating type - kept for migration compatibility
 export type AnalysisRating = "None" | "Low" | "Medium" | "High" | "Severe";
 
+// New severity levels (uppercase in data)
+export type SeverityLevel = "NONE" | "LOW" | "MEDIUM" | "HIGH" | "SEVERE";
+
+// Verdict types for audit conclusions
+export type Verdict = "TRUE" | "FALSE" | "MISLEADING" | "MANIPULATIVE" | "UNFOUNDED";
+
+// Legacy analysis detail - kept for migration compatibility
 export interface AnalysisDetail {
   rating: AnalysisRating;
   justification: string;
 }
 
+// New audit detail with severity and evidence
+export interface AuditDetail {
+  severity: SeverityLevel;
+  evidence: string;
+}
+
+// Legacy analysis result - kept for migration compatibility
 // FIX: Changed from an interface to a mapped type. This improves type safety and inference
 // when indexing the object with a variable of type AnalysisCategory, fixing errors in
 // App.tsx and AnalysisReport.tsx.
@@ -19,26 +45,70 @@ export type AnalysisResult = {
   [key in AnalysisCategory]?: AnalysisDetail;
 };
 
+// New audit result with verdict and rationale
+export interface AuditResult {
+  verdict: Verdict;
+  rationale: string;
+  categories: {
+    [key in AuditCategory]: AuditDetail;
+  };
+}
+
 export interface Quote {
-  id: string;
+  id?: string;
+  _id?: string;
   text: string;
-  source: string;
-  title: string;
-  date: string;
-  languageCode: string;
-  languageName: string;
+  source?: string;
+  title?: string;
+  date?: string;
+  languageCode?: string;
+  languageName?: string;
   analysisContext?: string;
-  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+  links?: Array<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }>;
+  person?: string | Person; // Can be ID string or full Person object
   metadata?: {
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }>;
     [key: string]: any;
   };
+  /** @deprecated Use audit instead */
   analysis?: AnalysisResult;
+  /** New strict audit result */
+  audit?: AuditResult;
   isAnalyzing?: boolean;
   isImproving?: boolean;
   personName?: string;
   isStored?: boolean;
   draft?: Partial<Quote>;
+  contentAnalysisId?: string;
+  originIds?: string[];
+  isDeprecated?: boolean;
+  // Audit fields
+  savedByUser?: string;
+  savedByName?: string;
+  savedAt?: string;
+  analyzedByUser?: string;
+  analyzedByName?: string;
+  analyzedByProvider?: string;
+  analyzedAt?: string;
+  improvedByUser?: string;
+  improvedByName?: string;
+  improvedByProvider?: string;
+  improvedAt?: string;
+}
+
+export interface AnalysisSession {
+  _id: string;
+  userId: string;
+  sourceUrl: string;
+  sourceType: 'youtube' | 'article' | 'text';
+  status: 'created' | 'extracting_transcript' | 'analyzing_topics' | 'identifying_speakers' | 'grouping_dialog' | 'completed' | 'failed';
+  createdAt: string;
+  updatedAt: string;
+  error?: string;
+  transcript?: any;
+  topicAnalysis?: any;
+  speakerAnalysis?: any;
+  dialogAnalysis?: any;
 }
 
 export type LogCommand = 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote';
@@ -90,12 +160,24 @@ export interface UserInfo {
   role?: string;
 }
 
-export interface User {
-  _id: string;
-  alias: string;
-  email: string;
-  role: 'admin' | 'editor' | 'moderator' | 'viewer';
-  createdAt: string;
+export interface ArticleRecommendation {
+  url: string;
+  title: string;
+  summary: string;
+  tags: string[];
+  relevanceScore: number;
+  publishedDate?: string;
+}
+
+export type AgenticSearchResult = 
+  | { type: 'quotes'; data: Quote[] }
+  | { type: 'articles'; data: ArticleRecommendation[] };
+
+export interface AgenticSearchOptions {
+  mode: 'quotes' | 'articles';
+  topics?: string[];
+  keywords?: string[];
+  searchDepth?: 'shallow' | 'deep';
 }
 
 export interface ExportData {
@@ -123,4 +205,9 @@ export interface QuoteUpdatePayload {
   context?: string;
   analysisContext?: string;
   metadata?: Record<string, any>;
+  // Audit fields
+  analyzedByProvider?: string;
+  analyzedAt?: string;
+  improvedByProvider?: string;
+  improvedAt?: string;
 }

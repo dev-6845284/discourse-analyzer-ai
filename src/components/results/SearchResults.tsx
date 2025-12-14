@@ -17,6 +17,8 @@ interface SearchResultsProps {
   onLanguageChange: (id: string, lang: string) => void;
   onAccept: (quote: Quote) => void;
   onDiscard: (quote: Quote) => void;
+  onRemove: (quote: Quote) => void;
+  onEditSource?: (quote: Quote) => void;
   clearError: () => void;
 }
 
@@ -34,6 +36,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onLanguageChange,
   onAccept,
   onDiscard,
+  onRemove,
+  onEditSource,
   clearError,
 }) => {
   return (
@@ -103,6 +107,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               onLanguageChange={onLanguageChange}
               onAccept={onAccept}
               onDiscard={onDiscard}
+              onRemove={onRemove}
               isApiKeySet={true}
             />
           ))}

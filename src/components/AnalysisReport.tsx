@@ -1,26 +1,103 @@
 
 import React from 'react';
-// FIX: Import AnalysisDetail to use for type casting.
-import { AnalysisResult, AnalysisCategory, AnalysisDetail } from '../types';
-import { CATEGORY_COLORS, RATING_COLORS } from '../constants';
+import { 
+  AnalysisResult, 
+  AnalysisCategory, 
+  AnalysisDetail, 
+  AuditResult, 
+  AuditCategory, 
+  AuditDetail,
+  SeverityLevel 
+} from '../types';
+import { 
+  CATEGORY_COLORS, 
+  RATING_COLORS, 
+  AUDIT_CATEGORY_COLORS, 
+  SEVERITY_COLORS, 
+  VERDICT_COLORS,
+  severityToDisplay 
+} from '../constants';
 
-interface AnalysisReportProps {
+interface LegacyAnalysisReportProps {
   analysis: AnalysisResult;
   selectable?: boolean;
   selectedCategories?: AnalysisCategory[];
   onToggleCategory?: (category: AnalysisCategory) => void;
 }
 
-const AnalysisReport: React.FC<AnalysisReportProps> = ({ 
-  analysis, 
-  selectable = false, 
-  selectedCategories = [], 
-  onToggleCategory 
-}) => {
+interface AuditReportProps {
+  audit: AuditResult;
+  selectable?: boolean;
+  selectedCategories?: AuditCategory[];
+  onToggleCategory?: (category: AuditCategory) => void;
+}
+
+type AnalysisReportProps = LegacyAnalysisReportProps | AuditReportProps;
+
+// Type guard to check if this is an audit result
+const isAuditResult = (props: AnalysisReportProps): props is AuditReportProps => {
+  return 'audit' in props && props.audit !== undefined;
+};
+
+const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
+  // Handle new AuditResult format
+  if (isAuditResult(props)) {
+    const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
+    
+    return (
+      <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
+        {/* Verdict Badge */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-cyan-300">Audit Report</h3>
+          <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${VERDICT_COLORS[audit.verdict]}`}>
+            {audit.verdict}
+          </span>
+        </div>
+        
+        {/* Rationale */}
+        <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-cyan-500">
+          <p className="text-gray-200 text-sm italic">{audit.rationale}</p>
+        </div>
+        
+        {/* Categories */}
+        {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => (
+          <div 
+            key={category} 
+            className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}
+          >
+            {selectable && onToggleCategory && (
+              <div className="pt-1">
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category)}
+                  onChange={() => onToggleCategory(category)}
+                  className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <div className="flex justify-between items-center">
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${AUDIT_CATEGORY_COLORS[category]}`}>
+                  {category}
+                </span>
+                <span className={`font-bold text-sm ${SEVERITY_COLORS[detail.severity]}`}>
+                  {severityToDisplay(detail.severity)}
+                </span>
+              </div>
+              <p className="mt-2 text-gray-300 text-sm">{detail.evidence}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Handle legacy AnalysisResult format
+  const { analysis, selectable = false, selectedCategories = [], onToggleCategory } = props as LegacyAnalysisReportProps;
+  
   return (
     <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
-      <h3 className="text-lg font-semibold text-cyan-300">Analysis Report</h3>
-      {/* FIX: Cast Object.entries to provide strong types for category and detail, resolving property access errors. */}
+      <h3 className="text-lg font-semibold text-cyan-300">Analysis Report (Legacy)</h3>
       {(Object.entries(analysis) as [AnalysisCategory, AnalysisDetail][]).map(([category, detail]) => (
         <div key={category} className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}>
           {selectable && onToggleCategory && (

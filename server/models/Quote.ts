@@ -8,9 +8,24 @@ export interface IQuote extends Document {
   tags: string[];
   context?: string;
   analysisContext?: string;
+  contentAnalysisId?: mongoose.Types.ObjectId;
+  originIds?: string[];
+  isDeprecated?: boolean;
   foundBy?: string;
   improvedBy?: string;
   analyzedBy?: string;
+  // Audit fields
+  savedByUser?: mongoose.Types.ObjectId;
+  savedByName?: string;
+  savedAt?: Date;
+  analyzedByUser?: mongoose.Types.ObjectId;
+  analyzedByName?: string;
+  analyzedByProvider?: string;
+  analyzedAt?: Date;
+  improvedByUser?: mongoose.Types.ObjectId;
+  improvedByName?: string;
+  improvedByProvider?: string;
+  improvedAt?: Date;
   metadata: Record<string, any>; // Flexible schema
   createdAt: Date;
   updatedAt: Date;
@@ -25,9 +40,24 @@ const QuoteSchema: Schema = new Schema(
     tags: { type: [String], index: true },
     context: { type: String },
     analysisContext: { type: String },
+    contentAnalysisId: { type: Schema.Types.ObjectId, ref: 'ContentAnalysis', index: true },
+    originIds: { type: [String], index: true },
+    isDeprecated: { type: Boolean, default: false },
     foundBy: { type: String },
     improvedBy: { type: String },
     analyzedBy: { type: String },
+    // Audit fields
+    savedByUser: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    savedByName: { type: String },
+    savedAt: { type: Date },
+    analyzedByUser: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    analyzedByName: { type: String },
+    analyzedByProvider: { type: String },
+    analyzedAt: { type: Date },
+    improvedByUser: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    improvedByName: { type: String },
+    improvedByProvider: { type: String },
+    improvedAt: { type: Date },
     metadata: { type: Schema.Types.Mixed, default: {} },
   },
   {

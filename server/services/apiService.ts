@@ -2,15 +2,23 @@ import { Request, Response } from 'express';
 import {
   Quote,
   AnalysisResult,
+  AuditResult,
   ModelResponseError,
   JsonParsingError,
 } from '../types';
-import geminiService from '../llm_services/geniniService';
+import geminiService from '../llm_services/geminiService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
+import agenticService from '../llm_services/agenticService';
 import { addLogEntry, updateLogEntry, getLogs } from './logService';
 import { LlmService } from '../llm_services/LlmService';
 import { postProcessResponse } from './responseProcessor';
+import { fetchArticle } from '../utils/articleExtractor';
+import { getTranscript } from './youtubeService';
+import { extractTranscriptTopics } from './dialogAnalysis/topicExtractorService';
+import { identifySpeakers } from './dialogAnalysis/speakerIdentificationService';
+import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysis';
+import { updateSessionStep, updateSessionStatus, createSession } from './analysisSessionService';
 
 const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
   switch (model) {
@@ -75,15 +83,61 @@ export const fetchQuotes = async (req: Request, res: Response) => {
   }
 };
 
+export const agenticSearch = async (req: Request, res: Response) => {
+  const {
+    personName,
+    timePeriod,
+    languages,
+    options,
+    apiKeys,
+    provider = 'gemini',
+  } = req.body;
+
+  const logId = addLogEntry(req.session.id!, 'agenticSearch', { personName, timePeriod, languages, options, provider });
+
+  try {
+    let apiKey: string;
+    if (provider === 'openai') {
+      apiKey = apiKeys?.openai || process.env.OPENAI_API_KEY!;
+    } else {
+      apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY!;
+    }
+    
+    const result = await agenticService.search(
+      provider,
+      apiKey,
+      personName,
+      timePeriod,
+      languages,
+      options,
+      logId,
+      req.session.id!
+    );
+    
+    updateLogEntry(req.session.id!, logId, result);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error in agentic search:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: error.message || 'Failed to perform agentic search' });
+  }
+};
+
 export const analyzeQuote = async (req: Request, res: Response) => {
   const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links } = req.body;
   const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, analysisContext, links });
 
   try {
     const { service, apiKey } = getService(model, apiKeys);
-    const analysis = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
-    updateLogEntry(req.session.id!, logId, analysis);
-    res.json(analysis);
+    const auditResult = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
+    updateLogEntry(req.session.id!, logId, auditResult);
+    res.json(auditResult);
   } catch (error: any) {
     console.error('Error analyzing quote:', error);
     updateLogEntry(req.session.id!, logId, undefined, error);
@@ -128,6 +182,78 @@ export const extractQuotes = async (req: Request, res: Response) => {
   }
 };
 
+export const extractQuotesFromUrl = async (req: Request, res: Response) => {
+  const { url, personName, model, temperature, apiKeys } = req.body;
+  const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, url, model, extractionType: 'url' });
+
+  try {
+    // Step 1: Fetch and extract article content
+    const article = await fetchArticle(url);
+
+    // Step 2: Use LLM to extract quotes from article content
+    const { service, apiKey } = getService(model, apiKeys);
+    const quotes = await service.extractQuotesFromArticle(
+      apiKey,
+      personName,
+      article.textContent,
+      {
+        url: article.url,
+        title: article.title,
+        byline: article.byline,
+        siteName: article.siteName,
+      },
+      temperature,
+      logId,
+      req.session.id!
+    );
+
+    updateLogEntry(req.session.id!, logId, quotes);
+    
+    // Return quotes along with article metadata for the frontend
+    const response: any = {
+      quotes,
+      articleMetadata: {
+        url: article.url,
+        title: article.title,
+        byline: article.byline,
+        siteName: article.siteName,
+        excerpt: article.excerpt,
+      }
+    };
+
+    // Include transcript data if it's a YouTube video
+    if (article.isYoutubeVideo && article.transcriptSegments) {
+      response.transcript = {
+        videoId: article.videoId,
+        languageCode: article.languageCode,
+        isAutoGenerated: article.isAutoGenerated,
+        segments: article.transcriptSegments,
+      };
+    }
+
+    res.json(response);
+  } catch (error: any) {
+    console.error('Error extracting quotes from URL:', error);
+    updateLogEntry(req.session.id!, logId, undefined, error);
+    
+    // Handle article fetch errors with user-friendly messages
+    if (error.message?.includes('Access denied') || 
+        error.message?.includes('not found') || 
+        error.message?.includes('Server error') ||
+        error.message?.includes('Could not extract article')) {
+      return res.status(400).json({ message: error.message, errorType: 'ArticleExtractionError' });
+    }
+    
+    if (error instanceof JsonParsingError) {
+      return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
+    }
+    if (error instanceof ModelResponseError) {
+      return res.status(500).json({ message: error.message, errorType: error.name });
+    }
+    res.status(500).json({ message: 'Failed to extract quotes from URL' });
+  }
+};
+
 export const improveSingleQuote = async (req: Request, res: Response) => {
   const { quote, personName, model, temperature, apiKeys } = req.body;
   const logId = addLogEntry(req.session.id!, 'improveQuote', { quote, personName, model });
@@ -162,3 +288,277 @@ export const getApiLogs = (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch logs' });
   }
 };
+
+export const fetchArticleContent = async (req: Request, res: Response) => {
+  const { url, language } = req.body;
+  
+  try {
+    const article = await fetchArticle(url, language);
+    
+    const response: any = {
+      textContent: article.textContent,
+      metadata: {
+        url: article.url,
+        title: article.title,
+        byline: article.byline,
+        siteName: article.siteName,
+        excerpt: article.excerpt,
+      }
+    };
+
+    // Include transcript data if it's a YouTube video
+    if (article.isYoutubeVideo && article.transcriptSegments) {
+      response.transcript = {
+        videoId: article.videoId,
+        languageCode: article.languageCode,
+        isAutoGenerated: article.isAutoGenerated,
+        segments: article.transcriptSegments,
+      };
+    }
+
+    res.json(response);
+  } catch (error: any) {
+    console.error('Error fetching article content:', error);
+    
+    if (error.message?.includes('Access denied') || 
+        error.message?.includes('not found') || 
+        error.message?.includes('Server error') ||
+        error.message?.includes('Could not extract article')) {
+      return res.status(400).json({ message: error.message, errorType: 'ArticleExtractionError' });
+    }
+    
+    res.status(500).json({ message: 'Failed to fetch article content' });
+  }
+};
+
+export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
+  const { url, language, sessionId, save } = req.body;
+  
+  if (!url) {
+    return res.status(400).json({ error: 'URL is required' });
+  }
+
+  let currentSessionId = sessionId;
+
+  try {
+    // If save is requested and no session exists, create one
+    if (save && !currentSessionId && req.session?.user) {
+      const session = await createSession(req.session.user._id as string, url, 'youtube');
+      currentSessionId = session._id;
+    }
+
+    if (currentSessionId) {
+      await updateSessionStatus(currentSessionId, 'extracting_transcript');
+    }
+
+    const transcript = await getTranscript(url, language);
+
+    if (currentSessionId) {
+      await updateSessionStep(currentSessionId, 'transcript', transcript, 'extracting_transcript');
+    }
+
+    // Return transcript with sessionId if available
+    res.json({ ...transcript, sessionId: currentSessionId });
+  } catch (error: any) {
+    console.error('Error fetching transcript:', error);
+    
+    // Let's use currentSessionId if it exists
+    if (currentSessionId) {
+       await updateSessionStatus(currentSessionId, 'failed', error.message);
+    }
+
+    const status = error.code === 'CAPTIONS_NOT_FOUND' ? 404 : 
+                   error.code === 'VIDEO_RESTRICTED' ? 403 :
+                   error.code === 'INVALID_VIDEO_ID' ? 400 : 500;
+    res.status(status).json({ error: error.message, code: error.code });
+  }
+};
+
+import { groupTranscriptByTime } from './dialogAnalysis/transcriptGrouper';
+
+/**
+ * Analyze YouTube transcript for topics and generate tag clouds
+ * Groups transcript into 15-minute blocks and extracts topics using fast models
+ */
+export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
+  const { segments, language, model, apiKeys, sessionId } = req.body;
+
+  if (!segments || !Array.isArray(segments) || segments.length === 0) {
+    return res.status(400).json({ error: 'Segments array is required and must not be empty' });
+  }
+
+  if (!apiKeys || typeof apiKeys !== 'object') {
+    return res.status(400).json({ error: 'API keys are required' });
+  }
+
+  try {
+    // Group segments into blocks on the backend
+    const blocks = groupTranscriptByTime(segments, 5);
+
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'analyzing_topics');
+      // Save the blocks used for analysis
+      await updateSessionStep(sessionId, 'transcriptBlocks', blocks, 'analyzing_topics');
+    }
+
+    console.log(`[TopicAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
+    
+    const results = await extractTranscriptTopics({
+      blocks,
+      language: language || 'lt',
+      model: model || 'gemini',
+      apiKeys,
+    });
+
+    if (sessionId) {
+      await updateSessionStep(sessionId, 'topicAnalysis', results, 'analyzing_topics');
+    }
+
+    console.log(`[TopicAnalysis] Successfully analyzed ${results.length} blocks`);
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing transcript topics:', error);
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
+    res.status(500).json({ 
+      error: error.message || 'Failed to analyze transcript topics',
+      details: error.stack 
+    });
+  }
+};
+
+/**
+ * Analyze YouTube transcript blocks for speaker identification
+ */
+export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => {
+  const { blocks, language, model, apiKeys, sessionId } = req.body;
+
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+    return res.status(400).json({ error: 'Blocks array is required and must not be empty' });
+  }
+
+  if (!apiKeys || typeof apiKeys !== 'object') {
+    return res.status(400).json({ error: 'API keys are required' });
+  }
+
+  let logId: string | undefined;
+
+  try {
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'identifying_speakers');
+      logId = addLogEntry(sessionId, 'identify-speakers', {
+        blocksCount: blocks.length,
+        language,
+        model
+      });
+    }
+
+    console.log(`[SpeakerAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
+    
+    const results = await identifySpeakers({
+      blocks,
+      language: language || 'lt',
+      model: model || 'gemini',
+      apiKeys,
+      sessionId,
+      logId,
+    });
+
+    if (sessionId) {
+      if (logId) {
+        updateLogEntry(sessionId, logId, { resultsCount: results.length });
+      }
+      await updateSessionStep(sessionId, 'speakerAnalysis', results, 'identifying_speakers');
+    }
+
+    console.log(`[SpeakerAnalysis] Successfully analyzed ${results.length} blocks`);
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing transcript speakers:', error);
+    if (sessionId) {
+      if (logId) {
+        updateLogEntry(sessionId, logId, undefined, error);
+      }
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
+    res.status(500).json({ 
+      error: error.message || 'Failed to analyze transcript speakers',
+      details: error.stack 
+    });
+  }
+};
+
+/**
+ * Analyze dialog for topic segmentation and analysis
+ */
+export const analyzeDialogTopics = async (req: Request, res: Response) => {
+  const { dialog, language, fastModel, betterModel, apiKeys, sessionId } = req.body;
+
+  if (!dialog || !Array.isArray(dialog) || dialog.length === 0) {
+    return res.status(400).json({ error: 'Dialog array is required and must not be empty' });
+  }
+
+  if (!apiKeys || typeof apiKeys !== 'object') {
+    return res.status(400).json({ error: 'API keys are required' });
+  }
+
+  let logId: string | undefined;
+  try {
+    // Create log entry for this API call
+    logId = addLogEntry(req.session.id || sessionId || 'unknown', 'analyze-dialog-topics', {
+      dialogBlockCount: dialog.length,
+      language: language || 'lt',
+      fastModel,
+      betterModel,
+    });
+
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'grouping_dialog');
+    }
+
+    console.log(`[DialogAnalysis] Analyzing dialog with ${dialog.length} blocks`);
+    
+    const results = await analyzeDialogTopicsService({
+      dialog,
+      language: language || 'lt',
+      fastModel,
+      betterModel,
+      apiKeys,
+      sessionId: req.session.id || sessionId,
+      logId,
+    });
+
+    if (sessionId) {
+      await updateSessionStep(sessionId, 'dialogAnalysis', results, 'completed');
+    }
+
+    console.log(`[DialogAnalysis] Successfully analyzed ${results.length} topic groups`);
+    
+    // Update log entry with response
+    if (logId) {
+      updateLogEntry(req.session.id || sessionId || 'unknown', logId, {
+        topicGroupCount: results.length,
+        totalLinesAnalyzed: results.reduce((sum, g) => sum + g.dialogLines.length, 0),
+      });
+    }
+
+    res.json(results);
+  } catch (error: any) {
+    console.error('Error analyzing dialog topics:', error);
+    if (sessionId) {
+      await updateSessionStatus(sessionId, 'failed', error.message);
+    }
+    
+    // Update log entry with error
+    if (logId) {
+      updateLogEntry(req.session.id || sessionId || 'unknown', logId, undefined, error);
+    }
+
+    res.status(500).json({ 
+      error: error.message || 'Failed to analyze dialog topics',
+      details: error.stack 
+    });
+  }
+};
+

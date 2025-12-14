@@ -1,5 +1,5 @@
-import { LogEntry, LogErrorDetails, ModelInteractionLog } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { LogEntry, LogErrorDetails, ModelInteractionLog, LogCommand } from '../types';
+import { randomUUID } from 'crypto';
 
 const logs = new Map<string, LogEntry[]>();
 const MAX_LOG_ENTRIES_PER_SESSION = 1000; // To prevent unbounded memory usage
@@ -39,6 +39,23 @@ const safeClone = <T>(payload: T): T => {
   }
 };
 
+const extractLlmResponseForLogging = (payload: any): any => {
+  if (!payload) {
+    return payload;
+  }
+
+  if (!Array.isArray(payload.candidates)) {
+    return safeClone(payload);
+  }
+
+  return {
+    candidates: payload.candidates.map((candidate: any) => ({
+      content: candidate?.content,
+      finishReason: candidate?.finishReason,
+    })),
+  };
+};
+
 const ensureSessionLogs = (sessionId: string): LogEntry[] => {
   if (!logs.has(sessionId)) {
     logs.set(sessionId, []);
@@ -52,10 +69,14 @@ const findEntry = (sessionId: string, entryId: string): LogEntry | undefined => 
   return sessionLogs.find((log) => log.id === entryId);
 };
 
-export const addLogEntry = (sessionId: string, command: 'fetchQuotes' | 'analyzeQuote' | 'improveQuote' | 'extractQuote', requestPayload: any): string => {
+export const addLogEntry = (sessionId: string, command: LogCommand, requestPayload: any): string => {
+  if (!sessionId) {
+    console.warn('[LOG_SERVICE] Attempted to add log entry without sessionId. Using "unknown" session.');
+    sessionId = 'unknown';
+  }
   const sessionLogs = ensureSessionLogs(sessionId);
 
-  const id = uuidv4();
+  const id = randomUUID();
   const entry: LogEntry = {
     id,
     timestamp: new Date().toISOString(),
@@ -78,14 +99,20 @@ export const updateLogEntry = (
   responsePayload?: any,
   error?: any
 ): void => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, id);
   if (entry) {
-    entry.responsePayload = safeClone(responsePayload);
+    entry.responsePayload = extractLlmResponseForLogging(responsePayload);
     entry.error = normalizeError(error);
   }
 };
 
 export const appendLogRequestPayload = (sessionId: string, id: string, payloadToAppend: Record<string, any>): void => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, id);
   if (entry) {
     entry.requestPayload = { ...entry.requestPayload, ...safeClone(payloadToAppend) };
@@ -105,11 +132,14 @@ export const addModelInteractionLog = (
   logId: string,
   interaction: ModelInteractionInput
 ): string | null => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, logId);
   if (!entry) return null;
 
   const interactionEntry: ModelInteractionLog = {
-    id: uuidv4(),
+    id: randomUUID(),
     timestamp: new Date().toISOString(),
     provider: interaction.provider,
     model: interaction.model,
@@ -134,6 +164,9 @@ export const completeModelInteractionLog = (
   error?: any
 ): void => {
   if (!interactionId) return;
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const entry = findEntry(sessionId, logId);
   if (!entry || !entry.modelInteractions) return;
 
@@ -141,7 +174,7 @@ export const completeModelInteractionLog = (
   if (!interaction) return;
 
   if (responsePayload !== undefined) {
-    interaction.responsePayload = safeClone(responsePayload);
+    interaction.responsePayload = extractLlmResponseForLogging(responsePayload);
   }
 
   interaction.error = normalizeError(error);
@@ -153,6 +186,9 @@ export const getLogs = (
   page: number,
   pageSize: number
 ): { logs: LogEntry[]; total: number; pages: number } => {
+  if (!sessionId) {
+    sessionId = 'unknown';
+  }
   const sessionLogs = logs.get(sessionId) || [];
   const sortedLogs = [...sessionLogs].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
