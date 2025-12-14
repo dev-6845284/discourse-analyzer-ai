@@ -31,6 +31,8 @@ import { Sidebar } from './components/layout/Sidebar';
 import { SearchControls } from './components/search/SearchControls';
 import { ExtractionControls } from './components/search/ExtractionControls';
 import { SearchResults } from './components/results/SearchResults';
+import { AdminAlertBanner } from './components/admin/AdminAlertBanner';
+import { UsageStatsDashboard } from './components/admin/UsageStatsDashboard';
 
 const App: React.FC = () => {
   // Custom hooks
@@ -136,6 +138,7 @@ const App: React.FC = () => {
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [extractedSourceUrl, setExtractedSourceUrl] = useState<string>('');
   const [shouldAnalyzeImmediately, setShouldAnalyzeImmediately] = useState<boolean>(true);
+  const [isUsageStatsDashboardOpen, setIsUsageStatsDashboardOpen] = useState<boolean>(false);
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -494,7 +497,18 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
-      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      {/* Admin Security Alert Banner */}
+      <AdminAlertBanner 
+        isAdmin={user?.role === 'admin'} 
+        onViewDashboard={() => setIsUsageStatsDashboardOpen(true)}
+      />
+      
+      {/* Usage Stats Dashboard Modal */}
+      {isUsageStatsDashboardOpen && (
+        <UsageStatsDashboard onClose={() => setIsUsageStatsDashboardOpen(false)} />
+      )}
+      
+      <div className={`container mx-auto p-4 md:p-6 lg:p-8 ${user?.role === 'admin' ? 'pt-16' : ''}`}>
           <Header
             user={user}
             isFormCollapsed={isFormCollapsed}

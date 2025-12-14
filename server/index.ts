@@ -11,8 +11,12 @@ import { isAuthenticated } from './middleware/auth';
 import apiRoutes from './routes/api';
 import userRoutes from './routes/users';
 import analysisRoutes from './routes/analysis';
+import adminRoutes from './routes/admin';
 import connectToDatabase from './db';
 import User from './models/User';
+import { generalRateLimiter, loginRateLimiter, apiRateLimiter } from './middleware/rateLimiter';
+import { ipBlocker } from './middleware/ipBlocker';
+import { usageTracker } from './middleware/usageTracker';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -25,6 +29,21 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 app.use(helmet());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// ============================================
+// SECURITY MIDDLEWARE - DDoS Protection Layer
+// ============================================
+
+// 1. IP Blocker - Block known bad IPs first (before any processing)
+app.use(ipBlocker);
+
+// 2. General rate limiter - Basic flood protection for all requests
+app.use(generalRateLimiter);
+
+// 3. Usage tracker - Log all API requests for monitoring
+app.use(usageTracker);
+
+// ============================================
 
 // Ensure database connection for every request (serverless friendly)
 app.use(async (req, res, next) => {
@@ -126,7 +145,9 @@ app.use(
   })
 );
 
-app.post('/api/login', async (req, res) => {
+// PUBLIC ROUTES (no authentication required)
+// Apply strict rate limiting to login endpoints
+app.post('/api/login', loginRateLimiter, async (req, res) => {
   const { token } = req.body;
   console.log('[LOGIN_GOOGLE]', {
     timestamp: new Date().toISOString(),
@@ -207,7 +228,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/api/login/password', async (req, res) => {
+app.post('/api/login/password', loginRateLimiter, async (req, res) => {
   const { email, password } = req.body;
   console.log('[LOGIN_PASSWORD]', {
     timestamp: new Date().toISOString(),
@@ -303,9 +324,12 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-app.use('/api/users', userRoutes);
-app.use('/api/analysis', analysisRoutes);
-app.use('/api', apiRoutes);
+// PROTECTED ROUTES (authentication required)
+// Apply API rate limiting to authenticated endpoints
+app.use('/api/admin', apiRateLimiter, adminRoutes);
+app.use('/api/users', apiRateLimiter, userRoutes);
+app.use('/api/analysis', apiRateLimiter, analysisRoutes);
+app.use('/api', apiRateLimiter, apiRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {

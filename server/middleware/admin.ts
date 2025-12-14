@@ -7,6 +7,9 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   return res.status(403).json({ message: 'Access denied. Admin role required.' });
 };
 
+// Alias for isAdmin - used in admin routes
+export const requireAdmin = isAdmin;
+
 export const isAdminOrDev = (req: Request, res: Response, next: NextFunction) => {
   const isDev = process.env.NODE_ENV !== 'production';
   if (isDev || (req.session.user && req.session.user.role === 'admin')) {
