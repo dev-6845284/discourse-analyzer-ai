@@ -572,19 +572,31 @@ export function useTranscriptAnalysis(initialData?: {
 
   /**
    * Link a speaker to an existing Person record
+   * Also renames the speaker to the person's name, discarding any pseudonym
    * Returns the updated speakerResults for saving
    */
   const linkSpeakerToPerson = useCallback((speakerId: string, personId: string, personName: string): SpeakerAnalysisResult[] => {
     let updatedResults: SpeakerAnalysisResult[] = [];
     setState(prev => {
-      updatedResults = prev.speakerResults.map(block => ({
-        ...block,
-        speakers: block.speakers?.map(s => 
-          s.id === speakerId 
-            ? { ...s, personId, personName, isExistingPerson: true } 
-            : s
-        ) || [],
-      }));
+      updatedResults = prev.speakerResults.map(block => {
+        const speaker = block.speakers?.find(s => s.id === speakerId);
+        const oldName = speaker?.name || '';
+        return {
+          ...block,
+          // Update speaker with person link AND rename to person's name
+          speakers: block.speakers?.map(s => 
+            s.id === speakerId 
+              ? { ...s, personId, personName, isExistingPerson: true, name: personName } 
+              : s
+          ) || [],
+          // Update identifiedSpeakers array with new name
+          identifiedSpeakers: block.identifiedSpeakers.map(s => s === oldName ? personName : s),
+          // Update all dialogue lines with the new speaker name
+          dialogue: block.dialogue.map(line =>
+            line.speakerId === speakerId ? { ...line, speaker: personName } : line
+          ),
+        };
+      });
       return {
         ...prev,
         speakerResults: updatedResults,

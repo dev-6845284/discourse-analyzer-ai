@@ -86,12 +86,29 @@ interface BlockContext {
   lastLines: Array<{ speaker: string; text: string }>;
   /** Accumulated speakers from previous blocks */
   knownSpeakers: Speaker[];
+  /** Whether there are skipped blocks between last processed and current */
+  hasSkippedBlocks?: boolean;
+  /** Last processed block number for gap detection */
+  lastBlockNumber?: number;
 }
 
 /** Internal speaker registry for cross-block tracking */
 interface SpeakerRegistry {
   speakers: Map<string, Speaker>; // normalized name -> Speaker
   threshold: number;
+}
+
+// ============================================================================
+// Block ID Utilities
+// ============================================================================
+
+/**
+ * Extract block number from blockId (e.g., "block-3" -> 3)
+ * Returns -1 if pattern doesn't match
+ */
+function extractBlockNumber(blockId: string): number {
+  const match = blockId.match(/^block-(\d+)$/);
+  return match ? parseInt(match[1], 10) : -1;
 }
 
 // ============================================================================
@@ -280,14 +297,19 @@ function buildContextForPrompt(context: BlockContext | null): string | null {
   
   const parts: string[] = [];
   
-  // Add known speakers list
+  // Add known speakers list (always include, even with gaps)
   if (context.knownSpeakers.length > 0) {
     const speakerNames = context.knownSpeakers.map(s => s.name).join(', ');
     parts.push(`IDENTIFIED SPEAKERS SO FAR: ${speakerNames}`);
   }
   
-  // Add last dialogue lines
-  if (context.lastLines.length > 0) {
+  // Add note about skipped blocks if applicable
+  if (context.hasSkippedBlocks) {
+    parts.push('NOTE: Some dialogue segments were skipped between previous context and current segment.');
+  }
+  
+  // Add last dialogue lines (only if consecutive, otherwise they may be misleading)
+  if (context.lastLines.length > 0 && !context.hasSkippedBlocks) {
     parts.push('LAST LINES FROM PREVIOUS SEGMENT:');
     for (const line of context.lastLines) {
       parts.push(`${line.speaker}: ${line.text}`);
@@ -302,7 +324,8 @@ function buildContextForPrompt(context: BlockContext | null): string | null {
  */
 function extractContextFromDialogue(
   dialogue: SpeakerDialogueLine[],
-  allSpeakers: Speaker[]
+  allSpeakers: Speaker[],
+  blockNumber: number
 ): BlockContext {
   const lastLines = dialogue.slice(-CONTEXT_LINES_COUNT).map(d => ({
     speaker: d.speaker,
@@ -312,6 +335,7 @@ function extractContextFromDialogue(
   return {
     lastLines,
     knownSpeakers: allSpeakers,
+    lastBlockNumber: blockNumber,
   };
 }
 
@@ -381,7 +405,11 @@ async function callLlmService(
 // ============================================================================
 
 /**
- * Process identified speakers from LLM response, matching against registry
+ * Process identified speakers from LLM response, matching against registry.
+ * Returns:
+ * - speakers: array of Speaker objects
+ * - speakerIdMap: maps both raw LLM names AND display names to speaker IDs
+ * - rawToDisplayMap: maps raw LLM names to their display names (for dialogue transformation)
  */
 async function processIdentifiedSpeakers(
   identifiedNames: string[],
@@ -389,9 +417,10 @@ async function processIdentifiedSpeakers(
   sessionId: string | undefined,
   blockId: string,
   blockStartTime: number
-): Promise<{ speakers: Speaker[]; speakerIdMap: Map<string, string> }> {
+): Promise<{ speakers: Speaker[]; speakerIdMap: Map<string, string>; rawToDisplayMap: Map<string, string> }> {
   const speakers: Speaker[] = [];
   const speakerIdMap = new Map<string, string>();
+  const rawToDisplayMap = new Map<string, string>();
   const processedNames = new Set<string>();
   
   for (const rawName of identifiedNames) {
@@ -401,6 +430,9 @@ async function processIdentifiedSpeakers(
       `${sessionId || ''}:${blockId}:${blockStartTime}`
     );
     
+    // Track raw to display name mapping (even for non-generic names)
+    rawToDisplayMap.set(rawName, displayName);
+    
     // Skip if already processed in this block (handles duplicates from LLM)
     if (processedNames.has(displayName)) continue;
     processedNames.add(displayName);
@@ -409,7 +441,9 @@ async function processIdentifiedSpeakers(
     const existingInRegistry = findSpeakerInRegistry(registry, displayName);
     if (existingInRegistry) {
       speakers.push(existingInRegistry);
+      // Map both raw and display names to the same speaker ID
       speakerIdMap.set(displayName, existingInRegistry.id);
+      speakerIdMap.set(rawName, existingInRegistry.id);
       console.log(`[SpeakerIdentification] Reusing speaker "${existingInRegistry.name}" for "${displayName}" (cross-block match)`);
       continue;
     }
@@ -425,7 +459,9 @@ async function processIdentifiedSpeakers(
         isExistingPerson: true,
       };
       speakers.push(speaker);
+      // Map both raw and display names to the same speaker ID
       speakerIdMap.set(displayName, speaker.id);
+      speakerIdMap.set(rawName, speaker.id);
       registerSpeaker(registry, speaker);
       console.log(`[SpeakerIdentification] Matched "${displayName}" to existing person "${existingPerson.name}" (similarity: ${existingPerson.similarity.toFixed(2)})`);
     } else {
@@ -436,12 +472,14 @@ async function processIdentifiedSpeakers(
         isExistingPerson: false,
       };
       speakers.push(speaker);
+      // Map both raw and display names to the same speaker ID
       speakerIdMap.set(displayName, speaker.id);
+      speakerIdMap.set(rawName, speaker.id);
       registerSpeaker(registry, speaker);
     }
   }
   
-  return { speakers, speakerIdMap };
+  return { speakers, speakerIdMap, rawToDisplayMap };
 }
 
 // ============================================================================
@@ -476,6 +514,19 @@ export async function identifySpeakers(
   const { provider, modelName, apiKey } = llmConfig;
   
   for (const block of blocks) {
+    // Detect if there are skipped blocks
+    const currentBlockNumber = extractBlockNumber(block.blockId);
+    if (blockContext && currentBlockNumber >= 0 && blockContext.lastBlockNumber !== undefined) {
+      const expectedBlockNumber = blockContext.lastBlockNumber + 1;
+      if (currentBlockNumber !== expectedBlockNumber) {
+        blockContext = {
+          ...blockContext,
+          hasSkippedBlocks: true,
+        };
+        console.log(`[SpeakerIdentification] Gap detected: expected block-${expectedBlockNumber}, got ${block.blockId}`);
+      }
+    }
+    
     const contextString = buildContextForPrompt(blockContext);
     const prompt = buildSpeakerIdentificationPrompt(
       block.text,
@@ -514,7 +565,7 @@ export async function identifySpeakers(
       const identifiedNames: string[] = llmResult.identifiedSpeakers || [];
       
       // Process speakers with registry for cross-block continuity
-      const { speakers, speakerIdMap } = await processIdentifiedSpeakers(
+      const { speakers, speakerIdMap, rawToDisplayMap } = await processIdentifiedSpeakers(
         identifiedNames,
         registry,
         sessionId,
@@ -522,9 +573,17 @@ export async function identifySpeakers(
         block.startTime
       );
 
+      // Transform dialogue speaker names from raw LLM names to display names (with pseudonyms)
+      const transformedDialogue = (llmResult.dialogue || []).map(
+        (line: { speaker: string; text: string; startTime?: number; endTime?: number }) => ({
+          ...line,
+          speaker: rawToDisplayMap.get(line.speaker) || line.speaker,
+        })
+      );
+
       // Match dialogue to timing
       const matchedDialogue = matchDialogueToTiming(
-        llmResult.dialogue || [],
+        transformedDialogue,
         block.segmentTiming,
         block.startTime,
         block.endTime,
@@ -550,7 +609,8 @@ export async function identifySpeakers(
       results.push(analysisResult);
 
       // Update context for next block (includes all known speakers)
-      blockContext = extractContextFromDialogue(matchedDialogue, getAllSpeakers(registry));
+      const currentBlockNum = extractBlockNumber(block.blockId);
+      blockContext = extractContextFromDialogue(matchedDialogue, getAllSpeakers(registry), currentBlockNum);
 
     } catch (error) {
       // Log the error
@@ -601,7 +661,8 @@ export async function identifySpeakers(
       });
       
       // Update context even on error for continuity
-      blockContext = extractContextFromDialogue(fallbackDialogue, getAllSpeakers(registry));
+      const currentBlockNum = extractBlockNumber(block.blockId);
+      blockContext = extractContextFromDialogue(fallbackDialogue, getAllSpeakers(registry), currentBlockNum);
     }
   }
 

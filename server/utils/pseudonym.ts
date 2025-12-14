@@ -32,12 +32,13 @@ export function generateCodeName(seed: string): string {
 
 /**
  * If name is generic, append a distinct pseudonym suffix to keep it unique.
- * Example: "Speaker 1" -> "Speaker 1 — Olive Otter".
+ * Example: "Speaker 1" -> "Speaker 1 — Olive Otter [Pseudonym]".
+ * The [Pseudonym] tag signals to AI that this is a temporary identifier.
  * Otherwise returns the original name.
  */
 export function withPseudonymIfGeneric(name: string, seed: string): string {
   if (!isGenericSpeakerName(name)) return name;
   const code = generateCodeName(seed);
-  // Use an em dash for readability
-  return `${name} — ${code}`;
+  // Use an em dash for readability, add [Pseudonym] tag for AI context
+  return `${name} — ${code} [Pseudonym]`;
 }
