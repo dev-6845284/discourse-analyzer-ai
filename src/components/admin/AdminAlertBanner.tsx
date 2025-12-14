@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getAdminDashboardSummary } from '../../utils/api';
 
 interface DashboardSummary {
   unacknowledgedAlerts: number;
@@ -12,16 +13,30 @@ interface DashboardSummary {
 interface AdminAlertBannerProps {
   isAdmin: boolean;
   onViewDashboard?: () => void;
+  isCollapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({ 
   isAdmin, 
-  onViewDashboard 
+  onViewDashboard,
+  isCollapsed: externalCollapsed,
+  onCollapsedChange,
 }) => {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  
+  // Use external state if provided, otherwise use internal state
+  const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
+  const setIsCollapsed = (collapsed: boolean) => {
+    if (onCollapsedChange) {
+      onCollapsedChange(collapsed);
+    } else {
+      setInternalCollapsed(collapsed);
+    }
+  };
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -29,19 +44,15 @@ export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({
     const fetchSummary = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('/api/admin/dashboard-summary', {
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setSummary(data);
-          setError(null);
-        } else if (response.status !== 403) {
+        const response = await getAdminDashboardSummary();
+        setSummary(response.data);
+        setError(null);
+      } catch (err: unknown) {
+        const axiosError = err as { response?: { status: number } };
+        if (axiosError.response?.status !== 403) {
+          console.error('Failed to fetch dashboard summary:', err);
           setError('Failed to load security summary');
         }
-      } catch (err) {
-        console.error('Failed to fetch dashboard summary:', err);
-        setError('Failed to load security summary');
       } finally {
         setIsLoading(false);
       }

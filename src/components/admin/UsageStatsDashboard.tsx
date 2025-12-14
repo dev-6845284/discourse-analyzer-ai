@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { 
+  getAdminUsageStats, 
+  getAdminSecurityAlerts, 
+  getBlockedIPs as fetchBlockedIPs,
+  acknowledgeSecurityAlert,
+  blockIP,
+  unblockIP,
+} from '../../utils/api';
 
 interface UsageStats {
   timeRange: {
@@ -67,24 +75,14 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
     
     try {
       const [statsRes, alertsRes, blockedRes] = await Promise.all([
-        fetch(`/api/admin/usage-stats?hours=${timeRange}`, { credentials: 'include' }),
-        fetch('/api/admin/security-alerts?limit=50', { credentials: 'include' }),
-        fetch('/api/admin/blocked-ips', { credentials: 'include' }),
+        getAdminUsageStats(timeRange),
+        getAdminSecurityAlerts(50),
+        fetchBlockedIPs(),
       ]);
 
-      if (!statsRes.ok || !alertsRes.ok || !blockedRes.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
-      const [statsData, alertsData, blockedData] = await Promise.all([
-        statsRes.json(),
-        alertsRes.json(),
-        blockedRes.json(),
-      ]);
-
-      setStats(statsData);
-      setAlerts(alertsData.alerts || []);
-      setBlockedIPs(blockedData);
+      setStats(statsRes.data);
+      setAlerts(alertsRes.data.alerts || []);
+      setBlockedIPs(blockedRes.data);
     } catch (err) {
       setError('Failed to load dashboard data');
       console.error('Dashboard fetch error:', err);
@@ -95,16 +93,10 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
-      const response = await fetch(`/api/admin/security-alerts/${alertId}/acknowledge`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        setAlerts(prev => prev.map(a => 
-          a._id === alertId ? { ...a, acknowledged: true } : a
-        ));
-      }
+      await acknowledgeSecurityAlert(alertId);
+      setAlerts(prev => prev.map(a => 
+        a._id === alertId ? { ...a, acknowledged: true } : a
+      ));
     } catch (err) {
       console.error('Failed to acknowledge alert:', err);
     }
@@ -113,21 +105,13 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
   const handleBlockIP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/admin/blocked-ips', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ipAddress: newBlockIP.ip,
-          reason: newBlockIP.reason,
-          expiresInMinutes: newBlockIP.expiresMinutes || undefined,
-        }),
-      });
-      
-      if (response.ok) {
-        setNewBlockIP({ ip: '', reason: '', expiresMinutes: '' });
-        fetchData();
-      }
+      await blockIP(
+        newBlockIP.ip,
+        newBlockIP.reason,
+        newBlockIP.expiresMinutes ? parseInt(newBlockIP.expiresMinutes, 10) : undefined
+      );
+      setNewBlockIP({ ip: '', reason: '', expiresMinutes: '' });
+      fetchData();
     } catch (err) {
       console.error('Failed to block IP:', err);
     }
@@ -137,14 +121,8 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
     if (!confirm(`Are you sure you want to unblock ${ip}?`)) return;
     
     try {
-      const response = await fetch(`/api/admin/blocked-ips/${encodeURIComponent(ip)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        setBlockedIPs(prev => prev.filter(b => b.ipAddress !== ip));
-      }
+      await unblockIP(ip);
+      setBlockedIPs(prev => prev.filter(b => b.ipAddress !== ip));
     } catch (err) {
       console.error('Failed to unblock IP:', err);
     }
@@ -190,7 +168,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(Number(e.target.value))}
-              className="bg-white/20 border border-white/30 rounded px-3 py-1 text-sm"
+              className="bg-white/20 border border-white/30 rounded px-3 py-1.5 text-sm text-white cursor-pointer hover:bg-white/30 transition-colors [&>option]:bg-slate-800 [&>option]:text-white"
             >
               <option value={1}>Last 1 hour</option>
               <option value={6}>Last 6 hours</option>
@@ -270,15 +248,15 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
               </div>
 
               {/* Top Endpoints */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-700 mb-3">Top Endpoints</h3>
+              <div className="bg-slate-100 rounded-lg p-4">
+                <h3 className="font-semibold text-slate-800 mb-3">Top Endpoints</h3>
                 <div className="space-y-2">
                   {stats.requestsByEndpoint.map((ep) => (
-                    <div key={ep._id} className="flex items-center justify-between bg-white rounded p-2">
-                      <span className="font-mono text-sm truncate flex-1">{ep._id}</span>
+                    <div key={ep._id} className="flex items-center justify-between bg-white rounded p-2 shadow-sm">
+                      <span className="font-mono text-sm truncate flex-1 text-slate-700">{ep._id}</span>
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-gray-600">{ep.count.toLocaleString()} req</span>
-                        <span className="text-gray-400">{ep.avgTime?.toFixed(0) || 0}ms avg</span>
+                        <span className="text-slate-600 font-medium">{ep.count.toLocaleString()} req</span>
+                        <span className="text-slate-500">{ep.avgTime?.toFixed(0) || 0}ms avg</span>
                       </div>
                     </div>
                   ))}
@@ -287,31 +265,31 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
 
               {/* Status Codes & Top IPs */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Status Codes</h3>
+                <div className="bg-slate-100 rounded-lg p-4">
+                  <h3 className="font-semibold text-slate-800 mb-3">Status Codes</h3>
                   <div className="space-y-2">
                     {stats.requestsByStatus.map((s) => (
-                      <div key={s._id} className="flex items-center justify-between">
-                        <span className={`font-mono ${getStatusColor(s._id)}`}>{s._id}</span>
-                        <span className="text-gray-600">{s.count.toLocaleString()}</span>
+                      <div key={s._id} className="flex items-center justify-between bg-white rounded p-2 shadow-sm">
+                        <span className={`font-mono font-medium ${getStatusColor(s._id)}`}>{s._id}</span>
+                        <span className="text-slate-700 font-medium">{s.count.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Top IPs</h3>
+                <div className="bg-slate-100 rounded-lg p-4">
+                  <h3 className="font-semibold text-slate-800 mb-3">Top IPs</h3>
                   <div className="space-y-2 text-sm">
                     {stats.topIPs.map((ip) => (
-                      <div key={ip._id} className="flex items-center justify-between bg-white rounded p-2">
-                        <span className="font-mono truncate">{ip._id}</span>
+                      <div key={ip._id} className="flex items-center justify-between bg-white rounded p-2 shadow-sm">
+                        <span className="font-mono truncate text-slate-700">{ip._id}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-600">{ip.count}</span>
+                          <span className="text-slate-600 font-medium">{ip.count}</span>
                           {ip.errors > 0 && (
-                            <span className="text-red-500 text-xs">({ip.errors} err)</span>
+                            <span className="text-red-600 text-xs font-medium">({ip.errors} err)</span>
                           )}
                           {ip.rateLimited > 0 && (
-                            <span className="text-yellow-600 text-xs bg-yellow-50 px-1 rounded">RL</span>
+                            <span className="text-amber-700 text-xs bg-amber-100 px-1.5 py-0.5 rounded font-medium">RL</span>
                           )}
                         </div>
                       </div>
@@ -321,8 +299,8 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
               </div>
 
               {/* Requests Over Time */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-700 mb-3">Requests Over Time</h3>
+              <div className="bg-slate-100 rounded-lg p-4">
+                <h3 className="font-semibold text-slate-800 mb-3">Requests Over Time</h3>
                 <div className="flex items-end gap-1 h-32">
                   {stats.requestsByHour.slice(-24).map((hour, i) => {
                     const maxCount = Math.max(...stats.requestsByHour.map(h => h.count));
@@ -344,7 +322,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                     );
                   })}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-slate-500 mt-2">
                   Showing last {Math.min(24, stats.requestsByHour.length)} hours
                 </div>
               </div>
@@ -354,7 +332,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
           {activeTab === 'alerts' && (
             <div className="space-y-3">
               {alerts.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-slate-500 py-8">
                   No security alerts
                 </div>
               ) : (
@@ -407,15 +385,15 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
           {activeTab === 'blocked' && (
             <div className="space-y-6">
               {/* Block IP Form */}
-              <form onSubmit={handleBlockIP} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-700 mb-3">Block an IP Address</h3>
+              <form onSubmit={handleBlockIP} className="bg-slate-100 rounded-lg p-4">
+                <h3 className="font-semibold text-slate-800 mb-3">Block an IP Address</h3>
                 <div className="flex gap-3">
                   <input
                     type="text"
                     placeholder="IP Address"
                     value={newBlockIP.ip}
                     onChange={(e) => setNewBlockIP(prev => ({ ...prev, ip: e.target.value }))}
-                    className="flex-1 px-3 py-2 border rounded"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                   <input
@@ -423,7 +401,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                     placeholder="Reason"
                     value={newBlockIP.reason}
                     onChange={(e) => setNewBlockIP(prev => ({ ...prev, reason: e.target.value }))}
-                    className="flex-1 px-3 py-2 border rounded"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                   <input
@@ -431,11 +409,11 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                     placeholder="Expires (min)"
                     value={newBlockIP.expiresMinutes}
                     onChange={(e) => setNewBlockIP(prev => ({ ...prev, expiresMinutes: e.target.value }))}
-                    className="w-32 px-3 py-2 border rounded"
+                    className="w-32 px-3 py-2 border border-slate-300 rounded text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium transition-colors"
                   >
                     Block
                   </button>
@@ -445,21 +423,21 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
               {/* Blocked IPs List */}
               <div className="space-y-2">
                 {blockedIPs.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="text-center text-slate-500 py-8">
                     No blocked IPs
                   </div>
                 ) : (
                   blockedIPs.map((ip) => (
-                    <div key={ip._id} className="bg-white border rounded-lg p-4 flex items-center justify-between">
+                    <div key={ip._id} className="bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
                       <div>
                         <div className="flex items-center gap-2">
-                          <code className="font-mono text-lg">{ip.ipAddress}</code>
+                          <code className="font-mono text-lg text-slate-800">{ip.ipAddress}</code>
                           {ip.isAutoBlocked && (
-                            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Auto-blocked</span>
+                            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium">Auto-blocked</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{ip.reason}</p>
-                        <div className="text-xs text-gray-400 mt-1 flex gap-4">
+                        <p className="text-sm text-slate-600 mt-1">{ip.reason}</p>
+                        <div className="text-xs text-slate-500 mt-1 flex gap-4">
                           <span>Blocked: {new Date(ip.blockedAt).toLocaleString()}</span>
                           {ip.blockedByName && <span>By: {ip.blockedByName}</span>}
                           {ip.expiresAt && <span>Expires: {new Date(ip.expiresAt).toLocaleString()}</span>}
@@ -468,7 +446,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                       </div>
                       <button
                         onClick={() => handleUnblockIP(ip.ipAddress)}
-                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded border border-red-200"
+                        className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded border border-red-300 font-medium transition-colors"
                       >
                         Unblock
                       </button>

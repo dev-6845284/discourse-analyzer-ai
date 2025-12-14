@@ -139,6 +139,7 @@ const App: React.FC = () => {
   const [extractedSourceUrl, setExtractedSourceUrl] = useState<string>('');
   const [shouldAnalyzeImmediately, setShouldAnalyzeImmediately] = useState<boolean>(true);
   const [isUsageStatsDashboardOpen, setIsUsageStatsDashboardOpen] = useState<boolean>(false);
+  const [isAdminBannerCollapsed, setIsAdminBannerCollapsed] = useState<boolean>(true);
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -497,10 +498,12 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
-      {/* Admin Security Alert Banner */}
+      {/* Admin Security Alert Banner - shown in dev mode or for admins */}
       <AdminAlertBanner 
-        isAdmin={user?.role === 'admin'} 
+        isAdmin={import.meta.env.DEV || user?.role === 'admin'} 
         onViewDashboard={() => setIsUsageStatsDashboardOpen(true)}
+        isCollapsed={isAdminBannerCollapsed}
+        onCollapsedChange={setIsAdminBannerCollapsed}
       />
       
       {/* Usage Stats Dashboard Modal */}
@@ -508,7 +511,9 @@ const App: React.FC = () => {
         <UsageStatsDashboard onClose={() => setIsUsageStatsDashboardOpen(false)} />
       )}
       
-      <div className={`container mx-auto p-4 md:p-6 lg:p-8 ${user?.role === 'admin' ? 'pt-16' : ''}`}>
+      <div className={`container mx-auto p-4 md:p-6 lg:p-8 transition-all duration-300 ${
+        (import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
+      }`}>
           <Header
             user={user}
             isFormCollapsed={isFormCollapsed}
