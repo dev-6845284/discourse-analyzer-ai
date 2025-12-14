@@ -204,9 +204,10 @@ export const analyzeSessionSpeakers = async (
   sessionId: string,
   language: string,
   model: string,
-  apiKeys: Record<string, string>
+  apiKeys: Record<string, string>,
+  speakerHint?: string
 ) => {
-  return api.post(`/analysis/sessions/${sessionId}/analyze-speakers`, { language, model, apiKeys });
+  return api.post(`/analysis/sessions/${sessionId}/analyze-speakers`, { language, model, apiKeys, speakerHint });
 };
 
 export const analyzeSessionDialog = async (

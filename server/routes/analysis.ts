@@ -276,7 +276,7 @@ router.put('/sessions/:id/selected-blocks', async (req, res) => {
 // Analyze speakers from session data (Step 2)
 router.post('/sessions/:id/analyze-speakers', async (req, res) => {
   const sessionId = req.params.id;
-  const { language, model, apiKeys } = req.body;
+  const { language, model, apiKeys, speakerHint } = req.body;
 
   let logId: string | undefined;
 
@@ -329,6 +329,7 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
       apiKeys,
       sessionId: req.session.id!,
       logId,
+      speakerHint,
     });
 
     if (logId) {

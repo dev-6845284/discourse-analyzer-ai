@@ -4,26 +4,12 @@ interface SegmentTimingInput {
   text: string;
 }
 
-/**
- * Formats segment timing as a string for the LLM prompt
- */
-function formatSegmentTiming(segments: SegmentTimingInput[]): string {
-  return segments.map(seg => {
-    const startMin = Math.floor(seg.start / 60);
-    const startSec = Math.floor(seg.start % 60);
-    const endMin = Math.floor(seg.end / 60);
-    const endSec = Math.floor(seg.end % 60);
-    const startStr = `${startMin.toString().padStart(2, '0')}:${startSec.toString().padStart(2, '0')}`;
-    const endStr = `${endMin.toString().padStart(2, '0')}:${endSec.toString().padStart(2, '0')}`;
-    return `[${startStr}-${endStr}] (${seg.start.toFixed(1)}s-${seg.end.toFixed(1)}s) ${seg.text}`;
-  }).join('\n');
-}
-
 export const buildSpeakerIdentificationPrompt = (
   blockText: string,
   segmentTiming: SegmentTimingInput[],
   previousContext: string | null,
-  language: string
+  language: string,
+  speakerHint?: string
 ): string => {
   let prompt = `Analyze the following transcript segment and identify the speakers.
 Transform the text into a dialogue format, attributing each line to a speaker.
@@ -47,17 +33,18 @@ Output Language: ${language}
 
 `;
 
-  if (previousContext) {
-    prompt += `CONTEXT FROM PREVIOUS SEGMENT (Use this to maintain speaker continuity):
-${previousContext}
+  if (speakerHint) {
+    prompt += `USER HINT ABOUT SPEAKERS:
+${speakerHint}
+
+Use this information to help identify and name the speakers correctly.
 
 `;
   }
 
-  // Include structured segment timing
-  if (segmentTiming && segmentTiming.length > 0) {
-    prompt += `TRANSCRIPT SEGMENTS WITH TIMING (use these timestamps for output):
-${formatSegmentTiming(segmentTiming)}
+  if (previousContext) {
+    prompt += `CONTEXT FROM PREVIOUS SEGMENT (Use this to maintain speaker continuity):
+${previousContext}
 
 `;
   }

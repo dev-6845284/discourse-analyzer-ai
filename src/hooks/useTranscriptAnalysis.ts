@@ -184,7 +184,8 @@ export function useTranscriptAnalysis(initialData?: {
       languageCode: string,
       model: string,
       apiKeys: Record<string, string>,
-      sessionId?: string
+      sessionId?: string,
+      speakerHint?: string
     ) => {
       if (!sessionId) {
         setState(prev => ({
@@ -221,7 +222,8 @@ export function useTranscriptAnalysis(initialData?: {
           sessionId,
           languageCode,
           model || 'gemini',
-          apiKeys
+          apiKeys,
+          speakerHint
         );
 
         const analysisResults: SpeakerAnalysisResult[] = response.data;

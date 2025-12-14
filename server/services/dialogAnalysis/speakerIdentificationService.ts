@@ -76,6 +76,8 @@ export interface SpeakerAnalysisRequest {
   logId?: string;
   /** Similarity threshold for cross-block speaker matching (default: 0.85) */
   speakerSimilarityThreshold?: number;
+  /** Optional user hint about speakers (names, count, roles) */
+  speakerHint?: string;
 }
 
 /** Context passed between blocks for speaker continuity */
@@ -461,6 +463,7 @@ export async function identifySpeakers(
     sessionId,
     logId,
     speakerSimilarityThreshold = DEFAULT_SPEAKER_SIMILARITY_THRESHOLD,
+    speakerHint,
   } = request;
   
   // Initialize results and tracking structures
@@ -478,7 +481,8 @@ export async function identifySpeakers(
       block.text,
       block.segmentTiming,
       contextString,
-      language
+      language,
+      speakerHint
     );
     
     // Log the LLM request

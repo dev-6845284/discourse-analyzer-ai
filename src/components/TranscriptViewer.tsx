@@ -79,6 +79,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     handleGroupChange,
     selectedLanguage,
     setSelectedLanguage,
+    speakerHint,
+    setSpeakerHint,
     getStepStatuses,
     handleStartStep,
     handleRenameSpeaker,
@@ -283,6 +285,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onClearAnalysis={topicAnalysis.clearTopicAnalysis}
             onSegmentClick={handleSegmentClick}
             onAnalyzeSpeakers={handleAnalyzeSpeakers}
+            speakerHint={speakerHint}
+            onSpeakerHintChange={setSpeakerHint}
             expandedBlocks={expandedBlocks}
           />
         )}

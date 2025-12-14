@@ -19,6 +19,8 @@ interface TopicAnalysisViewProps {
   onClearAnalysis: () => void;
   onSegmentClick: (start: number) => void;
   onAnalyzeSpeakers: () => void;
+  speakerHint?: string;
+  onSpeakerHintChange?: (hint: string) => void;
   expandedBlocks: Set<string>;
 }
 
@@ -36,6 +38,8 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
   onClearAnalysis,
   onSegmentClick,
   onAnalyzeSpeakers,
+  speakerHint = '',
+  onSpeakerHintChange,
   expandedBlocks,
 }) => {
   if (isAnalyzing) {
@@ -178,6 +182,21 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
           <p className="text-sm text-gray-300 mb-2">
             <strong>{selectedBlockIds.size}</strong> blocks selected for detailed analysis
           </p>
+          
+          {/* Speaker Hint Input */}
+          <div className="mb-3">
+            <label className="block text-xs text-gray-400 mb-1">
+              Speaker hint for AI (optional):
+            </label>
+            <textarea
+              value={speakerHint}
+              onChange={(e) => onSpeakerHintChange?.(e.target.value)}
+              placeholder="e.g., '2 speakers: Host named John and guest Dr. Jane Smith'"
+              rows={2}
+              className="w-full bg-gray-800 text-gray-300 text-sm rounded border border-gray-600 px-3 py-2 focus:border-purple-500 focus:outline-none resize-none"
+            />
+          </div>
+          
           <button
             onClick={onAnalyzeSpeakers}
             disabled={isSpeakerAnalyzing}

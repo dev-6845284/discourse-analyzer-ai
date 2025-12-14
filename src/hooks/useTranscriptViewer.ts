@@ -59,6 +59,9 @@ export const useTranscriptViewer = ({
   const [isSelectionMode, setIsSelectionMode] = useState(!!initialSelectedStatements && initialSelectedStatements.size > 0);
   const [lastUsedGroupId, setLastUsedGroupId] = useState(lockedGroupId || 1);
   const [selectedLanguage, setSelectedLanguage] = useState<string>(languageCode || 'en');
+  
+  // Speaker hint for AI identification
+  const [speakerHint, setSpeakerHint] = useState<string>('');
 
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dialogLineRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -235,7 +238,8 @@ export const useTranscriptViewer = ({
       languageCode,
       selectedAI || 'gemini',
       apiKeys,
-      sId
+      sId,
+      speakerHint || undefined
     );
     setViewMode('speakers');
   };
@@ -608,6 +612,8 @@ export const useTranscriptViewer = ({
     handleGroupChange,
     selectedLanguage,
     setSelectedLanguage,
+    speakerHint,
+    setSpeakerHint,
     contentAnalysisId,
     editQuoteId,
     getStepStatuses,
