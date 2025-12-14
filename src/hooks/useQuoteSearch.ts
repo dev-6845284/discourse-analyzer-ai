@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Quote, ArticleRecommendation } from '../types';
 import { TimePeriodResult } from '../utils/timePeriod';
 import { AnalysisCategory, AnalysisRating } from '../types';
-import api, { agenticSearch } from '../utils/api';
+import api, { agenticSearch, formatApiError } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 export function useQuoteSearch(handleLogout: () => void) {
@@ -27,17 +27,10 @@ export function useQuoteSearch(handleLogout: () => void) {
       setError('Authentication failed. Please log in again.');
       handleLogout();
     } else {
-      const errorData = e.response?.data;
-      let message = errorData?.message || e.message;
+      setError(formatApiError(e, `${context} failed`));
 
-      if (errorData?.errorType === 'ModelResponseError') {
-        message = `The AI model blocked the response. Details: ${message}`;
-      }
-
-      setError(`${context} failed: ${message}`);
-
-      if (errorData?.rawResponse) {
-        setRawApiResponseError(errorData.rawResponse);
+      if (e.response?.data?.rawResponse) {
+        setRawApiResponseError(e.response.data.rawResponse);
       }
     }
   };

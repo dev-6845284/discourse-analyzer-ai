@@ -7,7 +7,8 @@ import {
   analyzeSessionDialog,
   findSimilarPersons,
   mergeSpeakers as mergeSpeakersApi,
-  PersonSimilarityMatch
+  PersonSimilarityMatch,
+  formatApiError
 } from '../utils/api';
 
 export interface WeightedTag {
@@ -167,7 +168,7 @@ export function useTranscriptAnalysis(initialData?: {
         setState(prev => ({
           ...prev,
           isAnalyzing: false,
-          error: error.response?.data?.message || error.message || 'Failed to analyze transcript',
+          error: formatApiError(error),
           analysisProgress: 0,
         }));
       }
@@ -238,7 +239,7 @@ export function useTranscriptAnalysis(initialData?: {
         setState(prev => ({
           ...prev,
           isSpeakerAnalyzing: false,
-          error: error.response?.data?.message || error.message || 'Failed to analyze speakers',
+          error: formatApiError(error),
         }));
       }
     },
@@ -304,7 +305,7 @@ export function useTranscriptAnalysis(initialData?: {
         setState(prev => ({
           ...prev,
           isDialogAnalyzing: false,
-          error: error.response?.data?.message || error.message || 'Failed to analyze dialog topics',
+          error: formatApiError(error),
         }));
       }
     },
@@ -679,7 +680,7 @@ export function useTranscriptAnalysis(initialData?: {
       console.error('Error merging speakers:', error);
       setState(prev => ({
         ...prev,
-        error: error.response?.data?.message || error.message || 'Failed to merge speakers',
+        error: formatApiError(error),
       }));
       return null;
     }

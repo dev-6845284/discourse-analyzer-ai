@@ -245,4 +245,37 @@ export const findSimilarPersons = async (name: string, threshold?: number) => {
   return api.get<{ matches: PersonSimilarityMatch[] }>('/people/find-similar', { params });
 };
 
+/**
+ * Formats API error response into a user-friendly message.
+ * Handles rate limiting, model errors, and other common API errors.
+ */
+export const formatApiError = (error: any, context?: string): string => {
+  const errorData = error.response?.data;
+  let message = errorData?.message || error.message || 'An unknown error occurred';
+  
+  // Check for rate limit errors (OpenAI, Gemini, etc.)
+  if (message.toLowerCase().includes('rate limit')) {
+    // Extract wait time if present
+    const waitTimeMatch = message.match(/(\d+)\s*seconds?/i);
+    const waitTime = waitTimeMatch ? waitTimeMatch[1] : null;
+    
+    if (waitTime) {
+      message = `⏳ Rate limit reached. Please wait ${waitTime} seconds and try again.`;
+    } else {
+      message = '⏳ Rate limit reached. Please wait a moment and try again.';
+    }
+  } else if (errorData?.errorType === 'ModelResponseError') {
+    // Model blocked or failed to respond properly
+    message = `🤖 AI model error: ${message}`;
+  } else if (error.response?.status === 401) {
+    message = 'Authentication failed. Please log in again.';
+  } else if (error.response?.status === 403) {
+    message = 'Access denied. You do not have permission for this action.';
+  } else if (error.response?.status >= 500) {
+    message = `Server error: ${message}`;
+  }
+  
+  return context ? `${context}: ${message}` : message;
+};
+
 export default api;

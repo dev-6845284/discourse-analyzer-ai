@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Quote, QuoteUpdatePayload, AuditResult } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
-import api, { updateQuote, extractFromUrl } from '../utils/api';
+import api, { updateQuote, extractFromUrl, formatApiError } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
 export function useQuoteActions(
@@ -43,7 +43,7 @@ export function useQuoteActions(
           } : q))
         );
       } catch (e: any) {
-        setError(`Analysis failed: ${e.response?.data?.message || e.message}`);
+        setError(formatApiError(e, 'Analysis failed'));
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: false } : q))
         );
@@ -79,7 +79,7 @@ export function useQuoteActions(
           prev.map((q) => (q.id === quote.id ? { ...q, draft: { ...q, ...improvedQuote }, isImproving: false } : q))
         );
       } catch (e: any) {
-        setError(`Quote improvement failed: ${e.response?.data?.message || e.message}`);
+        setError(formatApiError(e, 'Quote improvement failed'));
         setQuotes((prev) =>
           prev.map((q) => (q.id === quote.id ? { ...q, isImproving: false } : q))
         );
