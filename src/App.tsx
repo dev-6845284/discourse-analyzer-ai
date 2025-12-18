@@ -12,6 +12,8 @@ import LogViewer from './components/LogViewer';
 import TranscriptViewer from './components/TranscriptViewer';
 import TranscriptImporter from './components/TranscriptImporter';
 import { SrtTranscriptImporter } from './components/SrtTranscriptImporter';
+import { TranscriptMethodSelector } from './components/TranscriptMethodSelector';
+import { YoutubeTranscriptButton } from './components/YoutubeTranscriptButton';
 import { exportQuotesToFile, importQuotesFromFile } from './utils/file';
 import { saveQuote, fetchArticle, getSession, getContentAnalysis } from './utils/api';
 import { ExportData, Quote, Person, AnalysisSession } from './types';
@@ -140,6 +142,8 @@ const App: React.FC = () => {
   const [shouldAnalyzeImmediately, setShouldAnalyzeImmediately] = useState<boolean>(true);
   const [isUsageStatsDashboardOpen, setIsUsageStatsDashboardOpen] = useState<boolean>(false);
   const [isAdminBannerCollapsed, setIsAdminBannerCollapsed] = useState<boolean>(true);
+  const [isTranscriptMethodSelectorOpen, setIsTranscriptMethodSelectorOpen] = useState<boolean>(false);
+  const [autoFetchError, setAutoFetchError] = useState<string | null>(null);
 
   const handleExport = () => {
     exportQuotesToFile(personName, quotes);
@@ -309,6 +313,7 @@ const App: React.FC = () => {
     setIsExtracting(true);
     setExtractionStatus('Fetching YouTube transcript...');
     setExtractionError(null);
+    setAutoFetchError(null);
     
     try {
       const response = await fetch('/api/quotes/fetch-transcript', {
@@ -336,7 +341,11 @@ const App: React.FC = () => {
       });
     } catch (error: any) {
       console.error('YouTube transcript error:', error);
-      setExtractionError(error.message || 'Failed to fetch YouTube transcript');
+      const errorMessage = error.message || 'Failed to fetch YouTube transcript';
+      setExtractionError(errorMessage);
+      setAutoFetchError(errorMessage);
+      // Open method selector to show alternative methods
+      setIsTranscriptMethodSelectorOpen(true);
     } finally {
       setIsExtracting(false);
       setExtractionStatus('');
@@ -619,6 +628,10 @@ const App: React.FC = () => {
                     setExtractionLanguage={setExtractionLanguage}
                     extractionError={extractionError}
                   />
+                  <YoutubeTranscriptButton
+                    onClick={() => setIsTranscriptMethodSelectorOpen(true)}
+                    isLoading={isExtracting}
+                  />
                   <TranscriptImporter
                     onImport={handleImportTranscript}
                     isLoading={isExtracting}
@@ -804,6 +817,21 @@ const App: React.FC = () => {
           <ApiKeySettingsModal
             isOpen={isApiKeyModalOpen}
             onClose={() => setIsApiKeyModalOpen(false)}
+          />
+          <TranscriptMethodSelector
+            isOpen={isTranscriptMethodSelectorOpen}
+            onClose={() => {
+              setIsTranscriptMethodSelectorOpen(false);
+              setAutoFetchError(null);
+            }}
+            onImport={(transcript) => {
+              handleImportTranscript(transcript);
+              setIsTranscriptMethodSelectorOpen(false);
+              setAutoFetchError(null);
+            }}
+            onAutoFetch={handleFetchYoutubeTranscript}
+            autoFetchError={autoFetchError}
+            isLoading={isExtracting}
           />
           {isChangePasswordModalOpen && user && user._id && (
             <PasswordModal
