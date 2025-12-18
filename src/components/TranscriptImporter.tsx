@@ -112,7 +112,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
         >
-          Text Format
+          Plain Text (hh:mm:ss or mm:ss)
         </button>
       </div>
 
@@ -150,7 +150,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
           placeholder={
             importMode === 'json'
               ? 'Paste JSON transcript export here...'
-              : 'Paste text transcript here (format: [HH:MM:SS] text)...'
+              : 'Paste plain text transcript here (format: (hh:mm:ss) or (mm:ss) text, e.g. (00:00) Hello world)...'
           }
           disabled={isLoading}
           rows={6}
@@ -181,7 +181,8 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
           <strong>JSON Format:</strong> Export from transcript viewer or use previously saved JSON files
         </p>
         <p>
-          <strong>Text Format:</strong> One line per segment with timestamps [HH:MM:SS] or [MM:SS] format
+          <strong>Plain Text Format:</strong> One line per segment, starting with (hh:mm:ss) or (mm:ss) in parentheses, followed by the text. Example: <br/>
+          <span className="font-mono">(00:00) Hello world</span>
         </p>
       </div>
     </div>

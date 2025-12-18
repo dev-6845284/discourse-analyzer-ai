@@ -278,4 +278,14 @@ export const formatApiError = (error: any, context?: string): string => {
   return context ? `${context}: ${message}` : message;
 };
 
+// Admin API endpoints
+export const getAdminDashboardSummary = () => api.get('/admin/dashboard-summary');
+export const getAdminUsageStats = (hours: number = 24) => api.get(`/admin/usage-stats?hours=${hours}`);
+export const getAdminSecurityAlerts = (limit: number = 50) => api.get(`/admin/security-alerts?limit=${limit}`);
+export const acknowledgeSecurityAlert = (alertId: string) => api.post(`/admin/security-alerts/${alertId}/acknowledge`);
+export const getBlockedIPs = () => api.get('/admin/blocked-ips');
+export const blockIP = (ipAddress: string, reason: string, expiresInMinutes?: number) => 
+  api.post('/admin/blocked-ips', { ipAddress, reason, expiresInMinutes });
+export const unblockIP = (ipAddress: string) => api.delete(`/admin/blocked-ips/${encodeURIComponent(ipAddress)}`);
+
 export default api;

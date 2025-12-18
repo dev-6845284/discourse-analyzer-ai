@@ -4,6 +4,16 @@
 ## - you may suggest improvements to existing sentences
 
 Todo:
+  DDoS Protection & Security:
+    [x] Redis-based rate limiting (express-rate-limit + rate-limit-redis)
+    [x] IP blocking middleware with auto-block capability
+    [x] API usage tracking and logging to MongoDB
+    [x] Security alerts system for suspicious activity
+    [x] Admin dashboard for usage stats and alerts
+    [x] Admin alert banner with real-time notifications
+    [] Add WebSocket for real-time alert updates
+    [] Implement Vercel Edge Middleware for edge-level rate limiting
+    [] Add email/webhook notifications for critical alerts
   Transcription analysis:
     Normalize GUI flows:
       [] Session stage
