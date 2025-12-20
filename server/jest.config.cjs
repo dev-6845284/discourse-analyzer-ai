@@ -3,12 +3,12 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'server/tsconfig.json' }],
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
     '^.+\\.(js|mjs)$': 'babel-jest'
   },
   globals: {
     'ts-jest': {
-      tsconfig: 'server/tsconfig.json'
+      tsconfig: '<rootDir>/tsconfig.json'
     },
   },
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',

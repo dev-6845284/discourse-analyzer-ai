@@ -11,7 +11,7 @@ interface SearchResultsProps {
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   onClear: () => void;
-  onAnalyze: (quote: Quote) => void;
+  onAnalyze: (quote: Quote, model: string) => void;
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (id: string, lang: string) => void;
@@ -20,6 +20,7 @@ interface SearchResultsProps {
   onRemove: (quote: Quote) => void;
   onEditSource?: (quote: Quote) => void;
   clearError: () => void;
+  selectedAI: string;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -39,6 +40,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onRemove,
   onEditSource,
   clearError,
+  selectedAI,
 }) => {
   return (
     <>
@@ -101,7 +103,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             <QuoteCard
               key={quote.id}
               quote={quote}
-              onAnalyze={onAnalyze}
+              onAnalyze={(q) => onAnalyze(q, selectedAI)}
               onImprove={onImprove}
               onSave={onSave}
               onLanguageChange={onLanguageChange}
@@ -109,6 +111,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               onDiscard={onDiscard}
               onRemove={onRemove}
               isApiKeySet={true}
+              selectedAI={selectedAI}
             />
           ))}
         </div>

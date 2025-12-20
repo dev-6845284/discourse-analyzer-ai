@@ -345,6 +345,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onEditSource={onEditSource}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
+              selectedAI={selectedAI} 
             />
           ))}
         </div>

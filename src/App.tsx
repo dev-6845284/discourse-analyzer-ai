@@ -269,7 +269,8 @@ const App: React.FC = () => {
               setSortOrder={setSortOrder}
 
               onClearQuotes={quotesState.handleClearQuotes}
-              onAnalyze={handleAnalyzeQuote}
+              selectedAI={searchParams.selectedAI}
+              onAnalyze={(quote, model) => quotesState.handleAnalyzeQuote(quote, model)}
               onImprove={handleImproveQuote}
               onSave={(quote: any) => {
                 handleSaveQuote({

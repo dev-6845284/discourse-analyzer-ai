@@ -24,7 +24,7 @@ interface MainContentProps {
 
   // handlers
   onClearQuotes: () => void;
-  onAnalyze: (q: any) => void;
+  onAnalyze: (q: any, model: string) => void;
   onImprove: (q: any) => void;
   onSave: (q: any) => void;
   onLanguageChange: (q: any, code: string) => void;
@@ -35,6 +35,7 @@ interface MainContentProps {
   onEditSource: (q: any) => void;
   onResumeSession: (session: any) => void;
   onStoredPromoteSuccess: () => void;
+  selectedAI: string;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
@@ -64,6 +65,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   onEditSource,
   onResumeSession,
   onStoredPromoteSuccess,
+  selectedAI,
 }) => {
   return (
     <div className="md:col-span-2 space-y-6">
@@ -140,7 +142,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               )}
               <StoredQuotes
                 selectedPerson={selectedPerson}
-                selectedAI={''}
+                selectedAI={selectedAI}
                 isApiKeySet={true}
                 onEditSource={onEditSource}
               />
@@ -194,6 +196,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 onDiscard={onDiscard}
                 onRemove={onRemove}
                 clearError={clearError}
+                selectedAI={selectedAI}
               />
             )
           )}
