@@ -11,6 +11,7 @@ Todo:
     [x] Security alerts system for suspicious activity
     [x] Admin dashboard for usage stats and alerts
     [x] Admin alert banner with real-time notifications
+    [] Check for more security and DDoS protection measures
     [] Add WebSocket for real-time alert updates
     [] Implement Vercel Edge Middleware for edge-level rate limiting
     [] Add email/webhook notifications for critical alerts
@@ -25,14 +26,12 @@ Todo:
       [x] when analyzing dialog into topics, provide timestamps for each line
       [x] Edit list of speakers
       [x] Allow update speaker
-      [] Replace strengths Texts into 'horizontal bars' showing it's stregth. Segments are number of possible levels. Text will be hover tooltip
+      [x] Replace strengths Texts into 'horizontal bars' showing it's stregth. Segments are number of possible levels. Text will be hover tooltip
       [] Allow save session state multiple times
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
   TickTok videos:
     [] Load from URL
   Bugs:
-    [x] Quote analysis result, checkboxes to select which parts to strore are ignored, stored everything
-    [] not translated category category_NarrativeControlPropaganda
     [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
     [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
     
