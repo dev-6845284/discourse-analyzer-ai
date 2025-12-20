@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Spinner from '../Spinner';
+import { useI18n } from '../../i18n';
 
 /**
  * Validates if a string is a valid HTTP/HTTPS URL
@@ -45,6 +46,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
   setExtractionLanguage,
   extractionError,
 }) => {
+  const { t } = useI18n();
   const isUrl = isValidUrl(textToExtract);
   const [analyzeImmediately, setAnalyzeImmediately] = useState(true);
   const lastExtractionRef = React.useRef<{url: string, lang: string} | null>(null);
@@ -71,22 +73,22 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg">
       <h2 className="text-xl font-semibold text-cyan-400 mb-4">
-        Extract from Text
+        {t('extractFromText')}
       </h2>
       <textarea
         value={textToExtract}
         onChange={(e) => setTextToExtract(e.target.value)}
         rows={6}
         className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-        placeholder={`Paste an article, a URL, or a single quote by ${
-          personName || 'the person'
-        } here...`}
+        placeholder={
+          personName ? t('pasteArticleOrUrlBy', { person: personName }) : t('pasteArticleOrUrlGeneric')
+        }
       ></textarea>
       
       {/* Language Selector for URLs */}
       {isUrl && setExtractionLanguage && (
         <div className="mt-2 flex items-center gap-2">
-          <label className="text-xs text-gray-400">Extraction Language:</label>
+          <label className="text-xs text-gray-400">{t('extractionLanguageLabel')}</label>
           <select
             value={extractionLanguage}
             onChange={(e) => setExtractionLanguage(e.target.value)}
@@ -121,8 +123,8 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
             disabled={isExtracting || !personName}
             title={
               !personName
-                ? "Please enter a person's name"
-                : 'Extract quotes from the article at this URL'
+                ? t('pleaseEnterPersonName')
+                : t('extractQuotesFromArticle')
             }
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
           >
@@ -133,7 +135,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
                 </svg>
-                Extract from Link
+                {t('extractFromLink')}
               </>
             )}
           </button>

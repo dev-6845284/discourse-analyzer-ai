@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Person } from '../../types';
+import { useI18n } from '../../i18n';
 
 interface PersonListProps {
   people: Person[];
@@ -20,6 +21,7 @@ export const PersonList: React.FC<PersonListProps> = ({
   onEdit, 
   onDelete 
 }) => {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
@@ -32,7 +34,7 @@ export const PersonList: React.FC<PersonListProps> = ({
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
           type="text"
-          placeholder="Search people..."
+          placeholder={t('searchPeople')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
@@ -41,11 +43,11 @@ export const PersonList: React.FC<PersonListProps> = ({
           type="submit"
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
         >
-          Search
+          {t('search')}
         </button>
       </form>
 
-      {isLoading && <div className="text-center py-4">Loading...</div>}
+      {isLoading && <div className="text-center py-4">{t('loading')}</div>}
       {error && <div className="text-red-600 py-2">{error}</div>}
 
       <div className="grid gap-4">
@@ -87,7 +89,7 @@ export const PersonList: React.FC<PersonListProps> = ({
           </div>
         ))}
         {!isLoading && people.length === 0 && (
-          <div className="text-center text-gray-500 py-4">No people found.</div>
+          <div className="text-center text-gray-500 py-4">{t('noPeopleFound')}</div>
         )}
       </div>
     </div>

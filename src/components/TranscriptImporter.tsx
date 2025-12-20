@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, AlertCircle } from 'lucide-react';
 import { parseTranscriptFromJson, parseTranscriptFromText, TranscriptData } from '../utils/transcriptStorage';
+import { useI18n } from '../i18n';
 
 interface TranscriptImporterProps {
   onImport: (transcript: TranscriptData) => void;
@@ -11,6 +12,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
   onImport,
   isLoading = false,
 }) => {
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [importMode, setImportMode] = useState<'json' | 'text'>('json');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -79,11 +81,11 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
       <h2 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
         <Upload size={20} />
-        Import Transcript Data
+        {t('importTranscriptDataTitle')}
       </h2>
 
       <p className="text-sm text-gray-400">
-        Skip YouTube fetching by importing previously downloaded transcript data
+        {t('skipYouTubeFetchByImporting')}
       </p>
 
       {/* Mode Selection */}
@@ -99,7 +101,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
         >
-          JSON Format
+          {t('jsonFormat')}
         </button>
         <button
           onClick={() => {
@@ -112,13 +114,13 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
         >
-          Plain Text (hh:mm:ss or mm:ss)
+          {t('plainTextFormat')}
         </button>
       </div>
 
       {/* File Upload */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Upload File</label>
+        <label className="text-sm font-medium text-gray-300 mb-2 block">{t('uploadFile')}</label>
         <div className="relative">
           <input
             ref={fileInputRef}
@@ -133,14 +135,14 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
             disabled={isLoading}
             className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Choose {importMode === 'json' ? 'JSON' : 'Text'} File
+            {importMode === 'json' ? t('chooseJsonFile') : t('chooseTextFile')}
           </button>
         </div>
       </div>
 
       {/* Paste Mode */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Or Paste Content</label>
+        <label className="text-sm font-medium text-gray-300 mb-2 block">{t('orPasteContent')}</label>
         <textarea
           value={pastedContent}
           onChange={(e) => {
@@ -149,8 +151,8 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
           }}
           placeholder={
             importMode === 'json'
-              ? 'Paste JSON transcript export here...'
-              : 'Paste plain text transcript here (format: (hh:mm:ss) or (mm:ss) text, e.g. (00:00) Hello world)...'
+              ? t('pasteJsonTranscriptPlaceholder')
+              : t('pastePlainTextTranscriptPlaceholder')
           }
           disabled={isLoading}
           rows={6}
@@ -164,7 +166,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
         disabled={isLoading || !pastedContent.trim()}
         className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'Importing...' : 'Import Transcript'}
+        {isLoading ? t('importing') : t('importTranscript')}
       </button>
 
       {/* Error Message */}
@@ -178,10 +180,10 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
       {/* Help Text */}
       <div className="text-xs text-gray-500 space-y-1">
         <p>
-          <strong>JSON Format:</strong> Export from transcript viewer or use previously saved JSON files
+          <strong>{t('jsonFormatHelpTitle')}</strong> {t('jsonFormatHelpText')}
         </p>
         <p>
-          <strong>Plain Text Format:</strong> One line per segment, starting with (hh:mm:ss) or (mm:ss) in parentheses, followed by the text. Example: <br/>
+          <strong>{t('plainTextFormatHelpTitle')}</strong> {t('plainTextFormatHelpText')} Example: <br/>
           <span className="font-mono">(00:00) Hello world</span>
         </p>
       </div>

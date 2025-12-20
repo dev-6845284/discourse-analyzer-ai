@@ -4,6 +4,7 @@ import { PersonSelector } from '../people/PersonSelector';
 import { usePeople } from '../../hooks/usePeople';
 import { Person } from '../../types';
 import Spinner from '../Spinner';
+import { useI18n } from '../../i18n';
 
 interface Speaker {
   id: string;
@@ -27,6 +28,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
   onUnlink,
   onCreateAndLink,
 }) => {
+  const { t } = useI18n();
   const [mode, setMode] = useState<'select' | 'create'>('select');
   const [selectedPersonName, setSelectedPersonName] = useState('');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -45,7 +47,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
 
   const handleLinkExisting = async () => {
     if (!selectedPerson) {
-      setError('Please select a person from the list');
+      setError(t('pleaseSelectPersonFromList'));
       return;
     }
     
@@ -55,7 +57,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
       await onLink(speaker.id, selectedPerson._id, selectedPerson.name);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to link person');
+      setError(err instanceof Error ? err.message : t('failedToLinkPerson'));
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +65,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
 
   const handleCreateAndLink = async () => {
     if (!newPersonName.trim()) {
-      setError('Please enter a name for the new person');
+      setError(t('pleaseEnterNameForNewPerson'));
       return;
     }
 
@@ -86,7 +88,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create person');
+      setError(err instanceof Error ? err.message : t('failedToCreatePerson'));
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +101,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
       await onUnlink(speaker.id);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to unlink person');
+      setError(err instanceof Error ? err.message : t('failedToUnlinkPerson'));
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +115,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Link2 size={20} className="text-cyan-400" />
-            Link Speaker to Person
+            {t('linkSpeakerToPerson')}
           </h3>
           <button
             onClick={onClose}
@@ -125,12 +127,12 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
 
         {/* Speaker info */}
         <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
-          <p className="text-sm text-gray-400 mb-1">Speaker:</p>
+          <p className="text-sm text-gray-400 mb-1">{t('speakerLabel')}:</p>
           <p className="text-white font-medium">{speaker.name}</p>
           {isLinked && (
             <p className="text-xs text-cyan-400 mt-1 flex items-center gap-1">
               <Link2 size={12} />
-              Currently linked to: {speaker.personName}
+              {t('currentlyLinkedTo', { name: speaker.personName })}
             </p>
           )}
         </div>
@@ -171,13 +173,13 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className="text-xs text-gray-400 mb-2 block">
-                Search and select a person:
+                {t('searchAndSelectPerson')}:
               </label>
               <PersonSelector
                 value={selectedPersonName}
                 onChange={setSelectedPersonName}
                 onSelectPerson={handleSelectPerson}
-                placeholder="Type to search..."
+                placeholder={t('typeToSearch')}
               />
             </div>
 
@@ -200,12 +202,12 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Spinner />
-                  Linking...
+                  {t('linking')}
                 </>
               ) : (
                 <>
                   <Check size={16} />
-                  Link to Selected Person
+                  {t('linkToSelectedPerson')}
                 </>
               )}
             </button>
@@ -214,27 +216,27 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className="text-xs text-gray-400 mb-2 block">
-                Person name:
+                {t('personNameLabel')}:
               </label>
               <input
                 type="text"
                 value={newPersonName}
                 onChange={(e) => setNewPersonName(e.target.value)}
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:ring-cyan-500 focus:border-cyan-500"
-                placeholder="Enter person name"
+                placeholder={t('enterPersonName')}
               />
             </div>
 
             <div>
               <label className="text-xs text-gray-400 mb-2 block">
-                Aliases (comma-separated, optional):
+                {t('aliasesLabelOptional')}:
               </label>
               <input
                 type="text"
                 value={newPersonAliases}
                 onChange={(e) => setNewPersonAliases(e.target.value)}
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:ring-cyan-500 focus:border-cyan-500"
-                placeholder="e.g., John D., J. Doe"
+                placeholder={t('aliasesPlaceholderExample')}
               />
             </div>
 
@@ -246,12 +248,12 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Spinner />
-                  Creating...
+                  {t('creating')}
                 </>
               ) : (
                 <>
                   <UserPlus size={16} />
-                  Create Person & Link
+                  {t('createPersonAndLink')}
                 </>
               )}
             </button>

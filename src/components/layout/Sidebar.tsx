@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../../i18n';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -21,23 +22,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   children,
   userRole,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="md:col-span-1 p-6 bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-cyan-400">Discourse Analyzer</h1>
+        <h1 className="text-3xl font-bold text-cyan-400">{t('appTitle')}</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={onExport}
             className="text-sm text-gray-400 hover:text-white"
-            title="Export current quotes to a JSON file"
+            title={t('exportTitle')}
           >
-            Export
+            {t('export')}
           </button>
           <label
             className="text-sm text-gray-400 hover:text-white cursor-pointer"
-            title="Import quotes from a JSON file"
+            title={t('importTitle')}
           >
-            Import
+            {t('import')}
             <input
               type="file"
               className="hidden"
@@ -55,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           aria-expanded={!isCollapsed}
           aria-controls="controls-panel"
         >
-          <span>{isCollapsed ? 'Show' : 'Hide'} Controls</span>
+          <span>{isCollapsed ? t('showControls') : t('hideControls')} {t('controls')}</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className={`h-5 w-5 transition-transform ${
@@ -88,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            Search
+            {t('searchTab')}
           </button>
           <button
             onClick={() => onTabChange('people')}
@@ -98,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            People
+            {t('peopleTab')}
           </button>
           <button
             onClick={() => onTabChange('sessions')}
@@ -108,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            Sessions
+            {t('sessionsTab')}
           </button>
           {userRole === 'admin' && (
             <button
@@ -119,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              Users
+              {t('usersTab')}
             </button>
           )}
         </div>

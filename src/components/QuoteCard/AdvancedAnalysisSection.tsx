@@ -136,7 +136,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                   type="text"
                   value={newLinkUrl}
                   onChange={(e) => onNewLinkUrlChange(e.target.value)}
-                  placeholder="https://..."
+                  placeholder={t('linkPlaceholder')}
                   className="flex-1 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-1.5 focus:border-cyan-500"
                 />
                 <select
@@ -144,15 +144,15 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                   onChange={(e) => onNewLinkTypeChange(e.target.value as 'quote' | 'context')}
                   className="bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-1.5"
                 >
-                  <option value="context">Context</option>
-                  <option value="quote">Quote Source</option>
+                  <option value="context">{t('contextLabelShort')}</option>
+                  <option value="quote">{t('quoteSource')}</option>
                 </select>
                 <button
                   onClick={onAddLink}
                   disabled={!newLinkUrl}
                   className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded disabled:opacity-50"
                 >
-                  Add
+                  {t('add')}
                 </button>
               </div>
             </div>

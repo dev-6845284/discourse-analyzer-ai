@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Play, AlertCircle, FileText } from 'lucide-react';
 import { parseSrtContent, extractYouTubeVideoId, isValidYouTubeUrl } from '../utils/srtParser';
+import { useI18n } from '../i18n';
 import { TranscriptData } from '../utils/transcriptStorage';
 
 interface SrtTranscriptImporterProps {
@@ -17,6 +18,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
 
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,7 +35,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
     
     // Validate URL format as user types
     if (url.trim() && !isValidYouTubeUrl(url)) {
-      setUrlError('Please enter a valid YouTube URL');
+      setUrlError(t('pleaseEnterValidYouTubeUrl'));
     }
   };
 
@@ -43,19 +45,19 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
 
     // Validate YouTube URL
     if (!youtubeUrl.trim()) {
-      setUrlError('Please enter a YouTube video URL');
+      setUrlError(t('pleaseEnterYoutubeUrl'));
       return;
     }
 
     const videoId = extractYouTubeVideoId(youtubeUrl);
     if (!videoId) {
-      setUrlError('Please enter a valid YouTube URL');
+      setUrlError(t('pleaseEnterValidYouTubeUrl'));
       return;
     }
 
     // Validate SRT file
     if (!selectedFile) {
-      setError('Please select an SRT file');
+      setError(t('pleaseSelectSrtFile'));
       return;
     }
 
@@ -79,7 +81,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
         fileInputRef.current.value = '';
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to parse SRT file');
+      setError(err.message || t('failedToParseSrtFile'));
     }
   };
 
@@ -93,24 +95,24 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
       <h2 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
         <FileText size={20} />
-        Import SRT Transcript
+        {t('importSrtTranscriptTitle')}
       </h2>
 
       <p className="text-sm text-gray-400">
-        Import a local SRT subtitle file for a YouTube video instead of fetching from YouTube
+        {t('srtImportNote')}
       </p>
 
       {/* YouTube URL Input */}
       <div>
         <label className="text-sm font-medium text-gray-300 mb-2 block">
-          YouTube Video URL
+          {t('youtubeVideoUrlLabel')}
         </label>
         <input
           type="text"
           value={youtubeUrl}
           onChange={handleUrlChange}
           onKeyPress={handleKeyPress}
-          placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+          placeholder={t('youtubeUrlPlaceholder')}
           disabled={isLoading}
           className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed ${
             urlError 
@@ -129,7 +131,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
       {/* SRT File Upload */}
       <div>
         <label className="text-sm font-medium text-gray-300 mb-2 block">
-          SRT Subtitle File
+          {t('srtSubtitleFileLabel')}
         </label>
         <div className="flex gap-2">
           <input
@@ -146,7 +148,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
             className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Upload size={18} />
-            {selectedFile ? selectedFile.name : 'Choose SRT File'}
+            {selectedFile ? selectedFile.name : t('chooseSrtFile')}
           </button>
           {selectedFile && (
             <button
@@ -158,7 +160,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
               }}
               disabled={isLoading}
               className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-400 hover:text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50"
-              title="Clear selected file"
+              title={t('clearSelectedFile')}
             >
               ✕
             </button>
@@ -186,12 +188,12 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Importing...
+            {t('importing')}
           </>
         ) : (
           <>
             <Play size={18} />
-            Import & View Transcript
+            {t('importAndViewTranscript')}
           </>
         )}
       </button>

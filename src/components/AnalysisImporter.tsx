@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, AlertCircle } from 'lucide-react';
 import { parseAnalysisFromJson, FullAnalysisData } from '../utils/analysisStorage';
+import { useI18n } from '../i18n';
 
 interface AnalysisImporterProps {
   onImport: (analysis: FullAnalysisData) => void;
@@ -11,6 +12,7 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
   onImport,
   isLoading = false,
 }) => {
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pastedContent, setPastedContent] = useState('');
@@ -30,13 +32,13 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
         fileInputRef.current.value = '';
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to import analysis');
+      setError(err.message || t('failedToImportAnalysisFile'));
     }
   };
 
   const handlePasteImport = async () => {
     if (!pastedContent.trim()) {
-      setError('Please paste analysis JSON content');
+      setError(t('pleasePasteAnalysisJsonContent'));
       return;
     }
 
@@ -48,7 +50,7 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
       onImport(analysis);
       setPastedContent('');
     } catch (err: any) {
-      setError(err.message || 'Failed to import analysis');
+      setError(err.message || t('failedToImportAnalysisFile'));
     }
   };
 
@@ -56,16 +58,16 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
       <h2 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
         <Upload size={20} />
-        Import Analysis Data
+        {t('importAnalysisTitle')}
       </h2>
 
       <p className="text-sm text-gray-400">
-        Import previously exported full analysis (topics, speakers, and dialog analysis)
+        {t('importAnalysisDescription')}
       </p>
 
       {/* File Upload */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Upload File</label>
+        <label className="text-sm font-medium text-gray-300 mb-2 block">{t('uploadFile')}</label>
         <div className="relative">
           <input
             ref={fileInputRef}
@@ -80,21 +82,21 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
             disabled={isLoading}
             className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Choose Analysis JSON File
+            {t('chooseAnalysisJsonFile')}
           </button>
         </div>
       </div>
 
       {/* Paste Mode */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Or Paste JSON Content</label>
+        <label className="text-sm font-medium text-gray-300 mb-2 block">{t('importAnalysisOrPaste')}</label>
         <textarea
           value={pastedContent}
           onChange={(e) => {
             setPastedContent(e.target.value);
             setError(null);
           }}
-          placeholder="Paste analysis JSON export here..."
+          placeholder={t('pasteAnalysisJsonPlaceholder')}
           disabled={isLoading}
           rows={6}
           className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 disabled:bg-gray-600 disabled:cursor-not-allowed font-mono text-xs"
@@ -107,7 +109,7 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
         disabled={isLoading || !pastedContent.trim()}
         className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'Importing...' : 'Import Analysis'}
+        {isLoading ? t('importing') : t('importAnalysis')}
       </button>
 
       {/* Error Message */}
@@ -121,7 +123,7 @@ export const AnalysisImporter: React.FC<AnalysisImporterProps> = ({
       {/* Help Text */}
       <div className="text-xs text-gray-500">
         <p>
-          Import full analysis data exported from the transcript viewer. This includes topic analysis, speaker identification, and dialog analysis results.
+          {t('importAnalysisHelp')}
         </p>
       </div>
     </div>

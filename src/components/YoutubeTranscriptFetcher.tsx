@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 interface YoutubeTranscriptFetcherProps {
   onFetch: (url: string) => Promise<void>;
@@ -14,19 +15,20 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
 }) => {
   const [videoUrl, setVideoUrl] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const handleFetch = async () => {
     setLocalError(null);
     
     if (!videoUrl.trim()) {
-      setLocalError('Please enter a YouTube video URL');
+      setLocalError(t('pleaseEnterYoutubeUrl'));
       return;
     }
 
     // Basic validation for YouTube URL
     const youtubeUrlPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
     if (!youtubeUrlPattern.test(videoUrl)) {
-      setLocalError('Please enter a valid YouTube URL');
+      setLocalError(t('pleaseEnterValidYouTubeUrl'));
       return;
     }
 
@@ -34,7 +36,7 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
       await onFetch(videoUrl);
       setVideoUrl(''); // Clear input after successful fetch
     } catch (err: any) {
-      setLocalError(err.message || 'Failed to fetch transcript');
+      setLocalError(err.message || t('failedToFetchTranscript'));
     }
   };
 
@@ -48,11 +50,11 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
       <h2 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
         <Play size={20} />
-        YouTube Transcript Viewer
+        {t('youtubeTranscriptViewerTitle')}
       </h2>
       
       <p className="text-sm text-gray-400 mb-4">
-        Paste a YouTube video URL to view its transcript with timestamps
+        {t('pasteVideoUrlToViewTranscript')}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
@@ -64,7 +66,7 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
             setLocalError(null);
           }}
           onKeyPress={handleKeyPress}
-          placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+          placeholder={t('youtubeUrlPlaceholder')}
           disabled={isLoading}
           className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 disabled:bg-gray-600 disabled:cursor-not-allowed"
         />
@@ -79,12 +81,12 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Fetching...
+              {t('fetching')}
             </>
           ) : (
             <>
               <Play size={18} />
-              Get Transcript
+              {t('getTranscript')}
             </>
           )}
         </button>

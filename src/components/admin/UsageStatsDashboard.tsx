@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useI18n } from '../../i18n';
 import { 
   getAdminUsageStats, 
   getAdminSecurityAlerts, 
@@ -63,6 +64,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'alerts' | 'blocked'>('overview');
   const [timeRange, setTimeRange] = useState<number>(24);
+  const { t } = useI18n();
   const [newBlockIP, setNewBlockIP] = useState({ ip: '', reason: '', expiresMinutes: '' });
 
   useEffect(() => {
@@ -84,7 +86,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
       setAlerts(alertsRes.data.alerts || []);
       setBlockedIPs(blockedRes.data);
     } catch (err) {
-      setError('Failed to load dashboard data');
+      setError(t('failedToLoadDashboardData'));
       console.error('Dashboard fetch error:', err);
     } finally {
       setIsLoading(false);
@@ -356,7 +358,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                           </span>
                           <span className="text-sm font-medium">{alert.type.replace(/_/g, ' ')}</span>
                           {alert.acknowledged && (
-                            <span className="text-xs text-gray-500">✓ Acknowledged</span>
+                            <span className="text-xs text-gray-500">{t('acknowledgedLabel')}</span>
                           )}
                         </div>
                         <p className="mt-1">{alert.message}</p>
@@ -372,7 +374,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                           onClick={() => handleAcknowledgeAlert(alert._id)}
                           className="ml-4 px-3 py-1 bg-white/50 hover:bg-white rounded text-sm"
                         >
-                          Acknowledge
+                          {t('acknowledge')}
                         </button>
                       )}
                     </div>
@@ -386,11 +388,11 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
             <div className="space-y-6">
               {/* Block IP Form */}
               <form onSubmit={handleBlockIP} className="bg-slate-100 rounded-lg p-4">
-                <h3 className="font-semibold text-slate-800 mb-3">Block an IP Address</h3>
+                <h3 className="font-semibold text-slate-800 mb-3">{t('blockIPTitle')}</h3>
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    placeholder="IP Address"
+                    placeholder={t('ipAddressPlaceholder')}
                     value={newBlockIP.ip}
                     onChange={(e) => setNewBlockIP(prev => ({ ...prev, ip: e.target.value }))}
                     className="flex-1 px-3 py-2 border border-slate-300 rounded text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -398,7 +400,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                   />
                   <input
                     type="text"
-                    placeholder="Reason"
+                    placeholder={t('reasonPlaceholder')}
                     value={newBlockIP.reason}
                     onChange={(e) => setNewBlockIP(prev => ({ ...prev, reason: e.target.value }))}
                     className="flex-1 px-3 py-2 border border-slate-300 rounded text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -406,7 +408,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                   />
                   <input
                     type="number"
-                    placeholder="Expires (min)"
+                    placeholder={t('expiresPlaceholder')}
                     value={newBlockIP.expiresMinutes}
                     onChange={(e) => setNewBlockIP(prev => ({ ...prev, expiresMinutes: e.target.value }))}
                     className="w-32 px-3 py-2 border border-slate-300 rounded text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -415,7 +417,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                     type="submit"
                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium transition-colors"
                   >
-                    Block
+                    {t('block')}
                   </button>
                 </div>
               </form>
@@ -424,7 +426,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
               <div className="space-y-2">
                 {blockedIPs.length === 0 ? (
                   <div className="text-center text-slate-500 py-8">
-                    No blocked IPs
+                    {t('noBlockedIPs')}
                   </div>
                 ) : (
                   blockedIPs.map((ip) => (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SUPPORTED_LANGUAGES } from '../constants';
+import { useI18n } from '../i18n';
 
 interface AddQuoteModalProps {
   isOpen: boolean;
@@ -14,13 +15,14 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [languageCode, setLanguageCode] = useState('en');
+  const { t } = useI18n();
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleSave = () => {
     if (!source.trim() || !date) {
-      setError('Source URL and Date are required.');
+      setError(t('sourceUrlAndDateRequired'));
       return;
     }
     setError('');
@@ -28,8 +30,8 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
     onSave({ source, title, date, languageCode, languageName });
   };
 
-  const titleText = mode === 'extract' ? 'Extract Quotes Details' : 'Add Quote Details';
-  const buttonText = mode === 'extract' ? 'Extract & Analyze' : 'Save and Analyze';
+  const titleText = mode === 'extract' ? t('extractQuotesDetails') : t('addQuoteDetails');
+  const buttonText = mode === 'extract' ? t('extractAndAnalyze') : t('saveAndAnalyze');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
@@ -44,35 +46,35 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
           }
         `}</style>
         <h2 className="text-2xl font-bold text-cyan-400 mb-4">{titleText}</h2>
-        <p className="text-gray-400 mb-6">Please provide the source, date, and language for the quote.</p>
+        <p className="text-gray-400 mb-6">{t('addQuoteInstructions')}</p>
         
         {error && <p className="text-red-400 mb-4 text-sm">{error}</p>}
         
         <div className="space-y-4">
           <div>
-            <label htmlFor="quoteSource" className="block text-sm font-medium text-gray-300 mb-1">Source URL</label>
+            <label htmlFor="quoteSource" className="block text-sm font-medium text-gray-300 mb-1">{t('sourceUrlLabel')}</label>
             <input
               type="text"
               id="quoteSource"
               value={source}
               onChange={(e) => setSource(e.target.value)}
               className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="https://example.com/article"
+              placeholder={t('linkPlaceholder')}
             />
           </div>
           <div>
-            <label htmlFor="quoteTitle" className="block text-sm font-medium text-gray-300 mb-1">Source Title (Optional)</label>
+            <label htmlFor="quoteTitle" className="block text-sm font-medium text-gray-300 mb-1">{t('sourceTitleLabelOptional')}</label>
             <input
               type="text"
               id="quoteTitle"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="Article Title"
+              placeholder={t('sourceTitlePlaceholder')}
             />
           </div>
           <div>
-            <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-300 mb-1">Date</label>
+            <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-300 mb-1">{t('dateLabel')}</label>
             <input
               type="date"
               id="quoteDate"
@@ -82,7 +84,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
             />
           </div>
           <div>
-            <label htmlFor="quoteLanguage" className="block text-sm font-medium text-gray-300 mb-1">Language</label>
+            <label htmlFor="quoteLanguage" className="block text-sm font-medium text-gray-300 mb-1">{t('languageLabel')}</label>
             <select
               id="quoteLanguage"
               value={languageCode}
@@ -102,7 +104,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
             type="button"
             className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}

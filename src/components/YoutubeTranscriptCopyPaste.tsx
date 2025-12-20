@@ -53,7 +53,7 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
 
     const videoId = extractYouTubeVideoId(youtubeUrl);
     if (!videoId) {
-      setUrlError('Please enter a valid YouTube URL');
+      setUrlError(t('pleaseEnterValidYouTubeUrl'));
       return;
     }
 
@@ -85,7 +85,7 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
       setYoutubeUrl('');
       setPastedTranscript('');
     } catch (err: any) {
-      setError(err.message || 'Failed to parse transcript');
+      setError(err.message || t('failedToParseTranscript'));
     }
   };
 
@@ -141,14 +141,14 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
       {/* YouTube URL Input */}
       <div>
         <label className="text-sm font-medium text-gray-300 mb-2 block">
-          YouTube Video URL <span className="text-red-400">*</span>
+          {t('youtubeVideoUrlLabel')} <span className="text-red-400">*</span>
         </label>
         <input
           type="url"
           value={youtubeUrl}
           onChange={handleUrlChange}
           onKeyDown={handleKeyPress}
-          placeholder="https://www.youtube.com/watch?v=..."
+          placeholder={t('youtubeUrlPlaceholder')}
           disabled={isLoading}
           className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed ${
             urlError
@@ -164,13 +164,13 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
       {/* Transcript Paste Area */}
       <div>
         <label className="text-sm font-medium text-gray-300 mb-2 block">
-          Paste Transcript <span className="text-red-400">*</span>
+          {t('pasteTranscriptLabel')} <span className="text-red-400">*</span>
         </label>
         <textarea
           value={pastedTranscript}
           onChange={handleTranscriptChange}
           onKeyDown={handleKeyPress}
-          placeholder={`0:00\nHello everyone\n0:05\nWelcome to this video\n...`}
+          placeholder={t('pasteTranscriptPlaceholder')}
           disabled={isLoading}
           rows={8}
           className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed font-mono text-sm ${
@@ -181,7 +181,7 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
         />
         {pastedTranscript && (
           <p className="mt-1 text-xs text-gray-500">
-            {pastedTranscript.split('\n').filter(l => l.trim()).length} lines pasted
+            {pastedTranscript.split('\n').filter(l => l.trim()).length} {t('linesPasted')}
           </p>
         )}
       </div>
@@ -200,10 +200,7 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
       )}
 
       {/* Keyboard Shortcut Hint */}
-      <p className="text-xs text-gray-500 text-center">
-        Press <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl</kbd> +{' '}
-        <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Enter</kbd> to import
-      </p>
+      <p className="text-xs text-gray-500 text-center">{t('pressCtrlEnterToImport')}</p>
     </div>
   );
 };
