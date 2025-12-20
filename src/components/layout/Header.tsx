@@ -28,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onEditProfile,
 }) => {
   const { t, language, setLanguage } = useI18n();
+  const isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development';
 
   return (
     <header className="flex justify-between items-center mb-6">
@@ -56,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           {isFormCollapsed ? t('expandForm') : t('collapseForm')}
         </button>
-        {(import.meta.env.DEV || user?.role === 'admin') && (
+        {(isDev || user?.role === 'admin') && (
           <button
             onClick={() => setLogsVisible(!logsVisible)}
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"

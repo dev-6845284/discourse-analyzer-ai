@@ -47,19 +47,23 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const t = (key: keyof Translations | string, vars?: Record<string, any>) => {
+    const isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development';
     const dict = LANGS[language] || LANGS['en'];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = (dict as any)[key];
     if (!value) {
       // fallback to English or the key itself
       value = (LANGS['en'] as any)[key] || key;
-      if (import.meta.env.DEV) console.warn(`Missing translation for key: ${String(key)}`);
+      if (isDev) console.warn(`Missing translation for key: ${String(key)}`);
     }
     if (vars) {
       Object.keys(vars).forEach((k) => {
         value = value.replace(new RegExp(`\{${k}\}`, 'g'), String(vars[k]));
       });
     }
+
+    // noop
+
     return value;
   };
 

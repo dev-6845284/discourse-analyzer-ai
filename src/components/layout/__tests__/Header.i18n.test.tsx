@@ -45,7 +45,7 @@ describe('Header language selector', () => {
     // Initially English
     expect(screen.getByTestId('results').textContent).toMatch(/Results \(2\)/);
 
-    const select = screen.getByLabelText('Select language') as HTMLSelectElement;
+    const select = screen.getByLabelText('Language') as HTMLSelectElement;
     await userEvent.selectOptions(select, 'lt');
 
     // localStorage should be updated
