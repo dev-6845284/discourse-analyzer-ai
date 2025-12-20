@@ -6,6 +6,7 @@ import { downloadSpeakerAnalysisJson, parseSpeakerAnalysisFromJson } from '../ut
 import { downloadAnalysisJson, parseAnalysisFromJson, FullAnalysisData } from '../utils/analysisStorage';
 import { createSession, updateSessionStep } from '../utils/api';
 import { TranscriptSegment, parseTimestamp, constructFormattedTranscript } from '../utils/transcriptHelpers';
+import { useI18n } from '../i18n';
 
 export interface UseTranscriptViewerProps {
   segments: TranscriptSegment[];
@@ -73,6 +74,7 @@ export const useTranscriptViewer = ({
   
   // Topic analysis hook
   const topicAnalysis = useTranscriptAnalysis(initialSessionData);
+  const { t } = useI18n();
 
   const formattedText = constructFormattedTranscript(segments);
 
@@ -371,7 +373,7 @@ export const useTranscriptViewer = ({
       
     } catch (error) {
       console.error('Failed to import analysis:', error);
-      alert('Failed to import analysis file. Please check the file format.');
+      alert(t('failedToImportAnalysisFile'));
     }
     
     // Reset input
@@ -391,7 +393,7 @@ export const useTranscriptViewer = ({
         setViewMode('speakers');
       } catch (error) {
         console.error('Failed to import speaker analysis:', error);
-        alert('Failed to import speaker analysis file. Please check the file format.');
+        alert(t('failedToImportSpeakerAnalysisFile'));
       }
     };
     reader.readAsText(file);
@@ -442,11 +444,11 @@ export const useTranscriptViewer = ({
         }
       } catch (updateError) {
         console.error('Failed to save session data:', updateError);
-        alert('Failed to save all data to database. Session created but some data may not be saved.');
+        alert(t('failedToSaveAllDataToDb'));
       }
     } catch (error) {
         console.error('Failed to create session:', error);
-      alert('Failed to save session to database.');
+      alert(t('failedToSaveSessionToDb'));
     }
   };
 
@@ -457,7 +459,7 @@ export const useTranscriptViewer = ({
         step: 'transcript' as const,
         status: segments.length > 0 ? 'completed' as const : 'pending' as const,
         resultCount: segments.length,
-        label: 'Transcription',
+        label: t('transcription'),
       },
       {
         step: 'topics' as const,
@@ -469,7 +471,7 @@ export const useTranscriptViewer = ({
               ? 'completed' as const 
               : 'pending' as const,
         resultCount: topicAnalysis.results.length,
-        label: 'Groups',
+        label: t('groups'),
       },
       {
         step: 'speakers' as const,
@@ -481,7 +483,7 @@ export const useTranscriptViewer = ({
               ? 'completed' as const 
               : 'pending' as const,
         resultCount: topicAnalysis.speakerResults.length,
-        label: 'Speakers',
+        label: t('speakers'),
       },
       {
         step: 'dialog' as const,
@@ -493,7 +495,7 @@ export const useTranscriptViewer = ({
               ? 'completed' as const 
               : 'pending' as const,
         resultCount: topicAnalysis.dialogResults.length,
-        label: 'Statements',
+        label: t('statements'),
       },
     ];
     return steps;

@@ -29,11 +29,12 @@ import { SearchResults } from './components/results/SearchResults';
 import { AdminAlertBanner } from './components/admin/AdminAlertBanner';
 import ModalsContainer from './components/ModalsContainer';
 import MainContent from './components/MainContent';
-import { I18nProvider } from './i18n';
+import { useI18n } from './i18n';
 import { UsageStatsDashboard } from './components/admin/UsageStatsDashboard';
 
 const App: React.FC = () => {
   const ctrl = useAppController();
+  const { t } = useI18n();
   const {
     user,
     loginError,
@@ -129,8 +130,7 @@ const App: React.FC = () => {
 
   return (
     <div>
-      {/* Provide translations to the whole app */}
-      <I18nProvider>
+      {/* Provided translations via root I18nProvider */}
         <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
       {/* Admin Security Alert Banner - shown in dev mode or for admins */}
       <AdminAlertBanner 
@@ -337,7 +337,7 @@ const App: React.FC = () => {
             user={user ? { _id: user._id, name: user.name } : null}
             onPasswordUpdated={() => {
               setIsChangePasswordModalOpen(false);
-              alert('Password updated successfully');
+              alert(t('passwordUpdated'));
             }}
             onProfileUpdated={(newName) => {
               setIsEditProfileModalOpen(false);
@@ -349,8 +349,7 @@ const App: React.FC = () => {
           />
         </div>
       </div>
-        </div>
-      </I18nProvider>
+    </div>
     </div>
   );
 };

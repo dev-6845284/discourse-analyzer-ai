@@ -6,6 +6,7 @@ import { useQuotes } from './useQuotes';
 import { useQuoteFilters } from './useQuoteFilters';
 import { useUIState } from './useUIState';
 import { fetchArticle, getSession, getContentAnalysis } from '../utils/api';
+import { useI18n } from '../i18n';
 import { exportQuotesToFile, importQuotesFromFile } from '../utils/file';
 import { saveQuote } from '../utils/api';
 import { TranscriptData } from '../utils/transcriptStorage';
@@ -18,6 +19,7 @@ export function useAppController() {
   const { user, loginError, googleButtonRef, handleLogout, loginWithPassword, updateUser } = useAuth();
 
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   const timePeriod = useTimePeriod();
   const quotesState = useQuotes(handleLogout);
   const quoteFilters = useQuoteFilters(quotesState.quotes);
@@ -301,13 +303,13 @@ export function useAppController() {
       }
     } catch (error: any) {
       console.error('Failed to resume session:', error);
-      alert('Failed to resume session');
+      alert(t('failedToResumeSession'));
     }
   }, [uiState]);
 
   const handleEditSource = React.useCallback(async (quote: Quote) => {
     if (!quote.contentAnalysisId) {
-      alert('This quote is not linked to a content analysis session.');
+      alert(t('quoteNotLinkedToContentAnalysis'));
       return;
     }
 
@@ -365,7 +367,7 @@ export function useAppController() {
 
     } catch (error: any) {
       console.error('Failed to load content analysis for editing:', error);
-      alert('Failed to load source analysis.');
+      alert(t('failedToLoadSourceAnalysis'));
     }
   }, [uiState]);
 

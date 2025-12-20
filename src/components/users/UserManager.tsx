@@ -5,6 +5,7 @@ import { UserList } from './UserList.tsx';
 import { UserForm } from './UserForm.tsx';
 import { PasswordModal } from './PasswordModal.tsx';
 import Spinner from '../Spinner';
+import { useI18n } from '../../i18n';
 
 export const UserManager: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -13,6 +14,7 @@ export const UserManager: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { t } = useI18n();
 
   const fetchUsers = async () => {
     try {
@@ -21,7 +23,7 @@ export const UserManager: React.FC = () => {
       setUsers(response.data);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch users');
+      setError(err.response?.data?.message || t('failedToFetchUsers'));
     } finally {
       setIsLoading(false);
     }
@@ -47,13 +49,13 @@ export const UserManager: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    if (!window.confirm(t('confirmDeleteUser'))) return;
     
     try {
       await api.delete(`/users/${userId}`);
       setUsers(users.filter(u => u._id !== userId));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete user');
+      alert(err.response?.data?.message || t('failedToDeleteUser'));
     }
   };
 
@@ -64,7 +66,7 @@ export const UserManager: React.FC = () => {
 
   const handlePasswordSubmit = () => {
     setIsPasswordModalOpen(false);
-    alert('Password updated successfully');
+    alert(t('passwordUpdated'));
   };
 
   if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
@@ -72,12 +74,12 @@ export const UserManager: React.FC = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('userManagement')}</h1>
         <button
           onClick={handleAddUser}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
         >
-          Add User
+          {t('addUser')}
         </button>
       </div>
 
