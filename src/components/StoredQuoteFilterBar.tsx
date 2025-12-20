@@ -57,6 +57,7 @@ const PersonFilterSelector: React.FC<{
   const { people, fetchPeople, isLoading } = usePeople();
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     fetchPeople();
