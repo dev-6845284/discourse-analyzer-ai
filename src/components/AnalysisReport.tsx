@@ -13,11 +13,14 @@ import {
 import { 
   CATEGORY_COLORS, 
   RATING_COLORS, 
+  RATING_HEX,
   AUDIT_CATEGORY_COLORS, 
   SEVERITY_COLORS, 
+  SEVERITY_HEX,
   VERDICT_COLORS,
   severityToDisplay 
 } from '../constants';
+import StrengthBar from './StrengthBar';
 
 interface LegacyAnalysisReportProps {
   analysis: AnalysisResult;
@@ -79,9 +82,14 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${AUDIT_CATEGORY_COLORS[category]}`}>
                   {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
                 </span>
-                <span className={`font-bold text-sm ${SEVERITY_COLORS[detail.severity]}`}>
-                  {t(`severity_${detail.severity}`) || severityToDisplay(detail.severity)}
-                </span>
+                <StrengthBar
+                  level={['NONE','LOW','MEDIUM','HIGH','SEVERE'].indexOf(detail.severity)}
+                  max={5}
+                  color={SEVERITY_HEX[detail.severity]}
+                  tooltip={t(`severity_${detail.severity}`) || severityToDisplay(detail.severity)}
+                  height={12}
+                  width={60}
+                />
               </div>
               <p className="mt-2 text-gray-300 text-sm">{detail.evidence}</p>
             </div>
@@ -113,9 +121,14 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
               <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${CATEGORY_COLORS[category]}`}>
                 {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
               </span>
-              <span className={`font-bold text-sm ${RATING_COLORS[detail.rating]}`}>
-                {t(`rating_${detail.rating}`) || detail.rating}
-              </span>
+              <StrengthBar
+                level={['None','Low','Medium','High','Severe'].indexOf(detail.rating)}
+                max={5}
+                color={RATING_HEX[detail.rating]}
+                tooltip={t(`rating_${detail.rating}`) || detail.rating}
+                height={12}
+                width={60}
+              />
             </div>
             <p className="mt-2 text-gray-300 text-sm">{detail.justification}</p>
           </div>

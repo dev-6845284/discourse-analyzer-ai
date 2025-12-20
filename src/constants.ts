@@ -20,20 +20,38 @@ export const AUDIT_CATEGORY_COLORS: Record<AuditCategory, string> = {
 
 // Legacy rating colors (title-case)
 export const RATING_COLORS: Record<AnalysisRating, string> = {
-  "None": "text-gray-400",
+  "None": "bg-gray-600/20 text-gray-400 ring-gray-500/30",
   "Low": "text-green-400",
   "Medium": "text-yellow-400",
   "High": "text-orange-400",
   "Severe": "text-red-500",
 };
 
+// Hex color mappings for legacy ratings (used by StrengthBar)
+export const RATING_HEX: Record<AnalysisRating, string> = {
+  "None": "#6b7280",
+  "Low": "#34d399",
+  "Medium": "#facc15",
+  "High": "#fb923c",
+  "Severe": "#ef4444",
+};
+
 // New severity level colors (uppercase)
 export const SEVERITY_COLORS: Record<SeverityLevel, string> = {
-  "NONE": "text-gray-400",
+  "NONE": "bg-gray-600/20 text-gray-400 ring-gray-500/30",
   "LOW": "text-green-400",
   "MEDIUM": "text-yellow-400",
   "HIGH": "text-orange-400",
   "SEVERE": "text-red-500",
+};
+
+// Hex color mappings for use in inline styles (e.g., StrengthBar)
+export const SEVERITY_HEX: Record<SeverityLevel, string> = {
+  "NONE": "#6b7280",
+  "LOW": "#34d399",
+  "MEDIUM": "#facc15",
+  "HIGH": "#fb923c",
+  "SEVERE": "#ef4444",
 };
 
 // Verdict colors
