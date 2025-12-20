@@ -30,7 +30,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
           <blockquote className="border-l-4 border-yellow-600 pl-4">
             <p className="text-gray-400 italic text-sm">"{quote.text}"</p>
           </blockquote>
-          {quote.analysis && !quote.draft?.analysis && (
+          {((quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) && !(quote.draft?.audit || quote.draft?.metadata?.legacyAnalysis || quote.draft?.analysis)) && (
             <div className="mt-2 text-xs text-gray-500">{t('originalAnalysisAvailable')}</div>
           )}
         </div>

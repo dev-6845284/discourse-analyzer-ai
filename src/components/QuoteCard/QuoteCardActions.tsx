@@ -67,7 +67,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             onClick={onAnalyze}
             disabled={!isApiKeySet || isBusy}
             className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title={!isApiKeySet ? t('analyzePleaseSetApiKey') : quote.analysis ? t('analyzeAgain') : t('analyzeQuote')}
+            title={!isApiKeySet ? t('analyzePleaseSetApiKey') : (quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) ? t('analyzeAgain') : t('analyzeQuote')}
           >
             {quote.isAnalyzing ? (
               <Spinner />

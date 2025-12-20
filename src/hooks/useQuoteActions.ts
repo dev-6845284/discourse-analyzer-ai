@@ -109,7 +109,7 @@ export function useQuoteActions(
           date: updatedQuote.date,
           metadata: {
             // Support both legacy analysis and new audit
-            ...(updatedQuote.analysis ? { analysis: updatedQuote.analysis } : {}),
+            ...(updatedQuote.audit ? { audit: updatedQuote.audit } : (updatedQuote.analysis ? { legacyAnalysis: updatedQuote.analysis } : {})),
             ...(updatedQuote.audit ? { audit: updatedQuote.audit } : {}),
             languageCode: updatedQuote.languageCode,
             languageName: updatedQuote.languageName,

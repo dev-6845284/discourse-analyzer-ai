@@ -167,12 +167,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
       {hasDraft && (
         <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-          <div className="text-yellow-500 text-xs font-bold uppercase mb-2">Original Content</div>
+          <div className="text-yellow-500 text-xs font-bold uppercase mb-2">{t('originalContent')}</div>
           <blockquote className="border-l-4 border-yellow-600 pl-4">
             <p className="text-gray-400 italic text-sm">"{quote.text}"</p>
           </blockquote>
-          {quote.analysis && !quote.draft?.analysis && (
-             <div className="mt-2 text-xs text-gray-500">Original analysis available</div>
+          {((quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) && !(quote.draft?.audit || quote.draft?.metadata?.legacyAnalysis || quote.draft?.analysis)) && (
+             <div className="mt-2 text-xs text-gray-500">{t('originalAnalysisAvailable')}</div>
           )}
         </div>
       )}

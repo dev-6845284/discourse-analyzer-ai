@@ -284,7 +284,7 @@ const App: React.FC = () => {
                   date: quote.date,
                   analysisContext: quote.analysisContext,
                   links: quote.links,
-                  ...(quote.analysis ? {
+                  ...(quote.audit ? {
                     analyzedByProvider: searchParams.selectedAI,
                     analyzedAt: new Date().toISOString()
                   } : {}),
@@ -292,7 +292,8 @@ const App: React.FC = () => {
                     title: quote.title,
                     languageCode: quote.languageCode,
                     languageName: quote.languageName,
-                    analysis: quote.analysis
+                    // Keep legacy backup if present
+                    ...(quote.audit ? { audit: quote.audit } : (quote.analysis ? { legacyAnalysis: quote.analysis } : {}))
                   }
                 }).then((response) => markQuoteAsStored(quote.id, response.data._id));
               }}
