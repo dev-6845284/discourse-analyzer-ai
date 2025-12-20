@@ -2,6 +2,17 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
+
+/*
+ * ⚠️ NOTE: StoredQuotes and SearchResults share similar UI and behavior for displaying quotes
+ * and handling AI-model related actions (e.g., the `selectedAI` prop, `onAnalyze` payloads,
+ * and how analysis results are processed/saved).
+ *
+ * When you update model selection UI, API payload shapes, or analysis/save logic in one
+ * component, please check and apply equivalent changes to the other component to keep
+ * behavior consistent and avoid subtle bugs.
+ */
+
 import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
 import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
 import api, { getStoredQuotes, updateQuote, deleteQuote } from '../utils/api';

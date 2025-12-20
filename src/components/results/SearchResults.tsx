@@ -3,6 +3,16 @@ import ErrorDisplay from './ErrorDisplay';
 import QuoteCard from '../QuoteCard';
 import { Quote } from '../../types';
 
+/*
+ * ⚠️ NOTE: SearchResults and StoredQuotes share similar UI and behavior for displaying quotes
+ * and handling AI-model related actions (e.g., the `selectedAI` prop, `onAnalyze` payloads,
+ * and how analysis results are processed/saved).
+ *
+ * When you update model selection UI, API payload shapes, or analysis/save logic in one
+ * component, please check and apply equivalent changes to the other component to keep
+ * behavior consistent and avoid subtle bugs.
+ */
+
 interface SearchResultsProps {
   results: Quote[];
   error: string | null;
