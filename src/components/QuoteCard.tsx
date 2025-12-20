@@ -159,8 +159,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute top-3 right-4 text-gray-400 hover:text-white text-2xl font-light leading-none z-10"
-        aria-label={isCollapsed ? 'Expand quote' : 'Collapse quote'}
-        title={isCollapsed ? 'Expand' : 'Collapse'}
+        aria-label={isCollapsed ? t('expandQuote') : t('collapseQuote')}
+        title={isCollapsed ? t('expand') : t('collapse')}
       >
         {isCollapsed ? '+' : '-'}
       </button>

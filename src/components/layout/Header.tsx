@@ -36,13 +36,13 @@ export const Header: React.FC<HeaderProps> = ({
       </h1>
       <div className="flex items-center space-x-4">
         <div>
-          <label htmlFor="language-select" className="sr-only">Language</label>
+          <label htmlFor="language-select" className="sr-only">{t('language')}</label>
           <select
             id="language-select"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-2 text-sm"
-            aria-label="Select language"
+            aria-label={t('language')}
           >
             {AVAILABLE_LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>{l.name}</option>
@@ -54,21 +54,21 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={toggleFormCollapsed}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
-          {isFormCollapsed ? 'Expand Form' : 'Collapse Form'}
+          {isFormCollapsed ? t('expandForm') : t('collapseForm')}
         </button>
         {(import.meta.env.DEV || user?.role === 'admin') && (
           <button
             onClick={() => setLogsVisible(!logsVisible)}
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
-            {logsVisible ? 'Hide Logs' : 'Show Logs'}
+            {logsVisible ? t('hideLogs') : t('showLogs')}
           </button>
         )}
         <button
           onClick={() => setIsApiKeyModalOpen(true)}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
-          API Keys
+          {t('apiKeys')}
         </button>
         {user._id && (
           <>
@@ -76,23 +76,23 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onEditProfile}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              Edit Profile
+              {t('editProfile')}
             </button>
             <button
               onClick={onChangePassword}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              Change Password
+              {t('changePassword')}
             </button>
           </>
         )}
-        <p className="text-gray-700 dark:text-gray-300">Welcome, {user.name}</p>
+        <p className="text-gray-700 dark:text-gray-300">{t('welcomeUser', { name: user.name })}</p>
         <div ref={googleButtonRef}></div>
         <button
           onClick={handleLogout}
           className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
         >
-          Logout
+          {t('logout')}
         </button>
       </div>
     </header>
