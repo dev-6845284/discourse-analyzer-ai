@@ -79,6 +79,48 @@ const en = {
   searching: 'Searching...',
   search: 'Search',
   cancel: 'Cancel',
+
+  // Audit Metadata
+  savedBy: 'Saved by {name}',
+  analyzedBy: 'Analyzed by {name}',
+  analyzedVia: 'via {provider}',
+  analyzedAt: '• {date}',
+  analyzedOnlyVia: 'Analyzed {via} {date}',
+  improvedBy: 'Improved by {name}',
+
+  // Advanced Analysis Section
+  hideAdvancedAnalysis: '▼ Hide Advanced Analysis',
+  advancedAnalysis: '▶ Advanced Analysis',
+  contextForAnalysis: 'Context for Analysis',
+  contextPlaceholder: "Provide context to help the AI determine truthfulness (e.g., 'This was said during a debate about tax reform...')",
+  factCheckingLinks: 'Fact-Checking Links',
+  selectAll: 'Select All',
+  deselectAll: 'Deselect All',
+  contextLabelShort: 'Context',
+  quoteSource: 'Quote Source',
+  add: 'Add',
+  linkPlaceholder: 'https://...',
+
+  // StoredQuoteFilterBar
+  filterSortQuotes: 'Filter & Sort Quotes',
+  showAdvanced: 'Show Advanced',
+  hideAdvanced: 'Hide Advanced',
+  resetFilters: 'Reset Filters',
+  sortByLabel: 'Sort by:',
+  searchText: 'Search Text',
+  personLabel: 'Person',
+  dateFrom: 'Date From',
+  dateTo: 'Date To',
+  ratingLabel: 'Rating',
+  languageLabel: 'Language',
+  providerLabel: 'AI Provider',
+  analysisStatus: 'Analysis Status',
+  improvementStatus: 'Improvement Status',
+  advancedDateFilters: 'Advanced Date Filters',
+  savedDate: 'Saved Date',
+  analyzedDate: 'Analyzed Date',
+  improvedDate: 'Improved Date',
+  noPeopleFound: 'No people found',
 };
 
 export default en;

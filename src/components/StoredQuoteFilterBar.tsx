@@ -3,6 +3,7 @@ import { StoredQuoteFilters, SortField, SortOrder } from '../hooks/useStoredQuot
 import { AnalysisRating, SeverityLevel, Person } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { usePeople } from '../hooks/usePeople';
+import { useI18n } from '../i18n';
 
 // AI providers available for filtering
 const AI_PROVIDERS = [
@@ -160,23 +161,25 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 }) => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+  const { t } = useI18n();
+
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg mb-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-300">Filter & Sort Quotes</h3>
+        <h3 className="text-sm font-medium text-gray-300">{t('filterSortQuotes')}</h3>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
           >
-            {showAdvancedFilters ? 'Hide Advanced' : 'Show Advanced'}
+            {showAdvancedFilters ? t('hideAdvanced') : t('showAdvanced')}
           </button>
           {hasActiveFilters && (
             <button
               onClick={onReset}
               className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-              Reset Filters
+              {t('resetFilters')}
             </button>
           )}
         </div>
@@ -184,7 +187,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
       {/* Sorting Controls */}
       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-700/50">
-        <span className="text-xs text-gray-400">Sort by:</span>
+        <span className="text-xs text-gray-400">{t('sortByLabel')}</span>
         <select
           value={filters.sortField}
           onChange={(e) => onFilterChange('sortField', e.target.value as SortField)}
@@ -205,7 +208,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
                 : 'text-gray-300 hover:bg-gray-600'
             }`}
           >
-            Newest
+            {t('newest')}
           </button>
           <button
             onClick={() => onFilterChange('sortOrder', 'oldest')}
@@ -215,7 +218,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
                 : 'text-gray-300 hover:bg-gray-600'
             }`}
           >
-            Oldest
+            {t('oldest')}
           </button>
         </div>
       </div>
@@ -223,19 +226,19 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {/* Text Search */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Search Text</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('searchText')}</label>
           <input
             type="text"
             value={filters.text}
             onChange={(e) => onFilterChange('text', e.target.value)}
-            placeholder="Search quotes..."
+            placeholder={t('searchText')}
             className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           />
         </div>
 
         {/* Person Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Person</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('personLabel')}</label>
           <PersonFilterSelector
             value={personName}
             onChange={onPersonNameChange}
@@ -245,7 +248,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Date From */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Date From</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('dateFrom')}</label>
           <input
             type="date"
             value={filters.dateFrom}
@@ -256,7 +259,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Date To */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Date To</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('dateTo')}</label>
           <input
             type="date"
             value={filters.dateTo}
@@ -267,7 +270,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Rating Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Rating</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('ratingLabel')}</label>
           <select
             value={filters.rating}
             onChange={(e) => onFilterChange('rating', e.target.value as AnalysisRating | 'all')}
@@ -283,7 +286,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Language Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Language</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('languageLabel')}</label>
           <select
             value={filters.language}
             onChange={(e) => onFilterChange('language', e.target.value)}
@@ -299,7 +302,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Provider Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">AI Provider</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('providerLabel')}</label>
           <select
             value={filters.provider}
             onChange={(e) => onFilterChange('provider', e.target.value)}
@@ -315,29 +318,29 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Analysis Status Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Analysis Status</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('analysisStatus')}</label>
           <select
             value={filters.isAnalyzed}
             onChange={(e) => onFilterChange('isAnalyzed', e.target.value as 'all' | 'true' | 'false')}
             className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
-            <option value="all">All</option>
-            <option value="true">Analyzed</option>
-            <option value="false">Not Analyzed</option>
+            <option value="all">{t('all')}</option>
+            <option value="true">{t('analyzed')}</option>
+            <option value="false">{`Not ${t('analyzed')}`}</option>
           </select>
         </div>
 
         {/* Improvement Status Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Improvement Status</label>
+          <label className="block text-xs text-gray-400 mb-1">{t('improvementStatus')}</label>
           <select
             value={filters.isImproved}
             onChange={(e) => onFilterChange('isImproved', e.target.value as 'all' | 'true' | 'false')}
             className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
-            <option value="all">All</option>
-            <option value="true">Improved</option>
-            <option value="false">Not Improved</option>
+            <option value="all">{t('all')}</option>
+            <option value="true">{t('improved')}</option>
+            <option value="false">{`Not ${t('improved')}`}</option>
           </select>
         </div>
       </div>
@@ -345,14 +348,14 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
       {/* Advanced Filters - Date Ranges for savedAt, analyzedAt, improvedAt */}
       {showAdvancedFilters && (
         <div className="mt-4 pt-4 border-t border-gray-700/50">
-          <h4 className="text-xs font-medium text-gray-400 mb-3">Advanced Date Filters</h4>
+          <h4 className="text-xs font-medium text-gray-400 mb-3">{t('advancedDateFilters')}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Saved At Range */}
             <div className="bg-gray-700/30 p-3 rounded-lg">
-              <label className="block text-xs text-cyan-400 mb-2 font-medium">Saved Date</label>
+              <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('savedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">From</label>
+              <label className="block text-[10px] text-gray-500 mb-1">{t('from')}</label>
                   <input
                     type="date"
                     value={filters.savedAtFrom}
@@ -361,7 +364,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">To</label>
+                  <label className="block text-[10px] text-gray-500 mb-1">{t('to')}</label>
                   <input
                     type="date"
                     value={filters.savedAtTo}
@@ -374,7 +377,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
             {/* Analyzed At Range */}
             <div className="bg-gray-700/30 p-3 rounded-lg">
-              <label className="block text-xs text-cyan-400 mb-2 font-medium">Analyzed Date</label>
+              <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('analyzedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[10px] text-gray-500 mb-1">From</label>

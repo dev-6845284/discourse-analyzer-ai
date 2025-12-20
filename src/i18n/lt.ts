@@ -81,6 +81,48 @@ const lt = {
   searching: 'Ieškoma...',
   search: 'Ieškoti',
   cancel: 'Atšaukti',
+
+  // Audit Metadata
+  savedBy: 'Išsauginta: {name}',
+  analyzedBy: 'Analizuota: {name}',
+  analyzedVia: 'per {provider}',
+  analyzedAt: '• {date}',
+  analyzedOnlyVia: 'Analizuota {via} {date}',
+  improvedBy: 'Patobulinta: {name}',
+
+  // Advanced Analysis Section
+  hideAdvancedAnalysis: '▼ Slėpti išplėstinę analizę',
+  advancedAnalysis: '▶ Išplėstinė analizė',
+  contextForAnalysis: 'Kontekstas analizei',
+  contextPlaceholder: "Pateikite kontekstą, kad AI galėtų nustatyti teisybę (pvz., 'Tai pasakyta diskusijoje apie mokesčių reformas...')",
+  factCheckingLinks: 'Faktų tikrinimo nuorodos',
+  selectAll: 'Pažymėti viską',
+  deselectAll: 'Atžymėti viską',
+  contextLabelShort: 'Kontekstas',
+  quoteSource: 'Citatos šaltinis',
+  add: 'Pridėti',
+  linkPlaceholder: 'https://...',
+
+  // StoredQuoteFilterBar
+  filterSortQuotes: 'Filtruoti ir rūšiuoti citatas',
+  showAdvanced: 'Rodyti išplėstinius',
+  hideAdvanced: 'Slėpti išplėstinius',
+  resetFilters: 'Atstatyti filtrus',
+  sortByLabel: 'Rūšiuoti pagal:',
+  searchText: 'Paieškos tekstas',
+  personLabel: 'Asmuo',
+  dateFrom: 'Nuo',
+  dateTo: 'Iki',
+  ratingLabel: 'Įvertinimas',
+  languageLabel: 'Kalba',
+  providerLabel: 'AI tiekėjas',
+  analysisStatus: 'Analizės būsena',
+  improvementStatus: 'Patobulinimo būsena',
+  advancedDateFilters: 'Išplėstiniai datos filtrai',
+  savedDate: 'Išsaugota',
+  analyzedDate: 'Analizuota',
+  improvedDate: 'Patobulinta',
+  noPeopleFound: 'Žmonių nerasta',
 };
 
 export default lt;
