@@ -5,12 +5,12 @@ import { SUPPORTED_LANGUAGES } from '../constants';
 import { usePeople } from '../hooks/usePeople';
 import { useI18n } from '../i18n';
 
-// AI providers available for filtering
+// AI providers available for filtering (labels are translated at render time)
 const AI_PROVIDERS = [
-  { value: 'all', label: 'All Providers' },
-  { value: 'gemini', label: 'Gemini' },
-  { value: 'grok', label: 'Grok' },
-  { value: 'chatgpt', label: 'ChatGPT' },
+  { value: 'all', labelKey: 'allProviders' },
+  { value: 'gemini', labelKey: 'provider_Gemini' },
+  { value: 'grok', labelKey: 'provider_Grok' },
+  { value: 'chatgpt', labelKey: 'provider_ChatGPT' },
 ];
 
 // Rating/Severity options for filtering (supports both legacy and new formats)
@@ -26,16 +26,16 @@ const getRatingOptions = (t: (key: string) => string) => [
 
 // Language options - extend SUPPORTED_LANGUAGES with 'all' option
 const LANGUAGE_OPTIONS = [
-  { code: 'all', name: 'All Languages' },
+  { code: 'all', nameKey: 'allLanguages' },
   ...SUPPORTED_LANGUAGES,
 ];
 
-// Sort field options
-const SORT_FIELD_OPTIONS: { value: SortField; label: string }[] = [
-  { value: 'savedAt', label: 'Saved Date' },
-  { value: 'analyzedAt', label: 'Analyzed Date' },
-  { value: 'improvedAt', label: 'Improved Date' },
-  { value: 'date', label: 'Quote Date' },
+// Sort field options (labels translated at render time)
+const SORT_FIELD_OPTIONS: { value: SortField; labelKey: string }[] = [
+  { value: 'savedAt', labelKey: 'savedDate' },
+  { value: 'analyzedAt', labelKey: 'analyzedDate' },
+  { value: 'improvedAt', labelKey: 'improvedDate' },
+  { value: 'date', labelKey: 'quoteDate' },
 ];
 
 interface StoredQuoteFilterBarProps {
@@ -111,7 +111,7 @@ const PersonFilterSelector: React.FC<{
           onChange={handleInputChange}
           onFocus={handleFocus}
           className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2 pr-8"
-          placeholder="Filter by person..."
+          placeholder={t('filterByPersonPlaceholder')}
           autoComplete="off"
         />
         {value && (
@@ -126,9 +126,9 @@ const PersonFilterSelector: React.FC<{
       </div>
       {isOpen && (
         <ul className="absolute z-20 w-full bg-gray-800 shadow-lg max-h-48 rounded-md py-1 text-sm ring-1 ring-gray-600 overflow-auto mt-1">
-          {isLoading && <li className="py-2 px-3 text-gray-400">Loading...</li>}
+          {isLoading && <li className="py-2 px-3 text-gray-400">{t('loading')}</li>}
           {!isLoading && people.length === 0 && value && (
-            <li className="py-2 px-3 text-gray-500 italic">No people found</li>
+            <li className="py-2 px-3 text-gray-500 italic">{t('noPeopleFound')}</li>
           )}
           {!isLoading && people.map((person) => (
             <li
@@ -196,7 +196,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
         >
           {SORT_FIELD_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
-              {opt.label}
+              {t(opt.labelKey)}
             </option>
           ))}
         </select>
@@ -295,7 +295,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
           >
             {LANGUAGE_OPTIONS.map((lang) => (
               <option key={lang.code} value={lang.code}>
-                {lang.name}
+                {lang.nameKey ? t(lang.nameKey) : lang.name}
               </option>
             ))}
           </select>
@@ -311,7 +311,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
           >
             {AI_PROVIDERS.map((p) => (
               <option key={p.value} value={p.value}>
-                {p.label}
+                {t((p as any).labelKey)}
               </option>
             ))}
           </select>
@@ -381,7 +381,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
               <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('analyzedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">From</label>
+                  <label className="block text-[10px] text-gray-500 mb-1">{t('from')}</label>
                   <input
                     type="date"
                     value={filters.analyzedAtFrom}
@@ -390,7 +390,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">To</label>
+                  <label className="block text-[10px] text-gray-500 mb-1">{t('to')}</label>
                   <input
                     type="date"
                     value={filters.analyzedAtTo}
@@ -403,10 +403,10 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
             {/* Improved At Range */}
             <div className="bg-gray-700/30 p-3 rounded-lg">
-              <label className="block text-xs text-cyan-400 mb-2 font-medium">Improved Date</label>
+              <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('improvedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">From</label>
+                  <label className="block text-[10px] text-gray-500 mb-1">{t('from')}</label>
                   <input
                     type="date"
                     value={filters.improvedAtFrom}
@@ -415,7 +415,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">To</label>
+                  <label className="block text-[10px] text-gray-500 mb-1">{t('to')}</label>
                   <input
                     type="date"
                     value={filters.improvedAtTo}

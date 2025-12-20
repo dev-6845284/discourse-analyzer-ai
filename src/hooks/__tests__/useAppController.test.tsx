@@ -95,6 +95,7 @@ jest.mock('../../utils/api', () => ({
 
 // Import the hook under test after mocking
 import { useAppController } from '../useAppController';
+import { I18nProvider } from '../../i18n';
 
 const TestComponent: React.FC = () => {
   const ctrl = useAppController();
@@ -113,7 +114,7 @@ const TestComponent: React.FC = () => {
 
 describe('useAppController', () => {
   it('openAddQuoteModal sets modalMode and triggers UI open', async () => {
-    render(<TestComponent />);
+    render(<I18nProvider><TestComponent /></I18nProvider>);
 
     fireEvent.click(screen.getByText('open-add'));
 
@@ -125,7 +126,7 @@ describe('useAppController', () => {
   });
 
   it('openExtractModal sets modalMode to extract and opens modal', async () => {
-    render(<TestComponent />);
+    render(<I18nProvider><TestComponent /></I18nProvider>);
 
     fireEvent.click(screen.getByText('open-extract'));
 
@@ -136,7 +137,7 @@ describe('useAppController', () => {
   });
 
   it('handleImportTranscript calls uiState.openTranscriptViewer with provided data', async () => {
-    render(<TestComponent />);
+    render(<I18nProvider><TestComponent /></I18nProvider>);
 
     fireEvent.click(screen.getByText('import-transcript'));
 

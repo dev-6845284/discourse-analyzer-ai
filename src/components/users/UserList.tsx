@@ -1,6 +1,7 @@
 import React from 'react';
 import { User } from '../../types';
 import { Edit, Trash2, Key } from 'lucide-react';
+import { useI18n } from '../../i18n';
 
 interface UserListProps {
   users: User[];
@@ -10,16 +11,17 @@ interface UserListProps {
 }
 
 export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onChangePassword }) => {
+  const { t } = useI18n();
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alias</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('aliasLabel')}</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('emailLabel')}</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('roleLabel')}</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('createdAt')}</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('actions')}</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -43,21 +45,21 @@ export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onC
                 <button
                   onClick={() => onEdit(user)}
                   className="text-indigo-600 hover:text-indigo-900 mr-4"
-                  title="Edit User"
+                  title={t('editUser')}
                 >
                   <Edit size={18} />
                 </button>
                 <button
                   onClick={() => onChangePassword(user)}
                   className="text-yellow-600 hover:text-yellow-900 mr-4"
-                  title="Change Password"
+                  title={t('changePassword')}
                 >
                   <Key size={18} />
                 </button>
                 <button
                   onClick={() => onDelete(user._id)}
                   className="text-red-600 hover:text-red-900"
-                  title="Delete User"
+                  title={t('deleteUser')}
                 >
                   <Trash2 size={18} />
                 </button>

@@ -177,6 +177,123 @@ const en = {
   rating_Medium: 'Medium',
   rating_High: 'High',
   rating_Severe: 'Severe',
+
+  // Speaker Analysis View
+  identifyingSpeakers: 'Identifying speakers...',
+  errorAnalyzingSpeakers: 'Error analyzing speakers:',
+  noSpeakerAnalysisData: 'No speaker analysis data available.',
+  importAnalysisJson: 'Import Analysis JSON',
+  import: 'Import',
+  exportJson: 'Export JSON',
+  analyzeDialogTopics: 'Analyze Dialog Topics',
+  clearAnalysis: 'Clear Analysis',
+  analyzedBlocks: 'Analyzed {count} blocks',
+  identifiedSpeakers: 'Identified Speakers ({count})',
+  mergeSelected: 'Merge Selected ({count})',
+  clearSelection: 'Clear Selection',
+  addSpeaker: 'Add Speaker',
+  cannotRemoveSpeakerUsed: 'Cannot remove "{name}" - speaker is used in dialogue lines',
+  selectForMerge: 'Select for merge',
+  linkedTo: 'Linked to: {name}',
+  person: 'Person',
+  linkToPersonRecord: 'Link to Person record',
+  renameSpeaker: 'Rename speaker',
+  removeSpeakerUnused: 'Remove speaker (unused)',
+  speakerNamePlaceholder: 'Speaker name...',
+  checking: 'Checking...',
+  addEnter: 'Add (Enter)',
+  cancelEscape: 'Cancel (Escape)',
+  similarExistingPersonsFoundFor: 'Similar existing persons found for "{name}":',
+  match: 'match',
+  exact: 'exact',
+  aliasesLabel: 'Aliases:',
+  useThis: 'Use this',
+  createNewAnyway: 'Create new "{name}" anyway',
+  start: 'Start',
+  end: 'End',
+  speaker: 'Speaker',
+  text: 'Text',
+  timingWasFuzzyMatched: 'Timing was fuzzy-matched',
+  mergeSpeakers: 'Merge Speakers',
+  mergeSpeakersWarning: 'You are about to merge {count} speakers into one. All dialogue lines will be reassigned to the selected target speaker.',
+  speakersToMerge: 'Speakers to merge:',
+  keepSpeakerAs: 'Keep speaker as:',
+  otherSpeakersWillBeRemoved: 'Other speakers will be removed and their lines reassigned to this speaker.',
+  merging: 'Merging...',
+  confirmMerge: 'Confirm Merge',
+
+  // Modals and generic
+  confirm: 'Confirm',
+
+  // User form
+  editUser: 'Edit User',
+  addUser: 'Add User',
+  aliasLabel: 'Alias',
+  emailLabel: 'Email',
+  roleLabel: 'Role',
+  passwordLabel: 'Password',
+  save: 'Save',
+  saving: 'Saving...',
+
+  // StoredQuoteFilterBar
+  allProviders: 'All Providers',
+  provider_Gemini: 'Gemini',
+  provider_Grok: 'Grok',
+  provider_ChatGPT: 'ChatGPT',
+  allLanguages: 'All Languages',
+  quoteDate: 'Quote Date',
+  filterByPersonPlaceholder: 'Filter by person...',
+  loading: 'Loading...',
+
+  // Main content
+  searchResultsTab: 'Search Results',
+  storedQuotesTab: 'Stored Quotes',
+  transcriptTab: 'Transcript',
+  foundArticles: 'Found Articles ({count})',
+  clearResults: 'Clear Results',
+  relevance: 'Relevance',
+
+  // YouTube Transcript Copy & Paste
+  showInstructions: 'Show instructions',
+  copyTranscriptNote: "Copy the transcript directly from YouTube's interface when automatic fetching is blocked",
+  howToGetTranscript: 'How to get the transcript from YouTube:',
+  yt_step_open: 'Open the YouTube video in your browser',
+  yt_step_click_three_dots: 'Click the ⋯ (three dots) button below the video',
+  yt_step_select_show_transcript: 'Select "Show transcript"',
+  yt_step_toggle_timestamps: 'In the transcript panel, click ⋯ and select "Toggle timestamps" to ensure timestamps are visible',
+  yt_step_select_all: 'Select all text in the transcript panel (Ctrl+A)',
+  yt_step_copy: 'Copy it (Ctrl+C)',
+  yt_step_paste: 'Paste it in the text box below',
+  yt_tip_videos_may_not_have_transcripts: 'Tip: Some videos may not have transcripts available',
+
+  pleaseEnterValidYouTubeUrl: 'Please enter a valid YouTube URL',
+  pleaseEnterYoutubeUrl: 'Please enter the YouTube video URL',
+  pleasePasteTranscriptText: 'Please paste the transcript text',
+  invalidYoutubeTranscriptFormat: 'This doesn\'t look like YouTube transcript format. Make sure you copied from the "Show transcript" panel.',
+  processing: 'Processing...',
+  importYouTubeTranscript: 'Import YouTube Transcript',
+  importShortcutHint: 'Press Ctrl + Enter to import',
+
+  // Password modal
+  passwordsDoNotMatch: 'Passwords do not match',
+  passwordMinLength: 'Password must be at least 6 characters long',
+  changePasswordFor: 'Change Password for {name}',
+  newPassword: 'New Password',
+  confirmPassword: 'Confirm Password',
+  updating: 'Updating...',
+  updatePassword: 'Update Password',
+
+  // Edit Profile modal
+  aliasCannotBeEmpty: 'Alias cannot be empty',
+  failedToUpdateProfile: 'Failed to update profile',
+  aliasOrNameLabel: 'Alias / Name',
+  saveChanges: 'Save Changes',
+
+  // Users table
+  createdAt: 'Created At',
+  actions: 'Actions',
+  deleteUser: 'Delete User',
+
 };
 
 export default en;

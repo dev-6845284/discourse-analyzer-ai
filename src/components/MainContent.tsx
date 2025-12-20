@@ -85,7 +85,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              Search Results
+              {t('searchResultsTab')}
             </button>
             <button
               onClick={() => setResultsTab('stored')}
@@ -95,7 +95,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                   : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
             >
-              Stored Quotes
+              {t('storedQuotesTab')}
             </button>
             {transcriptData && (
               <button
@@ -106,7 +106,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                     : 'text-gray-400 hover:text-white hover:bg-gray-700'
                 }`}
               >
-                Transcript
+                {t('transcriptTab')}
               </button>
             )}
           </div>
@@ -154,12 +154,12 @@ export const MainContent: React.FC<MainContentProps> = ({
             articles.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-white">Found Articles ({articles.length})</h3>
+                  <h3 className="text-lg font-semibold text-white">{t('foundArticles', { count: articles.length })}</h3>
                   <button 
                     onClick={() => onClearQuotes()} // Reusing clear quotes to clear results
                     className="text-sm text-gray-400 hover:text-white"
                   >
-                    Clear Results
+                    {t('clearResults')}
                   </button>
                 </div>
                 {articles.map((article, idx) => (
@@ -176,7 +176,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                       ))}
                     </div>
                     <div className="mt-3 flex justify-between items-center text-xs text-gray-500">
-                      <span>Relevance: {(article.relevanceScore * 100).toFixed(0)}%</span>
+                      <span>{t('relevance')}: {(article.relevanceScore * 100).toFixed(0)}%</span>
                       {article.publishedDate && <span>{article.publishedDate}</span>}
                     </div>
                   </div>

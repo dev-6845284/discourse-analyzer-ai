@@ -52,7 +52,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
       <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
         {/* Verdict Badge */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-cyan-300">Audit Report</h3>
+          <h3 className="text-lg font-semibold text-cyan-300">{t('auditReport')}</h3>
           <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${VERDICT_COLORS[audit.verdict]}`}>
             {audit.verdict}
           </span>
@@ -103,7 +103,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
   const { analysis, selectable = false, selectedCategories = [], onToggleCategory } = props as LegacyAnalysisReportProps;
   return (
     <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
-      <h3 className="text-lg font-semibold text-cyan-300">Analysis Report (Legacy)</h3>
+      <h3 className="text-lg font-semibold text-cyan-300">{t('analysisReportLegacy')}</h3>
       {(Object.entries(analysis) as [AnalysisCategory, AnalysisDetail][]).map(([category, detail]) => (
         <div key={category} className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}>
           {selectable && onToggleCategory && (

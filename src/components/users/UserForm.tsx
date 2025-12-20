@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';
+import { useI18n } from '../../i18n';
 
 interface UserFormProps {
   user: User | null;
@@ -15,6 +16,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (user) {
@@ -51,7 +53,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">{user ? 'Edit User' : 'Add User'}</h2>
+        <h2 className="text-xl font-bold mb-4">{user ? t('editUser') : t('addUser')}</h2>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -61,7 +63,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Alias</label>
+            <label className="block text-gray-700 text-sm font-bold mb-2">{t('aliasLabel')}</label>
             <input
               type="text"
               value={alias}
@@ -72,7 +74,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+            <label className="block text-gray-700 text-sm font-bold mb-2">{t('emailLabel')}</label>
             <input
               type="email"
               value={email}
@@ -83,7 +85,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Role</label>
+            <label className="block text-gray-700 text-sm font-bold mb-2">{t('roleLabel')}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as any)}
@@ -98,7 +100,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
 
           {!user && (
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
+              <label className="block text-gray-700 text-sm font-bold mb-2">{t('passwordLabel')}</label>
               <input
                 type="password"
                 value={password}
@@ -116,14 +118,14 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
               onClick={onClose}
               className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving...' : 'Save'}
+              {isSubmitting ? t('saving') : t('save')}
             </button>
           </div>
         </form>
