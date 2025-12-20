@@ -164,6 +164,18 @@ const en = {
   hideAdvancedAnalysis: '▼ Hide Advanced Analysis',
   advancedAnalysis: '▶ Advanced Analysis',
 
+  // Extraction controls
+  extractFromText: 'Extract from Text',
+  pasteArticleOrUrlBy: 'Paste an article, a URL, or a single quote by {person} here...',
+  pasteArticleOrUrlGeneric: 'Paste an article, a URL, or a single quote here...',
+  extractionLanguageLabel: 'Extraction Language:',
+  extractFromLink: 'Extract from Link',
+  pleaseEnterPersonName: "Please enter a person's name",
+  extractQuotesFromArticle: 'Extract quotes from the article at this URL',
+  pleaseEnterTextToExtract: 'Please enter text to extract',
+  pleaseEnterTextToAdd: 'Please enter text to add',
+  addTextAsQuote: 'Add Text as Quote',
+  analyzeImmediately: 'Analyze immediately',
   // YouTube method strings
   method_auto_title: 'Automatic (Server)',
   method_auto_description: 'Server fetches transcript directly from YouTube',

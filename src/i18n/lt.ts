@@ -166,6 +166,19 @@ const lt = {
   hideAdvancedAnalysis: '▼ Slėpti išplėstinę analizę',
   advancedAnalysis: '▶ Išplėstinė analizė',
 
+  // Extraction controls
+  extractFromText: 'Išgauti iš teksto',
+  pasteArticleOrUrlBy: 'Įklijuokite straipsnį, URL arba vieną citatą, pateiktą {person}...',
+  pasteArticleOrUrlGeneric: 'Įklijuokite straipsnį, URL arba vieną citatą čia...',
+  extractionLanguageLabel: 'Ištraukimo kalba:',
+  extractFromLink: 'Išgauti iš nuorodos',
+  pleaseEnterPersonName: 'Prašome įvesti asmens vardą',
+  extractQuotesFromArticle: 'Išgauti citatas iš straipsnio, esančio šiuo URL',
+  pleaseEnterTextToExtract: 'Prašome įvesti tekstą, kurį reikia išgauti',
+  pleaseEnterTextToAdd: 'Prašome įvesti tekstą, kurį reikia pridėti',
+  addTextAsQuote: 'Pridėti tekstą kaip citatą',
+  analyzeImmediately: 'Nedelsiant analizuoti',
+
   // YouTube method strings
   method_auto_title: 'Automatinis (Serveris)',
   method_auto_description: 'Serveris gauna transkriptą tiesiogiai iš YouTube',

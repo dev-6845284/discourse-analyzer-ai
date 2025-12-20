@@ -147,14 +147,14 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
               disabled={isExtracting || !textToExtract || !personName}
               title={
                 !personName
-                  ? "Please enter a person's name"
+                  ? t('pleaseEnterPersonName')
                   : !textToExtract
-                  ? 'Please enter text to extract'
+                  ? t('pleaseEnterTextToExtract')
                   : ''
               }
               className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
             >
-              {isExtracting ? <Spinner /> : 'Extract & Analyze'}
+              {isExtracting ? <Spinner /> : t('extractAndAnalyze')}
             </button>
             <div className="flex flex-col flex-1 gap-2">
               <button
@@ -162,14 +162,14 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
                 disabled={isExtracting || !textToExtract || !personName}
                 title={
                   !personName
-                    ? "Please enter a person's name"
+                    ? t('pleaseEnterPersonName')
                     : !textToExtract
-                    ? 'Please enter text to add'
+                    ? t('pleaseEnterTextToAdd')
                     : ''
                 }
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
-                Add Text as Quote
+                {t('addTextAsQuote')}
               </button>
               <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none justify-center">
                 <input 
@@ -178,7 +178,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
                   onChange={(e) => setAnalyzeImmediately(e.target.checked)}
                   className="rounded bg-gray-700 border-gray-600 text-cyan-600 focus:ring-cyan-500"
                 />
-                Analyze immediately
+                {t('analyzeImmediately')}
               </label>
             </div>
           </>
