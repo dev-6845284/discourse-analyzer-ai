@@ -9,7 +9,6 @@ export interface StepInfo {
   status: StepStatus;
   resultCount?: number;
   label: string;
-  icon: React.ReactNode;
 }
 
 interface StepProgressBarProps {

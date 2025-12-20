@@ -153,12 +153,19 @@ export type GroundingChunk = {
 };
 
 export interface UserInfo {
-  _id?: string;
+  _id: string;
   email: string;
   name: string;
+  alias?: string;
   picture?: string;
-  role?: string;
+  // Constrain role to known values used in the UI
+  role?: 'admin' | 'viewer' | 'moderator' | 'editor';
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+// Backwards-compatible alias used by components that import 'User'
+export type User = UserInfo;
 
 export interface ArticleRecommendation {
   url: string;

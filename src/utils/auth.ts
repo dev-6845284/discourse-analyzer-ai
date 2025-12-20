@@ -19,9 +19,13 @@ export function shouldBypassAuth(): boolean {
  */
 export function getDefaultLocalUser() {
   return {
+    _id: 'local',
     email: 'developer@example.com',
     name: 'Local Developer',
+    alias: 'dev',
     picture: '',
-    role: 'admin',
+    role: 'admin' as const,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 }

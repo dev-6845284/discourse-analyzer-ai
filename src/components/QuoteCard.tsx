@@ -43,15 +43,22 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analysisContext, setAnalysisContext] = useState(quote.analysisContext || '');
   
+  interface LinkData {
+    url: string;
+    title?: string;
+    type: 'quote' | 'context';
+    selected?: boolean;
+  }
+
   // Initialize links with selection state - YouTube links are unchecked by default
-  const initializeLinksWithSelection = (inputLinks: typeof links) => {
+  const initializeLinksWithSelection = (inputLinks: LinkData[]) => {
     return inputLinks.map(link => ({
       ...link,
       selected: link.selected !== undefined ? link.selected : !isYouTubeUrl(link.url)
     }));
   };
   
-  const [links, setLinks] = useState<{ url: string; title?: string; type: 'quote' | 'context'; selected?: boolean }[]>(
+  const [links, setLinks] = useState<LinkData[]>(
     initializeLinksWithSelection(quote.links || quote.metadata?.links || [])
   );
   const [newLinkUrl, setNewLinkUrl] = useState('');
@@ -121,11 +128,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     onAnalyze({ ...quote, analysisContext, links: selectedLinks });
   };
 
-  const handleToggleCategory = (category: AnalysisCategory) => {
+  const handleToggleCategory = (category: AnalysisCategory | AuditCategory) => {
     setSelectedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
+      prev.includes(category as any) 
+        ? prev.filter(c => c !== category as any)
+        : [...prev, category as any]
     );
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Quote } from '../types';
+import { Quote } from '../../types';
 
 interface AuditMetadataProps {
   quote: Quote;
