@@ -2,6 +2,7 @@ import React from 'react';
 import { UserManager } from './users/UserManager';
 import StoredQuotes from './StoredQuotes';
 import TranscriptViewer from './TranscriptViewer';
+import { useI18n } from '../i18n';
 import { SearchResults } from './results/SearchResults';
 
 interface MainContentProps {
@@ -67,6 +68,8 @@ export const MainContent: React.FC<MainContentProps> = ({
   onStoredPromoteSuccess,
   selectedAI,
 }) => {
+  const { t } = useI18n();
+
   return (
     <div className="md:col-span-2 space-y-6">
       {activeTab === 'users' ? (
@@ -130,13 +133,13 @@ export const MainContent: React.FC<MainContentProps> = ({
               {selectedPerson && (
                 <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
                   <span className="text-gray-300">
-                    Filtered by: <strong>{selectedPerson.name}</strong>
+                    {t('filteredBy', { name: selectedPerson.name })}
                   </span>
                   <button
                     onClick={() => setSelectedPerson(null)}
                     className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
                   >
-                    Clear Filter
+                    {t('clearFilter')}
                   </button>
                 </div>
               )}

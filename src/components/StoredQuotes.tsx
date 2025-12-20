@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
+import { useI18n } from '../i18n';
 
 /*
  * ⚠️ NOTE: StoredQuotes and SearchResults share similar UI and behavior for displaying quotes
@@ -27,6 +28,7 @@ interface StoredQuotesProps {
 }
 
 const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource }) => {
+  const { t } = useI18n();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -321,7 +323,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   return (
     <div className="h-full overflow-y-auto p-4">
       <h2 className="text-2xl font-bold text-gray-100 mb-4">
-        {selectedFilterPerson ? `Stored Quotes for ${selectedFilterPerson.name}` : 'All Stored Quotes'}
+        {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
       </h2>
       
       {/* Filter Bar */}
@@ -339,7 +341,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       {error && <div className="text-red-500 p-4">{error}</div>}
       
       {!isLoading && !error && quotes.length === 0 ? (
-        <p className="text-gray-500">No quotes found{hasActiveFilters ? ' matching your filters' : ''}.</p>
+        <p className="text-gray-500">{hasActiveFilters ? t('noQuotesMatchingFilters') : t('noQuotesFound')}.</p>
       ) : !isLoading && !error && (
         <div className="space-y-4">
           {quotes.map((quote) => (

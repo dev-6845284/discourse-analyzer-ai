@@ -2,6 +2,7 @@ import React from 'react';
 import ErrorDisplay from './ErrorDisplay';
 import QuoteCard from '../QuoteCard';
 import { Quote } from '../../types';
+import { useI18n } from '../../i18n';
 
 /*
  * ⚠️ NOTE: SearchResults and StoredQuotes share similar UI and behavior for displaying quotes
@@ -52,6 +53,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   clearError,
   selectedAI,
 }) => {
+  const { t } = useI18n();
   return (
     <>
       <ErrorDisplay
@@ -63,7 +65,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-cyan-300 mb-2">
-            Results ({results.length})
+            {t('results', { count: results.length })}
           </h2>
           {personName && (
             <p className="text-gray-400">
@@ -74,7 +76,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Sort by:</span>
+            <span className="text-sm text-gray-400">{t('sortBy')}</span>
             <div className="flex rounded-md bg-gray-700">
               <button
                 onClick={() => setSortOrder('newest')}
@@ -84,7 +86,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     : 'text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                Newest
+                {t('newest')}
               </button>
               <button
                 onClick={() => setSortOrder('oldest')}
@@ -94,7 +96,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     : 'text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                Oldest
+                {t('oldest')}
               </button>
             </div>
           </div>
@@ -102,7 +104,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             onClick={onClear}
             className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm"
           >
-            Clear All
+            {t('clearAll')}
           </button>
         </div>
       </div>

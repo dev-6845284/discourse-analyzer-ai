@@ -29,6 +29,7 @@ import { SearchResults } from './components/results/SearchResults';
 import { AdminAlertBanner } from './components/admin/AdminAlertBanner';
 import ModalsContainer from './components/ModalsContainer';
 import MainContent from './components/MainContent';
+import { I18nProvider } from './i18n';
 import { UsageStatsDashboard } from './components/admin/UsageStatsDashboard';
 
 const App: React.FC = () => {
@@ -127,7 +128,10 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
+    <div>
+      {/* Provide translations to the whole app */}
+      <I18nProvider>
+        <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
       {/* Admin Security Alert Banner - shown in dev mode or for admins */}
       <AdminAlertBanner 
         isAdmin={import.meta.env.DEV || user?.role === 'admin'} 
@@ -344,6 +348,8 @@ const App: React.FC = () => {
           />
         </div>
       </div>
+        </div>
+      </I18nProvider>
     </div>
   );
 };

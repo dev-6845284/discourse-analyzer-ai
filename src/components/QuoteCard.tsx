@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Quote, AnalysisCategory, AnalysisResult, AuditCategory } from '../types';
+import { useI18n } from '../i18n';
 import AnalysisReport from './AnalysisReport';
 import { initializeLinksWithSelection, LinkData } from '../utils/linkUtils';
 import { RATING_ORDER, SEVERITY_ORDER } from '../constants';
@@ -51,6 +52,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   );
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkType, setNewLinkType] = useState<'quote' | 'context'>('context');
+  const { t } = useI18n();
   const [selectedCategories, setSelectedCategories] = useState<(AnalysisCategory | AuditCategory)[]>([]);
 
   // Sync state with props when quote updates
@@ -203,7 +205,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             <div className="mt-3 pt-3 border-t border-gray-700/30 text-xs">
               {quote.analysisContext && (
                 <div className="mb-2">
-                  <span className="text-gray-500 font-semibold uppercase tracking-wider text-[10px]">Context: </span>
+                  <span className="text-gray-500 font-semibold uppercase tracking-wider text-[10px]">{t('contextLabel')}</span>
                   <span className="text-gray-400 italic">{quote.analysisContext}</span>
                 </div>
               )}
