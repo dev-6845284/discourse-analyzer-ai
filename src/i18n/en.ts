@@ -50,7 +50,6 @@ const en = {
   failedToPromoteQuotes: 'Failed to promote quotes: {msg}',
   any: 'Any',
   userManagement: 'User Management',
-  addUser: 'Add User',
   confirmDeleteUser: 'Are you sure you want to delete this user?',
   failedToDeleteUser: 'Failed to delete user',
   failedToFetchUsers: 'Failed to fetch users',

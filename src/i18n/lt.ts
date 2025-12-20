@@ -52,7 +52,6 @@ const lt = {
   failedToPromoteQuotes: 'Nepavyko konvertuoti į citatas: {msg}',
   any: 'Bet kuri',
   userManagement: 'Vartotojų valdymas',
-  addUser: 'Pridėti vartotoją',
   confirmDeleteUser: 'Ar tikrai norite ištrinti šį vartotoją?',
   failedToDeleteUser: 'Nepavyko ištrinti vartotojo',
   failedToFetchUsers: 'Nepavyko gauti vartotojų',
