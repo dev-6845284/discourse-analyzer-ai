@@ -138,6 +138,7 @@ const lt = {
   category_ResponsibilityShifting: 'Atsakomybės permetimas',
   category_UnsupportedAssertion: 'Nepagrįstas teiginys',
   category_NarrativeControl: 'Naratyvo kontrolė / propaganda',
+  category_NarrativeControlPropaganda: 'Naratyvo kontrolė / propaganda',
 
   // Vertimai: rimtumo lygiai / įvertinimai
   severity_NONE: 'Nėra',

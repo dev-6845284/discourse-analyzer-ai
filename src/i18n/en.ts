@@ -136,6 +136,7 @@ const en = {
   category_ResponsibilityShifting: 'Responsibility Shifting',
   category_UnsupportedAssertion: 'Unsupported Assertion',
   category_NarrativeControl: 'Narrative Control / Propaganda',
+  category_NarrativeControlPropaganda: 'Narrative Control / Propaganda',
 
   // Severity/Rating translations
   severity_NONE: 'None',
