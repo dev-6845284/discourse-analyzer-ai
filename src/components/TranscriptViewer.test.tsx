@@ -184,3 +184,10 @@ export const consoleLogGuide = {
   apiCall: '[handlePromote] Edit mode - updating quote source',
   success: 'Successfully updated quote source!'
 };
+
+// Small smoke test so this documentation file is picked up by Jest but not treated as empty
+describe('TranscriptViewer manual test scenarios (docs)', () => {
+  it('exports editQuoteTestScenarios', () => {
+    expect(editQuoteTestScenarios).toBeDefined();
+  });
+});

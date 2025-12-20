@@ -1,0 +1,24 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'server/tsconfig.json' }],
+    '^.+\\.(js|mjs)$': 'babel-jest'
+  },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'server/tsconfig.json'
+    },
+  },
+  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
+  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  moduleNameMapper: {
+    '^@google/genai$': '<rootDir>/testMocks/googleGenaiMock.js',
+    '^bson$': '<rootDir>/testMocks/bsonMock.js',
+    '^mongoose$': '<rootDir>/testMocks/mongooseMock.js'
+  },
+  setupFiles: ['<rootDir>/jest.setup.js'],
+  // Transform ESM modules under node_modules (exceptions) so babel-jest can handle them
+  transformIgnorePatterns: ['node_modules/(?!(bson|@google/genai|@google/generative-ai)/)'],
+};

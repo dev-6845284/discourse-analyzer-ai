@@ -31,6 +31,7 @@ Todo:
   TickTok videos:
     [] Load from URL
   Bugs:
+    [] Quote analysis result, checkboxes to select which parts to strore are ignored, stored everything
     [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
     [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
     

@@ -43,21 +43,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analysisContext, setAnalysisContext] = useState(quote.analysisContext || '');
   
-  interface LinkData {
-    url: string;
-    title?: string;
-    type: 'quote' | 'context';
-    selected?: boolean;
-  }
+  import { initializeLinksWithSelection, LinkData } from '../utils/linkUtils';
 
-  // Initialize links with selection state - YouTube links are unchecked by default
-  const initializeLinksWithSelection = (inputLinks: LinkData[]) => {
-    return inputLinks.map(link => ({
-      ...link,
-      selected: link.selected !== undefined ? link.selected : !isYouTubeUrl(link.url)
-    }));
-  };
-  
   const [links, setLinks] = useState<LinkData[]>(
     initializeLinksWithSelection(quote.links || quote.metadata?.links || [])
   );
