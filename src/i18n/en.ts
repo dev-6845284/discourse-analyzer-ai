@@ -121,6 +121,33 @@ const en = {
   analyzedDate: 'Analyzed Date',
   improvedDate: 'Improved Date',
   noPeopleFound: 'No people found',
+
+  // Category translations
+  // Legacy AnalysisCategory
+  category_Populism: 'Populism',
+  category_FactTwisting: 'Fact Twisting',
+  category_FalseClaims: 'Lies & False Claims',
+  category_InflammatoryLanguage: 'Inflammatory Language',
+
+  // AuditCategory
+  category_VerifiableFalsehood: 'Verifiable Falsehood',
+  category_MisleadingFraming: 'Misleading Framing',
+  category_RealityInversion: 'Reality Inversion',
+  category_ResponsibilityShifting: 'Responsibility Shifting',
+  category_UnsupportedAssertion: 'Unsupported Assertion',
+  category_NarrativeControl: 'Narrative Control / Propaganda',
+
+  // Severity/Rating translations
+  severity_NONE: 'None',
+  severity_LOW: 'Low',
+  severity_MEDIUM: 'Medium',
+  severity_HIGH: 'High',
+  severity_SEVERE: 'Severe',
+  rating_None: 'None',
+  rating_Low: 'Low',
+  rating_Medium: 'Medium',
+  rating_High: 'High',
+  rating_Severe: 'Severe',
 };
 
 export default en;

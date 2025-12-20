@@ -15,13 +15,13 @@ const AI_PROVIDERS = [
 
 // Rating/Severity options for filtering (supports both legacy and new formats)
 // Values use uppercase to match new SeverityLevel, server normalizes for legacy
-const RATING_OPTIONS: { value: SeverityLevel | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Ratings' },
-  { value: 'NONE', label: 'None' },
-  { value: 'LOW', label: 'Low' },
-  { value: 'MEDIUM', label: 'Medium' },
-  { value: 'HIGH', label: 'High' },
-  { value: 'SEVERE', label: 'Severe' },
+const getRatingOptions = (t: (key: string) => string) => [
+  { value: 'all', label: t('all') + ' ' + t('ratingLabel') },
+  { value: 'NONE', label: t('severity_NONE') },
+  { value: 'LOW', label: t('severity_LOW') },
+  { value: 'MEDIUM', label: t('severity_MEDIUM') },
+  { value: 'HIGH', label: t('severity_HIGH') },
+  { value: 'SEVERE', label: t('severity_SEVERE') },
 ];
 
 // Language options - extend SUPPORTED_LANGUAGES with 'all' option
@@ -162,6 +162,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const { t } = useI18n();
+  const RATING_OPTIONS = getRatingOptions(t);
 
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg mb-4">

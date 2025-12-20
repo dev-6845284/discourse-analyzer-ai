@@ -123,6 +123,33 @@ const lt = {
   analyzedDate: 'Analizuota',
   improvedDate: 'Patobulinta',
   noPeopleFound: 'Žmonių nerasta',
+
+  // Kategorijų vertimai
+  // Legacy AnalysisCategory
+  category_Populism: 'Populizmas',
+  category_FactTwisting: 'Faktų iškraipymas',
+  category_FalseClaims: 'Melas ir klaidingi teiginiai',
+  category_InflammatoryLanguage: 'Kurstančioji kalba',
+
+  // AuditCategory
+  category_VerifiableFalsehood: 'Patikrinamas melas',
+  category_MisleadingFraming: 'Klaidinantis pateikimas',
+  category_RealityInversion: 'Realybės apvertimas',
+  category_ResponsibilityShifting: 'Atsakomybės permetimas',
+  category_UnsupportedAssertion: 'Nepagrįstas teiginys',
+  category_NarrativeControl: 'Naratyvo kontrolė / propaganda',
+
+  // Vertimai: rimtumo lygiai / įvertinimai
+  severity_NONE: 'Nėra',
+  severity_LOW: 'Žemas',
+  severity_MEDIUM: 'Vidutinis',
+  severity_HIGH: 'Aukštas',
+  severity_SEVERE: 'Labai aukštas',
+  rating_None: 'Nėra',
+  rating_Low: 'Žemas',
+  rating_Medium: 'Vidutinis',
+  rating_High: 'Aukštas',
+  rating_Severe: 'Labai aukštas',
 };
 
 export default lt;

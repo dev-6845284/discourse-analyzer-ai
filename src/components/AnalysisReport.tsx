@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useI18n } from '../i18n';
 import { 
   AnalysisResult, 
   AnalysisCategory, 
@@ -39,11 +40,11 @@ const isAuditResult = (props: AnalysisReportProps): props is AuditReportProps =>
   return 'audit' in props && props.audit !== undefined;
 };
 
+
 const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
-  // Handle new AuditResult format
+  const { t } = useI18n();
   if (isAuditResult(props)) {
     const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
-    
     return (
       <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
         {/* Verdict Badge */}
@@ -53,24 +54,22 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
             {audit.verdict}
           </span>
         </div>
-        
         {/* Rationale */}
         <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-cyan-500">
           <p className="text-gray-200 text-sm italic">{audit.rationale}</p>
         </div>
-        
         {/* Categories */}
         {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => (
-          <div 
-            key={category} 
+          <div
+            key={category}
             className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}
           >
             {selectable && onToggleCategory && (
               <div className="pt-1">
                 <input
                   type="checkbox"
-                  checked={selectedCategories.includes(category)}
-                  onChange={() => onToggleCategory(category)}
+                  checked={selectedCategories.includes(category as AuditCategory)}
+                  onChange={() => onToggleCategory(category as AuditCategory)}
                   className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
                 />
               </div>
@@ -78,10 +77,10 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
             <div className="flex-1">
               <div className="flex justify-between items-center">
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${AUDIT_CATEGORY_COLORS[category]}`}>
-                  {category}
+                  {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
                 </span>
                 <span className={`font-bold text-sm ${SEVERITY_COLORS[detail.severity]}`}>
-                  {severityToDisplay(detail.severity)}
+                  {t(`severity_${detail.severity}`) || severityToDisplay(detail.severity)}
                 </span>
               </div>
               <p className="mt-2 text-gray-300 text-sm">{detail.evidence}</p>
@@ -92,9 +91,8 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
     );
   }
 
-  // Handle legacy AnalysisResult format
+  // Legacy analysis
   const { analysis, selectable = false, selectedCategories = [], onToggleCategory } = props as LegacyAnalysisReportProps;
-  
   return (
     <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
       <h3 className="text-lg font-semibold text-cyan-300">Analysis Report (Legacy)</h3>
@@ -104,19 +102,19 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
             <div className="pt-1">
               <input
                 type="checkbox"
-                checked={selectedCategories.includes(category)}
-                onChange={() => onToggleCategory(category)}
+                checked={selectedCategories.includes(category as AnalysisCategory)}
+                onChange={() => onToggleCategory(category as AnalysisCategory)}
                 className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
               />
             </div>
           )}
           <div className="flex-1">
             <div className="flex justify-between items-center">
-               <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${CATEGORY_COLORS[category]}`}>
-                {category}
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${CATEGORY_COLORS[category]}`}>
+                {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
               </span>
               <span className={`font-bold text-sm ${RATING_COLORS[detail.rating]}`}>
-                {detail.rating}
+                {t(`rating_${detail.rating}`) || detail.rating}
               </span>
             </div>
             <p className="mt-2 text-gray-300 text-sm">{detail.justification}</p>
