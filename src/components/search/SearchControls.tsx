@@ -60,7 +60,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
 
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg">
-      <h2 className="text-xl font-semibold text-cyan-400 mb-4">
+      <h2 className="text-lg font-semibold text-cyan-400 mb-3">
         {t('searchForQuotes')}
       </h2>
       <div className="mb-4">

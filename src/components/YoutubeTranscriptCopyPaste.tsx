@@ -98,7 +98,7 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-cyan-400 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-cyan-400 flex items-center gap-2">
           <Youtube size={20} />
           YouTube Transcript (Copy & Paste)
         </h2>

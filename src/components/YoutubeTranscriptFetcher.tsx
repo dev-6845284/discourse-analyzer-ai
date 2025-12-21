@@ -48,7 +48,7 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
 
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-      <h2 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
+      <h2 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
         <Play size={20} />
         {t('youtubeTranscriptViewerTitle')}
       </h2>

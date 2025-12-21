@@ -114,7 +114,7 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-cyan-400 mb-6">Analysis Sessions</h2>
+      <h2 className="text-lg font-semibold text-cyan-400 mb-3">Analysis Sessions</h2>
       
       {sessions.length === 0 ? (
         <div className="text-gray-400 text-center p-8 bg-gray-800/30 rounded-lg">

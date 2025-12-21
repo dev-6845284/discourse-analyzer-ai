@@ -79,7 +79,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
 
   return (
     <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
-      <h2 className="text-xl font-semibold text-cyan-400 mb-4 flex items-center gap-2">
+      <h2 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
         <Upload size={20} />
         {t('importTranscriptDataTitle')}
       </h2>

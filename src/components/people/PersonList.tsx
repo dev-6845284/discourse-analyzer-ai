@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Person } from '../../types';
 import { useI18n } from '../../i18n';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface PersonListProps {
   people: Person[];
@@ -54,37 +55,50 @@ export const PersonList: React.FC<PersonListProps> = ({
         {people.map((person) => (
           <div
             key={person._id}
-            className="p-3 sm:p-4 bg-gray-800 rounded-lg hover:bg-gray-700/60 transition-shadow border border-gray-700 flex justify-between items-start"
+            className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700/60 transition-shadow border border-gray-700"
           >
-            <div 
-              className="flex-1 cursor-pointer"
-              onClick={() => onSelect && onSelect(person)}
-            >
-              <h3 className="font-bold text-base sm:text-lg text-gray-100">{person.name}</h3>
-              {person.aliases.length > 0 && (
-                <p className="text-sm text-gray-400 hidden sm:block">Aliases: {person.aliases.join(', ')}</p>
-              )}
-              {person.description && (
-                <p className="text-sm text-gray-400 mt-1 hidden sm:block">{person.description}</p>
-              )}
-            </div>
-            <div className="flex gap-2 ml-2 sm:ml-4">
-              {onEdit && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onEdit(person); }}
-                  className="px-2 py-0.5 text-xs sm:text-sm text-cyan-400 hover:bg-gray-700 rounded border border-gray-700"
+            <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
+              <div className="min-w-0">
+                {/* Line 1: Name */}
+                <div
+                  className="truncate text-sm text-gray-100 cursor-pointer"
+                  onClick={() => onSelect && onSelect(person)}
                 >
-                  Edit
-                </button>
-              )}
-              {onDelete && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onDelete(person); }}
-                  className="px-2 py-0.5 text-xs sm:text-sm text-red-400 hover:bg-gray-700 rounded border border-gray-700"
-                >
-                  Delete
-                </button>
-              )}
+                  {person.name}
+                </div>
+
+                {/* Line 2: Alias */}
+                <div className="text-xs text-gray-400 mt-1 truncate">{person.aliases.length > 0 ? `Aliases: ${person.aliases.join(', ')}` : ''}</div>
+
+                {/* Optional description shown below */}
+                {person.description && (
+                  <div className="text-xs text-gray-400 mt-1">{person.description}</div>
+                )}
+              </div>
+
+              <div className="flex flex-col items-end gap-1">
+                {onEdit ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onEdit(person); }}
+                    title={t('edit')}
+                    aria-label={t('edit')}
+                    className="p-1 rounded text-cyan-400 hover:bg-gray-700"
+                  >
+                    <Edit size={16} />
+                  </button>
+                ) : <div className="h-6" />}
+
+                {onDelete ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(person); }}
+                    title={t('delete')}
+                    aria-label={t('delete')}
+                    className="p-1 rounded text-red-400 hover:bg-gray-700"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                ) : <div className="h-6" />}
+              </div>
             </div>
           </div>
         ))}

@@ -23,13 +23,13 @@ export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onC
             <col style={{ width: '10%' }} />
             <col style={{ width: '10%' }} />
           </colgroup>
-          <thead className="bg-gray-700">
+          <thead className="sr-only">
             <tr>
-              <th className="px-2 md:px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('aliasLabel')}</th>
-              <th className="px-2 md:px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('emailLabel')}</th>
-              <th className="px-2 md:px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('roleLabel')}</th>
-              <th className="px-2 md:px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('createdAt')}</th>
-              <th className="px-2 md:px-4 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">{t('actions')}</th>
+              <th>{t('aliasLabel')}</th>
+              <th>{t('emailLabel')}</th>
+              <th>{t('roleLabel')}</th>
+              <th>{t('createdAt')}</th>
+              <th>{t('actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-gray-800 divide-y divide-gray-700">

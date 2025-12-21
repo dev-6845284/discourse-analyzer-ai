@@ -40,8 +40,8 @@ export const PersonManager: React.FC<PersonManagerProps> = ({ onSelectPerson }) 
 
   return (
     <div className="h-full flex flex-col p-4 overflow-y-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-cyan-400">People</h2>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-semibold text-cyan-400">People</h2>
         {!isCreating && !editingPerson && (
           <button
             onClick={() => setIsCreating(true)}
