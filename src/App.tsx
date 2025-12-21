@@ -119,7 +119,7 @@ const App: React.FC = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
-        <div className="container mx-auto p-4 md:p-8">
+        <div className="w-full px-4 md:container md:mx-auto md:px-6 lg:px-8">
           <LoginScreen 
             googleButtonRef={googleButtonRef} 
             loginError={loginError} 
@@ -144,7 +144,7 @@ const App: React.FC = () => {
       
 
       
-      <div className={`container mx-auto p-4 md:p-6 lg:p-8 transition-all duration-300 ${
+      <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${
         (import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
       }`}>
           <Header
@@ -257,9 +257,7 @@ const App: React.FC = () => {
                 />
               }
               usersContent={
-                <div className="text-gray-400 text-sm text-center mt-4">
-                  Manage system users, roles and passwords.
-                </div>
+                <UserManager />
               }
             />
 

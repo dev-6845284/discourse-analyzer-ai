@@ -70,7 +70,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="md:col-span-2 space-y-6 min-w-0">
+    <div className="md:col-span-2 space-y-6 min-w-0 w-full mobile:w-[100vw] mobile:max-w-[100vw] mobile:box-border">
       <>
           <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
             <button

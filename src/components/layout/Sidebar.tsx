@@ -36,8 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { t } = useI18n();
 
   const containerClass = asDrawer
-    ? 'p-6 bg-gray-900/80 h-full overflow-y-auto min-w-0'
-    : 'md:col-span-1 p-6 bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto min-w-0';
+    ? 'p-6 bg-gray-900/80 h-full overflow-y-auto min-w-0 w-full'
+    : 'md:col-span-1 p-6 bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto min-w-0 w-full';
 
   return (
     <div className={containerClass}>

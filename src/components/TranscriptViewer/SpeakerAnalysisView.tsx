@@ -567,7 +567,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
           
           <div className="p-4">
             {/* Table header */}
-            <div className="grid grid-cols-[80px_80px_150px_1fr] gap-3 mb-3 pb-3 border-b border-gray-700 text-xs font-semibold text-gray-400">
+            <div className="hidden md:grid md:grid-cols-[80px_80px_150px_1fr] gap-3 mb-3 pb-3 border-b border-gray-700 text-xs font-semibold text-gray-400">
               <div>{t('start')}</div>
               <div>{t('end')}</div>
               <div>{t('speaker')}</div>
@@ -577,7 +577,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             {/* Dialogue rows */}
             <div className="space-y-1">
               {block.dialogue.map((line) => (
-                <div key={line.id} className="grid grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-700/30 rounded px-2 transition-colors">
+                <div key={line.id} className="grid grid-cols-1 md:grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-700/30 rounded px-2 transition-colors">
                   <div className="font-mono text-blue-400">
                     {line.startTime !== undefined ? formatTimestamp(line.startTime) : '—'}
                   </div>
