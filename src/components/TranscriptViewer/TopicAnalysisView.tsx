@@ -74,7 +74,7 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30 space-y-4">
       <div className="flex justify-between items-center mb-4">
         <p className="text-gray-300">
           {t('foundTranscriptBlocksWithTopics', { count: results.length })}

@@ -133,16 +133,16 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
                   </span>
                 </div>
                 
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0 flex-wrap">
                   <button
                     onClick={() => onResume(session)}
-                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-normal sm:whitespace-nowrap"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
                   >
                     Resume
                   </button>
                   <button
                     onClick={() => handleDeleteSession(session._id)}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-normal sm:whitespace-nowrap flex items-center gap-2"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2"
                   >X</button>
                 </div>
               </div>

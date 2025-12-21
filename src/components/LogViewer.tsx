@@ -166,7 +166,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ logsVisible }) => {
   if (!logsVisible) return null;
 
   return (
-    <div className="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+    <div className="mt-8 p-4 bg-gray-800 rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-cyan-400">AI Interaction Logs</h2>
         <button

@@ -72,7 +72,7 @@ export const UserManager: React.FC = () => {
   if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-cyan-400">{t('userManagement')}</h1>
         <button

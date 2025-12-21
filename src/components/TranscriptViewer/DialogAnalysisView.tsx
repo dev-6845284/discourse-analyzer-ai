@@ -146,7 +146,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30 space-y-6">
       {isSelectionMode && (
         <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur p-4 -mx-6 -mt-6 mb-6 border-b border-cyan-700/50 flex justify-between items-center shadow-lg">
           <div className="flex items-center gap-4">

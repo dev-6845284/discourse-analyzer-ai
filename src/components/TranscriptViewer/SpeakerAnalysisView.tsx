@@ -275,7 +275,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30 space-y-6">
       <div className="flex justify-between items-center mb-4">
         <p className="text-gray-300">{t('analyzedBlocks', { count: speakerResults.length })}</p>
         <div className="flex gap-2 items-center">
@@ -613,7 +613,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
       {/* Merge Confirmation Modal */}
       {showMergeModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
               <GitMerge size={20} className="text-orange-400" />
               {t('mergeSpeakers')}

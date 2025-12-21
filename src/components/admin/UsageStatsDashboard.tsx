@@ -220,7 +220,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4">
           {error && (
             <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-4">
               {error}

@@ -21,7 +21,7 @@ export const TranscriptSegmentList: React.FC<TranscriptSegmentListProps> = ({
       );
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30">
       {filteredSegments.length > 0 ? (
         <div className="space-y-3 font-mono text-sm">
           {filteredSegments.map((segment, index) => {
