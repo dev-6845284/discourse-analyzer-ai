@@ -280,6 +280,12 @@ const App: React.FC = () => {
 
               onClearQuotes={quotesState.handleClearQuotes}
               selectedAI={searchParams.selectedAI}
+              statusFilters={{
+                isAnalyzed: searchParams.isAnalyzed,
+                setIsAnalyzed: searchParams.setIsAnalyzed,
+                isImproved: searchParams.isImproved,
+                setIsImproved: searchParams.setIsImproved,
+              }}
               onAnalyze={(quote, model) => quotesState.handleAnalyzeQuote(quote, model)}
               onImprove={handleImproveQuote}
               onSave={(quote: any) => {

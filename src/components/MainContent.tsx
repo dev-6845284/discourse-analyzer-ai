@@ -8,6 +8,12 @@ interface MainContentProps {
   activeTab: 'search' | 'people' | 'users' | 'sessions';
   resultsTab: 'new' | 'stored' | 'transcript';
   setResultsTab: (tab: 'new' | 'stored' | 'transcript') => void;
+  statusFilters: {
+    isAnalyzed: 'all' | 'true' | 'false';
+    setIsAnalyzed: (value: 'all' | 'true' | 'false') => void;
+    isImproved: 'all' | 'true' | 'false';
+    setIsImproved: (value: 'all' | 'true' | 'false') => void;
+  };
   transcriptData: any | null;
   selectedPerson: any | null;
   setSelectedPerson: (p: any | null) => void;
@@ -42,6 +48,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   activeTab,
   resultsTab,
   setResultsTab,
+  statusFilters,
   transcriptData,
   selectedPerson,
   setSelectedPerson,
@@ -195,8 +202,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 onDiscard={onDiscard}
                 onRemove={onRemove}
                 clearError={clearError}
-                selectedAI={selectedAI}
-              />
+                selectedAI={selectedAI}                statusFilters={statusFilters}              />
             )
           )}
         </>

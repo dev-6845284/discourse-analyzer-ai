@@ -60,7 +60,9 @@ export const Header: React.FC<HeaderProps> = ({
           </select>
           <button
             onClick={toggleFormCollapsed}
-            className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
+            className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:hidden"
+            title={isFormCollapsed ? t('expandForm') : t('collapseForm')}
+            aria-label={isFormCollapsed ? t('expandForm') : t('collapseForm')}
           >
             {isFormCollapsed ? t('expandForm') : t('collapseForm')}
           </button>

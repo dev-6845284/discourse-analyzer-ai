@@ -63,6 +63,15 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
       <h2 className="text-lg font-semibold text-cyan-400 mb-3">
         {t('searchForQuotes')}
       </h2>
+          <div>
+        <label className="block text-sm font-medium text-gray-300 mb-1">
+          Person's Name
+        </label>
+        <PersonSelector
+          value={searchParams.personName}
+          onChange={searchParams.setPersonName}
+        />
+      </div>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-300 mb-2">
           {t('aiProvider')}
@@ -100,15 +109,6 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           </button>
         </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Person's Name
-        </label>
-        <PersonSelector
-          value={searchParams.personName}
-          onChange={searchParams.setPersonName}
-        />
-      </div>
 
       {/* Time Period Selection */}
       <div className="mt-4">
@@ -133,7 +133,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
               type="number"
               min="1"
               max={timePeriod.type === 'months' ? 120 : 30}
-              value={timePeriod.value}
+              value={timePeriod.value ?? 1}
               onChange={(e) =>
                 timePeriod.handleValueChange(parseInt(e.target.value, 10) || 1)
               }

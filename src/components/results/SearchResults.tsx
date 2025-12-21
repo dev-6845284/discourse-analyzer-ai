@@ -32,6 +32,12 @@ interface SearchResultsProps {
   onEditSource?: (quote: Quote) => void;
   clearError: () => void;
   selectedAI: string;
+  statusFilters: {
+    isAnalyzed: 'all' | 'true' | 'false';
+    setIsAnalyzed: (value: 'all' | 'true' | 'false') => void;
+    isImproved: 'all' | 'true' | 'false';
+    setIsImproved: (value: 'all' | 'true' | 'false') => void;
+  };
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -52,8 +58,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onEditSource,
   clearError,
   selectedAI,
+  statusFilters,
 }) => {
   const { t } = useI18n();
+  const sf = statusFilters || { isAnalyzed: 'all' as const, setIsAnalyzed: (_: any) => {}, isImproved: 'all' as const, setIsImproved: (_: any) => {} };
   return (
     <>
       <ErrorDisplay
@@ -106,6 +114,36 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           >
             {t('clearAll')}
           </button>
+        </div>
+      </div>
+
+      {/* Status filters */}
+      <div className="mb-4 p-3 bg-gray-800/40 rounded-md">
+        <div className="grid grid-cols-2 gap-3 max-w-sm">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">{t('analyzed')}</label>
+            <select
+              value={sf.isAnalyzed}
+              onChange={(e) => sf.setIsAnalyzed(e.target.value as 'all' | 'true' | 'false')}
+              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+            >
+              <option value="all">{t('all')}</option>
+              <option value="true">{t('analyzed')}</option>
+              <option value="false">{`Not ${t('analyzed')}`}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">{t('improved')}</label>
+            <select
+              value={sf.isImproved}
+              onChange={(e) => sf.setIsImproved(e.target.value as 'all' | 'true' | 'false')}
+              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+            >
+              <option value="all">{t('all')}</option>
+              <option value="true">{t('improved')}</option>
+              <option value="false">{`Not ${t('improved')}`}</option>
+            </select>
+          </div>
         </div>
       </div>
 
