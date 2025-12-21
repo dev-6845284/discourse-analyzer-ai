@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Play, FileText, AlertCircle, Clock, CheckCircle, Trash2 } from 'lucide-react';
+import { Play, FileText, AlertCircle, Clock, CheckCircle, Trash2, ArrowRightCircle } from 'lucide-react';
 import { AnalysisSession } from '../types';
 import { getSessions, deleteSession } from '../utils/api';
 
@@ -123,55 +123,65 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
       ) : (
         <div className="space-y-4">
           {sessions.map(session => (
-            <div key={session._id} className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-cyan-500/50 transition-colors">
-              {/* Source and Resume Button */}
-              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
-                <div className="flex items-center gap-2 min-w-0">
-                  {session.sourceType === 'youtube' ? <Play size={16} className="text-red-500 flex-shrink-0" /> : <FileText size={16} className="text-blue-500 flex-shrink-0" />}
-                  <span className="text-cyan-400 font-medium truncate" title={session.sourceUrl}>
-                    {session.sourceUrl}
-                  </span>
-                </div>
-                
-                <div className="flex gap-2 flex-shrink-0 flex-wrap">
-                  <button
-                    onClick={() => onResume(session)}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-                  >
-                    Resume
-                  </button>
-                  <button
-                    onClick={() => handleDeleteSession(session._id)}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2"
-                  >X</button>
-                </div>
+            <div key={session._id} className="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:border-cyan-500/50 transition-colors">
+              {/* Line 1: URL */}
+              <div className="flex items-center gap-2 mb-2 min-w-0">
+                {session.sourceType === 'youtube' ? <Play size={16} className="text-red-500 flex-shrink-0" /> : <FileText size={16} className="text-blue-500 flex-shrink-0" />}
+                <a
+                  href={session.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-400 font-medium truncate hover:underline"
+                  title={session.sourceUrl}
+                >
+                  {session.sourceUrl}
+                </a>
               </div>
 
-              {/* Progress Bar */}
-              <div className="mb-4 pb-4 border-b border-gray-700">
+              {/* Line 2: Progress Steps */}
+              <div className="mb-2">
                 {getProgressBar(session.status)}
               </div>
 
-              {/* Metadata */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-gray-400">
-                <div className="flex items-center gap-1">
+              {/* Line 3: timestamp + actions (icons) */}
+              <div className="flex items-center justify-between text-sm text-gray-400">
+                <div className="flex items-center gap-3">
                   <Clock size={14} />
                   <span>{new Date(session.updatedAt).toLocaleString()}</span>
+                  {session.status === 'failed' && (
+                    <div className="flex items-center gap-1 text-red-400 ml-2">
+                      <AlertCircle size={14} />
+                      <span>Failed</span>
+                    </div>
+                  )}
+                  {session.status === 'completed' && (
+                    <div className="flex items-center gap-1 text-green-400 ml-2">
+                      <CheckCircle size={14} />
+                      <span>Completed</span>
+                    </div>
+                  )}
                 </div>
-                {session.status === 'failed' && (
-                  <div className="flex items-center gap-1 text-red-400">
-                    <AlertCircle size={14} />
-                    <span>Failed</span>
-                  </div>
-                )}
-                {session.status === 'completed' && (
-                  <div className="flex items-center gap-1 text-green-400">
-                    <CheckCircle size={14} />
-                    <span>Completed</span>
-                  </div>
-                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onResume(session)}
+                    className="p-1 rounded text-cyan-400 hover:bg-gray-700"
+                    title="Resume analysis"
+                    aria-label="Resume analysis"
+                  >
+                    <ArrowRightCircle size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteSession(session._id)}
+                    className="p-1 rounded text-red-400 hover:bg-gray-700"
+                    title="Delete"
+                    aria-label="Delete session"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
-              
+
               {session.error && (
                 <div className="mt-3 text-xs text-red-400 bg-red-900/20 p-2 rounded border border-red-900/50">
                   Error: {session.error}
