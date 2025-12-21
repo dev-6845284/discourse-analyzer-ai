@@ -9,6 +9,7 @@ import TranscriptImporter from './components/TranscriptImporter';
 import { SrtTranscriptImporter } from './components/SrtTranscriptImporter';
 import { TranscriptMethodSelector } from './components/TranscriptMethodSelector';
 import { YoutubeTranscriptButton } from './components/YoutubeTranscriptButton';
+import { PersonSelector } from './components/people/PersonSelector';
 
 import { PersonManager } from './components/people/PersonManager';
 import { UserManager } from './components/users/UserManager';
@@ -177,64 +178,137 @@ const App: React.FC = () => {
                 openSection={openSidebarSection}
                 setOpenSection={setOpenSidebarSection}
                 searchContent={
-                  <div className="space-y-6">
-                    <SearchControls
-                      searchParams={searchParams}
-                      statusFilters={{
-                        isAnalyzed: searchParams.isAnalyzed,
-                        setIsAnalyzed: searchParams.setIsAnalyzed,
-                        isImproved: searchParams.isImproved,
-                        setIsImproved: searchParams.setIsImproved,
-                      }}
-                      timePeriod={{
-                        type: timePeriod.timePeriodType,
-                        value: timePeriod.timePeriodValue,
-                        customDateFrom: timePeriod.customDateFrom,
-                        customDateTo: timePeriod.customDateTo,
-                        handleTypeChange: timePeriod.handleTimePeriodTypeChange,
-                        handleValueChange: timePeriod.handleTimePeriodValueChange,
-                        setCustomDateFrom: timePeriod.setCustomDateFrom,
-                        setCustomDateTo: timePeriod.setCustomDateTo,
-                        description: timePeriod.getTimePeriod().description,
-                      }}
-                      languages={{
-                        selected: searchParams.selectedLanguages,
-                        onChange: searchParams.handleLanguageChange,
-                      }}
-                      onSearch={handleSearch}
-                      onCancel={quotesState.handleCancelSearch}
-                      isLoading={isLoading}
-                    />
-                    <ExtractionControls
-                      textToExtract={searchParams.textToExtract}
-                      setTextToExtract={searchParams.setTextToExtract}
-                      isExtracting={searchParams.isExtracting}
-                      personName={searchParams.personName}
-                      onExtract={openExtractModal}
-                      onAdd={openAddQuoteModal}
-                      onExtractFromUrl={handleExtractFromUrl}
-                      onAutoExtract={handleAutoExtract}
-                      extractionStatus={extractionStatus}
-                      extractionLanguage={extractionLanguage}
-                      setExtractionLanguage={setExtractionLanguage}
-                      extractionError={extractionError}
-                    />
-                    <YoutubeTranscriptButton
-                      onClick={() => setIsTranscriptMethodSelectorOpen(true)}
-                      isLoading={searchParams.isExtracting}
-                    />
-                    <TranscriptImporter
-                      onImport={handleImportTranscript}
-                      isLoading={searchParams.isExtracting}
-                    />
-                    <SrtTranscriptImporter
-                      onImport={handleImportTranscript}
-                      isLoading={searchParams.isExtracting}
-                    />
-                    <AnalysisImporter
-                      onImport={handleImportAnalysis}
-                      isLoading={searchParams.isExtracting}
-                    />
+                  <div className="space-y-4">
+                    {/* Always visible person selector */}
+                    <div className="p-4 bg-gray-800/50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('personsName')}</label>
+                      <div>
+                        <PersonSelector value={searchParams.personName} onChange={searchParams.setPersonName} />
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gray-800/50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('aiProvider')}</label>
+                      <div className="flex rounded-md bg-gray-700">
+                        <button
+                          onClick={() => searchParams.handleAISelectionChange('gemini')}
+                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${
+                            searchParams.selectedAI === 'gemini'
+                              ? 'bg-cyan-600 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          Gemini
+                        </button>
+                        <button
+                          onClick={() => searchParams.handleAISelectionChange('grok')}
+                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+                            searchParams.selectedAI === 'grok'
+                              ? 'bg-cyan-600 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          Grok
+                        </button>
+                        <button
+                          onClick={() => searchParams.handleAISelectionChange('chatgpt')}
+                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${
+                            searchParams.selectedAI === 'chatgpt'
+                              ? 'bg-cyan-600 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          ChatGPT
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Search for Quotes (collapsible) */}
+                    <details className="border rounded-lg bg-gray-800">
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('searchForQuotes')}</summary>
+                        <SearchControls
+                          searchParams={searchParams}
+                          statusFilters={{
+                            isAnalyzed: searchParams.isAnalyzed,
+                            setIsAnalyzed: searchParams.setIsAnalyzed,
+                            isImproved: searchParams.isImproved,
+                            setIsImproved: searchParams.setIsImproved,
+                          }}
+                          timePeriod={{
+                            type: timePeriod.timePeriodType,
+                            value: timePeriod.timePeriodValue,
+                            customDateFrom: timePeriod.customDateFrom,
+                            customDateTo: timePeriod.customDateTo,
+                            handleTypeChange: timePeriod.handleTimePeriodTypeChange,
+                            handleValueChange: timePeriod.handleTimePeriodValueChange,
+                            setCustomDateFrom: timePeriod.setCustomDateFrom,
+                            setCustomDateTo: timePeriod.setCustomDateTo,
+                            description: timePeriod.getTimePeriod().description,
+                          }}
+                          languages={{
+                            selected: searchParams.selectedLanguages,
+                            onChange: searchParams.handleLanguageChange,
+                          }}
+                          onSearch={handleSearch}
+                          onCancel={quotesState.handleCancelSearch}
+                          isLoading={isLoading}
+                        />
+                    </details>
+
+                    {/* Extract from Text (collapsible) */}
+                    <details className="border rounded-lg bg-gray-800">
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('extractFromText')}</summary>
+                        <ExtractionControls
+                          textToExtract={searchParams.textToExtract}
+                          setTextToExtract={searchParams.setTextToExtract}
+                          isExtracting={searchParams.isExtracting}
+                          personName={searchParams.personName}
+                          onExtract={openExtractModal}
+                          onAdd={openAddQuoteModal}
+                          onExtractFromUrl={handleExtractFromUrl}
+                          onAutoExtract={handleAutoExtract}
+                          extractionStatus={extractionStatus}
+                          extractionLanguage={extractionLanguage}
+                          setExtractionLanguage={setExtractionLanguage}
+                          extractionError={extractionError}
+                        />
+                    </details>
+
+                    {/* YouTube Transcript (collapsible) */}
+                    <details className="border rounded-lg bg-gray-800">
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('youtubeTranscript')}</summary>
+                        <YoutubeTranscriptButton
+                          onClick={() => setIsTranscriptMethodSelectorOpen(true)}
+                          isLoading={searchParams.isExtracting}
+                        />
+                    </details>
+
+                    {/* Import Transcript Data (collapsible) */}
+                    <details className="border rounded-lg bg-gray-800">
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
+                        <TranscriptImporter
+                          onImport={handleImportTranscript}
+                          isLoading={searchParams.isExtracting}
+                        />
+                    </details>
+
+                    {/* Import SRT Transcript (collapsible) */}
+                    <details className="border rounded-lg bg-gray-800">
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('importSrtTranscriptTitle')}</summary>
+                        <SrtTranscriptImporter
+                          onImport={handleImportTranscript}
+                          isLoading={searchParams.isExtracting}
+                        />
+                    </details>
+
+                    {/* Import Analysis Data (collapsible) */}
+                    <details className="border rounded-lg bg-gray-800">
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('importAnalysisTitle')}</summary>
+                        <AnalysisImporter
+                          onImport={handleImportAnalysis}
+                          isLoading={searchParams.isExtracting}
+                        />
+                    </details>
                   </div>
                 }
                 peopleContent={
@@ -317,6 +391,8 @@ const App: React.FC = () => {
               onEditSource={handleEditSource}
               onResumeSession={handleResumeSession}
               onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
+              onExport={handleExport}
+              onImport={handleImport}
             />
           </main>
 

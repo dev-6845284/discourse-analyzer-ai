@@ -38,6 +38,8 @@ interface SearchResultsProps {
     isImproved: 'all' | 'true' | 'false';
     setIsImproved: (value: 'all' | 'true' | 'false') => void;
   };
+  onExport?: () => void;
+  onImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -59,6 +61,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   clearError,
   selectedAI,
   statusFilters,
+  onExport,
+  onImport,
 }) => {
   const { t } = useI18n();
   const sf = statusFilters || { isAnalyzed: 'all' as const, setIsAnalyzed: (_: any) => {}, isImproved: 'all' as const, setIsImproved: (_: any) => {} };
@@ -108,6 +112,23 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Export / Import */}
+          {onExport && (
+            <button
+              onClick={onExport}
+              className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm"
+            >
+              {t('export')}
+            </button>
+          )}
+          {onImport && (
+            <label className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm cursor-pointer">
+              {t('import')}
+              <input type="file" accept=".json" onChange={onImport} className="hidden" />
+            </label>
+          )}
+
           <button
             onClick={onClear}
             className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm"

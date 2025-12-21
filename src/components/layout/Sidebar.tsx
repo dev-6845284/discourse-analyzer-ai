@@ -43,25 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className={containerClass}>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onExport}
-            className="text-sm text-gray-400 hover:text-white"
-            title={t('exportTitle')}
-          >
-            {t('export')}
-          </button>
-          <label
-            className="text-sm text-gray-400 hover:text-white cursor-pointer"
-            title={t('importTitle')}
-          >
-            {t('import')}
-            <input
-              type="file"
-              className="hidden"
-              accept=".json"
-              onChange={onImport}
-            />
-          </label>
+          {/* Export/Import moved to Search Results header */}
         </div>
       </div>
 

@@ -41,6 +41,8 @@ interface MainContentProps {
   onEditSource: (q: any) => void;
   onResumeSession: (session: any) => void;
   onStoredPromoteSuccess: () => void;
+  onExport?: () => void;
+  onImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectedAI: string;
 }
 
@@ -72,6 +74,8 @@ export const MainContent: React.FC<MainContentProps> = ({
   onEditSource,
   onResumeSession,
   onStoredPromoteSuccess,
+  onExport,
+  onImport,
   selectedAI,
 }) => {
   const { t } = useI18n();
@@ -202,7 +206,11 @@ export const MainContent: React.FC<MainContentProps> = ({
                 onDiscard={onDiscard}
                 onRemove={onRemove}
                 clearError={clearError}
-                selectedAI={selectedAI}                statusFilters={statusFilters}              />
+                selectedAI={selectedAI}
+                statusFilters={statusFilters}
+                onExport={onExport}
+                onImport={onImport}
+              />
             )
           )}
         </>

@@ -14,7 +14,7 @@ export const YoutubeTranscriptButton: React.FC<YoutubeTranscriptButtonProps> = (
   const { t } = useI18n();
 
   return (
-    <div className="p-4 bg-gradient-to-r from-red-900/30 to-gray-800/50 rounded-lg border border-red-700/50 hover:border-red-500/70 transition-colors">
+    <div className="bg-gradient-to-r from-red-900/30 to-gray-800/50 rounded-lg border border-red-700/50 hover:border-red-500/70 transition-colors">
       <h2 className="text-xl font-semibold text-red-400 mb-2 flex items-center gap-2">
         <Youtube size={20} />
         {t('youtubeTranscript')}

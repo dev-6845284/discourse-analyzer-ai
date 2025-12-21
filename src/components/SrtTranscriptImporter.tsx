@@ -92,7 +92,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
   };
 
   return (
-    <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
+    <div className="bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
       <h2 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
         <FileText size={20} />
         {t('importSrtTranscriptTitle')}

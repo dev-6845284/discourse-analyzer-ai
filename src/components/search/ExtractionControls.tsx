@@ -71,10 +71,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
   }, [textToExtract, isUrl, onAutoExtract, extractionLanguage]); // Re-run if language changes
 
   return (
-    <div className="p-4 bg-gray-800/50 rounded-lg">
-      <h2 className="text-lg font-semibold text-cyan-400 mb-3">
-        {t('extractFromText')}
-      </h2>
+    <div className="bg-gray-800/50 rounded-lg">
       <textarea
         value={textToExtract}
         onChange={(e) => setTextToExtract(e.target.value)}

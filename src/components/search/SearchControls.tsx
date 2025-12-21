@@ -59,56 +59,8 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="p-4 bg-gray-800/50 rounded-lg">
-      <h2 className="text-lg font-semibold text-cyan-400 mb-3">
-        {t('searchForQuotes')}
-      </h2>
-          <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Person's Name
-        </label>
-        <PersonSelector
-          value={searchParams.personName}
-          onChange={searchParams.setPersonName}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          {t('aiProvider')}
-        </label>
-        <div className="flex rounded-md bg-gray-700">
-          <button
-            onClick={() => searchParams.handleAISelectionChange('gemini')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors rounded-l-md ${
-              searchParams.selectedAI === 'gemini'
-                ? 'bg-cyan-600 text-white'
-                : 'text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Gemini
-          </button>
-          <button
-            onClick={() => searchParams.handleAISelectionChange('grok')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
-              searchParams.selectedAI === 'grok'
-                ? 'bg-cyan-600 text-white'
-                : 'text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Grok
-          </button>
-          <button
-            onClick={() => searchParams.handleAISelectionChange('chatgpt')}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors rounded-r-md ${
-              searchParams.selectedAI === 'chatgpt'
-                ? 'bg-cyan-600 text-white'
-                : 'text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            ChatGPT
-          </button>
-        </div>
-      </div>
+    <div className="bg-gray-800/50 rounded-lg">
+
 
       {/* Time Period Selection */}
       <div className="mt-4">
