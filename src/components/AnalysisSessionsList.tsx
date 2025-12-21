@@ -87,7 +87,7 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
               >
                 {isFailed ? '✕' : isCompleted || (isCompleteStage && currentStage > stageNumber) ? '✓' : stageNumber}
               </div>
-              <span className="text-xs text-gray-400 whitespace-nowrap">{stage.label}</span>
+              <span className="text-xs text-gray-400 whitespace-normal sm:whitespace-nowrap">{stage.label}</span>
             </div>
           );
         })}
@@ -136,13 +136,13 @@ export const AnalysisSessionsList: React.FC<AnalysisSessionsListProps> = ({ onRe
                 <div className="flex gap-2 flex-shrink-0">
                   <button
                     onClick={() => onResume(session)}
-                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-normal sm:whitespace-nowrap"
                   >
                     Resume
                   </button>
                   <button
                     onClick={() => handleDeleteSession(session._id)}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-normal sm:whitespace-nowrap flex items-center gap-2"
                   >X</button>
                 </div>
               </div>

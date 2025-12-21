@@ -12,8 +12,7 @@ interface HeaderProps {
   googleButtonRef: React.RefObject<HTMLDivElement>;
   handleLogout: () => void;
   onChangePassword: () => void;
-  onEditProfile: () => void;
-}
+  onEditProfile: () => void;  openSidebarMobile?: () => void;}
 
 export const Header: React.FC<HeaderProps> = ({
   user,
@@ -26,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   handleLogout,
   onChangePassword,
   onEditProfile,
+  openSidebarMobile,
 }) => {
   const { t, language, setLanguage } = useI18n();
   const isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development';
@@ -36,6 +36,16 @@ export const Header: React.FC<HeaderProps> = ({
         Discourse Analyzer AI
       </h1>
       <div className="flex items-center space-x-4">
+        {/* Mobile sidebar toggle */}
+        <button
+          onClick={() => openSidebarMobile && openSidebarMobile()}
+          className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors md:hidden"
+          aria-label="Open sidebar"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
         <div>
           <label htmlFor="language-select" className="sr-only">{t('language')}</label>
           <select

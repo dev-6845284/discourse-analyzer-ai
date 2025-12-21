@@ -35,6 +35,8 @@ import { UsageStatsDashboard } from './components/admin/UsageStatsDashboard';
 const App: React.FC = () => {
   const ctrl = useAppController();
   const { t } = useI18n();
+  const [isSidebarOpenMobile, setIsSidebarOpenMobile] = React.useState(false);
+  const [openSidebarSection, setOpenSidebarSection] = React.useState<string | null>(null);
   const {
     user,
     loginError,
@@ -156,43 +158,26 @@ const App: React.FC = () => {
             handleLogout={handleLogout}
             onChangePassword={openChangePasswordModal}
             onEditProfile={openEditProfileModal}
+            openSidebarMobile={() => setIsSidebarOpenMobile(true)}
           />
           {(import.meta.env.DEV || user?.role === 'admin') && <LogViewer logsVisible={logsVisible} />}
 
         <div
-          className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 overflow-hidden ${
-            isFormCollapsed ? 'max-h-16' : ''
+          className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col ${
+            isFormCollapsed ? 'max-h-16' : 'min-h-0'
           }`}
         >
-          <main className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <main className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1 min-w-0 overflow-auto">
+
             <Sidebar
               isCollapsed={isFormCollapsed}
               onToggleCollapse={toggleFormCollapsed}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
               onExport={handleExport}
               onImport={handleImport}
               userRole={user.role}
-            >
-              {activeTab === 'sessions' ? (
-                <AnalysisSessionsList 
-                  onResume={handleResumeSession} 
-                  refreshTrigger={sessionsRefreshTrigger}
-                />
-              ) : activeTab === 'people' ? (
-                <div className="bg-gray-100 rounded-lg h-[calc(100vh-200px)] overflow-hidden text-gray-900">
-                  <PersonManager
-                    onSelectPerson={(person) => {
-                      setSelectedPerson(person);
-                      setResultsTab('stored');
-                    }}
-                  />
-                </div>
-              ) : activeTab === 'users' ? (
-                <div className="text-gray-400 text-sm text-center mt-4">
-                  Manage system users, roles and passwords.
-                </div>
-              ) : (
+              openSection={openSidebarSection}
+              setOpenSection={setOpenSidebarSection}
+              searchContent={
                 <div className="space-y-6">
                   <SearchControls
                     searchParams={searchParams}
@@ -252,8 +237,31 @@ const App: React.FC = () => {
                     isLoading={searchParams.isExtracting}
                   />
                 </div>
-              )}
-            </Sidebar>
+              }
+              peopleContent={
+                <div className="bg-gray-100 rounded-lg flex flex-col h-full overflow-hidden text-gray-900">
+                  <div className="flex-1 overflow-auto">
+                    <PersonManager
+                      onSelectPerson={(person) => {
+                        setSelectedPerson(person);
+                        setResultsTab('stored');
+                      }}
+                    />
+                  </div>
+                </div>
+              }
+              sessionsContent={
+                <AnalysisSessionsList 
+                  onResume={handleResumeSession} 
+                  refreshTrigger={sessionsRefreshTrigger}
+                />
+              }
+              usersContent={
+                <div className="text-gray-400 text-sm text-center mt-4">
+                  Manage system users, roles and passwords.
+                </div>
+              }
+            />
 
             <MainContent
               activeTab={activeTab}
@@ -307,6 +315,109 @@ const App: React.FC = () => {
               onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
             />
           </main>
+
+          {isSidebarOpenMobile && (
+            <div className="fixed inset-0 z-50 md:hidden">
+              <div className="absolute inset-0 bg-black/60" onClick={() => setIsSidebarOpenMobile(false)} />
+              <div className="relative z-50 w-full max-w-xs h-full">
+                <Sidebar
+                  asDrawer
+                  onClose={() => setIsSidebarOpenMobile(false)}
+                  isCollapsed={isFormCollapsed}
+                  onToggleCollapse={toggleFormCollapsed}
+                  onExport={handleExport}
+                  onImport={handleImport}
+                  userRole={user.role}
+                  openSection={openSidebarSection}
+                  setOpenSection={setOpenSidebarSection}
+                  searchContent={
+                    <div className="space-y-6">
+                      <SearchControls
+                        searchParams={searchParams}
+                        statusFilters={{
+                          isAnalyzed: searchParams.isAnalyzed,
+                          setIsAnalyzed: searchParams.setIsAnalyzed,
+                          isImproved: searchParams.isImproved,
+                          setIsImproved: searchParams.setIsImproved,
+                        }}
+                        timePeriod={{
+                          type: timePeriod.timePeriodType,
+                          value: timePeriod.timePeriodValue,
+                          customDateFrom: timePeriod.customDateFrom,
+                          customDateTo: timePeriod.customDateTo,
+                          handleTypeChange: timePeriod.handleTimePeriodTypeChange,
+                          handleValueChange: timePeriod.handleTimePeriodValueChange,
+                          setCustomDateFrom: timePeriod.setCustomDateFrom,
+                          setCustomDateTo: timePeriod.setCustomDateTo,
+                          description: timePeriod.getTimePeriod().description,
+                        }}
+                        languages={{
+                          selected: searchParams.selectedLanguages,
+                          onChange: searchParams.handleLanguageChange,
+                        }}
+                        onSearch={handleSearch}
+                        onCancel={quotesState.handleCancelSearch}
+                        isLoading={isLoading}
+                      />
+                      <ExtractionControls
+                        textToExtract={searchParams.textToExtract}
+                        setTextToExtract={searchParams.setTextToExtract}
+                        isExtracting={searchParams.isExtracting}
+                        personName={searchParams.personName}
+                        onExtract={openExtractModal}
+                        onAdd={openAddQuoteModal}
+                        onExtractFromUrl={handleExtractFromUrl}
+                        onAutoExtract={handleAutoExtract}
+                        extractionStatus={extractionStatus}
+                        extractionLanguage={extractionLanguage}
+                        setExtractionLanguage={setExtractionLanguage}
+                        extractionError={extractionError}
+                      />
+                      <YoutubeTranscriptButton
+                        onClick={() => setIsTranscriptMethodSelectorOpen(true)}
+                        isLoading={searchParams.isExtracting}
+                      />
+                      <TranscriptImporter
+                        onImport={handleImportTranscript}
+                        isLoading={searchParams.isExtracting}
+                      />
+                      <SrtTranscriptImporter
+                        onImport={handleImportTranscript}
+                        isLoading={searchParams.isExtracting}
+                      />
+                      <AnalysisImporter
+                        onImport={handleImportAnalysis}
+                        isLoading={searchParams.isExtracting}
+                      />
+                    </div>
+                  }
+                  peopleContent={
+                    <div className="bg-gray-100 rounded-lg flex flex-col h-full overflow-hidden text-gray-900">
+                      <div className="flex-1 overflow-auto">
+                        <PersonManager
+                          onSelectPerson={(person) => {
+                            setSelectedPerson(person);
+                            setResultsTab('stored');
+                          }}
+                        />
+                      </div>
+                    </div>
+                  }
+                  sessionsContent={
+                    <AnalysisSessionsList 
+                      onResume={handleResumeSession} 
+                      refreshTrigger={sessionsRefreshTrigger}
+                    />
+                  }
+                  usersContent={
+                    <div className="text-gray-400 text-sm text-center mt-4">
+                      Manage system users, roles and passwords.
+                    </div>
+                  }
+                />
+              </div>
+            </div>
+          )}
 
           <ModalsContainer
             isAddModalOpen={isAddModalOpen}

@@ -44,7 +44,7 @@ export const TranscriptSegmentList: React.FC<TranscriptSegmentListProps> = ({
                 }`}
               >
                 <div className="flex gap-3">
-                  <span className="text-blue-400 font-bold flex-shrink-0 min-w-fit group-hover:text-blue-300">
+                  <span className="text-blue-400 font-bold flex-shrink-0 min-w-0 group-hover:text-blue-300">
                     [{formatTimestamp(segment.start)}]
                   </span>
                   <span className="flex-1 leading-relaxed break-words">{segment.text}</span>

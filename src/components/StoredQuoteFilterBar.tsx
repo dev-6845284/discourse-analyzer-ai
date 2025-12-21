@@ -296,7 +296,7 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
           >
             {LANGUAGE_OPTIONS.map((lang) => (
               <option key={lang.code} value={lang.code}>
-                {lang.nameKey ? t(lang.nameKey) : lang.name}
+                {'nameKey' in lang ? t(lang.nameKey) : lang.name}
               </option>
             ))}
           </select>

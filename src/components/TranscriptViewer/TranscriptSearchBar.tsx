@@ -29,7 +29,7 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
 
   return (
     <div className="flex gap-3 p-4 border-b border-gray-700 flex-shrink-0 flex-wrap">
-      <div className="flex-1 relative min-w-64">
+      <div className="flex-1 relative min-w-0">
         <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
           type="text"

@@ -1,5 +1,4 @@
 import React from 'react';
-import { UserManager } from './users/UserManager';
 import StoredQuotes from './StoredQuotes';
 import TranscriptViewer from './TranscriptViewer';
 import { useI18n } from '../i18n';
@@ -71,11 +70,8 @@ export const MainContent: React.FC<MainContentProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="md:col-span-2 space-y-6">
-      {activeTab === 'users' ? (
-        <UserManager />
-      ) : (
-        <>
+    <div className="md:col-span-2 space-y-6 min-w-0">
+      <>
           <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
             <button
               onClick={() => setResultsTab('new')}
@@ -204,7 +200,6 @@ export const MainContent: React.FC<MainContentProps> = ({
             )
           )}
         </>
-      )}
     </div>
   );
 };

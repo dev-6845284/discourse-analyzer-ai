@@ -113,7 +113,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-full sm:max-w-lg md:max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center gap-3">
@@ -142,7 +142,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
               <button
                 key={method}
                 onClick={() => setSelectedMethod(method)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-normal sm:whitespace-nowrap transition-colors border-b-2 ${
                   isSelected
                     ? 'text-cyan-400 border-cyan-400 bg-gray-800/50'
                     : 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-800/30'

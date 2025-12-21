@@ -73,7 +73,7 @@ export const YoutubeTranscriptFetcher: React.FC<YoutubeTranscriptFetcherProps> =
         <button
           onClick={handleFetch}
           disabled={isLoading || !videoUrl.trim()}
-          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-fit"
+          className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-0"
         >
           {isLoading ? (
             <>
