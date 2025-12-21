@@ -245,7 +245,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
           className="bg-gray-800/60 border border-gray-700 rounded-lg overflow-hidden"
         >
           <div className="p-4 bg-gray-900/50 border-b border-gray-700">
-            <h3 className="text-lg font-bold text-white mb-2">{group.title}</h3>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">{group.title}</h3>
             {group.analysis && (
               <div className="bg-gray-800/50 p-3 rounded border border-gray-700/50">
                 <ul className="list-disc list-inside space-y-2">

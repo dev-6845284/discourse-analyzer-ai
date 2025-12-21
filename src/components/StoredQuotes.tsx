@@ -322,7 +322,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <h2 className="text-2xl font-bold text-gray-100 mb-4">
+      <h2 className="text-2xl font-bold text-cyan-400 mb-4">
         {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
       </h2>
       

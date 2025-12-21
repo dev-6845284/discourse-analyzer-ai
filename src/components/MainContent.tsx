@@ -150,7 +150,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             articles.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-white">{t('foundArticles', { count: articles.length })}</h3>
+                  <h3 className="text-lg font-semibold text-cyan-400">{t('foundArticles', { count: articles.length })}</h3>
                   <button 
                     onClick={() => onClearQuotes()} // Reusing clear quotes to clear results
                     className="text-sm text-gray-400 hover:text-white"

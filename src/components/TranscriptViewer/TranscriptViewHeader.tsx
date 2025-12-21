@@ -26,7 +26,7 @@ export const TranscriptViewHeader: React.FC<TranscriptViewHeaderProps> = ({
   return (
     <div className="flex justify-between items-center p-6 border-b border-gray-700 flex-shrink-0">
       <div className="flex-1">
-        <h2 className="text-2xl font-bold text-white">{t('youtubeTranscript')}</h2>
+        <h2 className="text-2xl font-bold text-cyan-400">{t('youtubeTranscript')}</h2>
         <div className="mt-2 flex gap-4 text-sm text-gray-400">
           <span>
             {t('videoId')}: <span className="text-gray-300 font-mono">{videoId}</span>

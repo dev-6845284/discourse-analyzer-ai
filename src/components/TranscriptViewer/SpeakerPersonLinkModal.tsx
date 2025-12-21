@@ -113,7 +113,7 @@ export const SpeakerPersonLinkModal: React.FC<SpeakerPersonLinkModalProps> = ({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-cyan-400 flex items-center gap-2">
             <Link2 size={20} className="text-cyan-400" />
             {t('linkSpeakerToPerson')}
           </h3>

@@ -61,16 +61,16 @@ const LogEntryCard: React.FC<{ entry: LogEntry }> = ({ entry }) => {
         <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="font-semibold text-md mb-2 text-gray-800 dark:text-gray-200">Request Payload</h4>
-              <pre className="bg-gray-100 dark:bg-gray-900 p-3 rounded-md text-xs overflow-auto max-h-60">
+              <h4 className="font-semibold text-md mb-2 text-gray-200">Request Payload</h4>
+              <pre className="bg-gray-800 dark:bg-gray-900 p-3 rounded-md text-xs text-gray-100 overflow-auto max-h-60">
                 {JSON.stringify(entry.requestPayload, null, 2)}
               </pre>
             </div>
             <div>
               {entry.responsePayload && (
                 <>
-                  <h4 className="font-semibold text-md mb-2 text-gray-800 dark:text-gray-200">Response Payload</h4>
-                  <pre className="bg-gray-100 dark:bg-gray-900 p-3 rounded-md text-xs overflow-auto max-h-60">
+                  <h4 className="font-semibold text-md mb-2 text-gray-200">Response Payload</h4>
+                  <pre className="bg-gray-800 dark:bg-gray-900 p-3 rounded-md text-xs text-gray-100 overflow-auto max-h-60">
                     {JSON.stringify(entry.responsePayload, null, 2)}
                   </pre>
                 </>
@@ -94,7 +94,7 @@ const LogEntryCard: React.FC<{ entry: LogEntry }> = ({ entry }) => {
                 {entry.modelInteractions.map((interaction) => {
                   const status = getInteractionStatus(interaction);
                   return (
-                    <div key={interaction.id} className="p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white/70 dark:bg-gray-900/50">
+                    <div key={interaction.id} className="p-3 border border-gray-700 rounded-md bg-gray-800/70 dark:bg-gray-900/50">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
@@ -112,16 +112,16 @@ const LogEntryCard: React.FC<{ entry: LogEntry }> = ({ entry }) => {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                         <div>
-                          <p className="text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Model Request</p>
-                          <pre className="bg-gray-100 dark:bg-gray-950 p-2 rounded text-[11px] overflow-auto max-h-48">
+                          <p className="text-xs font-semibold mb-1 text-gray-300">Model Request</p>
+                          <pre className="bg-gray-800 dark:bg-gray-950 p-2 rounded text-[11px] text-gray-100 overflow-auto max-h-48">
                             {formatJson(interaction.requestPayload, 'No request payload recorded.')}
                           </pre>
                         </div>
                         <div>
                           {interaction.responsePayload && (
                             <div className="mb-2">
-                              <p className="text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">Model Response</p>
-                              <pre className="bg-gray-100 dark:bg-gray-950 p-2 rounded text-[11px] overflow-auto max-h-48">
+                              <p className="text-xs font-semibold mb-1 text-gray-300">Model Response</p>
+                              <pre className="bg-gray-800 dark:bg-gray-950 p-2 rounded text-[11px] text-gray-100 overflow-auto max-h-48">
                                 {formatJson(interaction.responsePayload, 'No response payload recorded.')}
                               </pre>
                             </div>
@@ -166,9 +166,9 @@ const LogViewer: React.FC<LogViewerProps> = ({ logsVisible }) => {
   if (!logsVisible) return null;
 
   return (
-    <div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+    <div className="mt-8 p-6 bg-gray-800 rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">AI Interaction Logs</h2>
+        <h2 className="text-2xl font-bold text-cyan-400">AI Interaction Logs</h2>
         <button
           onClick={refreshLogs}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"

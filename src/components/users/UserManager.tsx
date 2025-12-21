@@ -74,7 +74,7 @@ export const UserManager: React.FC = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t('userManagement')}</h1>
+        <h1 className="text-2xl font-bold text-cyan-400">{t('userManagement')}</h1>
         <button
           onClick={handleAddUser}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"

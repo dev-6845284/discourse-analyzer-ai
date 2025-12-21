@@ -42,7 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className={containerClass}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-cyan-400">{t('appTitle')}</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={onExport}

@@ -614,7 +614,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
       {showMergeModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
               <GitMerge size={20} className="text-orange-400" />
               {t('mergeSpeakers')}
             </h3>

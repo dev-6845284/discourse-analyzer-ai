@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="mb-6 w-full">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 w-full">
         <div className="flex items-center justify-between w-full md:w-auto">
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-800 dark:text-gray-200">Discourse Analyzer AI</h1>
+          <h1 className="hidden md:block text-2xl md:text-4xl font-bold text-gray-800 dark:text-gray-200">Discourse Analyzer AI</h1>
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => openSidebarMobile && openSidebarMobile()}
@@ -87,13 +87,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <>
                     <button
                       onClick={onEditProfile}
-                      className="px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
+                      className="px-4 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-700 rounded-t-lg"
                     >
                       {t('editProfile')}
                     </button>
                     <button
                       onClick={onChangePassword}
-                      className="px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="px-4 py-2 text-left hover:bg-gray-200 dark:hover:bg-gray-700"
                     >
                       {t('changePassword')}
                     </button>

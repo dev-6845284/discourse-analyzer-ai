@@ -119,7 +119,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
           <div className="flex items-center gap-3">
             <Youtube className="text-red-500" size={24} />
             <div>
-              <h2 className="text-xl font-bold text-white">{t('getYouTubeTranscriptTitle')}</h2>
+              <h2 className="text-xl font-bold text-cyan-400">{t('getYouTubeTranscriptTitle')}</h2>
               <p className="text-sm text-gray-400">{t('choosePreferredMethod')}</p>
             </div>
           </div>
@@ -170,7 +170,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
                   {METHOD_INFO[selectedMethod].icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{t(METHOD_INFO[selectedMethod].titleKey)}</h3>
+                  <h3 className="font-semibold text-cyan-400">{t(METHOD_INFO[selectedMethod].titleKey)}</h3>
                   <p className="text-sm text-gray-400">{t(METHOD_INFO[selectedMethod].descriptionKey)}</p>
                 </div>
               </div>

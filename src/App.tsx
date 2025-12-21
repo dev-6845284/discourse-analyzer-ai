@@ -238,7 +238,7 @@ const App: React.FC = () => {
                   </div>
                 }
                 peopleContent={
-                  <div className="bg-gray-100 rounded-lg flex flex-col h-full overflow-hidden text-gray-900">
+                  <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
                     <div className="flex-1 overflow-auto">
                       <PersonManager
                         onSelectPerson={(person) => {
@@ -390,7 +390,7 @@ const App: React.FC = () => {
                     </div>
                   }
                   peopleContent={
-                    <div className="bg-gray-100 rounded-lg flex flex-col h-full overflow-hidden text-gray-900">
+                    <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
                       <div className="flex-1 overflow-auto">
                         <PersonManager
                           onSelectPerson={(person) => {

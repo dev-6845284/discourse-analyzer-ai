@@ -64,7 +64,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
       <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-cyan-300 mb-2">
+          <h2 className="text-2xl font-semibold text-cyan-400 mb-2">
             {t('results', { count: results.length })}
           </h2>
           {personName && (

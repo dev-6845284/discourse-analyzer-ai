@@ -34,52 +34,52 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded shadow">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-800 rounded-lg shadow">
       <div>
-        <label className="block text-sm font-medium text-gray-700">Full Name (Required)</label>
+        <label className="block text-sm font-medium text-gray-300">Full Name (Required)</label>
         <input
           type="text"
           required
           value={formData.name}
           onChange={e => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+          className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">First Name</label>
+          <label className="block text-sm font-medium text-gray-300">First Name</label>
           <input
             type="text"
             value={formData.firstname}
             onChange={e => setFormData({ ...formData, firstname: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+            className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Surname</label>
+          <label className="block text-sm font-medium text-gray-300">Surname</label>
           <input
             type="text"
             value={formData.surname}
             onChange={e => setFormData({ ...formData, surname: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+            className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
           />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Aliases (comma separated)</label>
+        <label className="block text-sm font-medium text-gray-300">Aliases (comma separated)</label>
         <input
           type="text"
           value={formData.aliases}
           onChange={e => setFormData({ ...formData, aliases: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+          className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <label className="block text-sm font-medium text-gray-300">Description</label>
         <textarea
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+          className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
           rows={3}
         />
       </div>
@@ -87,7 +87,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
         >
           Cancel
         </button>

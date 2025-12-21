@@ -212,7 +212,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
       {/* Header with video info and save button */}
       <div className="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white">{t('youtubeTranscript')}</h3>
+          <h3 className="text-lg font-semibold text-cyan-400">{t('youtubeTranscript')}</h3>
           <div className="mt-1 flex gap-4 text-xs text-gray-400">
             <span>{t('videoId')}: <span className="text-gray-300 font-mono">{videoId}</span></span>
             <span>{t('language')}: <span className="text-gray-300">{languageCode}</span></span>

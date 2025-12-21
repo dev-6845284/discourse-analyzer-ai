@@ -53,7 +53,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">{user ? t('editUser') : t('addUser')}</h2>
+        <h2 className="text-xl font-bold mb-4 text-cyan-400">{user ? t('editUser') : t('addUser')}</h2>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
