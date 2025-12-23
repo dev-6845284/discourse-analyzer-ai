@@ -202,6 +202,20 @@ export class ModelResponseError extends Error {
   }
 }
 
+/**
+ * Custom error class for model validation failures (structure, missing categories, etc.).
+ * Includes the raw text response to aid debugging and deterministic retries.
+ */
+export class ModelValidationError extends Error {
+  public rawResponse: string;
+
+  constructor(message: string, rawResponse: string) {
+    super(message);
+    this.name = 'ModelValidationError';
+    this.rawResponse = rawResponse;
+  }
+}
+
 export interface WeightedTag {
   tag: string;
   relevance: number; // 0-1, how relevant to main topics

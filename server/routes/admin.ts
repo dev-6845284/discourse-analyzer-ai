@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { requireAdmin } from '../middleware/admin';
 import ApiUsage from '../models/ApiUsage';
+import adminCategoriesRouter from './adminCategories';
 import BlockedIP from '../models/BlockedIP';
 import SecurityAlert from '../models/SecurityAlert';
 import { blockIP, unblockIP, getBlockedIPs } from '../middleware/ipBlocker';
@@ -316,5 +317,8 @@ router.get('/dashboard-summary', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to get dashboard summary' });
   }
 });
+
+// Mount admin categories management endpoints
+router.use('/categories', adminCategoriesRouter);
 
 export default router;

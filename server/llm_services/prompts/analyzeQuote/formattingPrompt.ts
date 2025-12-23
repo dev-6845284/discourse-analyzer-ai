@@ -1,10 +1,23 @@
 import { AnalyzeQuoteFormattingPromptParams } from '../types';
+import { getCategoriesForMode } from '../../..//services/categoryService';
 
 /**
  * Builds the formatting prompt to convert audit notes into structured JSON.
  */
+
+function buildCategoriesJsonForAudit(quoteLanguageName: string): string {
+  const cats = getCategoriesForMode('audit');
+  return cats.map(c => `"${c.title}": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" }`).join(',\n    ');
+}
+
+function buildCategoriesJsonForFlaws(quoteLanguageName: string): string {
+  const cats = getCategoriesForMode('flaws');
+  return cats.map(c => `"${c.title}": {\n      "severity": "<LEVEL>",\n      "evidence": "<evidence in ${quoteLanguageName}>"\n    }`).join(',\n    ');
+} 
 export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormattingPromptParams): string {
   const { quoteLanguageName, analysisNotes } = params;
+
+  const categoriesJson = buildCategoriesJsonForAudit(quoteLanguageName);
 
   return `You are a structured data formatter. Convert the audit notes below into a strict JSON payload.
 
@@ -16,12 +29,7 @@ export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormatting
   "verdict": "<VERDICT>",
   "rationale": "<rationale in ${quoteLanguageName}>",
   "categories": {
-    "Verifiable Falsehood": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Misleading Framing": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Reality Inversion": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Responsibility Shifting": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Unsupported Assertion": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Narrative Control / Propaganda": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" }
+    ${categoriesJson}
   }
 }
 
@@ -37,7 +45,7 @@ export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormatting
 ${analysisNotes}
 >>>
 
-Return only the JSON object.`;
+Return only the JSON object.`; 
 }
 
 /**
@@ -45,6 +53,8 @@ Return only the JSON object.`;
  */
 export function buildAnalyzeFlawsFormattingPrompt(params: AnalyzeQuoteFormattingPromptParams): string {
   const { quoteLanguageName, analysisNotes } = params;
+
+  const categoriesJson = buildCategoriesJsonForFlaws(quoteLanguageName);
 
   return `You are a structured data formatter.
 
@@ -74,30 +84,7 @@ from the provided audit notes.
   "classification": "<CLASSIFICATION>",
   "finalAssessment": "<final assessment in ${quoteLanguageName}>",
   "categories": {
-    "Dehumanization": {
-      "severity": "<LEVEL>",
-      "evidence": "<evidence in ${quoteLanguageName}>"
-    },
-    "Symbolic Violence / Death-Wishing": {
-      "severity": "<LEVEL>",
-      "evidence": "<evidence in ${quoteLanguageName}>"
-    },
-    "Hate-Speech Adjacent Rhetoric": {
-      "severity": "<LEVEL>",
-      "evidence": "<evidence in ${quoteLanguageName}>"
-    },
-    "Authoritarian / Mob Logic": {
-      "severity": "<LEVEL>",
-      "evidence": "<evidence in ${quoteLanguageName}>"
-    },
-    "Democratic Norm Violation": {
-      "severity": "<LEVEL>",
-      "evidence": "<evidence in ${quoteLanguageName}>"
-    },
-    "Psychological & Rhetorical Profile": {
-      "severity": "<LEVEL>",
-      "evidence": "<evidence in ${quoteLanguageName}>"
-    }
+    ${categoriesJson}
   }
 }
 

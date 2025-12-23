@@ -346,10 +346,22 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+import { loadCategoriesFromDb } from './services/categoryService';
+import mongoose from 'mongoose';
+
 if (require.main === module) {
   app.listen(port, async () => {
     try {
       await connectToDatabase();
+      // Initialize dynamic categories from DB (if available). This is best-effort.
+      try {
+        if (mongoose.connection && mongoose.connection.db) {
+          await loadCategoriesFromDb(mongoose.connection.db as any);
+        }
+      } catch (e) {
+        console.warn('Could not load categories from DB at startup:', (e as Error).message);
+      }
+
       console.log(`Server is running on http://localhost:${port}`);
     } catch (error) {
       console.error('Failed to start server:', error);

@@ -261,9 +261,19 @@ class GeminiService implements LlmService {
           }
           
           try {
-              return JSON.parse(jsonText);
-          } catch (e) {
-              console.error("Failed to parse JSON from analysis response:", jsonText);
+        const parsed = JSON.parse(jsonText);
+        try {
+          const { validateAuditResult } = await import('../services/analysisValidator');
+          validateAuditResult(parsed, jsonText);
+        } catch (validationError) {
+          console.error('Model validation failed:', (validationError as Error).message);
+          throw validationError;
+        }
+        return parsed;
+      } catch (e) {
+        if (e instanceof JsonParsingError || e instanceof Error && (e as any).name === 'ModelValidationError') {
+          throw e;
+        }
               throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
           }
 

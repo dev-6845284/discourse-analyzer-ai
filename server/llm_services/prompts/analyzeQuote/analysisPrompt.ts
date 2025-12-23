@@ -1,4 +1,11 @@
 import { AnalyzeQuotePromptParams } from '../types';
+import { getCategoriesForMode } from '../../..//services/categoryService';
+
+function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
+  return getCategoriesForMode(mode)
+    .map((c, i) => `### ${i + 1}. ${c.title}\n${c.promptGuidance}`)
+    .join('\n\n');
+}
 
 /**
  * Builds the strict audit prompt for evidence-based fact-checking and discourse analysis.
@@ -45,23 +52,7 @@ Fact-check all claims using your knowledge and web search if necessary.${context
 
 Analyze using ONLY these categories:
 
-### 1. Verifiable Falsehood
-Use when the statement contradicts documented facts or is demonstrably untrue based on public record.
-
-### 2. Misleading Framing
-Use when facts are selectively presented, negative reality is reframed as success, or criticism is reinterpreted as misunderstanding.
-
-### 3. Reality Inversion
-Use when public backlash is portrayed as approval, failure is reframed as achievement, or reputational damage is framed as "impact".
-
-### 4. Responsibility Shifting
-Use when blame is moved to "politics", "media", or "opponents", or affected groups are portrayed as manipulated or irrational.
-
-### 5. Unsupported Assertion
-Use when no evidence, data, or metric is provided, and claims rely solely on personal belief or anecdote.
-
-### 6. Narrative Control / Propaganda
-Use when language attempts to normalize controversy, delegitimize critics, or redefine criticism as hostile propaganda.
+${renderCategoryListMarkdown('audit')}
 
 ## SEVERITY LEVELS
 
@@ -159,42 +150,7 @@ Impact, function, and democratic risk ARE.
 ## REQUIRED ANALYSIS CATEGORIES
 (Use ONLY these categories)
 
-### 1. Dehumanization
-Use when people are described as:
-- dead, subhuman, vermin, objects, symbols,
-- morally non-existent (“already dead”, “not really alive”),
-- stripped of agency or dignity.
-
-### 2. Symbolic Violence / Death-Wishing
-Use when the statement:
-- fantasizes about death, removal, disposal, or ritual elimination,
-- uses historical or cultural metaphors to simulate execution or burial,
-- frames death as deserved, humorous, or cleansing.
-
-### 3. Hate-Speech Adjacent Rhetoric
-Use when the language:
-- targets individuals or groups as inherently corrupt, evil, or unworthy,
-- uses humiliation, ridicule, or contempt as political tools,
-- invites audience participation in scorn or hatred.
-
-### 4. Authoritarian / Mob Logic
-Use when the statement:
-- replaces argument with expulsion or elimination,
-- frames opponents as beyond debate,
-- implies that removal, silencing, or destruction is preferable to discourse.
-
-### 5. Democratic Norm Violation
-Use when the statement:
-- undermines pluralism or legitimacy of opponents,
-- treats disagreement as moral rot or social disease,
-- erodes norms of political coexistence.
-
-### 6. Psychological & Rhetorical Profile
-Diagnose what the language reveals about:
-- impulse control,
-- hostility level,
-- contempt for democratic process,
-- reliance on provocation over reasoning.
+${renderCategoryListMarkdown('flaws')}
 
 This is NOT a medical diagnosis.
 It is a rhetorical-behavioral assessment based on language.

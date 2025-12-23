@@ -3,6 +3,19 @@ import { getSourceProvenancePolicySection } from '../shared/sourceProvenancePoli
 import { getEntityDisambiguationSection } from '../shared/entityDisambiguation';
 import { getWebSearchPlanSection } from '../shared/webSearchPlan';
 import { TimePeriod } from '../types';
+import { getCategoriesForMode } from '../../..//services/categoryService';
+
+function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
+  return getCategoriesForMode(mode)
+    .map((c, i) => `1. **${c.title}**: ${c.description}`)
+    .join('\n');
+}
+
+function buildCategoriesJsonForGrok(quoteLanguageName: string): string {
+  return getCategoriesForMode('audit')
+    .map(c => `    "${c.title}": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" }`)
+    .join(',\n');
+} 
 
 export interface GrokFetchQuotesPromptParams {
   personName: string;
@@ -119,12 +132,7 @@ Follow these steps carefully:
 ## REQUIRED CATEGORIES
 Rate each using: NONE, LOW, MEDIUM, HIGH, SEVERE
 
-1. **Verifiable Falsehood**: Statement contradicts documented facts or is demonstrably untrue.
-2. **Misleading Framing**: Facts selectively presented, negative reality reframed as success.
-3. **Reality Inversion**: Backlash portrayed as approval, failure as achievement.
-4. **Responsibility Shifting**: Blame moved to "politics", "media", or "opponents".
-5. **Unsupported Assertion**: No evidence, data, or metric provided.
-6. **Narrative Control / Propaganda**: Language attempts to normalize controversy or delegitimize critics.
+${renderCategoryListMarkdown('audit')}
 
 ## HARD RULES
 * Do NOT excuse claims because they are "opinions".
@@ -137,12 +145,7 @@ Return a single JSON object with this structure:
   "verdict": "<TRUE|FALSE|MISLEADING|MANIPULATIVE|UNFOUNDED>",
   "rationale": "<2-4 sentences in ${quoteLanguageName} explaining why this verdict is unavoidable>",
   "categories": {
-    "Verifiable Falsehood": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Misleading Framing": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Reality Inversion": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Responsibility Shifting": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Unsupported Assertion": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Narrative Control / Propaganda": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" }
+${buildCategoriesJsonForGrok(quoteLanguageName)}
   }
 }
 
