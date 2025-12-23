@@ -17,7 +17,7 @@ describe('categoryService', () => {
   test('loadCategoriesFromDb replaces cache when DB has docs', async () => {
     const mockColl = {
       find: jest.fn().mockReturnValue({ toArray: jest.fn().mockResolvedValue([
-        { id: 'xcat', title: 'X Cat', description: 'x', promptGuidance: 'x', modes: ['audit'], severityDefault: 'NONE', uiOrder: 1 }
+        { id: 'xcat', title: 'X Cat', description: 'x', promptGuidance: 'x', modes: ['audit'], uiOrder: 1 }
       ]) })
     };
     const mockDb = { collection: jest.fn().mockReturnValue(mockColl) };

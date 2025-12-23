@@ -423,6 +423,31 @@ const lt = {
   // Admin
   acknowledge: 'Patvirtinti',
   acknowledgedLabel: '✓ Patvirtinta',
+
+  // Admin: Audit Categories UI
+  adminCategories: 'Audito kategorijos',
+  adminCategories_title: 'Audito kategorijos',
+  adminCategories_refresh: 'Atnaujinti',
+  adminCategories_reloadCache: 'Perkrauti talpyklą',
+  adminCategories_create: 'Sukurti',
+  adminCategories_update: 'Atnaujinti',
+  adminCategories_deleteConfirm: 'Ar tikrai norite ištrinti šią kategoriją?',
+  adminCategories_mode_audit: 'auditas',
+  adminCategories_mode_flaws: 'trūkumai',
+  adminCategories_col_id: 'ID',
+  adminCategories_col_title: 'Pavadinimas',
+  adminCategories_col_modes: 'Režimai',
+  adminCategories_col_order: 'Rikiavimas',
+  adminCategories_placeholder_id: 'id',
+  adminCategories_placeholder_title: 'pavadinimas',
+  adminCategories_placeholder_uiOrder: 'eilės tvarka',
+  adminCategories_placeholder_description: 'aprašymas',
+  adminCategories_placeholder_promptGuidance: 'gairės',
+
+  // Generic small actions
+  edit: 'Redaguoti',
+  delete: 'Ištrinti',
+
   blockIPTitle: 'Blokuoti IP adresą',
   ipAddressPlaceholder: 'IP adresas',
   reasonPlaceholder: 'Priežastis',

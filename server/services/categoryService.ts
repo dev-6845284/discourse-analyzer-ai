@@ -38,7 +38,6 @@ export async function loadCategoriesFromDb(db?: Db): Promise<void> {
         description: d.description || d.promptGuidance || '',
         promptGuidance: d.promptGuidance || d.description || '',
         modes: d.modes || ['audit'],
-        severityDefault: d.severityDefault || 'NONE',
         legacyNames: d.legacyNames || [],
         uiOrder: d.uiOrder || 0,
       } as CategoryDefinition));
@@ -79,9 +78,8 @@ export async function createCategory(cat: Partial<CategoryDefinition>): Promise<
     description: cat.description || '',
     promptGuidance: cat.promptGuidance || cat.description || '',
     modes: cat.modes || ['audit'],
-    severityDefault: cat.severityDefault || 'NONE',
-    legacyNames: cat.legacyNames || [],
     uiOrder: cat.uiOrder || 0,
+    legacyNames: cat.legacyNames || [],
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -93,24 +91,59 @@ export async function createCategory(cat: Partial<CategoryDefinition>): Promise<
   return doc as CategoryDefinition;
 }
 
+/**
+ * Update a category document in the database with a partial patch.
+ *
+ * This function:
+ * - Locates the category by its `id` in the collection named `auditCategories${process.env.DB_COLLECTION_SUFFIX || ''}`.
+ * - Rejects any patch that attempts to change the category `id`.
+ * - Applies only an allow-listed subset of fields from the provided `patch` (title, description, promptGuidance, modes, legacyNames, uiOrder).
+ * - Always updates the `updatedAt` timestamp to the current time.
+ * - Uses a single atomic find-and-update operation and attempts to read the updated document in a way compatible with both older and newer MongoDB driver option names.
+ * - After a successful update, resets `initializedFromDb` and reloads categories via `loadCategoriesFromDb(db)` to refresh in-memory state.
+ *
+ * Note: Fields not present in `patch` are left unchanged. The function performs its work against the active Mongoose connection's database.
+ *
+ * @param id - The identifier of the category to update.
+ * @param patch - Partial set of category properties to apply; must not contain `id`.
+ * @returns A promise that resolves to the updated CategoryDefinition.
+ * @throws Error If `patch.id` is provided (id changes are not allowed) or if no category with the given `id` is found.
+ * @remarks This function has the side effects of mutating the persistent store and triggering an in-memory reload of category definitions.
+ */
 export async function updateCategory(id: string, patch: Partial<CategoryDefinition>): Promise<CategoryDefinition> {
   const collectionName = `auditCategories${process.env.DB_COLLECTION_SUFFIX || ''}`;
   const db = mongoose.connection.db as any;
   const coll = db.collection(collectionName);
 
+  if ((patch as any).id !== undefined) throw new Error('Cannot change category id');
+
   const updateDoc: any = { $set: { updatedAt: new Date() } };
-  const allowed = ['title','description','promptGuidance','modes','severityDefault','legacyNames','uiOrder'];
+  const allowed = ['title','description','promptGuidance','modes','legacyNames','uiOrder'];
   for (const key of allowed) {
-    if ((patch as any)[key] !== undefined) (updateDoc.$set as any)[key] = (patch as any)[key];
+    if ((patch as any)[key] !== undefined) {
+      (updateDoc.$set as any)[key] = (patch as any)[key];
+    }
   }
 
-  const res = await coll.findOneAndUpdate({ id }, updateDoc, { returnDocument: 'after' as any });
-  if (!res || !res.value) throw new Error('Category not found');
+  // Support both old and new driver options and read the returned document reliably.
+  const res = await coll.findOneAndUpdate({ id }, updateDoc, { returnDocument: 'after' as any, returnOriginal: false } as any);
+  // Support different driver/mocking shapes: some drivers return { value: doc },
+  // while tests/mocks may return the doc directly. Normalize both cases.
+  let updatedDoc: any = null;
+  if (res && typeof res === 'object') {
+    if ((res as any).value !== undefined) {
+      updatedDoc = (res as any).value;
+    } else if ((res as any).id !== undefined || (res as any)._id !== undefined) {
+      // Looks like the document itself was returned
+      updatedDoc = res;
+    }
+  }
+  if (!updatedDoc) throw new Error('Category not found');
 
   initializedFromDb = false;
   await loadCategoriesFromDb(db);
 
-  return res.value as CategoryDefinition;
+  return updatedDoc as CategoryDefinition;
 }
 
 export async function deleteCategory(id: string): Promise<void> {

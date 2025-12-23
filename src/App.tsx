@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const { t } = useI18n();
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = React.useState(false);
   const [openSidebarSection, setOpenSidebarSection] = React.useState<string | null>(null);
+  const [isAdminCategoriesOpen, setIsAdminCategoriesOpen] = React.useState<boolean>(false);
   const {
     user,
     loginError,
@@ -155,6 +156,7 @@ const App: React.FC = () => {
             logsVisible={logsVisible}
             setLogsVisible={setLogsVisible}
             setIsApiKeyModalOpen={setIsApiKeyModalOpen}
+            openAdminCategories={() => setIsAdminCategoriesOpen(true)}
             googleButtonRef={googleButtonRef}
             handleLogout={handleLogout}
             onChangePassword={openChangePasswordModal}
@@ -535,8 +537,10 @@ const App: React.FC = () => {
               updateUser({ name: newName });
             }}
 
-            isUsageStatsDashboardOpen={isUsageStatsDashboardOpen}
-            onCloseUsageStats={() => setIsUsageStatsDashboardOpen(false)}
+              isUsageStatsDashboardOpen={isUsageStatsDashboardOpen}
+              onCloseUsageStats={() => setIsUsageStatsDashboardOpen(false)}
+              isAdminCategoriesOpen={isAdminCategoriesOpen}
+              onCloseAdminCategories={() => setIsAdminCategoriesOpen(false)}
           />
         </div>
       </div>

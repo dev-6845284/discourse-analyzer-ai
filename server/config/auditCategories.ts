@@ -1,5 +1,3 @@
-export type SeverityLevel = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'SEVERE';
-
 export type CategoryMode = 'audit' | 'flaws';
 
 export interface CategoryDefinition {
@@ -8,7 +6,6 @@ export interface CategoryDefinition {
   description: string;
   promptGuidance: string;
   modes: CategoryMode[]; // which prompt flavors should include this category
-  severityDefault: SeverityLevel;
   legacyNames?: string[]; // optional legacy display names for migration compatibility
   uiOrder?: number;
 }
@@ -21,7 +18,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when the statement contradicts documented facts or is demonstrably untrue based on public record.',
     modes: ['audit'],
-    severityDefault: 'NONE',
     legacyNames: ['Lies & False Claims'],
     uiOrder: 10,
   },
@@ -32,7 +28,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when facts are selectively presented, negative reality is reframed as success, or criticism is reinterpreted as misunderstanding.',
     modes: ['audit'],
-    severityDefault: 'NONE',
     legacyNames: ['Fact Twisting'],
     uiOrder: 20,
   },
@@ -43,7 +38,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when public backlash is portrayed as approval, failure is reframed as achievement, or reputational damage is reframed as impact.',
     modes: ['audit'],
-    severityDefault: 'NONE',
     uiOrder: 30,
   },
   {
@@ -53,7 +47,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when the statement shifts blame to "politics", "media", or "opponents", or portrays affected groups as manipulated or irrational.',
     modes: ['audit'],
-    severityDefault: 'NONE',
     uiOrder: 40,
   },
   {
@@ -63,7 +56,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when no evidence, data, or metric is provided and claims rely solely on personal belief or anecdote.',
     modes: ['audit'],
-    severityDefault: 'NONE',
     uiOrder: 50,
   },
   {
@@ -73,7 +65,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when language attempts to normalize controversy, delegitimize critics, or redefine criticism as hostile propaganda.',
     modes: ['audit'],
-    severityDefault: 'NONE',
     legacyNames: ['Populism', 'Inflammatory Language'],
     uiOrder: 60,
   },
@@ -84,7 +75,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when people are described as dead, subhuman, vermin, objects, or stripped of agency/dignity.',
     modes: ['flaws'],
-    severityDefault: 'NONE',
     uiOrder: 110,
   },
   {
@@ -94,7 +84,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when the statement fantasizes about death, removal, disposal, or uses historical/cultural metaphors to simulate execution or burial.',
     modes: ['flaws'],
-    severityDefault: 'NONE',
     uiOrder: 120,
   },
   {
@@ -104,7 +93,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when the language targets groups with humiliation, ridicule, or contempt and invites audience participation in scorn or hatred.',
     modes: ['flaws'],
-    severityDefault: 'NONE',
     uiOrder: 130,
   },
   {
@@ -114,7 +102,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when the statement replaces argument with expulsion or implies removal/silencing is preferable to discourse.',
     modes: ['flaws'],
-    severityDefault: 'NONE',
     uiOrder: 140,
   },
   {
@@ -124,7 +111,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Use when the statement treats disagreement as moral rot, undermines pluralism, or erodes norms of political coexistence.',
     modes: ['flaws'],
-    severityDefault: 'NONE',
     uiOrder: 150,
   },
   {
@@ -134,7 +120,6 @@ export const AUDIT_CATEGORIES: CategoryDefinition[] = [
     promptGuidance:
       'Diagnose what the language reveals about impulse control, hostility level, contempt for democratic process, or reliance on provocation over reasoning.',
     modes: ['flaws'],
-    severityDefault: 'NONE',
     uiOrder: 160,
   },
 ];

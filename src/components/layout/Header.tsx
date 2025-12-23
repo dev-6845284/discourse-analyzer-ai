@@ -12,7 +12,10 @@ interface HeaderProps {
   googleButtonRef: React.RefObject<HTMLDivElement>;
   handleLogout: () => void;
   onChangePassword: () => void;
-  onEditProfile: () => void;  openSidebarMobile?: () => void;}
+  onEditProfile: () => void;
+  openSidebarMobile?: () => void;
+  openAdminCategories?: () => void;
+}
 
 export const Header: React.FC<HeaderProps> = ({
   user,
@@ -25,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   handleLogout,
   onChangePassword,
   onEditProfile,
+  openAdminCategories,
   openSidebarMobile,
 }) => {
   const { t, language, setLanguage } = useI18n();
@@ -80,6 +84,14 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {t('apiKeys')}
           </button>
+          {(isDev || user?.role === 'admin') && (
+            <button
+              onClick={() => openAdminCategories && openAdminCategories()}
+              className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
+            >
+              {t('adminCategories') || 'Categories'}
+            </button>
+          )}
           {/* User actions dropdown for mobile */}
           <div className="relative">
             <details className="md:hidden">

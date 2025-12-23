@@ -11,7 +11,6 @@ describe('auditCategories config', () => {
       expect(typeof c.title).toBe('string');
       expect(typeof c.promptGuidance).toBe('string');
       expect(Array.isArray(c.modes)).toBe(true);
-      expect(['NONE', 'LOW', 'MEDIUM', 'HIGH', 'SEVERE']).toContain(c.severityDefault);
     }
   });
 

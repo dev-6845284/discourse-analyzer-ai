@@ -22,7 +22,10 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const updated = await updateCategory(req.params.id, req.body);
+    // Ensure clients cannot change the category id via request body
+    const patch = { ...(req.body || {}) } as any;
+    if (Object.prototype.hasOwnProperty.call(patch, 'id')) delete patch.id;
+    const updated = await updateCategory(req.params.id, patch);
     res.json(updated);
   } catch (err: any) {
     res.status(400).json({ message: err.message });

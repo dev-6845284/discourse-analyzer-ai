@@ -420,6 +420,31 @@ const en = {
   // Admin
   acknowledge: 'Acknowledge',
   acknowledgedLabel: '✓ Acknowledged',
+
+  // Admin: Audit Categories UI
+  adminCategories: 'Admin Categories',
+  adminCategories_title: 'Audit Categories',
+  adminCategories_refresh: 'Refresh',
+  adminCategories_reloadCache: 'Reload Cache',
+  adminCategories_create: 'Create',
+  adminCategories_update: 'Update',
+  adminCategories_deleteConfirm: 'Are you sure you want to delete this category?',
+  adminCategories_mode_audit: 'audit',
+  adminCategories_mode_flaws: 'flaws',
+  adminCategories_col_id: 'ID',
+  adminCategories_col_title: 'Title',
+  adminCategories_col_modes: 'Modes',
+  adminCategories_col_order: 'Order',
+  adminCategories_placeholder_id: 'id',
+  adminCategories_placeholder_title: 'title',
+  adminCategories_placeholder_uiOrder: 'order',
+  adminCategories_placeholder_description: 'description',
+  adminCategories_placeholder_promptGuidance: 'prompt guidance',
+
+  // Generic small actions
+  edit: 'Edit',
+  delete: 'Delete',
+
   blockIPTitle: 'Block an IP Address',
   ipAddressPlaceholder: 'IP Address',
   reasonPlaceholder: 'Reason',

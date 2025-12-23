@@ -289,3 +289,10 @@ export const blockIP = (ipAddress: string, reason: string, expiresInMinutes?: nu
 export const unblockIP = (ipAddress: string) => api.delete(`/admin/blocked-ips/${encodeURIComponent(ipAddress)}`);
 
 export default api;
+
+// Admin categories API
+export const getAdminCategories = () => api.get('/admin/categories');
+export const createAdminCategory = (category: any) => api.post('/admin/categories', category);
+export const updateAdminCategory = (id: string, category: any) => api.put(`/admin/categories/${id}`, category);
+export const deleteAdminCategory = (id: string) => api.delete(`/admin/categories/${id}`);
+export const reloadAdminCategories = () => api.post('/admin/categories/reload');

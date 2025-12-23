@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import AddQuoteModal from './AddQuoteModal';
 import ApiKeySettingsModal from './ApiKeySettingsModal';
 import { TranscriptMethodSelector } from './TranscriptMethodSelector';
 import { PasswordModal } from './users/PasswordModal';
 import { EditProfileModal } from './users/EditProfileModal';
 import { UsageStatsDashboard } from './admin/UsageStatsDashboard';
+const AdminCategoriesLazy = React.lazy(() => import('./admin/AdminCategories'));
 import type { FullAnalysisData } from '../utils/analysisStorage';
 import type { TranscriptData } from '../utils/transcriptStorage';
 
@@ -38,6 +39,9 @@ interface ModalsProps {
   // Usage dashboard
   isUsageStatsDashboardOpen: boolean;
   onCloseUsageStats: () => void;
+  // Admin categories
+  isAdminCategoriesOpen?: boolean;
+  onCloseAdminCategories?: () => void;
 }
 
 export const ModalsContainer: React.FC<ModalsProps> = ({
@@ -61,11 +65,32 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
   onProfileUpdated,
   isUsageStatsDashboardOpen,
   onCloseUsageStats,
+  isAdminCategoriesOpen,
+  onCloseAdminCategories,
 }) => {
   return (
     <>
       {isUsageStatsDashboardOpen && (
         <UsageStatsDashboard onClose={onCloseUsageStats} />
+      )}
+
+      {isAdminCategoriesOpen && onCloseAdminCategories && (
+        <Suspense fallback={<div>Loading admin categories...</div>}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/60" onClick={onCloseAdminCategories} />
+            <div className="relative w-full max-w-4xl mx-4 bg-gray-900 text-gray-100 rounded-xl shadow-lg overflow-auto">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+                <h3 className="text-lg font-semibold">Audit Categories</h3>
+                <div className="flex items-center gap-2">
+                  <button className="px-3 py-1 bg-gray-700 rounded" onClick={onCloseAdminCategories}>Close</button>
+                </div>
+              </div>
+              <div className="p-4">
+                <AdminCategoriesLazy />
+              </div>
+            </div>
+          </div>
+        </Suspense>
       )}
 
       {isAddModalOpen && (
