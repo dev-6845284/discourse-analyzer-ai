@@ -1,7 +1,8 @@
 
 # Instruction for AI model: 
-## - do not suggest new sentedences, only current in progress
-## - you may suggest improvements to existing sentences
+- do not suggest new sentetences, only current in progress
+- you may suggest improvements to existing sentences
+- do not suggest done items
 
 Todo:
   DDoS Protection & Security:
@@ -29,6 +30,8 @@ Todo:
       [x] Replace strengths Texts into 'horizontal bars' showing it's stregth. Segments are number of possible levels. Text will be hover tooltip
       [] Allow save session state multiple times
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
+  Quote analysis:
+    [] Create different 'flavors' of quote analysis: fact check, toxi
   TickTok videos:
     [] Load from URL
   Bugs:
