@@ -7,6 +7,7 @@ import {
   AnalysisRating,
   ModelResponseError,
   TopicAnalysisResult,
+  PersonInfo,
 } from '../types';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { LlmService } from './LlmService';
@@ -293,6 +294,7 @@ class ChatGptService implements LlmService {
     temperature: number,
     logId: string,
     sessionId: string,
+    person?: PersonInfo,
     analysisContext?: string,
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
   ): Promise<AuditResult> {
@@ -303,6 +305,8 @@ class ChatGptService implements LlmService {
       const analysisPrompt = buildAnalyzeQuotePrompt({
         quoteText,
         quoteLanguageName,
+        person,
+        personName: person?.name,
         analysisContext,
         links,
       });

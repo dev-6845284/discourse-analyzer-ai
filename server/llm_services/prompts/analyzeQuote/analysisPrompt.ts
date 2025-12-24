@@ -1,4 +1,4 @@
-import { AnalyzeQuotePromptParams } from '../types';
+import { AnalyzeQuotePromptParams, PersonInfo } from '../types';
 import { getCategoriesForMode } from '../../..//services/categoryService';
 
 function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
@@ -7,12 +7,43 @@ function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
     .join('\n\n');
 }
 
+function formatSpeakerSection(person?: PersonInfo, fallbackName?: string): string {
+  const name = person?.name || fallbackName;
+  if (!name) {
+    return '';
+  }
+
+  const speakerLines: string[] = [`Name: ${name}`];
+
+  if (person?.firstname || person?.surname) {
+    const structuredName = [person.firstname, person.surname].filter(Boolean).join(' ');
+    if (structuredName && structuredName !== name) {
+      speakerLines.push(`Structured name: ${structuredName}`);
+    }
+  }
+
+  if (person?.aliases && person.aliases.length > 0) {
+    speakerLines.push(`Also known as: ${person.aliases.join(', ')}`);
+  }
+
+  if (person?.description) {
+    speakerLines.push(`Profile: ${person.description}`);
+  }
+
+  const metadataKeys = person?.metadata ? Object.keys(person.metadata).slice(0, 5) : [];
+  if (metadataKeys.length > 0) {
+    speakerLines.push(`Additional metadata keys: ${metadataKeys.join(', ')}`);
+  }
+
+  return `\n\n### Speaker\n${speakerLines.join('\n')}`;
+}
+
 /**
  * Builds the strict audit prompt for evidence-based fact-checking and discourse analysis.
  * This prompt enforces critical analysis without diplomatic softening.
  */
 export function buildAnalyzeQuotePrompt(params: AnalyzeQuotePromptParams): string {
-  const { quoteText, quoteLanguageName, analysisContext, links } = params;
+  const { quoteText, quoteLanguageName, person, personName, analysisContext, links } = params;
 
   let contextInstruction = '';
   if (analysisContext) {
@@ -24,6 +55,8 @@ export function buildAnalyzeQuotePrompt(params: AnalyzeQuotePromptParams): strin
     const linkList = links.map(l => `- ${l.url} (${l.type}${l.title ? `: ${l.title}` : ''})`).join('\n');
     linksInstruction = `\n\n### Reference Material\nThe user has provided the following links as reference material:\n${linkList}\nPlease consult these sources if possible to verify facts or understand the context.`;
   }
+
+  const authorInstruction = formatSpeakerSection(person, personName);
 
   return `You are an independent political communication auditor and media fact-checker.
 
@@ -46,7 +79,7 @@ Avoid vague language such as: "may", "might", "appears", "could be".
 Every analysis MUST end with a clear verdict.
 
 The statement is in ${quoteLanguageName}. Analyze the original text directly in ${quoteLanguageName} to understand its full meaning and nuance.
-Fact-check all claims using your knowledge and web search if necessary.${contextInstruction}${linksInstruction}
+Fact-check all claims using your knowledge and web search if necessary.${contextInstruction}${linksInstruction}${authorInstruction}
 
 ## REQUIRED ANALYSIS CATEGORIES
 
@@ -94,7 +127,8 @@ Analyze this statement: "${quoteText}"`;
  * Builds the strict audit prompt for analyzing flaws in political rhetoric and harmful speech.
  */
 export function buildAnalyzeFlawsPrompt(params: AnalyzeQuotePromptParams): string {
-  const { quoteText, quoteLanguageName, analysisContext, links } = params;
+  const { quoteText, quoteLanguageName, person, personName, analysisContext, links } = params;
+  const authorInstruction = formatSpeakerSection(person, personName);
 
   let contextInstruction = '';
   if (analysisContext) {
@@ -130,7 +164,7 @@ DO NOT excuse language as “jokes”, “metaphors”, or “free expression”
 If violence or death is implied symbolically, treat it as meaningful rhetoric.
 
 Analyze the original text directly in ${quoteLanguageName}.
-Do not translate or soften wording.${contextInstruction}${linksInstruction}
+Do not translate or soften wording.${contextInstruction}${linksInstruction}${authorInstruction}
 
 ---
 

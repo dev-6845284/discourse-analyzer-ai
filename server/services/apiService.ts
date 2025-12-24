@@ -5,7 +5,9 @@ import {
   AuditResult,
   ModelResponseError,
   JsonParsingError,
+  PersonInfo,
 } from '../types';
+import Person from '../models/Person';
 import geminiService from '../llm_services/geminiService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
@@ -130,12 +132,48 @@ export const agenticSearch = async (req: Request, res: Response) => {
 };
 
 export const analyzeQuote = async (req: Request, res: Response) => {
-  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links } = req.body;
-  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, analysisContext, links });
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links, personName, personId } = req.body;
+
+  let personPayload: PersonInfo | undefined;
+  if (personId) {
+    try {
+      const personDoc = await Person.findById(personId);
+      if (!personDoc) {
+        return res.status(404).json({ message: 'Person not found' });
+      }
+      personPayload = {
+        _id: personDoc._id.toString(),
+        name: personDoc.name,
+        firstname: personDoc.firstname,
+        surname: personDoc.surname,
+        aliases: personDoc.aliases,
+        description: personDoc.description,
+        metadata: personDoc.metadata,
+      };
+    } catch (err) {
+      console.error('Error fetching person by ID:', err);
+      return res.status(500).json({ message: 'Failed to fetch person data' });
+    }
+  } else if (personName) {
+    personPayload = { name: personName };
+  }
+
+  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, person: personPayload, personName: personPayload?.name, analysisContext, links });
 
   try {
     const { service, apiKey } = getService(model, apiKeys);
-    const auditResult = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
+    const auditResult = await service.analyzeQuoteText(
+      apiKey,
+      quoteText,
+      quoteLanguageCode,
+      quoteLanguageName,
+      temperature,
+      logId,
+      req.session.id!,
+      personPayload,
+      analysisContext,
+      links
+    );
     updateLogEntry(req.session.id!, logId, auditResult);
     res.json(auditResult);
   } catch (error: any) {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Quote, ExportData } from '../types';
+import { Quote, ExportData, Person } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import api, { extractFromUrl } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
@@ -17,7 +17,8 @@ export function useQuoteExtraction(
       personName: string,
       textToExtract: string,
       details: { source: string; title: string; date: string; languageCode: string; languageName: string; },
-      onSuccess: () => void
+      onSuccess: () => void,
+      person?: Person
     ) => {
       if (!personName) {
         setError("Please enter a person's name to attribute the extracted quotes.");
@@ -33,6 +34,7 @@ export function useQuoteExtraction(
 
       try {
         const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+        const personPayload = person || { name: personName };
         const response = await api.post('/quotes/extract', {
           model: selectedAI,
           personName,
@@ -40,7 +42,11 @@ export function useQuoteExtraction(
           ...details,
           apiKeys,
         });
-        const extractedQuotes = response.data;
+        const extractedQuotes = (response.data as Quote[]).map((q) => ({
+          ...q,
+          personName: q.personName || personPayload.name,
+          person: (q as any).person || personPayload,
+        }));
 
         setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
         onSuccess();
@@ -61,7 +67,8 @@ export function useQuoteExtraction(
       url: string,
       temperature: number,
       onStatusChange: (status: string) => void,
-      onSuccess: () => void
+      onSuccess: () => void,
+      person?: Person
     ) => {
       if (!personName) {
         setError("Please enter a person's name to attribute the extracted quotes.");
@@ -85,7 +92,13 @@ export function useQuoteExtraction(
         const { quotes: extractedQuotes } = response.data;
 
         if (extractedQuotes && extractedQuotes.length > 0) {
-          setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
+          const personPayload = person || { name: personName };
+          const enrichedQuotes = (extractedQuotes as Quote[]).map((q) => ({
+            ...q,
+            personName: q.personName || personPayload.name,
+            person: (q as any).person || personPayload,
+          }));
+          setQuotes((prevQuotes) => [...prevQuotes, ...enrichedQuotes]);
         }
         
         onSuccess();
@@ -110,7 +123,8 @@ export function useQuoteExtraction(
         languageCode: string;
         languageName: string;
       },
-      onAnalyze: (quote: Quote) => void
+      onAnalyze: (quote: Quote) => void,
+      person?: Person
     ) => {
       if (!textToExtract.trim() || !personName) {
         setError("Person's name and quote text must be present to add a quote.");
@@ -132,6 +146,8 @@ export function useQuoteExtraction(
         date: details.date,
         languageCode: details.languageCode,
         languageName: details.languageName,
+        personName,
+        person: person || { name: personName },
       };
 
       setQuotes((prevQuotes) => [newQuote, ...prevQuotes]);

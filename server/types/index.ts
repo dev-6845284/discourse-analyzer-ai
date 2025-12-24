@@ -37,6 +37,16 @@ export interface AuditDetail {
   evidence: string;
 }
 
+export interface PersonInfo {
+  _id?: string;
+  name: string;
+  firstname?: string;
+  surname?: string;
+  aliases?: string[];
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
 // Legacy analysis result - kept for migration compatibility
 export type AnalysisResult = {
   [key in AnalysisCategory]: AnalysisDetail;

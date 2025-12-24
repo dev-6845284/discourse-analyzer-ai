@@ -116,9 +116,10 @@ export function useAppController() {
       quoteFilters.filterRating,
       quoteFilters.sortOrder,
       searchParams.isAgentic,
-      searchParams.agenticMode
+      searchParams.agenticMode,
+      selectedPerson
     );
-  }, [quotesState, searchParams, timePeriod, quoteFilters]);
+  }, [quotesState, searchParams, timePeriod, quoteFilters, selectedPerson]);
 
   const handleAnalyzeQuote = React.useCallback((quote: any) => {
     quotesState.handleAnalyzeQuote(quote, searchParams.selectedAI);
@@ -133,9 +134,9 @@ export function useAppController() {
     await quotesState.handleExtractQuotes(searchParams.selectedAI, searchParams.personName, searchParams.textToExtract, details, () => {
       searchParams.clearTextToExtract();
       searchParams.setIsExtracting(false);
-    });
+    }, selectedPerson || undefined);
     searchParams.setIsExtracting(false);
-  }, [quotesState, searchParams]);
+  }, [quotesState, searchParams, selectedPerson]);
 
   const handleExtractFromUrl = React.useCallback(async () => {
     searchParams.setIsExtracting(true);
@@ -154,7 +155,8 @@ export function useAppController() {
         (status: string) => setExtractionStatus(status),
         () => {
           searchParams.clearTextToExtract();
-        }
+        },
+        selectedPerson || undefined
       );
 
       if (transcript) {
@@ -175,7 +177,7 @@ export function useAppController() {
       searchParams.setIsExtracting(false);
       setExtractionStatus('');
     }
-  }, [quotesState, searchParams, extractionLanguage]);
+  }, [quotesState, searchParams, extractionLanguage, selectedPerson]);
 
   const handleModalSave = React.useCallback((details: any) => {
     if (modalMode === 'extract') {
@@ -185,12 +187,12 @@ export function useAppController() {
         if (shouldAnalyzeImmediately) {
           quotesState.handleAnalyzeQuote(quote, searchParams.selectedAI);
         }
-      });
+      }, selectedPerson || undefined);
       searchParams.clearTextToExtract();
       setExtractedSourceUrl('');
     }
     uiState.closeAddModal();
-  }, [modalMode, performExtraction, quotesState, searchParams, shouldAnalyzeImmediately, uiState]);
+  }, [modalMode, performExtraction, quotesState, searchParams, shouldAnalyzeImmediately, uiState, selectedPerson]);
 
   const openExtractModal = React.useCallback(() => {
     setModalMode('extract');

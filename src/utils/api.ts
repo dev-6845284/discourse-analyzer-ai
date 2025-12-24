@@ -104,7 +104,9 @@ export const analyzeQuote = async (
   quoteLanguageName: string,
   apiKeys: Record<string, string>,
   analysisContext?: string,
-  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+  personId?: string,
+  personName?: string
 ) => {
   return api.post('/quotes/analyze', {
     model,
@@ -114,6 +116,8 @@ export const analyzeQuote = async (
     apiKeys,
     analysisContext,
     links,
+    personId,
+    personName,
   });
 };
 

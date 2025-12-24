@@ -6,6 +6,7 @@ import {
   AnalysisCategory,
   AnalysisRating,
   TopicAnalysisResult,
+  PersonInfo,
 } from '../types';
 import { extractJson } from './utils';
 import {
@@ -190,6 +191,7 @@ class GrokService implements LlmService {
     temperature: number,
     logId: string,
     sessionId: string,
+    person?: PersonInfo,
     analysisContext?: string,
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
   ): Promise<AuditResult> {
@@ -199,6 +201,8 @@ class GrokService implements LlmService {
       const prompt = buildGrokAnalyzeQuotePrompt({
         quoteText,
         quoteLanguageName,
+        person,
+        personName: person?.name,
         analysisContext,
         links,
       });

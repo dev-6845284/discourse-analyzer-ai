@@ -193,14 +193,15 @@ export interface ExportData {
 }
 
 export interface Person {
-  _id: string;
+  _id?: string;
   name: string;
   firstname?: string;
   surname?: string;
-  aliases: string[];
+  aliases?: string[];
   description?: string;
-  createdAt: string;
-  updatedAt: string;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface QuoteUpdatePayload {

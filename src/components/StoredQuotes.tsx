@@ -64,6 +64,13 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
 
   const handleAnalyze = async (quote: Quote) => {
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
+    const personId = (quote.person && typeof quote.person === 'object')
+      ? (quote.person as Person)._id
+      : (typeof quote.person === 'string' ? quote.person : selectedPerson?._id);
+    const personName = (quote.person && typeof quote.person === 'object')
+      ? (quote.person as Person).name
+      : quote.personName || selectedPerson?.name;
+
     try {
       const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
       const response = await api.post('/quotes/analyze', {
@@ -71,6 +78,8 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         quoteText: quote.text,
         quoteLanguageCode: quote.languageCode,
         quoteLanguageName: quote.languageName,
+        personId,
+        personName,
         analysisContext: quote.analysisContext,
         links: quote.links,
         apiKeys,
@@ -95,10 +104,13 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: true } : q));
     try {
       const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+      const personName = (quote.person && typeof quote.person === 'object')
+        ? (quote.person as Person).name
+        : quote.personName || selectedPerson?.name || 'Unknown';
       const response = await api.post('/quotes/improve', {
         model: selectedAI,
         quote,
-        personName: quote.personName || selectedPerson?.name || 'Unknown',
+        personName,
         apiKeys,
       });
       const improvedQuote = response.data;
@@ -273,6 +285,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           analysis: q.metadata?.analysis,
           audit: q.metadata?.audit,
           personName: q.person?.name,
+          person: q.person,
           analysisContext: q.analysisContext,
           links: q.metadata?.links,
           metadata: q.metadata,

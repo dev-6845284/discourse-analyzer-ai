@@ -7,6 +7,7 @@ import * as logService from './logService';
 import { postProcessResponse } from './responseProcessor';
 import { JsonParsingError, ModelResponseError } from '../types';
 import { createQuoteFixture } from '../testUtils/quoteFactory';
+import Person from '../models/Person';
 
 jest.mock('../llm_services/geminiService');
 jest.mock('../llm_services/chatGptService');
@@ -18,6 +19,10 @@ jest.mock('./responseProcessor', () => ({
 jest.mock('../utils/articleExtractor', () => ({
   fetchArticle: jest.fn(),
   isValidUrl: jest.fn(),
+}));
+jest.mock('../models/Person', () => ({
+  __esModule: true,
+  default: { findById: jest.fn() },
 }));
 
 const createMockResponse = () => {
@@ -45,6 +50,15 @@ describe('apiService', () => {
     };
     (logService.addLogEntry as jest.Mock).mockReturnValue(logId);
     (postProcessResponse as jest.Mock).mockImplementation((_operation: string, data: any) => data);
+    (Person.findById as jest.Mock).mockResolvedValue({
+      _id: 'person-123',
+      name: 'DB Person',
+      aliases: ['Tester'],
+      firstname: 'Db',
+      surname: 'Person',
+      description: 'desc',
+      metadata: { role: 'test' },
+    });
   });
 
   describe('analyzeQuote', () => {
@@ -53,16 +67,26 @@ describe('apiService', () => {
       quoteText: 'Test Quote',
       quoteLanguageCode: 'en',
       quoteLanguageName: 'English',
+      personId: 'person-123',
       temperature: 0.3,
       apiKeys: { chatgpt: 'chat-key' },
       analysisContext: 'context',
       links: [{ url: 'https://example.com', type: 'quote' as const, title: 'Example' }],
     });
 
-    it('routes analysis to chatgpt with full payload', async () => {
+    it('routes analysis to chatgpt with DB person data', async () => {
       req.body = baseAnalyzeBody();
       const mockAnalysis = { sentiment: 'positive' };
       (chatGptService.analyzeQuoteText as jest.Mock).mockResolvedValue(mockAnalysis);
+      (Person.findById as jest.Mock).mockResolvedValue({
+        _id: 'person-123',
+        name: 'DB Person',
+        aliases: ['Tester'],
+        firstname: 'Db',
+        surname: 'Person',
+        description: 'desc',
+        metadata: { role: 'test' },
+      });
 
       await apiService.analyzeQuote(req as Request, res as Response);
 
@@ -74,6 +98,15 @@ describe('apiService', () => {
         0.3,
         logId,
         sessionId,
+        {
+          _id: 'person-123',
+          name: 'DB Person',
+          aliases: ['Tester'],
+          firstname: 'Db',
+          surname: 'Person',
+          description: 'desc',
+          metadata: { role: 'test' },
+        },
         'context',
         [{ url: 'https://example.com', type: 'quote', title: 'Example' }]
       );

@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { Quote, QuoteUpdatePayload, AuditResult } from '../types';
-import { SUPPORTED_LANGUAGES } from '../constants';
 import api, { updateQuote, extractFromUrl, formatApiError } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
@@ -21,11 +20,23 @@ export function useQuoteActions(
 
       try {
         const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+        let personId: string | undefined;
+        let personName = quote.personName;
+
+        if (quote.person && typeof quote.person === 'string') {
+          personId = quote.person;
+        } else if (quote.person && typeof quote.person === 'object') {
+          personId = quote.person._id || quote.person.id;
+          personName = quote.person.name || personName;
+        }
+
         const response = await api.post('/quotes/analyze', {
           model: selectedAI,
           quoteText: quote.text,
           quoteLanguageCode: quote.languageCode,
           quoteLanguageName: quote.languageName,
+          personId,
+          personName,
           analysisContext: quote.analysisContext,
           links: quote.links,
           apiKeys,

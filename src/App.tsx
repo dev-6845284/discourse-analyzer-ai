@@ -185,7 +185,17 @@ const App: React.FC = () => {
                     <div className="p-4 bg-gray-800/50 rounded-lg">
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('personsName')}</label>
                       <div>
-                        <PersonSelector value={searchParams.personName} onChange={searchParams.setPersonName} />
+                        <PersonSelector 
+                          value={searchParams.personName} 
+                          onChange={(name) => {
+                            searchParams.setPersonName(name);
+                            setSelectedPerson(null);
+                          }}
+                          onSelectPerson={(person) => {
+                            setSelectedPerson(person);
+                            searchParams.setPersonName(person.name);
+                          }}
+                        />
                       </div>
                     </div>
 

@@ -35,6 +35,7 @@ Todo:
   TickTok videos:
     [] Load from URL
   Bugs:
+    [] Person name is not sent for quote analysis
     [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
     [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
     

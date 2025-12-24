@@ -9,6 +9,7 @@ import {
   AnalysisCategory,
   AnalysisRating,
   TopicAnalysisResult,
+  PersonInfo,
 } from '../types';
 import { resolveUrls } from '../utils/urlResolver';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
@@ -205,6 +206,7 @@ class GeminiService implements LlmService {
     temperature: number,
     logId: string,
     sessionId: string,
+    person?: PersonInfo,
     analysisContext?: string,
     links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
   ): Promise<AuditResult> {
@@ -213,21 +215,23 @@ class GeminiService implements LlmService {
       
       try {
           const prompt = buildGeminiAnalyzeQuotePrompt({
-          quoteText,
-          quoteLanguageName,
-          analysisContext,
-          links,
-        });
+            quoteText,
+            quoteLanguageName,
+            person,
+            personName: person?.name,
+            analysisContext,
+            links,
+          });
 
           appendLogRequestPayload(sessionId, logId, { prompt });
 
           const requestDetails = {
-              model: 'gemini-2.5-flash',
-              contents: prompt,
-              config: {
-                  tools: [{ googleSearch: {} }],
-                  temperature: temperature,
-              }
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+              tools: [{ googleSearch: {} }],
+              temperature: temperature,
+            }
           };
 
           const interactionId = addModelInteractionLog(sessionId, logId, {

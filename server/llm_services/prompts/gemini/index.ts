@@ -3,7 +3,7 @@ import { getSourceProvenancePolicySection } from '../shared/sourceProvenancePoli
 import { getEntityDisambiguationSection } from '../shared/entityDisambiguation';
 import { getWebSearchPlanSection } from '../shared/webSearchPlan';
 import { SUPPORTED_LANGUAGES } from '../../../constants';
-import { TimePeriod } from '../types';
+import { TimePeriod, PersonInfo } from '../types';
 import { AnalysisCategory, AnalysisRating } from '../../../types';
 import { getCategoriesForMode } from '../../..//services/categoryService';
 
@@ -83,15 +83,47 @@ Do not include any other text or markdown formatting outside of the JSON object.
 export interface GeminiAnalyzeQuotePromptParams {
   quoteText: string;
   quoteLanguageName: string;
+  person?: PersonInfo;
+  personName?: string;
   analysisContext?: string;
   links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
+}
+
+function buildSpeakerSection(person?: PersonInfo, fallbackName?: string): string {
+  const name = person?.name || fallbackName;
+  if (!name) return '';
+
+  const speakerLines: string[] = [`Name: ${name}`];
+
+  if (person?.firstname || person?.surname) {
+    const structuredName = [person.firstname, person.surname].filter(Boolean).join(' ');
+    if (structuredName && structuredName !== name) {
+      speakerLines.push(`Structured name: ${structuredName}`);
+    }
+  }
+
+  if (person?.aliases?.length) {
+    speakerLines.push(`Also known as: ${person.aliases.join(', ')}`);
+  }
+
+  if (person?.description) {
+    speakerLines.push(`Profile: ${person.description}`);
+  }
+
+  const metadataKeys = person?.metadata ? Object.keys(person.metadata).slice(0, 5) : [];
+  if (metadataKeys.length) {
+    speakerLines.push(`Additional metadata keys: ${metadataKeys.join(', ')}`);
+  }
+
+  return `\n\n### Speaker\n${speakerLines.join('\n')}`;
 }
 
 /**
  * Builds the strict audit prompt for Gemini (single-stage with step-by-step instructions).
  */
 export function buildGeminiAnalyzeQuotePrompt(params: GeminiAnalyzeQuotePromptParams): string {
-  const { quoteText, quoteLanguageName, analysisContext, links } = params;
+  const { quoteText, quoteLanguageName, person, personName, analysisContext, links } = params;
+  const authorInstruction = buildSpeakerSection(person, personName);
 
   let contextInstruction = '';
   if (analysisContext) {
@@ -123,8 +155,7 @@ Avoid vague language such as: "may", "might", "appears", "could be".
 Every analysis MUST end with a clear verdict.
 
 The statement is in ${quoteLanguageName}. Analyze the original text directly in ${quoteLanguageName} to understand its full meaning and nuance.
-Fact-check all claims using online search.${contextInstruction}${linksInstruction}
-
+Fact-check all claims using online search.${contextInstruction}${linksInstruction}${authorInstruction}
 Follow these steps carefully:
 1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance.
 2.  **Think step-by-step in English** to determine the severity and evidence for each category.
