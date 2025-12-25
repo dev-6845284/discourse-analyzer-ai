@@ -16,6 +16,8 @@ export {
 // Analyze Quote prompts (ChatGPT - two-stage)
 export {
   buildAnalyzeQuotePrompt,
+  buildAnalyzeFlawsPrompt,
+  buildAnalyzePromptByType,
   buildAnalyzeQuoteFormattingPrompt,
 } from './analyzeQuote';
 

@@ -12,6 +12,7 @@ import { saveQuote } from '../utils/api';
 import { TranscriptData } from '../utils/transcriptStorage';
 import { FullAnalysisData } from '../utils/analysisStorage';
 import type { Quote, Person, AnalysisSession, ExportData } from '../types';
+import { loadFromStorage } from '../utils/localStorage';
 
 export type UseAppController = ReturnType<typeof useAppController>;
 
@@ -129,13 +130,59 @@ export function useAppController() {
     quotesState.handleImproveQuote(quote, searchParams.selectedAI, searchParams.personName);
   }, [quotesState, searchParams.selectedAI, searchParams.personName]);
 
-  const performExtraction = React.useCallback(async (details: any) => {
+  const performExtraction = React.useCallback(async (details: any, analysisType: 'audit'|'flaws' = 'audit') => {
     searchParams.setIsExtracting(true);
-    await quotesState.handleExtractQuotes(searchParams.selectedAI, searchParams.personName, searchParams.textToExtract, details, () => {
-      searchParams.clearTextToExtract();
+    setExtractionStatus('Extracting quotes...');
+    setExtractionError(null);
+
+    try {
+      const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+
+      const response = await fetch('/api/quotes/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: searchParams.selectedAI,
+          personName: searchParams.personName,
+          textContent: searchParams.textToExtract,
+          ...details,
+          apiKeys,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Extraction failed');
+      }
+
+      const data = await response.json();
+
+      if (data.quotes && data.quotes.length > 0) {
+        const enrichedQuotes = (data.quotes as any[]).map((q) => ({
+          ...q,
+          personName: q.personName || (selectedPerson ? selectedPerson.name : searchParams.personName),
+          person: (q as any).person || (selectedPerson ? selectedPerson : { name: searchParams.personName }),
+        }));
+        setQuotes((prevQuotes) => [...enrichedQuotes, ...prevQuotes]);
+
+        // Trigger analysis for each extracted quote using the selected analysis type
+        for (const q of enrichedQuotes) {
+          try {
+            await quotesState.handleAnalyzeQuote(q, searchParams.selectedAI, analysisType);
+          } catch (err) {
+            console.error('Failed to analyze extracted quote:', err);
+          }
+        }
+      }
+
+      setExtractionStatus('');
+    } catch (error: any) {
+      console.error('Extract quotes error:', error);
+      setExtractionError(error.response?.data?.message || 'Failed to extract quotes');
+    } finally {
       searchParams.setIsExtracting(false);
-    }, selectedPerson || undefined);
-    searchParams.setIsExtracting(false);
+      setExtractionStatus('');
+    }
   }, [quotesState, searchParams, selectedPerson]);
 
   const handleExtractFromUrl = React.useCallback(async () => {
@@ -179,13 +226,14 @@ export function useAppController() {
     }
   }, [quotesState, searchParams, extractionLanguage, selectedPerson]);
 
-  const handleModalSave = React.useCallback((details: any) => {
+  const handleModalSave = React.useCallback((details: any, analysisType?: 'audit'|'flaws') => {
     if (modalMode === 'extract') {
-      performExtraction(details);
+      performExtraction(details, analysisType);
     } else {
-      quotesState.handleAddQuoteManually(searchParams.personName, searchParams.textToExtract, details, (quote) => {
+      quotesState.handleAddQuoteManually(searchParams.personName, searchParams.textToExtract, details, (quote, chosenType) => {
+        const effectiveType = chosenType || analysisType;
         if (shouldAnalyzeImmediately) {
-          quotesState.handleAnalyzeQuote(quote, searchParams.selectedAI);
+          quotesState.handleAnalyzeQuote(quote, searchParams.selectedAI, effectiveType);
         }
       }, selectedPerson || undefined);
       searchParams.clearTextToExtract();
@@ -194,8 +242,11 @@ export function useAppController() {
     uiState.closeAddModal();
   }, [modalMode, performExtraction, quotesState, searchParams, shouldAnalyzeImmediately, uiState, selectedPerson]);
 
-  const openExtractModal = React.useCallback(() => {
+  const [modalAnalysisType, setModalAnalysisType] = React.useState<'audit'|'flaws'>('audit');
+
+  const openExtractModal = React.useCallback((analysisType: 'audit'|'flaws' = 'audit') => {
     setModalMode('extract');
+    setModalAnalysisType(analysisType);
     uiState.openAddModal();
   }, [uiState]);
 
@@ -413,6 +464,8 @@ export function useAppController() {
     setIsEditProfileModalOpen,
     modalMode,
     setModalMode,
+    modalAnalysisType,
+    setModalAnalysisType,
     activeTab,
     setActiveTab,
     resultsTab,

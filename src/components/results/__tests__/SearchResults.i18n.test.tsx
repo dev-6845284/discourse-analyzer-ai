@@ -57,3 +57,37 @@ test('SearchResults heading reflects language changes from i18n provider', async
 
   expect(screen.getByText(/Rezultatai \(2\)/)).toBeInTheDocument();
 });
+
+test('Analyze button passes selected model and analysis type', async () => {
+  const user = userEvent.setup();
+  const onAnalyze = jest.fn();
+
+  render(
+    <I18nProvider>
+      <SearchResults
+        results={[sampleQuote]}
+        error={null}
+        rawApiResponseError={null}
+        personName={''}
+        sortOrder={'newest'}
+        setSortOrder={() => {}}
+        onClear={() => {}}
+        onAnalyze={onAnalyze}
+        onImprove={() => {}}
+        onSave={() => {}}
+        onLanguageChange={() => {}}
+        onAccept={() => {}}
+        onDiscard={() => {}}
+        onRemove={() => {}}
+        onEditSource={() => {}}
+        clearError={() => {}}
+        selectedAI={'chatgpt'}
+      />
+    </I18nProvider>
+  );
+
+  await user.click(screen.getByTitle(/Analizuoti citatą|Analyze Quote/i));
+
+  expect(onAnalyze).toHaveBeenCalledTimes(1);
+  expect(onAnalyze).toHaveBeenCalledWith(expect.objectContaining({ id: 'q1' }), 'chatgpt', 'audit');
+});

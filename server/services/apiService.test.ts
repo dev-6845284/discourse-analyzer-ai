@@ -108,7 +108,8 @@ describe('apiService', () => {
           metadata: { role: 'test' },
         },
         'context',
-        [{ url: 'https://example.com', type: 'quote', title: 'Example' }]
+        [{ url: 'https://example.com', type: 'quote', title: 'Example' }],
+        'audit'
       );
       expect(res.json).toHaveBeenCalledWith(mockAnalysis);
       expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, mockAnalysis);

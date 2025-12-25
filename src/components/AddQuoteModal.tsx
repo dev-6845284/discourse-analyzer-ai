@@ -5,18 +5,20 @@ import { useI18n } from '../i18n';
 interface AddQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }) => void;
+  onSave: (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }, analysisType?: 'audit'|'flaws') => void;
   mode?: 'add' | 'extract';
   initialSource?: string;
+  initialAnalysisType?: 'audit'|'flaws';
 }
 
-const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add', initialSource = '' }) => {
+const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add', initialSource = '', initialAnalysisType = 'audit' }) => {
   const [source, setSource] = useState(initialSource);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [languageCode, setLanguageCode] = useState('en');
   const { t } = useI18n();
   const [error, setError] = useState('');
+  const [analysisType, setAnalysisType] = useState<'audit'|'flaws'>(initialAnalysisType);
 
   if (!isOpen) return null;
 
@@ -27,7 +29,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
     }
     setError('');
     const languageName = SUPPORTED_LANGUAGES.find(lang => lang.code === languageCode)?.name || 'English';
-    onSave({ source, title, date, languageCode, languageName });
+    onSave({ source, title, date, languageCode, languageName }, analysisType);
   };
 
   const titleText = mode === 'extract' ? t('extractQuotesDetails') : t('addQuoteDetails');
@@ -98,22 +100,52 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
           </div>
         </div>
 
-        <div className="mt-8 flex justify-end gap-4">
-          <button
-            onClick={onClose}
-            type="button"
-            className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors"
-          >
-            {t('cancel')}
-          </button>
-          <button
-            onClick={handleSave}
-            type="button"
-            className="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 transition-colors"
-          >
-            {buttonText}
-          </button>
-        </div>
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Analysis Type:</label>
+            <div className="flex gap-6">
+              <label className="flex items-center" htmlFor="addquote-analysis-audit">
+                <input
+                  id="addquote-analysis-audit"
+                  type="radio"
+                  name="addQuoteAnalysisType"
+                  value="audit"
+                  checked={analysisType === 'audit'}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  className="mr-2 accent-cyan-600 focus:ring-cyan-500"
+                />
+                <span className="text-sm text-gray-300">Audit</span>
+              </label>
+              <label className="flex items-center" htmlFor="addquote-analysis-flaws">
+                <input
+                  id="addquote-analysis-flaws"
+                  type="radio"
+                  name="addQuoteAnalysisType"
+                  value="flaws"
+                  checked={analysisType === 'flaws'}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  className="mr-2 accent-cyan-600 focus:ring-cyan-500"
+                />
+                <span className="text-sm text-gray-300">Flaws</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end gap-4">
+            <button
+              onClick={onClose}
+              type="button"
+              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              onClick={() => handleSave()}
+              type="button"
+              className="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 transition-colors"
+            >
+              {buttonText}
+            </button>
+          </div>
       </div>
     </div>
   );

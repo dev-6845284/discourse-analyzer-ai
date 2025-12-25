@@ -2,9 +2,7 @@ import { getSecurityGuardsSection } from '../shared/securityGuards';
 import { getSourceProvenancePolicySection } from '../shared/sourceProvenancePolicy';
 import { getEntityDisambiguationSection } from '../shared/entityDisambiguation';
 import { getWebSearchPlanSection } from '../shared/webSearchPlan';
-import { SUPPORTED_LANGUAGES } from '../../../constants';
 import { TimePeriod, PersonInfo } from '../types';
-import { AnalysisCategory, AnalysisRating } from '../../../types';
 import { getCategoriesForMode } from '../../..//services/categoryService';
 
 function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
@@ -183,6 +181,113 @@ ${buildCategoriesJsonForGemini(quoteLanguageName)}
 }
 
 Analyze this statement: "${quoteText}"`;
+}
+
+/**
+ * Builds the strict flaws prompt for Gemini.
+ */
+export function buildGeminiAnalyzeFlawsPrompt(params: GeminiAnalyzeQuotePromptParams): string {
+  const { quoteText, quoteLanguageName, person, personName, analysisContext, links } = params;
+  const authorInstruction = buildSpeakerSection(person, personName);
+
+  let contextInstruction = '';
+  if (analysisContext) {
+    contextInstruction = `\n\n### User-Provided Context\nThe user has provided the following context to help with the analysis:\n"${analysisContext}"\nUse this context to better understand the intent and background of the quote.`;
+  }
+
+  let linksInstruction = '';
+  if (links && links.length > 0) {
+    const linkList = links.map(l => `- ${l.url} (${l.type}${l.title ? `: ${l.title}` : ''})`).join('\n');
+    linksInstruction = `\n\n### Reference Material\nThe user has provided the following links as reference material:\n${linkList}\nPlease consult these sources if possible to verify facts or understand the context.`;
+  }
+
+  return `You are an independent auditor of political rhetoric, democratic norms, and harmful speech.
+
+Your task is to perform a STRICT analysis of the following statement as a form of
+political communication — NOT as a factual claim.
+
+IMPORTANT:
+This statement may be ironic, hyperbolic, mocking, symbolic, or deliberately absurd.
+DO NOT perform literal historical or factual fact-checking unless the statement
+explicitly claims verifiable facts as its primary function.
+
+Your focus is:
+- hate speech mechanisms,
+- dehumanization,
+- symbolic violence,
+- normalization of harm,
+- authoritarian or mob-logic rhetoric,
+- psychological and rhetorical intent as reflected in language use.
+
+DO NOT be neutral, empathetic, or diplomatic.
+DO NOT excuse language as “jokes”, “metaphors”, or “free expression”.
+If violence or death is implied symbolically, treat it as meaningful rhetoric.
+
+Analyze the original text directly in ${quoteLanguageName}.
+Do not translate or soften wording.${contextInstruction}${linksInstruction}${authorInstruction}
+
+---
+
+## CORE ANALYTICAL GOAL
+
+Determine whether the statement functions to:
+- normalize harm or death toward named individuals or groups,
+- strip targets of moral or human status,
+- legitimize exclusion, punishment, or elimination,
+- mobilize contempt instead of argument.
+
+Truthfulness is NOT the primary axis.
+Impact, function, and democratic risk ARE.
+
+---
+
+## REQUIRED ANALYSIS CATEGORIES
+(Use ONLY these categories)
+
+${renderCategoryListMarkdown('flaws')}
+
+This is NOT a medical diagnosis.
+It is a rhetorical-behavioral assessment based on language.
+
+---
+
+## SEVERITY LEVELS
+Use ONLY:
+- NONE
+- LOW
+- MEDIUM
+- HIGH
+- SEVERE
+
+If symbolic death or dehumanization is explicit → severity CANNOT be below HIGH.
+
+---
+
+## HARD RULES
+
+* Do NOT downgrade severity because language is metaphorical or ironic.
+* Do NOT justify speech as satire unless there is clear self-targeting or power-upward critique.
+* If named individuals are depicted as dead, disposable, or non-human → Dehumanization is at least HIGH.
+* If death imagery is used playfully or mockingly → Symbolic Violence is at least HIGH.
+* If the statement invites emotional pleasure from humiliation → Hate-Speech Adjacent is at least MEDIUM.
+
+---
+
+## OUTPUT FORMAT
+
+Return a single JSON object with this structure:
+{
+  "classification": "<CLASSIFICATION>",
+  "finalAssessment": "<final assessment in ${quoteLanguageName}>",
+  "categories": {
+${buildCategoriesJsonForGemini(quoteLanguageName)}
+  }
+}
+
+Write the final assessment in ${quoteLanguageName}.
+
+Analyze this statement:
+"${quoteText}"`;
 }
 
 export interface GeminiExtractQuotesFromTextPromptParams {

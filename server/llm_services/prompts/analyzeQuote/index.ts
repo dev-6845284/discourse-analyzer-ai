@@ -1,2 +1,2 @@
-export { buildAnalyzeQuotePrompt } from './analysisPrompt';
-export { buildAnalyzeQuoteFormattingPrompt } from './formattingPrompt';
+export { buildAnalyzeQuotePrompt, buildAnalyzeFlawsPrompt, buildAnalyzePromptByType } from './analysisPrompt';
+export { buildAnalyzeQuoteFormattingPrompt, buildAnalyzeFlawsFormattingPrompt } from './formattingPrompt';

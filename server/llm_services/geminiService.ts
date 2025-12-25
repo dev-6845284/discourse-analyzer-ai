@@ -23,6 +23,7 @@ import {
   buildGeminiImproveQuotePrompt,
   createTopicExtractionPrompt,
 } from './prompts';
+import { buildGeminiAnalyzeFlawsPrompt } from "./prompts/gemini";
 
 // The AI client will be initialized on-demand within each function.
 
@@ -208,20 +209,16 @@ class GeminiService implements LlmService {
     sessionId: string,
     person?: PersonInfo,
     analysisContext?: string,
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+    analysisType: 'audit'|'flaws' = 'audit'
   ): Promise<AuditResult> {
       if (!apiKey) throw new Error("Gemini API key is missing.");
       const ai = new GoogleGenAI({ apiKey });
       
       try {
-          const prompt = buildGeminiAnalyzeQuotePrompt({
-            quoteText,
-            quoteLanguageName,
-            person,
-            personName: person?.name,
-            analysisContext,
-            links,
-          });
+          const prompt = analysisType === 'flaws'
+            ? buildGeminiAnalyzeFlawsPrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links })
+            : buildGeminiAnalyzeQuotePrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links });
 
           appendLogRequestPayload(sessionId, logId, { prompt });
 

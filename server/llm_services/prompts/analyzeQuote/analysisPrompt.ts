@@ -39,6 +39,21 @@ function formatSpeakerSection(person?: PersonInfo, fallbackName?: string): strin
 }
 
 /**
+ * Unified entry point for building analysis prompts by type.
+ * @param type The analysis type ('audit' | 'flaws')
+ * @param params The analysis parameters
+ */
+export function buildAnalyzePromptByType(type: 'audit' | 'flaws', params: AnalyzeQuotePromptParams): string {
+  switch (type) {
+    case 'audit':
+      return buildAnalyzeQuotePrompt(params);
+    case 'flaws':
+      return buildAnalyzeFlawsPrompt(params);
+    default:
+      throw new Error(`Unknown analysis type: ${type}`);
+  }
+}
+/**
  * Builds the strict audit prompt for evidence-based fact-checking and discourse analysis.
  * This prompt enforces critical analysis without diplomatic softening.
  */

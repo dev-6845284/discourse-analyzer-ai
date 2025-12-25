@@ -71,6 +71,7 @@ const App: React.FC = () => {
     isEditProfileModalOpen,
     setIsEditProfileModalOpen,
     modalMode,
+    modalAnalysisType,
 
     activeTab,
     setActiveTab,
@@ -372,7 +373,7 @@ const App: React.FC = () => {
                 isImproved: searchParams.isImproved,
                 setIsImproved: searchParams.setIsImproved,
               }}
-              onAnalyze={(quote, model) => quotesState.handleAnalyzeQuote(quote, model)}
+              onAnalyze={(quote, model, analysisType) => quotesState.handleAnalyzeQuote(quote, model, analysisType)}
               onImprove={handleImproveQuote}
               onSave={(quote: any) => {
                 handleSaveQuote({
@@ -517,15 +518,7 @@ const App: React.FC = () => {
             onSave={handleModalSave}
             mode={modalMode}
             initialSource={extractedSourceUrl}
-
-            isApiKeyModalOpen={isApiKeyModalOpen}
-            onCloseApiKeyModal={() => setIsApiKeyModalOpen(false)}
-
-            isTranscriptMethodSelectorOpen={isTranscriptMethodSelectorOpen}
-            onCloseTranscriptMethodSelector={() => {
-              setIsTranscriptMethodSelectorOpen(false);
-              setAutoFetchError(null);
-            }}
+            initialAnalysisType={modalAnalysisType}
             onImportTranscript={(t) => {
               handleImportTranscript(t);
               setIsTranscriptMethodSelectorOpen(false);
@@ -534,6 +527,10 @@ const App: React.FC = () => {
             onAutoFetchTranscript={handleFetchYoutubeTranscript}
             autoFetchError={autoFetchError}
             isExtracting={searchParams.isExtracting}
+            isApiKeyModalOpen={isApiKeyModalOpen}
+            onCloseApiKeyModal={() => setIsApiKeyModalOpen(false)}
+            isTranscriptMethodSelectorOpen={isTranscriptMethodSelectorOpen}
+            onCloseTranscriptMethodSelector={() => setIsTranscriptMethodSelectorOpen(false)}
 
             isChangePasswordModalOpen={isChangePasswordModalOpen}
             isEditProfileModalOpen={isEditProfileModalOpen}

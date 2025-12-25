@@ -22,7 +22,7 @@ interface SearchResultsProps {
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   onClear: () => void;
-  onAnalyze: (quote: Quote, model: string) => void;
+  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => void;
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (id: string, lang: string) => void;
@@ -174,7 +174,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             <QuoteCard
               key={quote.id}
               quote={quote}
-              onAnalyze={(q) => onAnalyze(q, selectedAI)}
+              onAnalyze={onAnalyze}
               onImprove={onImprove}
               onSave={onSave}
               onLanguageChange={onLanguageChange}

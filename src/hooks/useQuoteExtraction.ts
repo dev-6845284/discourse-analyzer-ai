@@ -123,7 +123,7 @@ export function useQuoteExtraction(
         languageCode: string;
         languageName: string;
       },
-      onAnalyze: (quote: Quote) => void,
+      onAnalyze: (quote: Quote, analysisType?: 'audit'|'flaws') => void,
       person?: Person
     ) => {
       if (!textToExtract.trim() || !personName) {

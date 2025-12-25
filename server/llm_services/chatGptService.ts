@@ -15,7 +15,6 @@ import { extractJson } from './utils';
 import {
   buildFetchQuotesResearchPrompt,
   buildFetchQuotesFormattingPrompt,
-  buildAnalyzeQuotePrompt,
   buildAnalyzeQuoteFormattingPrompt,
   buildExtractQuotesFromTextPrompt,
   buildExtractQuotesFormattingPrompt,
@@ -24,6 +23,7 @@ import {
   buildImproveQuoteFormattingPrompt,
   createTopicExtractionPrompt,
 } from './prompts';
+import * as prompts from './prompts';
 
 const OPENAI_API_BASE_URL = "https://api.openai.com/v1";
 export const CHATGPT_MODEL = "gpt-5-search-api";
@@ -118,7 +118,7 @@ export const callChatGptAPI = async (
 
         // Make the message user-friendly if it contains technical details
         if (message.includes('Rate limit reached')) {
-          const waitTimeMatch = message.match(/Please try again in ([\d\.]+)s/);
+          const waitTimeMatch = message.match(/(?:Please try again in|Please wait|try again in)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:s|seconds?)/i);
           if (waitTimeMatch) {
             message = `OpenAI rate limit reached. Please wait ${waitTimeMatch[1]} seconds before trying again.`;
           } else {
@@ -296,13 +296,14 @@ class ChatGptService implements LlmService {
     sessionId: string,
     person?: PersonInfo,
     analysisContext?: string,
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+    analysisType: 'audit' | 'flaws' = 'audit'
   ): Promise<AuditResult> {
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
       // Step 1: Deep Analysis with Search
-      const analysisPrompt = buildAnalyzeQuotePrompt({
+      const analysisPrompt = (prompts as any).buildAnalyzePromptByType(analysisType, {
         quoteText,
         quoteLanguageName,
         person,

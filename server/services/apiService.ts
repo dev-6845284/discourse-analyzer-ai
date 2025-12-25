@@ -132,7 +132,7 @@ export const agenticSearch = async (req: Request, res: Response) => {
 };
 
 export const analyzeQuote = async (req: Request, res: Response) => {
-  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links, personName, personId } = req.body;
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links, personName, personId, analysisType } = req.body;
 
   let personPayload: PersonInfo | undefined;
   if (personId) {
@@ -158,7 +158,7 @@ export const analyzeQuote = async (req: Request, res: Response) => {
     personPayload = { name: personName };
   }
 
-  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, person: personPayload, personName: personPayload?.name, analysisContext, links });
+  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, person: personPayload, personName: personPayload?.name, analysisContext, links, analysisType });
 
   try {
     const { service, apiKey } = getService(model, apiKeys);
@@ -172,7 +172,8 @@ export const analyzeQuote = async (req: Request, res: Response) => {
       req.session.id!,
       personPayload,
       analysisContext,
-      links
+      links,
+      analysisType || 'audit'
     );
     updateLogEntry(req.session.id!, logId, auditResult);
     res.json(auditResult);

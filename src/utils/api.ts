@@ -106,7 +106,8 @@ export const analyzeQuote = async (
   analysisContext?: string,
   links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
   personId?: string,
-  personName?: string
+  personName?: string,
+  analysisType: 'audit'|'flaws' = 'audit'
 ) => {
   return api.post('/quotes/analyze', {
     model,
@@ -118,6 +119,7 @@ export const analyzeQuote = async (
     links,
     personId,
     personName,
+    analysisType,
   });
 };
 
@@ -258,9 +260,9 @@ export const formatApiError = (error: any, context?: string): string => {
   let message = errorData?.message || error.message || 'An unknown error occurred';
   
   // Check for rate limit errors (OpenAI, Gemini, etc.)
-  if (message.toLowerCase().includes('rate limit')) {
-    // Extract wait time if present
-    const waitTimeMatch = message.match(/(\d+)\s*seconds?/i);
+    if (message.toLowerCase().includes('rate limit')) {
+    // Extract wait time if present (support decimals and multiple phrasings)
+    const waitTimeMatch = message.match(/(?:please try again in|please wait|try again in)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:s|seconds?)/i);
     const waitTime = waitTimeMatch ? waitTimeMatch[1] : null;
     
     if (waitTime) {

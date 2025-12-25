@@ -10,7 +10,7 @@ interface QuoteCardActionsProps {
   isBusy: boolean;
   isSaved: boolean;
   hideSaveButton?: boolean;
-  onAnalyze: () => void;
+  onAnalyze: (analysisType?: 'audit'|'flaws') => void;
   onImprove: () => void;
   onSave: () => void;
   onAccept: () => void;
@@ -37,6 +37,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   onEditSource,
 }) => {
   const { t } = useI18n();
+  const [analysisType, setAnalysisType] = React.useState<'audit'|'flaws'>('audit');
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
@@ -63,20 +64,47 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
         </>
       ) : (
         <>
-          <button
-            onClick={onAnalyze}
-            disabled={!isApiKeySet || isBusy}
-            className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title={!isApiKeySet ? t('analyzePleaseSetApiKey') : (quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) ? t('analyzeAgain') : t('analyzeQuote')}
-          >
-            {quote.isAnalyzing ? (
-              <Spinner />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-              </svg>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`analysis-type-${quote.id}`}
+                  value="audit"
+                  checked={analysisType === 'audit'}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  className="mr-1 text-cyan-600 focus:ring-cyan-500"
+                />
+                <span className="text-xs text-gray-300">Audit</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`analysis-type-${quote.id}`}
+                  value="flaws"
+                  checked={analysisType === 'flaws'}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  className="mr-1 text-cyan-600 focus:ring-cyan-500"
+                />
+                <span className="text-xs text-gray-300">Flaws</span>
+              </label>
+            </div>
+
+            <button
+              onClick={() => onAnalyze(analysisType)}
+              disabled={!isApiKeySet || isBusy}
+              className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!isApiKeySet ? t('analyzePleaseSetApiKey') : (quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) ? t('analyzeAgain') : t('analyzeQuote')}
+            >
+              {quote.isAnalyzing ? (
+                <Spinner />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           <button
             onClick={onImprove}

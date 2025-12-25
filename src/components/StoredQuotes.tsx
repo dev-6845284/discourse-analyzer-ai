@@ -62,7 +62,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setSelectedFilterPerson(null);
   }, [resetFilters]);
 
-  const handleAnalyze = async (quote: Quote) => {
+  const handleAnalyze = async (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => {
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
     const personId = (quote.person && typeof quote.person === 'object')
       ? (quote.person as Person)._id
@@ -74,7 +74,8 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     try {
       const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
       const response = await api.post('/quotes/analyze', {
-        model: selectedAI,
+        model,
+        analysisType,
         quoteText: quote.text,
         quoteLanguageCode: quote.languageCode,
         quoteLanguageName: quote.languageName,

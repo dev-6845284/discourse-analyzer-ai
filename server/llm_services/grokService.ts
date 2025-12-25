@@ -19,6 +19,7 @@ import {
 } from './prompts';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { LlmService } from './LlmService';
+import { buildGrokAnalyzeFlawsPrompt } from './prompts/grok';
 
 // Grok API uses OpenAI-compatible endpoints
 const GROK_API_BASE_URL = "https://api.x.ai/v1";
@@ -193,19 +194,15 @@ class GrokService implements LlmService {
     sessionId: string,
     person?: PersonInfo,
     analysisContext?: string,
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+    analysisType: 'audit' | 'flaws' = 'audit'
   ): Promise<AuditResult> {
     if (!apiKey) throw new Error("Grok API key is missing.");
 
     try {
-      const prompt = buildGrokAnalyzeQuotePrompt({
-        quoteText,
-        quoteLanguageName,
-        person,
-        personName: person?.name,
-        analysisContext,
-        links,
-      });
+      const prompt = analysisType === 'flaws'
+        ? buildGrokAnalyzeFlawsPrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links })
+        : buildGrokAnalyzeQuotePrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links });
 
       const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
 

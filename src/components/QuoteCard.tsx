@@ -13,7 +13,7 @@ import { isYouTubeUrl } from '../utils/urlHelpers';
 
 interface QuoteCardProps {
   quote: Quote;
-  onAnalyze: (quote: Quote, model: string) => void;
+  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => void;
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (quoteId: string, newLanguageCode: string) => void;
@@ -120,10 +120,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setLinks(links.map(link => ({ ...link, selected: false })));
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = (analysisType?: 'audit'|'flaws') => {
     // Only include selected links for analysis
     const selectedLinks = links.filter(link => link.selected !== false);
-    onAnalyze({ ...quote, analysisContext, links: selectedLinks }, selectedAI);
+    onAnalyze({ ...quote, analysisContext, links: selectedLinks }, selectedAI, analysisType);
   };
 
   const handleToggleCategory = (category: AnalysisCategory | AuditCategory) => {

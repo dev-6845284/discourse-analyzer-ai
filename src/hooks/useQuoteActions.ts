@@ -11,7 +11,7 @@ export function useQuoteActions(
   handleLogout: () => void
 ) {
   const handleAnalyzeQuote = useCallback(
-    async (quote: Quote, selectedAI: string) => {
+    async (quote: Quote, selectedAI: string, analysisType: 'audit'|'flaws' = 'audit') => {
       setQuotes((prev) =>
         prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: true } : q))
       );
@@ -40,6 +40,7 @@ export function useQuoteActions(
           analysisContext: quote.analysisContext,
           links: quote.links,
           apiKeys,
+          analysisType
         });
         // Server now returns AuditResult instead of AnalysisResult
         const audit: AuditResult = response.data;
