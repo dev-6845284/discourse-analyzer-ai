@@ -1,5 +1,4 @@
 import React from 'react';
-import { PersonSelector } from '../people/PersonSelector';
 import Spinner from '../Spinner';
 import { SUPPORTED_LANGUAGES } from '../../constants';
 import { useI18n } from '../../i18n';

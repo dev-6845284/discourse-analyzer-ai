@@ -101,7 +101,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
         </div>
 
           <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Analysis Type:</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">{t('analysisTypeLabel')}</label>
             <div className="flex gap-6">
               <label className="flex items-center" htmlFor="addquote-analysis-audit">
                 <input
@@ -113,7 +113,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
                   onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
                   className="mr-2 accent-cyan-600 focus:ring-cyan-500"
                 />
-                <span className="text-sm text-gray-300">Audit</span>
+                <span className="text-sm text-gray-300">{t('analysisType_audit')}</span>
               </label>
               <label className="flex items-center" htmlFor="addquote-analysis-flaws">
                 <input
@@ -125,7 +125,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
                   onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
                   className="mr-2 accent-cyan-600 focus:ring-cyan-500"
                 />
-                <span className="text-sm text-gray-300">Flaws</span>
+                <span className="text-sm text-gray-300">{t('analysisType_flaws')}</span>
               </label>
             </div>
           </div>
