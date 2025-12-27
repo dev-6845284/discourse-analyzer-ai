@@ -130,58 +130,38 @@ export function useAppController() {
     quotesState.handleImproveQuote(quote, searchParams.selectedAI, searchParams.personName);
   }, [quotesState, searchParams.selectedAI, searchParams.personName]);
 
-  const performExtraction = React.useCallback(async (details: any, analysisType: 'audit'|'flaws' = 'audit') => {
+  const performExtraction = React.useCallback(async (details: any, analysisType?: 'audit'|'flaws') => {
+    // Snapshot existing quote ids so we can detect newly added quotes after extraction
+    const existingIds = new Set(quotesState.quotes.map((q: any) => q.id));
     searchParams.setIsExtracting(true);
-    setExtractionStatus('Extracting quotes...');
-    setExtractionError(null);
 
     try {
-      const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+      await quotesState.handleExtractQuotes(
+        searchParams.selectedAI,
+        searchParams.personName,
+        searchParams.textToExtract,
+        details,
+        () => {
+          searchParams.clearTextToExtract();
+          searchParams.setIsExtracting(false);
+        },
+        selectedPerson || undefined
+      );
 
-      const response = await fetch('/api/quotes/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: searchParams.selectedAI,
-          personName: searchParams.personName,
-          textContent: searchParams.textToExtract,
-          ...details,
-          apiKeys,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Extraction failed');
-      }
-
-      const data = await response.json();
-
-      if (data.quotes && data.quotes.length > 0) {
-        const enrichedQuotes = (data.quotes as any[]).map((q) => ({
-          ...q,
-          personName: q.personName || (selectedPerson ? selectedPerson.name : searchParams.personName),
-          person: (q as any).person || (selectedPerson ? selectedPerson : { name: searchParams.personName }),
-        }));
-        setQuotes((prevQuotes) => [...enrichedQuotes, ...prevQuotes]);
-
-        // Trigger analysis for each extracted quote using the selected analysis type
-        for (const q of enrichedQuotes) {
+      // If an analysis type was specified, analyze each newly extracted quote
+      if (analysisType) {
+        const newQuotes = (quotesState.quotes || []).filter((q: any) => !existingIds.has(q.id));
+        for (const q of newQuotes) {
           try {
             await quotesState.handleAnalyzeQuote(q, searchParams.selectedAI, analysisType);
-          } catch (err) {
-            console.error('Failed to analyze extracted quote:', err);
+          } catch (e) {
+            // Don't fail the whole extraction flow if a single analysis fails
+            console.error('Failed to analyze extracted quote:', e);
           }
         }
       }
-
-      setExtractionStatus('');
-    } catch (error: any) {
-      console.error('Extract quotes error:', error);
-      setExtractionError(error.response?.data?.message || 'Failed to extract quotes');
     } finally {
       searchParams.setIsExtracting(false);
-      setExtractionStatus('');
     }
   }, [quotesState, searchParams, selectedPerson]);
 

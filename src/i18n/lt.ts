@@ -27,6 +27,7 @@ const lt = {
   analysisTypeLabel: 'Analizės tipas',
   analysisType_audit: 'Auditas',
   analysisType_flaws: 'Trūkumai',
+  auditReport: 'Įvertinimas',
   editSourceStatements: 'Redaguoti šaltinio teiginius',
   saved: 'Išsaugota',
   saveToDatabase: 'Išsaugoti į duomenų bazę',

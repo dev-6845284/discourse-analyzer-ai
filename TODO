@@ -28,6 +28,7 @@ Todo:
       [x] Edit list of speakers
       [x] Allow update speaker
       [x] Replace strengths Texts into 'horizontal bars' showing it's stregth. Segments are number of possible levels. Text will be hover tooltip
+      [] Audit verdict is ambiguous, improve with prompt or remove
       [] Allow save session state multiple times
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
   Quote analysis:

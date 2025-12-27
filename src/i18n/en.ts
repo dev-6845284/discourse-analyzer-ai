@@ -25,6 +25,7 @@ const en = {
   analysisTypeLabel: 'Analysis Type',
   analysisType_audit: 'Audit',
   analysisType_flaws: 'Flaws',
+  auditReport: 'Analysis',
   editSourceStatements: 'Edit Source Statements',
   saved: 'Saved',
   saveToDatabase: 'Save to database',
