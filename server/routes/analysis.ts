@@ -7,10 +7,12 @@ import { identifySpeakers } from '../services/dialogAnalysis/speakerIdentificati
 import { analyzeDialogTopics as analyzeDialogTopicsService } from '../services/dialogAnalysis';
 import { groupTranscriptByTime } from '../services/dialogAnalysis/transcriptGrouper';
 import { addLogEntry, updateLogEntry } from '../services/logService';
+import authorizeMiddleware from '../middleware/authorize';
 
 const router = express.Router();
 
 router.use(isAuthenticated);
+router.use(authorizeMiddleware);
 
 // Create a new analysis session
 router.post('/sessions', async (req, res) => {

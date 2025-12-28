@@ -4,6 +4,7 @@ import * as personService from '../services/personService';
 import * as quoteService from '../services/quoteService';
 import { isAuthenticated } from '../middleware/auth';
 import { isAdminOrDev } from '../middleware/admin';
+import authorizeMiddleware from '../middleware/authorize';
 
 const router = express.Router();
 
@@ -27,6 +28,8 @@ router.use((req, res, next) => {
 
 // All API routes are protected
 router.use(isAuthenticated);
+// Authorization middleware checks role-based access for each API call
+router.use(authorizeMiddleware);
 
 router.post('/quotes/search', (req, res) => apiService.fetchQuotes(req, res));
 router.post('/quotes/agentic-search', (req, res) => apiService.agenticSearch(req, res));

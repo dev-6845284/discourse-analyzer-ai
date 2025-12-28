@@ -1,10 +1,15 @@
-import User, { IUser } from '../models/User';
+import User, { IUser, USER_ROLES } from '../models/User';
 
 export const getAllUsers = async () => {
   return User.find({}, '-password').sort({ createdAt: -1 });
 };
 
 export const createUser = async (userData: Partial<IUser>) => {
+  // Validate role if provided
+  if (userData.role && !USER_ROLES.includes(userData.role as any)) {
+    throw new Error('Invalid role');
+  }
+
   const user = new User(userData);
   await user.save();
   const userObj = user.toObject();

@@ -32,12 +32,12 @@ Todo:
       [] Allow save session state multiple times
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
   user management:
-    [] role assignments to users;
-    [] every api call should check user role and permissions;
-    [] every api has to have define who can access it (roles);
-    [] create db api role configurations;
-    [] on application start register all api endpoints to db, any missing register with default admin role restriction
-    [] create db migration script to add role based access control to existing users;
+    [] Role assignments to users
+    [] Ensure every API call checks user role and permissions
+    [] Define required roles for each API endpoint
+    [] Store API role configurations in DB
+    [] On application start, register all API endpoints in DB; register missing endpoints with default admin role
+    [] Create DB migration to add role-based access control to existing users
   public quotes:
     [] Quotes can be promoted to public quotes from admin dashboard
     [] Add moderation system for public quotes

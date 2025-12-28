@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserInfo } from '../../types';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
+import DevRoleSelector from '../DevRoleSelector';
 
 interface HeaderProps {
   user: UserInfo;
@@ -15,6 +16,7 @@ interface HeaderProps {
   onEditProfile: () => void;
   openSidebarMobile?: () => void;
   openAdminCategories?: () => void;
+  openManagement?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   onChangePassword,
   onEditProfile,
   openAdminCategories,
+  openManagement,
   openSidebarMobile,
 }) => {
   const { t, language, setLanguage } = useI18n();
@@ -71,12 +74,16 @@ export const Header: React.FC<HeaderProps> = ({
             {isFormCollapsed ? t('expandForm') : t('collapseForm')}
           </button>
           {(isDev || user?.role === 'admin') && (
-            <button
-              onClick={() => setLogsVisible(!logsVisible)}
-              className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
-            >
-              {logsVisible ? t('hideLogs') : t('showLogs')}
-            </button>
+            <>
+              <button
+                onClick={() => setLogsVisible(!logsVisible)}
+                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
+              >
+                {logsVisible ? t('hideLogs') : t('showLogs')}
+              </button>
+              {/* Dev role selector (visible in dev only) */}
+              <DevRoleSelector />
+            </>
           )}
           <button
             onClick={() => setIsApiKeyModalOpen(true)}
@@ -85,12 +92,23 @@ export const Header: React.FC<HeaderProps> = ({
             {t('apiKeys')}
           </button>
           {(isDev || user?.role === 'admin') && (
-            <button
-              onClick={() => openAdminCategories && openAdminCategories()}
-              className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
-            >
-              {t('adminCategories') || 'Categories'}
-            </button>
+            <>
+              <button
+                onClick={() => openAdminCategories && openAdminCategories()}
+                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
+              >
+                {t('adminCategories') || 'Categories'}
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Management button clicked');
+                  openManagement && openManagement();
+                }}
+                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs md:text-base"
+              >
+                {t('management') || 'Management'}
+              </button>
+            </>
           )}
           {/* User actions dropdown for mobile */}
           <div className="relative">

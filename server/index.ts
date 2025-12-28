@@ -8,12 +8,9 @@ import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import path from 'path';
 import { isAuthenticated } from './middleware/auth';
-import apiRoutes from './routes/api';
-import userRoutes from './routes/users';
-import analysisRoutes from './routes/analysis';
-import adminRoutes from './routes/admin';
+// Route modules are lazily required below to avoid importing Mongoose-backed
+// models at module initialization time (prevents test-time side-effects).
 import connectToDatabase from './db';
-import User from './models/User';
 import { generalRateLimiter, loginRateLimiter, apiRateLimiter } from './middleware/rateLimiter';
 import { ipBlocker } from './middleware/ipBlocker';
 import { usageTracker } from './middleware/usageTracker';
@@ -35,20 +32,31 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // ============================================
 
 // 1. IP Blocker - Block known bad IPs first (before any processing)
-app.use(ipBlocker);
+if (process.env.MONGODB_URI) {
+  app.use(ipBlocker);
+} else {
+  // No DB configured — use noop middleware so tests and local dev without DB work
+  app.use((req, res, next) => next());
+}
 
 // 2. General rate limiter - Basic flood protection for all requests
 app.use(generalRateLimiter);
 
 // 3. Usage tracker - Log all API requests for monitoring
-app.use(usageTracker);
+if (process.env.MONGODB_URI) {
+  app.use(usageTracker);
+} else {
+  app.use((req, res, next) => next());
+}
 
 // ============================================
 
 // Ensure database connection for every request (serverless friendly)
 app.use(async (req, res, next) => {
   try {
-    await connectToDatabase();
+    if (process.env.MONGODB_URI) {
+      await connectToDatabase();
+    }
     next();
   } catch (error) {
     console.error('Database connection failed:', error);
@@ -173,6 +181,7 @@ app.post('/api/login', loginRateLimiter, async (req, res) => {
     let userId: string | undefined;
 
     // Check if user exists in DB
+    const User = (await import('./models/User')).default;
     const dbUser = await User.findOne({ email });
     
     if (dbUser) {
@@ -237,6 +246,7 @@ app.post('/api/login/password', loginRateLimiter, async (req, res) => {
   });
   
   try {
+    const User = (await import('./models/User')).default;
     const user = await User.findOne({ email: email.toLowerCase() });
     
     if (!user) {
@@ -324,12 +334,49 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
+// DEV-only endpoints (role switcher, etc.) — always public but only available in non-production
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+  try {
+    // Synchronously require dev routes so they are mounted before the generic `/api` router
+    // in environments used by tests.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const devRouter = require('./routes/dev').default;
+    app.use('/api/dev', devRouter);
+  } catch (e) {
+    console.warn('Could not load dev routes synchronously:', (e as Error).message);
+  }
+} else {
+  // In production, keep dynamic mounting (no-op)
+  import('./utils/mountDevRoutes').then(m => m.default(app)).catch((e) => console.warn('Could not load dev routes:', (e as Error).message));
+}
+
 // PROTECTED ROUTES (authentication required)
-// Apply API rate limiting to authenticated endpoints
-app.use('/api/admin', apiRateLimiter, adminRoutes);
-app.use('/api/users', apiRateLimiter, userRoutes);
-app.use('/api/analysis', apiRateLimiter, analysisRoutes);
-app.use('/api', apiRateLimiter, apiRoutes);
+// Apply API rate limiting to authenticated endpoints; lazy-require route modules
+app.use('/api/admin', apiRateLimiter, (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const adminRoutes = require('./routes/admin').default;
+  return adminRoutes(req, res, next);
+});
+app.use('/api/users', apiRateLimiter, (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const userRoutes = require('./routes/users').default;
+  return userRoutes(req, res, next);
+});
+app.use('/api/analysis', apiRateLimiter, (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const analysisRoutes = require('./routes/analysis').default;
+  return analysisRoutes(req, res, next);
+});
+// If dev routes are not mounted (non-development/test), ensure /api/dev/* returns 404
+if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
+  app.use('/api/dev', (req, res) => res.status(404).json({ message: 'Not found' }));
+}
+
+app.use('/api', apiRateLimiter, (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const apiRoutes = require('./routes/api').default;
+  return apiRoutes(req, res, next);
+});
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
@@ -348,6 +395,7 @@ if (process.env.NODE_ENV === 'production') {
 
 import { loadCategoriesFromDb } from './services/categoryService';
 import mongoose from 'mongoose';
+import permissionService from './services/permissionService';
 
 if (require.main === module) {
   app.listen(port, async () => {
@@ -360,6 +408,13 @@ if (require.main === module) {
         }
       } catch (e) {
         console.warn('Could not load categories from DB at startup:', (e as Error).message);
+      }
+
+      // Register API endpoints in DB (upsert missing endpoints with default roles)
+      try {
+        await permissionService.registerEndpoints(app);
+      } catch (e) {
+        console.warn('Failed to register API endpoints for permissions:', (e as Error).message);
       }
 
       console.log(`Server is running on http://localhost:${port}`);

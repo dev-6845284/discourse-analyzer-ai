@@ -9,6 +9,17 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Add Babel Standalone for in-browser JSX/TS transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="module">
+      // Expose Vite env var at runtime to avoid referencing import.meta in modules
+      (function(){
+        try {
+          // import.meta.env is available when served by Vite; copy to window for runtime
+          window.__VITE_API_URL = (import.meta && import.meta.env && import.meta.env.VITE_API_URL) || '';
+        } catch (e) {
+          window.__VITE_API_URL = '';
+        }
+      })();
+    </script>
   <script type="importmap">
 </script>
 </head>

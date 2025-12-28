@@ -1,8 +1,5 @@
 import { Request, Response } from 'express';
 import {
-  Quote,
-  AnalysisResult,
-  AuditResult,
   ModelResponseError,
   JsonParsingError,
   PersonInfo,

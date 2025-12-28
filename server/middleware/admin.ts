@@ -11,7 +11,7 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 export const requireAdmin = isAdmin;
 
 export const isAdminOrDev = (req: Request, res: Response, next: NextFunction) => {
-  const isDev = process.env.NODE_ENV !== 'production';
+  const isDev = process.env.NODE_ENV === 'development';
   if (isDev || (req.session.user && req.session.user.role === 'admin')) {
     return next();
   }

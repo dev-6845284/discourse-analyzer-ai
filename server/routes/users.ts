@@ -2,6 +2,7 @@ import express from 'express';
 import * as userService from '../services/userService';
 import { isAuthenticated } from '../middleware/auth';
 import { isAdmin } from '../middleware/admin';
+import authorizeMiddleware from '../middleware/authorize';
 
 const router = express.Router();
 
@@ -64,7 +65,10 @@ router.put('/:id', isAuthenticated, async (req, res) => {
 });
 
 // Protect all user routes with authentication and admin check
-router.use(isAuthenticated, isAdmin);
+router.use(isAuthenticated);
+router.use(authorizeMiddleware);
+// admin-only checks for listing/creating/deleting users
+router.use(isAdmin);
 
 router.get('/', async (req, res) => {
   try {

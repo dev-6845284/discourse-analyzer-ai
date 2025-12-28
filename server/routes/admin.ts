@@ -10,6 +10,9 @@ const router = express.Router();
 
 // All admin routes require admin authentication
 router.use(requireAdmin);
+// Additionally enforce configured role permissions where applicable
+import authorizeMiddleware from '../middleware/authorize';
+router.use(authorizeMiddleware);
 
 /**
  * GET /api/admin/usage-stats
@@ -320,5 +323,9 @@ router.get('/dashboard-summary', async (req: Request, res: Response) => {
 
 // Mount admin categories management endpoints
 router.use('/categories', adminCategoriesRouter);
+
+// Access control management (role assignments for endpoints)
+import accessControlRouter from './adminAccessControl';
+router.use('/access-control', accessControlRouter);
 
 export default router;

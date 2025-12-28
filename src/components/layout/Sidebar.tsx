@@ -11,6 +11,7 @@ interface SidebarProps {
   peopleContent?: React.ReactNode;
   sessionsContent?: React.ReactNode;
   usersContent?: React.ReactNode;
+  managementContent?: React.ReactNode;
   userRole?: string;
   asDrawer?: boolean;
   onClose?: () => void;
@@ -27,6 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   peopleContent,
   sessionsContent,
   usersContent,
+  managementContent,
   userRole,
   asDrawer,
   onClose,
@@ -138,6 +140,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               setOpenSection={setOpenSection}
             >
               {usersContent}
+            </SidebarSection>
+          )}
+          {managementContent && (
+            <SidebarSection
+              title="Management"
+              sectionKey="management"
+              openSection={openSection}
+              setOpenSection={setOpenSection}
+            >
+              {managementContent}
             </SidebarSection>
           )}
         </div>

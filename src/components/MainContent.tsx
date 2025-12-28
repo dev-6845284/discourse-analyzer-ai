@@ -47,16 +47,13 @@ interface MainContentProps {
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
-  activeTab,
   resultsTab,
   setResultsTab,
   statusFilters,
   transcriptData,
   selectedPerson,
   setSelectedPerson,
-  quotes,
   articles,
-  isLoading,
   error,
   rawApiResponseError,
   filteredAndSortedQuotes,
@@ -72,7 +69,6 @@ export const MainContent: React.FC<MainContentProps> = ({
   onRemove,
   clearError,
   onEditSource,
-  onResumeSession,
   onStoredPromoteSuccess,
   onExport,
   onImport,

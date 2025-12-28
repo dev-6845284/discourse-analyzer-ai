@@ -243,20 +243,8 @@ export function useAppController() {
     setAutoFetchError(null);
 
     try {
-      const response = await fetch('/api/quotes/fetch-transcript', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: videoUrl, save: true }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch transcript');
-      }
-
-      const data = await response.json();
+      const response = await fetchYoutubeTranscript(videoUrl, true);
+      const data = response.data;
       uiState.openTranscriptViewer({
         videoId: data.videoId,
         languageCode: data.languageCode,
@@ -266,7 +254,7 @@ export function useAppController() {
       });
     } catch (error: any) {
       console.error('YouTube transcript error:', error);
-      const errorMessage = error.message || 'Failed to fetch YouTube transcript';
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch YouTube transcript';
       setExtractionError(errorMessage);
       setAutoFetchError(errorMessage);
       setIsTranscriptMethodSelectorOpen(true);

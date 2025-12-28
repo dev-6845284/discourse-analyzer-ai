@@ -7,7 +7,19 @@
 // 4. Create an "OAuth client ID" for a "Web application".
 // 5. Under "Authorized JavaScript origins", add your production URL
 // 6. Copy the generated Client ID and use it as the value for VITE_GOOGLE_CLIENT_ID.
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'missing-client-id';
+const _viteClientId = (() => {
+  try {
+    // Try to read Vite's injected env without referencing import.meta at parse time
+    // (the string is executed at runtime so it won't break Jest's parser)
+    // eslint-disable-next-line no-new-func
+    const g = new Function('return (typeof import !== "undefined" && import.meta && import.meta.env) ? import.meta.env.VITE_GOOGLE_CLIENT_ID : undefined;');
+    return g();
+  } catch {
+    return undefined;
+  }
+})();
+
+export const GOOGLE_CLIENT_ID = _viteClientId || (typeof process !== 'undefined' && process.env ? (process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) : undefined) || 'missing-client-id';
 
 export const DEFAULT_AI_PROVIDER = 'chatgpt';
 

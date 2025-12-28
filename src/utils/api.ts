@@ -2,13 +2,28 @@ import axios from 'axios';
 import { QuoteUpdatePayload, AgenticSearchOptions, AgenticSearchResult } from '../types';
 import { TimePeriodResult } from './timePeriod';
 
+// Determine API base URL at runtime. Avoid using `import.meta` here so tests
+// and Node environments don't fail when Jest isn't configured for ESM import.meta.
 const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    console.log('Using VITE_API_URL:', import.meta.env.VITE_API_URL);
-    return import.meta.env.VITE_API_URL;
-  } else {
+  // Prefer runtime-injected Vite env when available (set in index.html to avoid import.meta in modules)
+  if (typeof window !== 'undefined') {
+    const win = window as any;
+    if (win.__VITE_API_URL && typeof win.__VITE_API_URL === 'string' && win.__VITE_API_URL.trim() !== '') {
+      return win.__VITE_API_URL;
+    }
+  }
+
+  // Server-side or test env: allow process.env
+  if (typeof process !== 'undefined' && (process.env as any)?.VITE_API_URL) {
+    return (process.env as any).VITE_API_URL;
+  }
+
+  // Browser fallback: build a URL from current location
+  if (typeof window !== 'undefined') {
     return `${window.location.protocol}//${window.location.hostname}/api`;
   }
+  // Fallback for non-browser environments
+  return 'http://localhost:3001/api';
 };
 
 const api = axios.create({
@@ -141,6 +156,11 @@ export const extractFromUrl = async (
 
 export const fetchArticle = async (url: string, language?: string) => {
   return api.post('/quotes/fetch-article', { url, language });
+};
+
+// Fetch YouTube transcript helper (server route: POST /api/quotes/fetch-transcript)
+export const fetchYoutubeTranscript = (url: string, save: boolean = true) => {
+  return api.post('/quotes/fetch-transcript', { url, save });
 };
 
 export const agenticSearch = async (
@@ -286,6 +306,10 @@ export const formatApiError = (error: any, context?: string): string => {
 
 // Admin API endpoints
 export const getAdminDashboardSummary = () => api.get('/admin/dashboard-summary');
+
+// Dev/testing helpers (dev-only endpoint)
+export const setDevRole = (role: string) => api.post('/dev/role', { role });
+export const getDevRoles = () => api.get('/dev/roles');
 export const getAdminUsageStats = (hours: number = 24) => api.get(`/admin/usage-stats?hours=${hours}`);
 export const getAdminSecurityAlerts = (limit: number = 50) => api.get(`/admin/security-alerts?limit=${limit}`);
 export const acknowledgeSecurityAlert = (alertId: string) => api.post(`/admin/security-alerts/${alertId}/acknowledge`);
@@ -302,3 +326,8 @@ export const createAdminCategory = (category: any) => api.post('/admin/categorie
 export const updateAdminCategory = (id: string, category: any) => api.put(`/admin/categories/${id}`, category);
 export const deleteAdminCategory = (id: string) => api.delete(`/admin/categories/${id}`);
 export const reloadAdminCategories = () => api.post('/admin/categories/reload');
+
+// Access control (permissions) management
+export const getAccessControlList = () => api.get('/admin/access-control');
+export const updateAccessControl = (id: string, updates: any) => api.put(`/admin/access-control/${id}`, updates);
+export const createAccessControl = (payload: any) => api.post('/admin/access-control', payload);
