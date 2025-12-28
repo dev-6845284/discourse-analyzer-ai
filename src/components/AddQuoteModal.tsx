@@ -2,6 +2,30 @@ import React, { useState } from 'react';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import { useI18n } from '../i18n';
 
+/**
+ * Extracts Facebook post URL from iframe embed code
+ */
+const extractFacebookUrl = (text: string): string => {
+  // Check if the text contains a Facebook iframe
+  if (text.includes('<iframe') && text.includes('facebook.com/plugins/post.php')) {
+    const iframeMatch = text.match(/<iframe[^>]*src="([^"]*facebook\.com\/plugins\/post\.php[^"]*)"[^>]*><\/iframe>/i);
+    if (iframeMatch) {
+      try {
+        const src = iframeMatch[1];
+        const url = new URL(src);
+        const href = url.searchParams.get('href');
+        if (href) {
+          return decodeURIComponent(href);
+        }
+      } catch (error) {
+        // If parsing fails, return original text
+        console.warn('Failed to extract Facebook URL from iframe:', error);
+      }
+    }
+  }
+  return text;
+};
+
 interface AddQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,8 +38,11 @@ interface AddQuoteModalProps {
 const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add', initialSource = '', initialAnalysisType = 'audit' }) => {
   const [source, setSource] = useState(initialSource);
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [languageCode, setLanguageCode] = useState('en');
+  const [date, setDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [languageCode, setLanguageCode] = useState('lt');
   const { t } = useI18n();
   const [error, setError] = useState('');
   const [analysisType, setAnalysisType] = useState<'audit'|'flaws'>(initialAnalysisType);
@@ -59,7 +86,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
               type="text"
               id="quoteSource"
               value={source}
-              onChange={(e) => setSource(e.target.value)}
+              onChange={(e) => setSource(extractFacebookUrl(e.target.value))}
               className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
               placeholder={t('linkPlaceholder')}
             />

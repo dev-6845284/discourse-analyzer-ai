@@ -31,6 +31,20 @@ Todo:
       [] Audit verdict is ambiguous, improve with prompt or remove
       [] Allow save session state multiple times
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
+  user management:
+    [] role assignments to users;
+    [] every api call should check user role and permissions;
+    [] every api has to have define who can access it (roles);
+    [] create db api role configurations;
+    [] on application start register all api endpoints to db, any missing register with default admin role restriction
+    [] create db migration script to add role based access control to existing users;
+  public quotes:
+    [] Quotes can be promoted to public quotes from admin dashboard
+    [] Add moderation system for public quotes
+    [] Roles based access control for admin dashboard
+    [] Public quotes display: hide audit metadata: who added, initial analysis, AI model used
+  Quote display:
+    [] Show facebook embeded iframe for facebook quotes
   Quote analysis:
     [] Create different 'flavors' of quote analysis: fact check, toxi
   TickTok videos:
