@@ -43,6 +43,16 @@ const AccessControlManagement: React.FC<{ onClose: () => void }> = ({ onClose })
       .finally(() => setLoading(false));
   }, []);
 
+  // auto-open first group after items load so items are visible by default
+  useEffect(() => {
+    if (items.length > 0 && !openGroup) {
+      const first = items[0];
+      const parts = first.path.split('/').filter(Boolean);
+      const key = parts[1] ?? parts[0] ?? '/';
+      setOpenGroup(key);
+    }
+  }, [items, openGroup]);
+
   const getItemKey = (it: AccessItem) => it._id ?? `${it.method}-${it.path}`;
 
   const handleChangeRole = (itemKey: string, role: string) => {
@@ -139,11 +149,14 @@ const AccessControlManagement: React.FC<{ onClose: () => void }> = ({ onClose })
                   onClick={() => setOpenGroup((g) => (g === group.key ? null : group.key))}
                   className="w-full flex items-center justify-between text-left px-2 py-1 bg-gray-100 dark:bg-gray-900 rounded hover:opacity-90"
                 >
-                  <div className="text-sm font-semibold">{group.key} <span className="text-xs text-gray-500">({group.items.length})</span></div>
+                  <div className="text-sm font-semibold">
+                    {group.key} <span className="text-xs text-gray-500">({group.items.length})</span>
+                    <span className="ml-2 text-xs text-gray-500">{group.items.map((it) => it.method).join(', ')}</span>
+                  </div>
                   <div className="text-xs text-gray-500">{openGroup === group.key ? '▾' : '▸'}</div>
                 </button>
 
-                {openGroup === group.key && group.items.map((it) => {
+                {openGroup === group.key && group.items.map((it, idx) => {
                   const key = getItemKey(it);
                   return (
                     <div key={key} className="p-3 border rounded bg-gray-50 dark:bg-gray-900">
@@ -157,7 +170,7 @@ const AccessControlManagement: React.FC<{ onClose: () => void }> = ({ onClose })
                           <label key={r} className={`inline-flex items-center text-sm ${!it.requiredRole && r === 'public' ? 'font-semibold' : ''}`}>
                             <input
                               type="radio"
-                              name={`role-${key}`}
+                              name={`role-${idx}`}
                               value={r}
                               checked={it.requiredRole === r}
                               onChange={() => handleChangeRole(key, r)}

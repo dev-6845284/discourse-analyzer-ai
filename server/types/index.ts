@@ -151,6 +151,28 @@ export interface UserInfo {
   role?: string;
 }
 
+// API Key set types
+export interface ApiKeySet {
+  _id?: string;
+  alias: string;
+  GEMINI_API_KEY?: string | null;
+  GROK_API_KEY?: string | null;
+  CHATGPT_API_KEY?: string | null;
+  createdBy?: string; // user id
+  updatedBy?: string; // user id
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserApiKeySet {
+  _id?: string;
+  userId: string;
+  apiKeySetId: string;
+  assignedAt?: string;
+  assignedBy?: string;
+  role?: string;
+}
+
 export interface ExportData {
   personName: string;
   quotes: Quote[];

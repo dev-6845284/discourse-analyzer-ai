@@ -64,6 +64,39 @@ router.put('/:id', isAuthenticated, async (req, res) => {
   }
 });
 
+// GET /api/users/:id/keyset - fetch the user's personal keyset (alias = USERS_KEYSET)
+router.get('/:id/keyset', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+    if (!isSelf && !isAdminUser) return res.status(403).json({ message: 'Unauthorized' });
+
+    const USERS_KEYSET = process.env.USERS_KEYSET_ALIAS || 'USERS_KEYSET';
+    const set = await (await import('../services/apiKeyService')).getApiKeySetByAliasAndCreator(USERS_KEYSET, req.params.id);
+    res.json(set || null);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user keyset', error });
+  }
+});
+
+// PUT /api/users/:id/keyset - create or update the user's personal keyset (alias = USERS_KEYSET)
+router.put('/:id/keyset', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+    if (!isSelf && !isAdminUser) return res.status(403).json({ message: 'Unauthorized' });
+
+    const { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY } = req.body;
+    const svc = await import('../services/apiKeyService');
+    const updated = await svc.upsertUserKeyset(req.params.id, { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user keyset', error });
+  }
+});
+
 // Protect all user routes with authentication and admin check
 router.use(isAuthenticated);
 router.use(authorizeMiddleware);

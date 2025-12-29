@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import api from '../utils/api';
+import { useAuth } from '../hooks/useAuth';
 import { useI18n } from '../i18n';
 
 interface ApiKeySettingsModalProps {
@@ -11,13 +12,17 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
   const [geminiKey, setGeminiKey] = useState('');
   const [chatGptKey, setChatGptKey] = useState('');
   const [grokKey, setGrokKey] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
+  // Do not load keys from storage or server. Reset inputs when modal opens.
   useEffect(() => {
     if (isOpen) {
-      const keys = loadFromStorage<Record<string, string>>('apiKeys') || {};
-      setGeminiKey(keys.gemini || '');
-      setChatGptKey(keys.chatgpt || '');
-      setGrokKey(keys.grok || '');
+      setGeminiKey('');
+      setChatGptKey('');
+      setGrokKey('');
+      setError(null);
     }
   }, [isOpen]);
 
@@ -25,14 +30,28 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
 
   const { t } = useI18n();
 
-  const handleSave = () => {
-    const keys = {
-      gemini: geminiKey,
-      chatgpt: chatGptKey,
-      grok: grokKey,
-    };
-    saveToStorage('apiKeys', keys);
-    onClose();
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      if (!user || !user._id) throw new Error('User not available');
+      const payload = {
+        GEMINI_API_KEY: geminiKey || null,
+        GROK_API_KEY: grokKey || null,
+        CHATGPT_API_KEY: chatGptKey || null,
+      };
+      await api.put(`/users/${user._id}/keyset`, payload);
+      // Clear form after successful save
+      setGeminiKey('');
+      setChatGptKey('');
+      setGrokKey('');
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Save failed');
+      console.error('Failed to save API keys', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -83,6 +102,7 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
           </div>
         </div>
 
+        {error && <div className="text-sm text-red-400 mb-3">{error}</div>}
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
@@ -92,9 +112,10 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors"
+            disabled={isSaving}
+            className={`px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors ${isSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
-            {t('saveKeys')}
+            {isSaving ? t('saving') : t('saveKeys')}
           </button>
         </div>
       </div>

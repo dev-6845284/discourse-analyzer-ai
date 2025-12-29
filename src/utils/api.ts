@@ -331,3 +331,8 @@ export const reloadAdminCategories = () => api.post('/admin/categories/reload');
 export const getAccessControlList = () => api.get('/admin/access-control');
 export const updateAccessControl = (id: string, updates: any) => api.put(`/admin/access-control/${id}`, updates);
 export const createAccessControl = (payload: any) => api.post('/admin/access-control', payload);
+
+// User API keyset upsert helper
+export const upsertUserKeyset = (userId: string, keys: { GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }) => {
+  return api.put(`/users/${userId}/keyset`, keys);
+};

@@ -9,6 +9,10 @@ function Schema(definition) {
 }
 Schema.Types = Types;
 Schema.prototype.index = function() { /* no-op for tests */ };
+Schema.prototype.pre = function() { /* no-op for tests */ };
+Schema.prototype.post = function() { /* no-op for tests */ };
+Schema.prototype.methods = {};
+Schema.prototype.statics = {};
 
 const models = {};
 

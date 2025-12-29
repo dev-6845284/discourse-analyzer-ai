@@ -33,8 +33,8 @@ describe('AccessControlManagement', () => {
     await waitFor(() => expect(getAccessControlList).toHaveBeenCalled());
 
     // ensure items are rendered (there may be duplicates for path because multiple methods)
-    expect(screen.getByText('GET')).toBeInTheDocument();
-    expect(screen.getAllByText('/api/quotes').length).toBeGreaterThan(0);
+    await waitFor(() => expect(screen.getByText(/GET/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText('/api/quotes').length).toBeGreaterThan(0));
 
     // change first item's role to 'admin' by selecting the radio inside the first group's name
     const adminRadio = container.querySelector('input[name="role-0"][value="admin"]') as HTMLInputElement | null;

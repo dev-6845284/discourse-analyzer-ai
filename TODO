@@ -33,6 +33,9 @@ Todo:
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
   user management:
     [] Role assignments to users
+    [] Use DB stored api keys instead of environment variables
+    [] Create form for admin to enter extra keysets for users
+    
     [x] Ensure every API call checks user role and permissions
     [x] Define required roles for each API endpoint
     [x] Store API role configurations in DB

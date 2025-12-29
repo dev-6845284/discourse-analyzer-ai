@@ -5,6 +5,9 @@ export default {
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },
+  moduleNameMapper: {
+    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
+  },
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],

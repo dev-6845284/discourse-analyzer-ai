@@ -328,4 +328,8 @@ router.use('/categories', adminCategoriesRouter);
 import accessControlRouter from './adminAccessControl';
 router.use('/access-control', accessControlRouter);
 
+// Admin API key sets management
+import adminApiKeysRouter from './adminApiKeys';
+router.use('/api-key-sets', adminApiKeysRouter);
+
 export default router;
