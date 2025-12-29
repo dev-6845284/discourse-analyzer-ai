@@ -21,6 +21,31 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
   isBusy,
 }) => {
   const { t } = useI18n();
+  const [iframeHeight, setIframeHeight] = React.useState<number>(220);
+  const [expanded, setExpanded] = React.useState<boolean>(false);
+  const prevHeightRef = React.useRef<number | null>(null);
+
+  const increaseHeight = () => setIframeHeight((h) => Math.min(800, h + 120));
+  const decreaseHeight = () => setIframeHeight((h) => Math.max(120, h - 120));
+  const toggleExpanded = () => {
+    setExpanded((v) => {
+      if (!v) {
+        // expanding: remember previous height and ensure a larger minimum for readability
+        prevHeightRef.current = iframeHeight;
+        const target = Math.max(iframeHeight, 650);
+        setIframeHeight(target);
+        return true;
+      } else {
+        // collapsing: restore previous height if available
+        const prev = prevHeightRef.current ?? 220;
+        setIframeHeight(prev);
+        prevHeightRef.current = null;
+        return false;
+      }
+    });
+  };
+
+  
 
   return (
     <>
@@ -43,33 +68,95 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
       </blockquote>
 
       {!isCollapsed && (
-        <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
-          <a
-            href={displayQuote.source}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
-            title={displayQuote.title}
-          >
-            {displayQuote.title}
-          </a>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <select
-              value={displayQuote.languageCode}
-              onChange={(e) => onLanguageChange(quote.id, e.target.value)}
-              disabled={isBusy || hasDraft}
-              className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label={t('quoteLanguageLabel')}
-            >
-              {SUPPORTED_LANGUAGES.map((lang: any) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-            <span className="text-gray-400">{displayQuote.date}</span>
-          </div>
-        </div>
+        <>
+          {/* If the source contains a Facebook plugin iframe, render the embed instead of a plain link */}
+          {typeof displayQuote.source === 'string' && displayQuote.source.includes('<iframe') && displayQuote.source.includes('facebook.com/plugins/post.php') ? (
+            (() => {
+              const match = displayQuote.source.match(/<iframe[^>]*src="([^"]*facebook\.com\/plugins\/post\.php[^"]*)"[^>]*><\/iframe>/i);
+              const iframeSrc = match ? match[1] : null;
+              return iframeSrc ? (
+                <div className="mt-3 w-full">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={toggleExpanded}
+                        title={expanded ? t('collapse') : t('expand')}
+                        className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                      >
+                        {expanded ? '-' : '+'}
+                      </button>
+                      <button
+                        onClick={increaseHeight}
+                        title={t('increase')}
+                        className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                      >
+                        ⬆
+                      </button>
+                      <button
+                        onClick={decreaseHeight}
+                        title={t('decrease')}
+                        className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                      >
+                        ⬇
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-400">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
+                  </div>
+                  <div className={`rounded-md overflow-hidden border-0 ${expanded ? 'w-full' : 'w-full'}`} style={{ backgroundColor: '#ffffff' }}>
+                    <iframe
+                      src={iframeSrc}
+                      title={displayQuote.title || 'Embedded Post'}
+                      className="w-full rounded-md border-0 overflow-hidden"
+                      style={{ height: expanded ? Math.max(iframeHeight, 420) : iframeHeight, backgroundColor: '#ffffff' }}
+                      loading="lazy"
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <a
+                    href={displayQuote.source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
+                    title={displayQuote.title}
+                  >
+                    {displayQuote.title}
+                  </a>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
+              <a
+                href={displayQuote.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
+                title={displayQuote.title}
+              >
+                {displayQuote.title}
+              </a>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <select
+                  value={displayQuote.languageCode}
+                  onChange={(e) => onLanguageChange(quote.id, e.target.value)}
+                  disabled={isBusy || hasDraft}
+                  className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={t('quoteLanguageLabel')}
+                >
+                  {SUPPORTED_LANGUAGES.map((lang: any) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-gray-400">{displayQuote.date}</span>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );
