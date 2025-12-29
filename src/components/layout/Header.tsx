@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from '../../assets/images/image64.png';
 import { UserInfo } from '../../types';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
 import DevRoleSelector from '../DevRoleSelector';
@@ -21,8 +22,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   user,
-  isFormCollapsed,
-  toggleFormCollapsed,
   logsVisible,
   setLogsVisible,
   setIsApiKeyModalOpen,
@@ -41,7 +40,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="mb-6 w-full">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 w-full">
         <div className="flex items-center justify-between w-full md:w-auto">
-          <h1 className="hidden md:block text-2xl md:text-4xl font-bold text-gray-800 dark:text-gray-200">Discourse Analyzer AI</h1>
+          <div className="hidden md:flex items-center gap-3 md:mr-6">
+            <img src={logo} alt="logo" className="h-10 w-10 object-cover rounded-md" />
+            <h1 className="text-2xl md:text-4xl font-bold text-gray-800 dark:text-gray-200">{t('appTitle')}</h1>
+          </div>
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => openSidebarMobile && openSidebarMobile()}

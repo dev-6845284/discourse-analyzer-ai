@@ -72,7 +72,7 @@ const lt = {
   getYouTubeTranscript: 'Gauti YouTube transkriptą',
   chooseFromMethods: 'Pasirinkite iš: auto-gauti, kopijuoti-įklijuoti, bookmarklet arba SRT importas',
   // Sidebar
-  appTitle: 'Discourse Analyzer',
+  appTitle: 'Pasitikrink',
   export: 'Eksportuoti',
   exportTitle: 'Eksportuoti dabartines citatas į JSON failą',
   import: 'Importuoti',

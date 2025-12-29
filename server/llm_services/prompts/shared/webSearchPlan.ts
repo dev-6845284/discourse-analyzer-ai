@@ -40,6 +40,6 @@ For this time period, perform targeted multilingual searches using all relevant 
 - English: "interview", "quote", "speech", "statement", "article", "publication", "op-ed", "press conference"
 - Russian: "интервью", "цитата", "речь", "заявление", "статья", "публикация", "пресс-конференция"
 - Lithuanian: "interviu", "citata", "kalba", "pareiškimas", "straipsnis", "publikacija", "spaudos konferencija"
-**Sources:** [Delfi](https://www.delfi.lt), [15min](https://www.15min.lt), [TV3](https://www.tv3.lt), [Lrytas](https://www.lrytas.lt), [LRT](https://www.lrt.lt), [Alfa](https://www.alfa.lt), [VE.lt](https://www.ve.lt), [Diena.lt](https://www.diena.lt), [Respublika](https://www.respublika.lt), [Verslo žinios](https://www.vz.lt), government records, think tanks, transcript repositories, and official sites.
+**Sources:** [Delfi](https://www.delfi.lt), [15min](https://www.15min.lt), [TV3](https://www.tv3.lt), [Lrytas](https://www.lrytas.lt), [LRT](https://www.lrt.lt), [Alfa](https://www.alfa.lt), [VE.lt](https://www.ve.lt), [Diena.lt](https://www.diena.lt), [Respublika](https://www.respublika.lt), [Verslo žinios](https://www.vz.lt),[](https://jp.lt/), government records, think tanks, transcript repositories, and official sites.
 Extract only **direct quotes or verbatim authored text**, no summaries.`;
 }
