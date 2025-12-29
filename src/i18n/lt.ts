@@ -162,6 +162,12 @@ const lt = {
   savedBy: 'Išsauginta: {name}',
   analyzedBy: 'Analizuota: {name}',
   analyzedVia: 'per {provider}',
+  // Verdict translations
+  verdict_TRUE: 'Teisinga',
+  verdict_FALSE: 'Netiesa',
+  verdict_MISLEADING: 'Dezorientuojanti',
+  verdict_MANIPULATIVE: 'Manipuliacija',
+  verdict_UNFOUNDED: 'Nepagrįsta',
   analyzedAt: '• {date}',
   analyzedOnlyVia: 'Analizuota {via} {date}',
   improvedBy: 'Patobulinta: {name}',

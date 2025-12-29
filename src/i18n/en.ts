@@ -381,6 +381,12 @@ const en = {
 
   // Modals and generic
   confirm: 'Confirm',
+  // Verdict translations
+  verdict_TRUE: 'True',
+  verdict_FALSE: 'False',
+  verdict_MISLEADING: 'Misleading',
+  verdict_MANIPULATIVE: 'Manipulative',
+  verdict_UNFOUNDED: 'Unfounded',
   // Add Quote modal
   extractQuotesDetails: 'Extract Quotes Details',
   addQuoteDetails: 'Add Quote Details',

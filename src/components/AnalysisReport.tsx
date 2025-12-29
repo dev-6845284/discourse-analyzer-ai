@@ -54,7 +54,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-cyan-300">{t('auditReport')}</h3>
           <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${VERDICT_COLORS[audit.verdict]}`}>
-            {audit.verdict}
+            {t(`verdict_${audit.verdict}`) || audit.verdict}
           </span>
         </div>
         {/* Rationale */}
