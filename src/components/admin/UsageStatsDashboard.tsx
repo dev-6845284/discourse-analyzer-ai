@@ -1,3 +1,25 @@
+/**
+ * UsageStatsDashboard component
+ *
+ * Purpose:
+ * - Admin-facing dashboard to monitor API usage and security events.
+ * - Provides three tabs: Overview (usage metrics), Alerts (security events),
+ *   and Blocked IPs (manage IP blocks).
+ *
+ * Behavior:
+ * - Fetches usage statistics, security alerts, and blocked IPs from server
+ *   endpoints via helpers in `src/utils/api`.
+ * - Allows acknowledging alerts and blocking/unblocking IP addresses.
+ * - Renders summary metrics, top endpoints, status code breakdowns,
+ *   request volume over time, and lists for alerts and blocked IPs.
+ *
+ * Data shapes:
+ * - `UsageStats`: summary, requestsByEndpoint, requestsByStatus, requestsByHour, topIPs
+ * - `SecurityAlert`: id, type, severity, message, details, ipAddress, timestamp, acknowledged
+ * - `BlockedIP`: id, ipAddress, reason, blockedAt, expiresAt, isAutoBlocked, hitCount
+ *
+ * Location: src/components/admin/UsageStatsDashboard.tsx
+ */
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n';
 import { 

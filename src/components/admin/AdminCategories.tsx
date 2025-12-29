@@ -1,3 +1,28 @@
+/**
+ * AdminCategories component
+ *
+ * Purpose:
+ * - Provides an admin UI for managing "audit categories" used by the application.
+ * - Allows listing, creating, updating, deleting, and reloading category definitions
+ *   via API helpers in `src/utils/api`.
+ *
+ * Behavior:
+ * - Renders a form for creating/editing categories and a table of existing categories.
+ * - Uses the `useI18n` hook for translations of labels and messages.
+ * - Interacts with server endpoints through `getAdminCategories`,
+ *   `createAdminCategory`, `updateAdminCategory`, `deleteAdminCategory`, and
+ *   `reloadAdminCategories`.
+ *
+ * Data shape (Category):
+ * - `id` (string): unique identifier (read-only when editing)
+ * - `title` (string): human-readable title
+ * - `description` (string): optional description
+ * - `promptGuidance` (string): guidance text used by LLM prompts
+ * - `modes` (string[]): modes this category applies to (e.g., ["audit","flaws"])
+ * - `uiOrder` (number): ordering hint for UI
+ *
+ * Location: src/components/admin/AdminCategories.tsx
+ */
 import React, { useEffect, useState } from 'react';
 import {
   getAdminCategories,

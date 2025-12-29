@@ -1,3 +1,18 @@
+/**
+ * AccessControlManagement
+ *
+ * Purpose: Modal UI to view and manage HTTP access control entries used by the server.
+ * - Fetches current access rules via `getAccessControlList()` on mount.
+ * - Allows selecting a minimum `requiredRole` per method+path using radio buttons.
+ * - Persists changes with `updateAccessControl()` for existing entries or
+ *   `createAccessControl()` for new entries, then refreshes the list.
+ * - Exposed as a modal component; parent should provide `onClose()`.
+ *
+ * Notes:
+ * - Roles are constrained to `ROLES` in this file for the UI.
+ * - This component performs optimistic UI updates by re-fetching after save.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { getAccessControlList, updateAccessControl, createAccessControl } from '../../utils/api';
 
