@@ -46,11 +46,12 @@ Todo:
   Quote display:
     [] Show facebook embeded iframe for facebook quotes
   Quote analysis:
-    [] Create different 'flavors' of quote analysis: fact check, toxi
+    [x] Create different 'flavors' of quote analysis: fact check, toxi
   TickTok videos:
     [] Load from URL
   Bugs:
-    [] Person name is not sent for quote analysis
+    [x] Person name is not sent for quote analysis
+    [] Re-evaluating quote does not use latesst updated context content
     [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
     [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
     
