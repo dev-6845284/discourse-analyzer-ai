@@ -430,6 +430,7 @@ const lt = {
 
   // Admin: Audit Categories UI
   adminCategories: 'Audito kategorijos',
+  management: 'Valdymas',
   adminCategories_title: 'Audito kategorijos',
   adminCategories_refresh: 'Atnaujinti',
   adminCategories_reloadCache: 'Perkrauti talpyklą',

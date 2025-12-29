@@ -427,6 +427,7 @@ const en = {
 
   // Admin: Audit Categories UI
   adminCategories: 'Admin Categories',
+  management: 'Management',
   adminCategories_title: 'Audit Categories',
   adminCategories_refresh: 'Refresh',
   adminCategories_reloadCache: 'Reload Cache',

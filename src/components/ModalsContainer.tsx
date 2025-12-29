@@ -6,7 +6,6 @@ import { PasswordModal } from './users/PasswordModal';
 import { EditProfileModal } from './users/EditProfileModal';
 import { UsageStatsDashboard } from './admin/UsageStatsDashboard';
 const AdminCategoriesLazy = React.lazy(() => import('./admin/AdminCategories'));
-import type { FullAnalysisData } from '../utils/analysisStorage';
 import type { TranscriptData } from '../utils/transcriptStorage';
 
 interface ModalsProps {

@@ -48,35 +48,24 @@ export const DevRoleSelector: React.FC = () => {
   if (!isDev) return null;
 
   return (
-    <div className="flex items-center gap-2">
-      <select
-        value={selected ?? ''}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-          const v = e.target.value;
-          if (!v) { setSelected(null); return; }
-          if ((ROLES as readonly string[]).includes(v)) {
-            setSelected(v as Role);
-          } else {
-            // Unknown value from server or unexpected input - ignore and warn
-            // This keeps typings safe and prevents runtime surprise
-            // eslint-disable-next-line no-console
-            console.warn('Unknown role selected:', v);
-          }
-        }}
-        className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-2 text-sm"
-      >
-        <option value="">Select role</option>
-        {available.map(r => (
-          <option key={r} value={r}>{r}</option>
-        ))}
-      </select>
-      <button
-        onClick={() => selected && apply(selected)}
-        disabled={!selected || loading}
-        className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-xs md:text-base"
-      >
-        {loading ? 'Applying...' : 'Set role'}
-      </button>
+    <div className="flex items-center gap-3">
+      {available.map(r => (
+        <label key={r} className="flex items-center gap-2 text-xs md:text-sm">
+          <input
+            type="radio"
+            name="dev-role"
+            value={r}
+            checked={selected === r}
+            disabled={loading}
+            onChange={() => {
+              setSelected(r);
+              apply(r);
+            }}
+            className="w-3 h-3"
+          />
+          <span className="capitalize">{r}</span>
+        </label>
+      ))}
     </div>
   );
 };

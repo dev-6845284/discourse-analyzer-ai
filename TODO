@@ -33,11 +33,11 @@ Todo:
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
   user management:
     [] Role assignments to users
-    [] Ensure every API call checks user role and permissions
-    [] Define required roles for each API endpoint
-    [] Store API role configurations in DB
-    [] On application start, register all API endpoints in DB; register missing endpoints with default admin role
-    [] Create DB migration to add role-based access control to existing users
+    [x] Ensure every API call checks user role and permissions
+    [x] Define required roles for each API endpoint
+    [x] Store API role configurations in DB
+    [x] On application start, register all API endpoints in DB; register missing endpoints with default admin role
+    [x] Create DB migration to add role-based access control to existing users
   public quotes:
     [] Quotes can be promoted to public quotes from admin dashboard
     [] Add moderation system for public quotes
