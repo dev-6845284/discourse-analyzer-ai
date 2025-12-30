@@ -43,6 +43,16 @@ jest.mock('../users/PasswordModal', () => ({
   ),
 }));
 
+jest.mock('../users/UserChangePasswordModal', () => ({
+  __esModule: true,
+  UserChangePasswordModal: ({ onClose, onSubmit }: any) => (
+    <div data-testid="password-modal">
+      <button data-testid="pw-submit" onClick={() => onSubmit()}>submit</button>
+      <button data-testid="pw-close" onClick={onClose}>close</button>
+    </div>
+  ),
+}));
+
 jest.mock('../users/EditProfileModal', () => ({
   __esModule: true,
   EditProfileModal: ({ user, onClose, onSubmit }: any) => (
