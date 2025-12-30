@@ -495,7 +495,7 @@ const en = {
   keyset_unassign: 'Unassign',
   keyset_assigned: 'Assigned Keyset',
   keyset_none: 'No keyset assigned',
-  keyset_current: 'Current: {alias}',
+  keyset_current: 'Keyset: {alias}',
 
   // Generic small actions
   edit: 'Edit',

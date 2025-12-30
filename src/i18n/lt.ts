@@ -497,7 +497,7 @@ const lt = {
   keyset_unassign: 'Atskleisti',
   keyset_assigned: 'Priskirtas Keysetās',
   keyset_none: 'Nėra priskirtų keysetų',
-  keyset_current: 'Dabartinis: {alias}',
+  keyset_current: 'Keyset: {alias}',
 
   // Generic small actions
   edit: 'Redaguoti',

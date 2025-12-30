@@ -52,60 +52,99 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4 text-cyan-400">{user ? t('editUser') : t('addUser')}</h2>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="mb-4 bg-red-900/30 border border-red-700 rounded text-red-300 px-4 py-3">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">{t('aliasLabel')}</label>
+            <label className="block text-gray-200 text-sm font-semibold mb-2">{t('aliasLabel')}</label>
             <input
               type="text"
               value={alias}
               onChange={(e) => setAlias(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="bg-gray-900 border border-gray-600 rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:border-cyan-400"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">{t('emailLabel')}</label>
+            <label className="block text-gray-200 text-sm font-semibold mb-2">{t('emailLabel')}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="bg-gray-900 border border-gray-600 rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:border-cyan-400"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">{t('roleLabel')}</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            >
-              <option value="viewer">Viewer</option>
-              <option value="moderator">Moderator</option>
-              <option value="editor">Editor</option>
-              <option value="admin">Admin</option>
-            </select>
+            <label className="block text-gray-200 text-sm font-semibold mb-2">{t('roleLabel')}</label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <input
+                  type="radio"
+                  name="role"
+                  value="viewer"
+                  checked={role === 'viewer'}
+                  onChange={() => setRole('viewer')}
+                  className="form-radio text-cyan-400 bg-gray-900"
+                />
+                <span>Viewer</span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <input
+                  type="radio"
+                  name="role"
+                  value="moderator"
+                  checked={role === 'moderator'}
+                  onChange={() => setRole('moderator')}
+                  className="form-radio text-cyan-400 bg-gray-900"
+                />
+                <span>Moderator</span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <input
+                  type="radio"
+                  name="role"
+                  value="editor"
+                  checked={role === 'editor'}
+                  onChange={() => setRole('editor')}
+                  className="form-radio text-cyan-400 bg-gray-900"
+                />
+                <span>Editor</span>
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-gray-200">
+                <input
+                  type="radio"
+                  name="role"
+                  value="admin"
+                  checked={role === 'admin'}
+                  onChange={() => setRole('admin')}
+                  className="form-radio text-cyan-400 bg-gray-900"
+                />
+                <span>Admin</span>
+              </label>
+            </div>
           </div>
 
           {!user && (
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2">{t('passwordLabel')}</label>
+              <label className="block text-gray-200 text-sm font-semibold mb-2">{t('passwordLabel')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                className="bg-gray-900 border border-gray-600 rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:border-cyan-400"
                 required
                 minLength={6}
               />
@@ -116,14 +155,14 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+              className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 px-4 rounded focus:outline-none disabled:opacity-50"
             >
               {isSubmitting ? t('saving') : t('save')}
             </button>
