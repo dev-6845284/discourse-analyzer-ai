@@ -34,6 +34,7 @@ interface ModalsProps {
   isEditProfileModalOpen: boolean;
   user: { _id: string; name: string } | null;
   onPasswordUpdated: () => void;
+  closeChangePasswordModal: () => void;
   onProfileUpdated: (newName: string) => void;
 
   // Usage dashboard
@@ -63,6 +64,7 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
   isEditProfileModalOpen,
   user,
   onPasswordUpdated,
+  closeChangePasswordModal,
   onProfileUpdated,
   isUsageStatsDashboardOpen,
   onCloseUsageStats,
@@ -122,7 +124,7 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
       {isChangePasswordModalOpen && user && (
         <PasswordModal
           user={{ _id: user._id, name: user.name }}
-          onClose={() => onPasswordUpdated()}
+          onClose={() => closeChangePasswordModal()}
           onSubmit={() => onPasswordUpdated()}
         />
       )}

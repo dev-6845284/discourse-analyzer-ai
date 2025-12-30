@@ -541,6 +541,7 @@ const App: React.FC = () => {
               setIsChangePasswordModalOpen(false);
               alert(t('passwordUpdated'));
             }}
+            closeChangePasswordModal={() => setIsChangePasswordModalOpen(false)}
             onProfileUpdated={(newName) => {
               setIsEditProfileModalOpen(false);
               updateUser({ name: newName });
