@@ -46,7 +46,7 @@ export function useAppController() {
   const [isTranscriptMethodSelectorOpen, setIsTranscriptMethodSelectorOpen] = React.useState<boolean>(false);
   const [autoFetchError, setAutoFetchError] = React.useState<string | null>(null);
   // Admin view within Admin actions container (e.g., 'users', 'categories', null)
-  const [adminView, setAdminView] = React.useState<'users' | 'categories' | 'logs' | 'management' | null>(null);
+  const [adminView, setAdminView] = React.useState<'users' | 'categories' | 'logs' | 'management' | 'keysets' | null>(null);
 
   React.useEffect(() => {
     if (logsVisible) {

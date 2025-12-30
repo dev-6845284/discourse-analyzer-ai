@@ -336,3 +336,19 @@ export const createAccessControl = (payload: any) => api.post('/admin/access-con
 export const upsertUserKeyset = (userId: string, keys: { GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }) => {
   return api.put(`/users/${userId}/keyset`, keys);
 };
+
+// Admin API keyset management
+export const getAdminKeysets = () => api.get('/admin/api-key-sets/available');
+export const createAdminKeyset = (keyset: { alias: string; GEMINI_API_KEY?: string; GROK_API_KEY?: string; CHATGPT_API_KEY?: string }) => 
+  api.post('/admin/api-key-sets', keyset);
+export const updateAdminKeyset = (id: string, keyset: { alias?: string; GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }) => 
+  api.put(`/admin/api-key-sets/${id}`, keyset);
+export const deleteAdminKeyset = (id: string) => api.delete(`/admin/api-key-sets/${id}`);
+
+// User keyset assignment
+export const assignKeysetToUser = (keysetId: string, userId: string) => 
+  api.post(`/admin/api-key-sets/${keysetId}/assign`, { userId });
+export const unassignKeysetFromUser = (keysetId: string, userId: string) => 
+  api.post(`/admin/api-key-sets/${keysetId}/unassign`, { userId });
+export const getUserAssignedKeyset = (userId: string) => 
+  api.get(`/users/${userId}/assigned-keyset`);

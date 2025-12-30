@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../../types';
-import { Edit, Trash2, Key } from 'lucide-react';
+import { Edit, Trash2, Key, Link as LinkIcon } from 'lucide-react';
 import { useI18n } from '../../i18n';
 
 interface UserListProps {
@@ -8,9 +8,10 @@ interface UserListProps {
   onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
   onChangePassword: (user: User) => void;
+  onAssignKeyset: (user: User) => void;
 }
 
-export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onChangePassword }) => {
+export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onChangePassword, onAssignKeyset }) => {
   const { t } = useI18n();
   return (
     <div className="bg-gray-800 shadow-md rounded-lg overflow-hidden">
@@ -37,11 +38,29 @@ export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onC
               <tr key={user._id} className="hover:bg-gray-700">
                 <td colSpan={5} className="px-2 md:px-4 py-3">
                   <div className="flex flex-col gap-1 min-w-0">
-                    {/* Line 1: Name / Alias */}
-                    <div className="font-medium text-gray-100 truncate">{user.alias}</div>
+                    {/* Line 1: Name / Alias with keyset status badge */}
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium text-gray-100 truncate">{user.alias}</div>
+                      {user.assignedKeysetAlias ? (
+                        <span className="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-900 text-blue-200 whitespace-nowrap">
+                          📌 Keyset
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-gray-700 text-gray-400 whitespace-nowrap">
+                          ○ None
+                        </span>
+                      )}
+                    </div>
 
                     {/* Line 2: Email */}
                     <div className="text-sm text-gray-400 truncate">{user.email}</div>
+
+                    {/* Line 2b: Assigned Keyset details */}
+                    {user.assignedKeysetAlias && (
+                      <div className="text-xs text-blue-400">
+                        {t('keyset_current', { alias: user.assignedKeysetAlias })}
+                      </div>
+                    )}
 
                     {/* Line 3: Meta + Actions */}
                     <div className="flex items-center justify-between mt-1">
@@ -61,6 +80,13 @@ export const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, onC
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
+                        <button
+                          onClick={() => onAssignKeyset(user)}
+                          className="text-cyan-400 hover:text-cyan-300"
+                          title={t('keyset_assign')}
+                        >
+                          <LinkIcon size={16} />
+                        </button>
                         <button
                           onClick={() => onEdit(user)}
                           className="text-indigo-300 hover:text-indigo-100"

@@ -7,14 +7,15 @@ import { UserManager } from './users/UserManager';
 import LogViewer from './LogViewer';
 import AccessControlManagement from './admin/AccessControlManagement';
 import AdminCategories from './admin/AdminCategories';
+import KeysetManagement from './admin/KeysetManagement';
 
 interface MainContentProps {
   activeTab: 'search' | 'people' | 'users' | 'sessions' | 'admin';
   setActiveTab: (tab: 'search' | 'people' | 'users' | 'sessions' | 'admin') => void;
   resultsTab: 'new' | 'stored' | 'transcript';
   setResultsTab: (tab: 'new' | 'stored' | 'transcript') => void;
-  adminView?: 'users' | 'categories' | 'logs' | 'management' | null;
-  setAdminView?: (v: 'users' | 'categories' | 'logs' | 'management' | null) => void;
+  adminView?: 'users' | 'categories' | 'logs' | 'management' | 'keysets' | null;
+  setAdminView?: (v: 'users' | 'categories' | 'logs' | 'management' | 'keysets' | null) => void;
   statusFilters: {
     isAnalyzed: 'all' | 'true' | 'false';
     setIsAnalyzed: (value: 'all' | 'true' | 'false') => void;
@@ -186,6 +187,13 @@ export const MainContent: React.FC<MainContentProps> = ({
                     <h3 className="text-lg font-semibold text-cyan-400">{t('analysisCategories')}</h3>
                   </div>
                   <AdminCategories />
+                </div>
+              ) : adminView === 'keysets' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/50 rounded-lg flex items-center">
+                    <h3 className="text-lg font-semibold text-cyan-400">{t('keyset_title')}</h3>
+                  </div>
+                  <KeysetManagement />
                 </div>
               ) : (
                 <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 text-gray-300">

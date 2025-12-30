@@ -3,6 +3,33 @@ import UserApiKeySet from '../models/UserApiKeySet';
 import { maybeEncrypt, maybeDecrypt } from '../utils/crypto';
 import mongoose from 'mongoose';
 
+// Helper: Return sanitized keyset for API responses (no actual key values)
+const sanitizeKeyset = (doc: any) => {
+  if (!doc) return null;
+  return {
+    _id: doc._id,
+    alias: doc.alias,
+    has_GEMINI_API_KEY: !!doc.GEMINI_API_KEY,
+    has_GROK_API_KEY: !!doc.GROK_API_KEY,
+    has_CHATGPT_API_KEY: !!doc.CHATGPT_API_KEY,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+    createdBy: doc.createdBy,
+    updatedBy: doc.updatedBy,
+  };
+};
+
+// Helper: Return keyset with decrypted values for internal server use
+const decryptKeyset = (doc: any) => {
+  if (!doc) return null;
+  return {
+    ...doc,
+    GEMINI_API_KEY: maybeDecrypt(doc.GEMINI_API_KEY),
+    GROK_API_KEY: maybeDecrypt(doc.GROK_API_KEY),
+    CHATGPT_API_KEY: maybeDecrypt(doc.CHATGPT_API_KEY),
+  };
+};
+
 export async function createApiKeySet(data: { alias: string; GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null; createdBy?: string }) {
   const doc = new ApiKeySet({
     alias: data.alias,
@@ -15,25 +42,24 @@ export async function createApiKeySet(data: { alias: string; GEMINI_API_KEY?: st
   return doc.toObject();
 }
 
-export async function getApiKeySetByAliasAndCreator(alias: string, createdBy: string | null) {
+// Internal: Get keyset with decrypted values for server-side use
+export async function getApiKeySetByAliasAndCreator_Internal(alias: string, createdBy: string | null) {
   const query: any = { alias };
   if (createdBy === null) {
     query.createdBy = null;
   } else if (mongoose.isValidObjectId(createdBy)) {
     query.createdBy = new mongoose.Types.ObjectId(createdBy);
   } else {
-    // Non-ObjectId creator (e.g. 'local' during dev). Treat as null to avoid BSON errors.
-    console.warn(`getApiKeySetByAliasAndCreator: received non-ObjectId createdBy='${createdBy}', falling back to null`);
+    console.warn(`getApiKeySetByAliasAndCreator_Internal: received non-ObjectId createdBy='${createdBy}', falling back to null`);
     query.createdBy = null;
   }
   const d: any = await ApiKeySet.findOne(query).lean();
-  if (!d) return null;
-  return {
-    ...d,
-    GEMINI_API_KEY: maybeDecrypt(d.GEMINI_API_KEY),
-    GROK_API_KEY: maybeDecrypt(d.GROK_API_KEY),
-    CHATGPT_API_KEY: maybeDecrypt(d.CHATGPT_API_KEY),
-  };
+  return decryptKeyset(d);
+}
+
+// Keep old name for backward compatibility
+export async function getApiKeySetByAliasAndCreator(alias: string, createdBy: string | null) {
+  return getApiKeySetByAliasAndCreator_Internal(alias, createdBy);
 }
 
 export async function upsertUserKeyset(userId: string, keys: Partial<{ GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }>) {
@@ -60,44 +86,46 @@ export async function upsertUserKeyset(userId: string, keys: Partial<{ GEMINI_AP
   if (existing) {
     await ApiKeySet.updateOne({ _id: existing._id }, { $set: payload });
     const d: any = await ApiKeySet.findById(existing._id).lean();
-    return {
-      ...d,
-      GEMINI_API_KEY: maybeDecrypt(d.GEMINI_API_KEY),
-      GROK_API_KEY: maybeDecrypt(d.GROK_API_KEY),
-      CHATGPT_API_KEY: maybeDecrypt(d.CHATGPT_API_KEY),
-    };
+    return decryptKeyset(d);
   }
 
   const created = new ApiKeySet({ alias, createdBy: mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : null, ...payload });
   await created.save();
-  const d: any = created.toObject();
-  return {
-    ...d,
-    GEMINI_API_KEY: maybeDecrypt(d.GEMINI_API_KEY),
-    GROK_API_KEY: maybeDecrypt(d.GROK_API_KEY),
-    CHATGPT_API_KEY: maybeDecrypt(d.CHATGPT_API_KEY),
-  };
+  return decryptKeyset(created.toObject());
 }
 
-export async function listApiKeySets() {
+// Public: List keysets for API (sanitized, no actual keys)
+export async function listApiKeySets_Public() {
   const docs = await ApiKeySet.find().sort({ alias: 1 }).lean();
-  return docs.map((d: any) => ({
-    ...d,
-    GEMINI_API_KEY: maybeDecrypt(d.GEMINI_API_KEY),
-    GROK_API_KEY: maybeDecrypt(d.GROK_API_KEY),
-    CHATGPT_API_KEY: maybeDecrypt(d.CHATGPT_API_KEY),
-  }));
+  return docs.map(sanitizeKeyset);
 }
 
-export async function getApiKeySetById(id: string) {
+// Internal: List keysets with decrypted values for server use
+export async function listApiKeySets_Internal() {
+  const docs = await ApiKeySet.find().sort({ alias: 1 }).lean();
+  return docs.map(decryptKeyset);
+}
+
+// Keep old name, delegates to internal version
+export async function listApiKeySets() {
+  return listApiKeySets_Internal();
+}
+
+// Public: Get keyset for API (sanitized, no actual keys)
+export async function getApiKeySetById_Public(id: string) {
   const d: any = await ApiKeySet.findById(id).lean();
-  if (!d) return null;
-  return {
-    ...d,
-    GEMINI_API_KEY: maybeDecrypt(d.GEMINI_API_KEY),
-    GROK_API_KEY: maybeDecrypt(d.GROK_API_KEY),
-    CHATGPT_API_KEY: maybeDecrypt(d.CHATGPT_API_KEY),
-  };
+  return sanitizeKeyset(d);
+}
+
+// Internal: Get keyset with decrypted values for server use
+export async function getApiKeySetById_Internal(id: string) {
+  const d: any = await ApiKeySet.findById(id).lean();
+  return decryptKeyset(d);
+}
+
+// Keep old name, delegates to internal version
+export async function getApiKeySetById(id: string) {
+  return getApiKeySetById_Internal(id);
 }
 
 export async function updateApiKeySet(id: string, updates: Partial<{ alias: string; GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null; updatedBy?: string }>) {
@@ -110,12 +138,7 @@ export async function updateApiKeySet(id: string, updates: Partial<{ alias: stri
 
   const doc = await ApiKeySet.findByIdAndUpdate(id, set, { new: true }).lean();
   if (!doc) return null;
-  return {
-    ...doc,
-    GEMINI_API_KEY: maybeDecrypt((doc as any).GEMINI_API_KEY),
-    GROK_API_KEY: maybeDecrypt((doc as any).GROK_API_KEY),
-    CHATGPT_API_KEY: maybeDecrypt((doc as any).CHATGPT_API_KEY),
-  };
+  return decryptKeyset(doc);
 }
 
 export async function deleteApiKeySet(id: string) {
@@ -151,7 +174,13 @@ export async function listUsersForKeySet(apiKeySetId: string) {
 export default {
   createApiKeySet,
   listApiKeySets,
+  listApiKeySets_Internal,
+  listApiKeySets_Public,
   getApiKeySetById,
+  getApiKeySetById_Internal,
+  getApiKeySetById_Public,
+  getApiKeySetByAliasAndCreator,
+  getApiKeySetByAliasAndCreator_Internal,
   updateApiKeySet,
   deleteApiKeySet,
   assignKeySetToUser,

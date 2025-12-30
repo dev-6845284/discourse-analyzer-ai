@@ -6,7 +6,7 @@ const router = express.Router();
 // GET /api/admin/api-key-sets
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const sets = await service.listApiKeySets();
+    const sets = await service.listApiKeySets_Public();
     res.json(sets);
   } catch (error) {
     console.error('[ADMIN][API_KEYS] Failed to list api key sets:', (error as Error).message);
@@ -25,7 +25,7 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Cannot create reserved USERS_KEYSET via admin endpoint' });
     }
     const set = await service.createApiKeySet({ alias, GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY, createdBy });
-    res.status(201).json(set);
+    res.status(201).json(await service.getApiKeySetById_Public(set._id.toString()));
   } catch (error) {
     console.error('[ADMIN][API_KEYS] Failed to create api key set:', (error as Error).message);
     res.status(500).json({ error: 'Failed to create api key set' });
@@ -37,7 +37,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/available', async (req: Request, res: Response) => {
   try {
     const USERS_KEYSET = process.env.USERS_KEYSET_ALIAS || 'USERS_KEYSET';
-    const sets = await service.listApiKeySets();
+    const sets = await service.listApiKeySets_Public();
     const filtered = sets.filter((s: any) => s.alias !== USERS_KEYSET);
     res.json(filtered);
   } catch (error) {
@@ -49,7 +49,7 @@ router.get('/available', async (req: Request, res: Response) => {
 // GET /api/admin/api-key-sets/:id
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const d = await service.getApiKeySetById(req.params.id);
+    const d = await service.getApiKeySetById_Public(req.params.id);
     if (!d) return res.status(404).json({ error: 'Not found' });
     res.json(d);
   } catch (error) {
@@ -61,11 +61,19 @@ router.get('/:id', async (req: Request, res: Response) => {
 // PUT /api/admin/api-key-sets/:id
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const updates = req.body;
+    const { alias, GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY, overwrite_GEMINI_API_KEY, overwrite_GROK_API_KEY, overwrite_CHATGPT_API_KEY } = req.body;
+    
+    // Build updates: only include key if overwrite flag is true
+    const updates: any = {};
+    if (alias !== undefined) updates.alias = alias;
+    if (overwrite_GEMINI_API_KEY && GEMINI_API_KEY) updates.GEMINI_API_KEY = GEMINI_API_KEY;
+    if (overwrite_GROK_API_KEY && GROK_API_KEY) updates.GROK_API_KEY = GROK_API_KEY;
+    if (overwrite_CHATGPT_API_KEY && CHATGPT_API_KEY) updates.CHATGPT_API_KEY = CHATGPT_API_KEY;
+    
     updates.updatedBy = (req as any).session?.userId || undefined;
     const updated = await service.updateApiKeySet(req.params.id, updates);
     if (!updated) return res.status(404).json({ error: 'Not found' });
-    res.json(updated);
+    res.json(await service.getApiKeySetById_Public(req.params.id));
   } catch (error) {
     console.error('[ADMIN][API_KEYS] Failed to update api key set:', (error as Error).message);
     res.status(500).json({ error: 'Failed to update api key set' });

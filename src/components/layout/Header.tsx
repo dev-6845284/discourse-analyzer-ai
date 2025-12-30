@@ -52,7 +52,12 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
         <div className="flex flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
-          <p className="text-gray-700 dark:text-gray-300 mr-2 text-sm">{t('welcomeUser', { name: user.name })}</p>
+          <div className="flex flex-col gap-1">
+            <p className="text-gray-700 dark:text-gray-300 text-sm">{t('welcomeUser', { name: user.name })}</p>
+            {user.assignedKeysetAlias && (
+              <p className="text-xs text-blue-400">{t('keyset_current', { alias: user.assignedKeysetAlias })}</p>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {AVAILABLE_LANGUAGES.map((l) => (
               <label key={l.code} className="flex items-center gap-1 text-xs md:text-sm">

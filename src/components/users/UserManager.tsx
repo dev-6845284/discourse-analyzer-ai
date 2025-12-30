@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import { UserList } from './UserList.tsx';
 import { UserForm } from './UserForm.tsx';
 import { PasswordModal } from './PasswordModal.tsx';
+import { KeysetAssignmentModal } from './KeysetAssignmentModal.tsx';
 import Spinner from '../Spinner';
 import { useI18n } from '../../i18n';
 
@@ -13,7 +14,9 @@ export const UserManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isKeysetModalOpen, setIsKeysetModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserKeysetId, setSelectedUserKeysetId] = useState<string | undefined>();
   const { t } = useI18n();
 
   const fetchUsers = async () => {
@@ -46,6 +49,12 @@ export const UserManager: React.FC = () => {
   const handleChangePassword = (user: User) => {
     setSelectedUser(user);
     setIsPasswordModalOpen(true);
+  };
+
+  const handleAssignKeyset = (user: User) => {
+    setSelectedUser(user);
+    setSelectedUserKeysetId(user.assignedKeysetId);
+    setIsKeysetModalOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -94,6 +103,7 @@ export const UserManager: React.FC = () => {
         onEdit={handleEditUser}
         onDelete={handleDeleteUser}
         onChangePassword={handleChangePassword}
+        onAssignKeyset={handleAssignKeyset}
       />
 
       {isFormOpen && (
@@ -109,6 +119,17 @@ export const UserManager: React.FC = () => {
           user={selectedUser}
           onClose={() => setIsPasswordModalOpen(false)}
           onSubmit={handlePasswordSubmit}
+        />
+      )}
+
+      {isKeysetModalOpen && selectedUser && (
+        <KeysetAssignmentModal
+          user={selectedUser}
+          assignedKeysetId={selectedUserKeysetId}
+          onClose={() => setIsKeysetModalOpen(false)}
+          onSuccess={() => {
+            fetchUsers();
+          }}
         />
       )}
     </div>

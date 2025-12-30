@@ -133,4 +133,22 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// GET user's assigned keyset
+router.get('/:id/assigned-keyset', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+
+    if (!isAdminUser && !isSelf) {
+      return res.status(403).json({ message: 'Unauthorized to view this user keyset' });
+    }
+
+    const keyset = await userService.getUserAssignedKeyset(req.params.id);
+    res.json(keyset);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error fetching user keyset', error });
+  }
+});
+
 export default router;

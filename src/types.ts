@@ -162,6 +162,8 @@ export interface UserInfo {
   role?: 'admin' | 'viewer' | 'moderator' | 'editor';
   createdAt?: string;
   updatedAt?: string;
+  assignedKeysetId?: string;
+  assignedKeysetAlias?: string;
 }
 
 // Backwards-compatible alias used by components that import 'User'

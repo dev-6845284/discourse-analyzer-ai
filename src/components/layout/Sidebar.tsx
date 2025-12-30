@@ -20,7 +20,7 @@ interface SidebarProps {
   setOpenSection?: (key: string | null) => void;
   activeTab?: 'search' | 'people' | 'users' | 'sessions' | 'admin';
   setActiveTab?: (tab: 'search' | 'people' | 'users' | 'sessions' | 'admin') => void;
-  setAdminView?: (v: 'users' | 'categories' | 'logs' | 'management' | null) => void;
+  setAdminView?: (v: 'users' | 'categories' | 'logs' | 'management' | 'keysets' | null) => void;
   openAdminCategories?: () => void;
   logsVisible?: boolean;
   setLogsVisible?: (v: boolean) => void;
@@ -174,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('api_management')}
-                  </button>    
+                  </button>
 
                       <button
                     onClick={() => {
@@ -184,6 +184,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('analysisCategories')}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab && setActiveTab('admin');
+                      setAdminView && setAdminView('keysets');
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    {t('keyset_management')}
                   </button>
                 </div>
               </SidebarSection>
