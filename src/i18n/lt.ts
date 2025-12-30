@@ -430,30 +430,47 @@ const lt = {
   clearResults: 'Išvalyti rezultatus',
   relevance: 'Svarba',
 
+  // Admin UI labels
+  adminActions: 'Administravimas',
+  backToQuotes: 'Atgal į citatas',
+  adminPlaceholder: 'Administratoriaus įrankiai ir valdymas bus čia.',
+
+  // Sidebar tags
+  analysisTag: 'Analizė',
+  adminTag: 'Administravimas',
+
+  // Troubleshooting
+  troubleshooting: 'Trikčių šalinimas',
+  analysis_logs: 'Analizės žurnalai',
+
+  // Testing (dev-only)
+  testing: 'Testavimas',
+
   // Admin
   acknowledge: 'Patvirtinti',
   acknowledgedLabel: '✓ Patvirtinta',
 
   // Admin: Audit Categories UI
-  adminCategories: 'Audito kategorijos',
-  management: 'Valdymas',
-  adminCategories_title: 'Audito kategorijos',
-  adminCategories_refresh: 'Atnaujinti',
-  adminCategories_reloadCache: 'Perkrauti talpyklą',
-  adminCategories_create: 'Sukurti',
-  adminCategories_update: 'Atnaujinti',
-  adminCategories_deleteConfirm: 'Ar tikrai norite ištrinti šią kategoriją?',
-  adminCategories_mode_audit: 'auditas',
-  adminCategories_mode_flaws: 'trūkumai',
-  adminCategories_col_id: 'ID',
-  adminCategories_col_title: 'Pavadinimas',
-  adminCategories_col_modes: 'Režimai',
-  adminCategories_col_order: 'Rikiavimas',
-  adminCategories_placeholder_id: 'id',
-  adminCategories_placeholder_title: 'pavadinimas',
-  adminCategories_placeholder_uiOrder: 'eilės tvarka',
-  adminCategories_placeholder_description: 'aprašymas',
-  adminCategories_placeholder_promptGuidance: 'gairės',
+  analysisCategories: 'Analizės kategorijos',
+  api_management: 'API valdymas',
+  analysisCategories_title: 'Analizės kategorijos',
+
+  analysisCategories_refresh: 'Atnaujinti',
+  analysisCategories_reloadCache: 'Perkrauti talpyklą',
+  analysisCategories_create: 'Sukurti',
+  analysisCategories_update: 'Atnaujinti',
+  analysisCategories_deleteConfirm: 'Ar tikrai norite ištrinti šią kategoriją?',
+  analysisCategories_mode_audit: 'auditas',
+  analysisCategories_mode_flaws: 'trūkumai',
+  analysisCategories_col_id: 'ID',
+  analysisCategories_col_title: 'Pavadinimas',
+  analysisCategories_col_modes: 'Režimai',
+  analysisCategories_col_order: 'Rikiavimas',
+  analysisCategories_placeholder_id: 'id',
+  analysisCategories_placeholder_title: 'pavadinimas',
+  analysisCategories_placeholder_uiOrder: 'eilės tvarka',
+  analysisCategories_placeholder_description: 'aprašymas',
+  analysisCategories_placeholder_promptGuidance: 'gairės',
 
   // Generic small actions
   edit: 'Redaguoti',

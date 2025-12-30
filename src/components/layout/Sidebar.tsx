@@ -1,6 +1,7 @@
 import SidebarSection from './SidebarSection';
 import React from 'react';
 import { useI18n } from '../../i18n';
+import DevRoleSelector from '../DevRoleSelector';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -17,6 +18,12 @@ interface SidebarProps {
   onClose?: () => void;
   openSection?: string | null;
   setOpenSection?: (key: string | null) => void;
+  activeTab?: 'search' | 'people' | 'users' | 'sessions' | 'admin';
+  setActiveTab?: (tab: 'search' | 'people' | 'users' | 'sessions' | 'admin') => void;
+  setAdminView?: (v: 'users' | 'categories' | 'logs' | 'management' | null) => void;
+  openAdminCategories?: () => void;
+  logsVisible?: boolean;
+  setLogsVisible?: (v: boolean) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -34,6 +41,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   openSection,
   setOpenSection,
+  activeTab,
+  setActiveTab,
+  setAdminView,
+  openAdminCategories,
+  logsVisible,
+  setLogsVisible,
 }) => {
   const { t } = useI18n();
 
@@ -108,46 +121,138 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={`${isCollapsed ? 'hidden' : 'block'} md:block`}
       >
         <div className="space-y-2">
-          <SidebarSection
-            title={t('searchTab')}
-            sectionKey="search"
-            openSection={openSection}
-            setOpenSection={setOpenSection}
-          >
-            {searchContent}
-          </SidebarSection>
-          <SidebarSection
-            title={t('peopleTab')}
-            sectionKey="people"
-            openSection={openSection}
-            setOpenSection={setOpenSection}
-          >
-            {peopleContent}
-          </SidebarSection>
-          <SidebarSection
-            title={t('sessionsTab')}
-            sectionKey="sessions"
-            openSection={openSection}
-            setOpenSection={setOpenSection}
-          >
-            {sessionsContent}
-          </SidebarSection>
-          {userRole === 'admin' && (
-            <SidebarSection
-              title={t('usersTab')}
-              sectionKey="users"
-              openSection={openSection}
-              setOpenSection={setOpenSection}
-            >
-              {usersContent}
-            </SidebarSection>
+          {activeTab !== 'admin' && (
+            <>
+              <SidebarSection
+                title={t('searchTab')}
+                sectionKey="search"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('analysisTag')}
+              >
+                {searchContent}
+              </SidebarSection>
+
+              <SidebarSection
+                title={t('peopleTab')}
+                sectionKey="people"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('analysisTag')}
+              >
+                {peopleContent}
+              </SidebarSection>
+
+              <SidebarSection
+                title={t('sessionsTab')}
+                sectionKey="sessions"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('analysisTag')}
+              >
+                {sessionsContent}
+              </SidebarSection>
+            </>
           )}
-          {managementContent && (
+
+          {userRole === 'admin' && activeTab !== 'search' && (
+            <>
+              <SidebarSection
+                title={t('adminActions')}
+                sectionKey="admin-actions"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('adminTag')}
+                defaultOpen={true}
+              >
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setActiveTab && setActiveTab('admin');
+                      setAdminView && setAdminView('management');
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    {t('api_management')}
+                  </button>    
+
+                      <button
+                    onClick={() => {
+                      setActiveTab && setActiveTab('admin');
+                      setAdminView && setAdminView('categories');
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    {t('analysisCategories')}
+                  </button>
+                </div>
+              </SidebarSection>
+
+              <SidebarSection
+                title={t('troubleshooting')}
+                sectionKey="troubleshooting"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('adminTag')}
+                defaultOpen={true}
+              >
+                <div className="flex flex-col gap-2">
+                      <button
+                    onClick={() => {
+                      setAdminView && setAdminView('logs');
+                      setActiveTab && setActiveTab('admin');
+                      setLogsVisible && setLogsVisible(true);
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    {t('analysis_logs')}
+                  </button>
+                </div>
+              </SidebarSection>
+
+              <SidebarSection
+                title={t('testing')}
+                sectionKey="testing"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('adminTag')}
+                defaultOpen={true}
+              >
+                <div className="flex flex-col gap-2">
+                  <DevRoleSelector />
+                </div>
+              </SidebarSection>
+
+              <SidebarSection
+                title={t('usersTab')}
+                sectionKey="users"
+                openSection={openSection}
+                setOpenSection={setOpenSection}
+                tag={t('adminTag')}
+                defaultOpen={true}
+              >
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setAdminView && setAdminView('users');
+                      setActiveTab && setActiveTab('admin');
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    {t('userManagement')}
+                  </button>
+                </div>
+              </SidebarSection>
+            </>
+          )}
+          {managementContent && activeTab !== 'search' && (
             <SidebarSection
-              title="Management"
+              title={t('api_management')}
               sectionKey="management"
               openSection={openSection}
               setOpenSection={setOpenSection}
+              tag={t('adminTag')}
+              defaultOpen={true}
             >
               {managementContent}
             </SidebarSection>

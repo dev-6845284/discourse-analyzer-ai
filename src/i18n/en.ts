@@ -427,30 +427,48 @@ const en = {
   clearResults: 'Clear Results',
   relevance: 'Relevance',
 
+  // Admin UI labels
+  adminActions: 'Admin Actions',
+  backToQuotes: 'Back to Quotes',
+  adminPlaceholder: 'Admin tools and management will be available here.',
+
+  // Sidebar tags
+  analysisTag: 'Analysis',
+  adminTag: 'Admin',
+
+  // Troubleshooting
+  troubleshooting: 'Troubleshooting',
+  analysis_logs: 'Analysis logs',
+
+  // Testing (dev-only)
+  testing: 'Testing',
+
   // Admin
   acknowledge: 'Acknowledge',
   acknowledgedLabel: '✓ Acknowledged',
 
   // Admin: Audit Categories UI
-  adminCategories: 'Admin Categories',
-  management: 'Management',
-  adminCategories_title: 'Audit Categories',
-  adminCategories_refresh: 'Refresh',
-  adminCategories_reloadCache: 'Reload Cache',
-  adminCategories_create: 'Create',
-  adminCategories_update: 'Update',
-  adminCategories_deleteConfirm: 'Are you sure you want to delete this category?',
-  adminCategories_mode_audit: 'audit',
-  adminCategories_mode_flaws: 'flaws',
-  adminCategories_col_id: 'ID',
-  adminCategories_col_title: 'Title',
-  adminCategories_col_modes: 'Modes',
-  adminCategories_col_order: 'Order',
-  adminCategories_placeholder_id: 'id',
-  adminCategories_placeholder_title: 'title',
-  adminCategories_placeholder_uiOrder: 'order',
-  adminCategories_placeholder_description: 'description',
-  adminCategories_placeholder_promptGuidance: 'prompt guidance',
+  analysisCategories: 'Analysis Categories',
+  api_management: 'API management',
+  analysisCategories_title: 'Analysis Categories',
+
+
+  analysisCategories_refresh: 'Refresh',
+  analysisCategories_reloadCache: 'Reload Cache',
+  analysisCategories_create: 'Create',
+  analysisCategories_update: 'Update',
+  analysisCategories_deleteConfirm: 'Are you sure you want to delete this category?',
+  analysisCategories_mode_audit: 'audit',
+  analysisCategories_mode_flaws: 'flaws',
+  analysisCategories_col_id: 'ID',
+  analysisCategories_col_title: 'Title',
+  analysisCategories_col_modes: 'Modes',
+  analysisCategories_col_order: 'Order',
+  analysisCategories_placeholder_id: 'id',
+  analysisCategories_placeholder_title: 'title',
+  analysisCategories_placeholder_uiOrder: 'order',
+  analysisCategories_placeholder_description: 'description',
+  analysisCategories_placeholder_promptGuidance: 'prompt guidance',
 
   // Generic small actions
   edit: 'Edit',

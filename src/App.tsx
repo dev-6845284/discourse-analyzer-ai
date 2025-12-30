@@ -30,7 +30,6 @@ const App: React.FC = () => {
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = React.useState(false);
   const [openSidebarSection, setOpenSidebarSection] = React.useState<string | null>(null);
   const [isAdminCategoriesOpen, setIsAdminCategoriesOpen] = React.useState<boolean>(false);
-  const [isManagementOpen, setIsManagementOpen] = React.useState<boolean>(false);
   const {
     user,
     loginError,
@@ -62,6 +61,9 @@ const App: React.FC = () => {
     modalAnalysisType,
 
     activeTab,
+    setActiveTab,
+    adminView,
+    setAdminView,
     resultsTab,
     setResultsTab,
     selectedPerson,
@@ -141,15 +143,12 @@ const App: React.FC = () => {
             logsVisible={logsVisible}
             setLogsVisible={setLogsVisible}
             setIsApiKeyModalOpen={setIsApiKeyModalOpen}
-            openAdminCategories={() => setIsAdminCategoriesOpen(true)}
-            openManagement={() => setIsManagementOpen(true)}
             googleButtonRef={googleButtonRef}
             handleLogout={handleLogout}
             onChangePassword={openChangePasswordModal}
             onEditProfile={openEditProfileModal}
             openSidebarMobile={() => setIsSidebarOpenMobile(true)}
           />
-          {(import.meta.env.DEV || user?.role === 'admin') && <LogViewer logsVisible={logsVisible} />}
 
         <div
           className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
@@ -163,6 +162,12 @@ const App: React.FC = () => {
                 onExport={handleExport}
                 onImport={handleImport}
                 userRole={user.role}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                setAdminView={setAdminView}
+                openAdminCategories={() => setIsAdminCategoriesOpen(true)}
+                logsVisible={logsVisible}
+                setLogsVisible={setLogsVisible}
                 openSection={openSidebarSection}
                 setOpenSection={setOpenSidebarSection}
                 searchContent={
@@ -333,80 +338,71 @@ const App: React.FC = () => {
               />
             </div>
 
-            {(() => {
-              console.log('Management render check:', {
-                userRole: user?.role,
-                isDev: import.meta.env.DEV,
-                isManagementOpen,
-                condition: ((user && user.role === 'admin') || import.meta.env.DEV) && isManagementOpen
-              });
-              return ((user && user.role === 'admin') || import.meta.env.DEV) && isManagementOpen ? (
-                <div className="md:col-span-2">
-                  <AccessControlManagement onClose={() => setIsManagementOpen(false)} />
-                </div>
-              ) : (
-                <MainContent
-                  activeTab={activeTab}
-                  resultsTab={resultsTab}
-                  setResultsTab={setResultsTab}
-                  transcriptData={transcriptData}
-                  selectedPerson={selectedPerson}
-                  setSelectedPerson={setSelectedPerson}
+            <MainContent
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              adminView={adminView}
+              setAdminView={setAdminView}
+              openAdminCategories={() => setIsAdminCategoriesOpen(true)}
+              logsVisible={logsVisible}
+              setLogsVisible={setLogsVisible}
+              resultsTab={resultsTab}
+              setResultsTab={setResultsTab}
+              transcriptData={transcriptData}
+              selectedPerson={selectedPerson}
+              setSelectedPerson={setSelectedPerson}
 
-                  quotes={quotes}
-                  articles={articles}
-                  isLoading={isLoading}
-                  error={error}
-                  rawApiResponseError={rawApiResponseError}
-                  filteredAndSortedQuotes={filteredAndSortedQuotes}
-                  sortOrder={sortOrder}
-                  setSortOrder={setSortOrder}
+              quotes={quotes}
+              articles={articles}
+              isLoading={isLoading}
+              error={error}
+              rawApiResponseError={rawApiResponseError}
+              filteredAndSortedQuotes={filteredAndSortedQuotes}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
 
-                  onClearQuotes={quotesState.handleClearQuotes}
-                  selectedAI={searchParams.selectedAI}
-                  statusFilters={{
-                    isAnalyzed: searchParams.isAnalyzed,
-                    setIsAnalyzed: searchParams.setIsAnalyzed,
-                    isImproved: searchParams.isImproved,
-                    setIsImproved: searchParams.setIsImproved,
-                  }}
-                  onAnalyze={(quote, model, analysisType) => quotesState.handleAnalyzeQuote(quote, model, analysisType)}
-                  onImprove={handleImproveQuote}
-                  onSave={(quote: any) => {
-                    handleSaveQuote({
-                      text: quote.text,
-                      personName: searchParams.personName,
-                      source: quote.source,
-                      date: quote.date,
-                      analysisContext: quote.analysisContext,
-                      links: quote.links,
-                      ...(quote.audit ? {
-                        analyzedByProvider: searchParams.selectedAI,
-                        analyzedAt: new Date().toISOString()
-                      } : {}),
-                      metadata: {
-                        title: quote.title,
-                        languageCode: quote.languageCode,
-                        languageName: quote.languageName,
-                        // Keep legacy backup if present
-                        ...(quote.audit ? { audit: quote.audit } : (quote.analysis ? { legacyAnalysis: quote.analysis } : {}))
-                      }
-                    }).then((response) => markQuoteAsStored(quote.id, response.data._id));
-                  }}
-                  onLanguageChange={quotesState.handleUpdateQuoteLanguage}
-                  onAccept={(quote: any) => quotesState.handleAcceptQuote(quote, searchParams.selectedAI)}
-                  onDiscard={quotesState.handleDiscardQuote}
-                  onRemove={quotesState.handleRemoveQuote}
-                  clearError={quotesState.clearError}
-                  onEditSource={handleEditSource}
-                  onResumeSession={handleResumeSession}
-                  onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
-                  onExport={handleExport}
-                  onImport={handleImport}
-                />
-              );
-            })()}
-            
+              onClearQuotes={quotesState.handleClearQuotes}
+              selectedAI={searchParams.selectedAI}
+              statusFilters={{
+                isAnalyzed: searchParams.isAnalyzed,
+                setIsAnalyzed: searchParams.setIsAnalyzed,
+                isImproved: searchParams.isImproved,
+                setIsImproved: searchParams.setIsImproved,
+              }}
+              onAnalyze={(quote, model, analysisType) => quotesState.handleAnalyzeQuote(quote, model, analysisType)}
+              onImprove={handleImproveQuote}
+              onSave={(quote: any) => {
+                handleSaveQuote({
+                  text: quote.text,
+                  personName: searchParams.personName,
+                  source: quote.source,
+                  date: quote.date,
+                  analysisContext: quote.analysisContext,
+                  links: quote.links,
+                  ...(quote.audit ? {
+                    analyzedByProvider: searchParams.selectedAI,
+                    analyzedAt: new Date().toISOString()
+                  } : {}),
+                  metadata: {
+                    title: quote.title,
+                    languageCode: quote.languageCode,
+                    languageName: quote.languageName,
+                    // Keep legacy backup if present
+                    ...(quote.audit ? { audit: quote.audit } : (quote.analysis ? { legacyAnalysis: quote.analysis } : {}))
+                  }
+                }).then((response) => markQuoteAsStored(quote.id, response.data._id));
+              }}
+              onLanguageChange={quotesState.handleUpdateQuoteLanguage}
+              onAccept={(quote: any) => quotesState.handleAcceptQuote(quote, searchParams.selectedAI)}
+              onDiscard={quotesState.handleDiscardQuote}
+              onRemove={quotesState.handleRemoveQuote}
+              clearError={quotesState.clearError}
+              onEditSource={handleEditSource}
+              onResumeSession={handleResumeSession}
+              onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
+              onExport={handleExport}
+              onImport={handleImport}
+            />            
           </main>
 
           {isSidebarOpenMobile && (
@@ -421,6 +417,12 @@ const App: React.FC = () => {
                   onExport={handleExport}
                   onImport={handleImport}
                   userRole={user.role}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  setAdminView={setAdminView}
+                  openAdminCategories={() => setIsAdminCategoriesOpen(true)}
+                  logsVisible={logsVisible}
+                  setLogsVisible={setLogsVisible}
                   openSection={openSidebarSection}
                   setOpenSection={setOpenSidebarSection}
                   searchContent={

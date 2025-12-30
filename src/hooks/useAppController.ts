@@ -32,7 +32,7 @@ export function useAppController() {
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = React.useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = React.useState(false);
   const [modalMode, setModalMode] = React.useState<'add' | 'extract'>('add');
-  const [activeTab, setActiveTab] = React.useState<'search' | 'people' | 'users' | 'sessions'>('search');
+  const [activeTab, setActiveTab] = React.useState<'search' | 'people' | 'users' | 'sessions' | 'admin'>('search');
   const [resultsTab, setResultsTab] = React.useState<'new' | 'stored' | 'transcript'>('new');
   const [selectedPerson, setSelectedPerson] = React.useState<Person | null>(null);
   const [sessionsRefreshTrigger, setSessionsRefreshTrigger] = React.useState(0);
@@ -45,6 +45,8 @@ export function useAppController() {
   const [isAdminBannerCollapsed, setIsAdminBannerCollapsed] = React.useState<boolean>(true);
   const [isTranscriptMethodSelectorOpen, setIsTranscriptMethodSelectorOpen] = React.useState<boolean>(false);
   const [autoFetchError, setAutoFetchError] = React.useState<string | null>(null);
+  // Admin view within Admin actions container (e.g., 'users', 'categories', null)
+  const [adminView, setAdminView] = React.useState<'users' | 'categories' | 'logs' | 'management' | null>(null);
 
   React.useEffect(() => {
     if (logsVisible) {
@@ -459,6 +461,10 @@ export function useAppController() {
     setIsTranscriptMethodSelectorOpen,
     autoFetchError,
     setAutoFetchError,
+
+    // Admin view
+    adminView,
+    setAdminView,
 
     // Actions
     handleExport,

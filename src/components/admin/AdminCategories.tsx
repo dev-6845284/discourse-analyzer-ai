@@ -94,7 +94,7 @@ const AdminCategories: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('adminCategories_deleteConfirm'))) return;
+    if (!confirm(t('analysisCategories_deleteConfirm'))) return;
     try {
       await deleteAdminCategory(id);
       await load();
@@ -114,43 +114,65 @@ const AdminCategories: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">{t('adminCategories_title')}</h2>
+    <div className="p-4 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-gray-700">
+        <h2 className="text-xl font-bold text-gray-100">{t('analysisCategories_title')}</h2>
         <div className="flex gap-2">
-          <button className="px-3 py-1 bg-gray-700 rounded" onClick={load} disabled={loading}>{t('adminCategories_refresh')}</button>
-          <button className="px-3 py-1 bg-blue-600 rounded" onClick={handleReload} disabled={loading}>{t('adminCategories_reloadCache')}</button>
+          <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm" onClick={load} disabled={loading}>{t('analysisCategories_refresh')}</button>
+          <button className="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors text-sm" onClick={handleReload} disabled={loading}>{t('analysisCategories_reloadCache')}</button>
         </div>
       </div>
 
-      {error && <div className="mb-3 text-red-400">{error}</div>}
+      {error && <div className="p-3 bg-red-900/30 border border-red-700 rounded text-red-300">{error}</div>}
 
-      <div className="mb-6">
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-          <input placeholder={t('adminCategories_placeholder_id')} value={form.id} onChange={e => setForm({ ...form, id: e.target.value })} className="p-2 bg-gray-800 rounded" required readOnly={!!editing} />
-          <input placeholder={t('adminCategories_placeholder_title')} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="p-2 bg-gray-800 rounded" required />
-          <input placeholder={t('adminCategories_placeholder_uiOrder')} value={String(form.uiOrder ?? 0)} onChange={e => setForm({ ...form, uiOrder: Number(e.target.value || 0) })} className="p-2 bg-gray-800 rounded" />
-          <div />
-          <textarea placeholder={t('adminCategories_placeholder_description')} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="p-2 bg-gray-800 rounded col-span-2" />
-          <textarea placeholder={t('adminCategories_placeholder_promptGuidance')} value={form.promptGuidance} onChange={e => setForm({ ...form, promptGuidance: e.target.value })} className="p-2 bg-gray-800 rounded col-span-2" />
-          <div className="col-span-2 flex items-center gap-3">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.modes?.includes('audit')} onChange={e => setForm({ ...form, modes: e.target.checked ? ['audit'] : [] })} /> {t('adminCategories_mode_audit') || 'audit'}</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.modes?.includes('flaws')} onChange={e => setForm({ ...form, modes: e.target.checked ? Array.from(new Set([...(form.modes||[]),'flaws'])) : (form.modes||[]).filter(m=>m!=='flaws') })} /> {t('adminCategories_mode_flaws') || 'flaws'}</label>
-            <button className="ml-auto px-3 py-1 bg-green-600 rounded" type="submit">{editing ? t('adminCategories_update') : t('adminCategories_create')}</button>
-            {editing && <button type="button" className="px-3 py-1 bg-gray-600 rounded" onClick={() => { setEditing(null); setForm(emptyForm); }}>{t('cancel')}</button>}
+      {/* Form Section */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
+        <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">{editing ? t('edit') : t('analysisCategories_create')}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* ID and Title Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <input placeholder={t('analysisCategories_placeholder_id')} value={form.id} onChange={e => setForm({ ...form, id: e.target.value })} className="p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors" required readOnly={!!editing} />
+            <input placeholder={t('analysisCategories_placeholder_title')} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors" required />
+          </div>
+
+          {/* UI Order */}
+          <input placeholder={t('analysisCategories_placeholder_uiOrder')} value={String(form.uiOrder ?? 0)} onChange={e => setForm({ ...form, uiOrder: Number(e.target.value || 0) })} className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors" />
+
+          {/* Description and Prompt Guidance */}
+          <div className="space-y-3">
+            <textarea placeholder={t('analysisCategories_placeholder_description')} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors min-h-20 resize-none" />
+            <textarea placeholder={t('analysisCategories_placeholder_promptGuidance')} value={form.promptGuidance} onChange={e => setForm({ ...form, promptGuidance: e.target.value })} className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors min-h-20 resize-none" />
+          </div>
+
+          {/* Modes and Action Buttons */}
+          <div className="pt-2 border-t border-gray-700 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.modes?.includes('audit')} onChange={e => setForm({ ...form, modes: e.target.checked ? ['audit'] : [] })} className="cursor-pointer" /> <span className="text-sm text-gray-300">{t('analysisCategories_mode_audit') || 'audit'}</span></label>
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.modes?.includes('flaws')} onChange={e => setForm({ ...form, modes: e.target.checked ? Array.from(new Set([...(form.modes||[]),'flaws'])) : (form.modes||[]).filter(m=>m!=='flaws') })} className="cursor-pointer" /> <span className="text-sm text-gray-300">{t('analysisCategories_mode_flaws') || 'flaws'}</span></label>
+            </div>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded transition-colors text-sm font-medium" type="submit">{editing ? t('analysisCategories_update') : t('analysisCategories_create')}</button>
+              {editing && <button type="button" className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded transition-colors text-sm" onClick={() => { setEditing(null); setForm(emptyForm); }}>{t('cancel')}</button>}
+            </div>
           </div>
         </form>
       </div>
 
-      <div>
-        {loading ? <div>{t('loading')}</div> : (
-          <table className="w-full table-auto text-sm">
+      {/* List Section */}
+      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
+        <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">{t('analysisCategories_title')}</h3>
+        {loading ? (
+          <div className="py-8 text-center text-gray-400">{t('loading')}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto text-sm">
             <thead>
               <tr className="text-left border-b border-gray-700/40">
-                <th className="py-2">{t('adminCategories_col_id')}</th>
-                <th>{t('adminCategories_col_title')}</th>
-                <th>{t('adminCategories_col_modes')}</th>
-                <th>{t('adminCategories_col_order')}</th>
+                <th className="py-2">{t('analysisCategories_col_id')}</th>
+                <th>{t('analysisCategories_col_title')}</th>
+                <th>{t('analysisCategories_col_modes')}</th>
+                <th>{t('analysisCategories_col_order')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -186,7 +208,8 @@ const AdminCategories: React.FC = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

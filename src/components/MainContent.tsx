@@ -3,11 +3,18 @@ import StoredQuotes from './StoredQuotes';
 import TranscriptViewer from './TranscriptViewer';
 import { useI18n } from '../i18n';
 import { SearchResults } from './results/SearchResults';
+import { UserManager } from './users/UserManager';
+import LogViewer from './LogViewer';
+import AccessControlManagement from './admin/AccessControlManagement';
+import AdminCategories from './admin/AdminCategories';
 
 interface MainContentProps {
-  activeTab: 'search' | 'people' | 'users' | 'sessions';
+  activeTab: 'search' | 'people' | 'users' | 'sessions' | 'admin';
+  setActiveTab: (tab: 'search' | 'people' | 'users' | 'sessions' | 'admin') => void;
   resultsTab: 'new' | 'stored' | 'transcript';
   setResultsTab: (tab: 'new' | 'stored' | 'transcript') => void;
+  adminView?: 'users' | 'categories' | 'logs' | 'management' | null;
+  setAdminView?: (v: 'users' | 'categories' | 'logs' | 'management' | null) => void;
   statusFilters: {
     isAnalyzed: 'all' | 'true' | 'false';
     setIsAnalyzed: (value: 'all' | 'true' | 'false') => void;
@@ -30,7 +37,7 @@ interface MainContentProps {
 
   // handlers
   onClearQuotes: () => void;
-  onAnalyze: (q: any, model: string) => void;
+  onAnalyze: (q: any, model: string, analysisType?: 'audit'|'flaws') => Promise<void> | void;
   onImprove: (q: any) => void;
   onSave: (q: any) => void;
   onLanguageChange: (q: any, code: string) => void;
@@ -43,12 +50,19 @@ interface MainContentProps {
   onStoredPromoteSuccess: () => void;
   onExport?: () => void;
   onImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  openAdminCategories?: () => void;
+  logsVisible?: boolean;
+  setLogsVisible?: (v: boolean) => void;
   selectedAI: string;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
+  activeTab,
+  setActiveTab,
   resultsTab,
   setResultsTab,
+  adminView,
+  setAdminView,
   statusFilters,
   transcriptData,
   selectedPerson,
@@ -73,48 +87,114 @@ export const MainContent: React.FC<MainContentProps> = ({
   onExport,
   onImport,
   selectedAI,
+  openAdminCategories,
+  logsVisible,
+  setLogsVisible,
 }) => {
   const { t } = useI18n();
 
   return (
     <div className="md:col-span-2 space-y-6 min-w-0 w-full mobile:w-[100vw] mobile:max-w-[100vw] mobile:box-border">
       <>
-          <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
-            <button
-              onClick={() => setResultsTab('new')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                resultsTab === 'new'
-                  ? 'bg-cyan-600 text-white shadow'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              {t('searchResultsTab')}
-            </button>
-            <button
-              onClick={() => setResultsTab('stored')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                resultsTab === 'stored'
-                  ? 'bg-cyan-600 text-white shadow'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              {t('storedQuotesTab')}
-            </button>
-            {transcriptData && (
+          <div className="flex items-center justify-between mb-4 bg-gray-800 p-1 rounded-lg">
+            <div className="flex space-x-1 flex-1">
+              {activeTab !== 'admin' ? (
+                <>
+                  <button
+                    onClick={() => setResultsTab('new')}
+                    className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${
+                      resultsTab === 'new'
+                        ? 'bg-cyan-600 text-white shadow'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    {t('searchResultsTab')}
+                  </button>
+                  <button
+                    onClick={() => setResultsTab('stored')}
+                    className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${
+                      resultsTab === 'stored'
+                        ? 'bg-cyan-600 text-white shadow'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    {t('storedQuotesTab')}
+                  </button>
+                  {transcriptData && (
+                    <button
+                      onClick={() => setResultsTab('transcript')}
+                      className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${
+                        resultsTab === 'transcript'
+                          ? 'bg-cyan-600 text-white shadow'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      {t('transcriptTab')}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="flex-1">
+                  <button
+                    onClick={() => setActiveTab('search')}
+                    className="py-2 px-3 text-sm font-medium rounded-md bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  >
+                    {t('backToQuotes') || 'Back to Quotes'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex-shrink-0">
               <button
-                onClick={() => setResultsTab('transcript')}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                  resultsTab === 'transcript'
-                    ? 'bg-cyan-600 text-white shadow'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                onClick={() => setActiveTab(activeTab === 'admin' ? 'search' : 'admin')}
+                className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                  activeTab === 'admin' ? 'bg-cyan-600 text-white shadow' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                 }`}
               >
-                {t('transcriptTab')}
+                {t('adminActions') || 'Admin Actions'}
               </button>
-            )}
+            </div>
           </div>
 
-          {resultsTab === 'transcript' ? (
+          {activeTab === 'admin' ? (
+            <div>
+              {adminView === 'users' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-cyan-400">{t('userManagement')}</h3>
+                  </div>
+                  <UserManager />
+                </div>
+              ) : adminView === 'logs' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-cyan-400">{t('analysis_logs')}</h3>
+                  </div>
+                  <LogViewer logsVisible={true} />
+                </div>
+              ) : adminView === 'management' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/50 rounded-lg flex items-center">
+                    <h3 className="text-lg font-semibold text-cyan-400">{t('api_management')}</h3>
+                  </div>
+                  <AccessControlManagement onClose={() => setAdminView && setAdminView(null)} inline />
+                </div>
+              ) : adminView === 'categories' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-800/50 rounded-lg flex items-center">
+                    <h3 className="text-lg font-semibold text-cyan-400">{t('analysisCategories')}</h3>
+                  </div>
+                  <AdminCategories />
+                </div>
+              ) : (
+                <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 text-gray-300">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-2">{t('adminActions') || 'Admin actions'}</h3>
+                  <div className="text-sm text-gray-400">{t('adminPlaceholder') || 'Admin tools and management will be available here.'}</div>
+                </div>
+              )}
+            </div>
+          ) : resultsTab === 'transcript' ? (
             transcriptData && (
               <TranscriptViewer
                 segments={transcriptData.segments}

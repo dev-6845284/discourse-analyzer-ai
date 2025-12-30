@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '../../assets/images/image64.png';
 import { UserInfo } from '../../types';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
-import DevRoleSelector from '../DevRoleSelector';
+
 
 interface HeaderProps {
   user: UserInfo;
@@ -16,8 +16,6 @@ interface HeaderProps {
   onChangePassword: () => void;
   onEditProfile: () => void;
   openSidebarMobile?: () => void;
-  openAdminCategories?: () => void;
-  openManagement?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,8 +27,6 @@ export const Header: React.FC<HeaderProps> = ({
   handleLogout,
   onChangePassword,
   onEditProfile,
-  openAdminCategories,
-  openManagement,
   openSidebarMobile,
 }) => {
   const { t, language, setLanguage } = useI18n();
@@ -85,34 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
           </div>
 
-          {/* Role selector (dev only) */}
-          <DevRoleSelector />
 
-          {(isDev || user?.role === 'admin') && (
-            <>
-              <button
-                onClick={() => setLogsVisible(!logsVisible)}
-                className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs md:text-sm"
-              >
-                {logsVisible ? t('hideLogs') : t('showLogs')}
-              </button>
-              <button
-                onClick={() => {
-                  console.log('Management button clicked');
-                  openManagement && openManagement();
-                }}
-                className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs md:text-sm"
-              >
-                {t('management') || 'Management'}
-              </button>
-              <button
-                onClick={() => openAdminCategories && openAdminCategories()}
-                className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs md:text-sm"
-              >
-                {t('adminCategories') || 'Categories'}
-              </button>
-            </>
-          )}
 
           <button
             onClick={() => setIsApiKeyModalOpen(true)}
