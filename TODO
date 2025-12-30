@@ -35,7 +35,7 @@ Todo:
     [] Role assignments to users
     [] Use DB stored api keys instead of environment variables
     [] Create form for admin to enter extra keysets for users
-    
+    [] Admin assign keysets to users
     [x] Ensure every API call checks user role and permissions
     [x] Define required roles for each API endpoint
     [x] Store API role configurations in DB
@@ -54,7 +54,7 @@ Todo:
     [] Load from URL
   Bugs:
     [x] Person name is not sent for quote analysis
-    [] Re-evaluating quote does not use latesst updated context content
+    [] Re-evaluating quote does not use latest updated context content
     [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
     [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
     

@@ -223,7 +223,7 @@ const App: React.FC = () => {
 
                     {/* Search for Quotes (collapsible) */}
                     <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('searchForQuotes')}</summary>
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('searchForQuotes')}</summary>
                         <SearchControls
                           searchParams={searchParams}
                           statusFilters={{
@@ -255,7 +255,7 @@ const App: React.FC = () => {
 
                     {/* Extract from Text (collapsible) */}
                     <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('extractFromText')}</summary>
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('extractFromText')}</summary>
                         <ExtractionControls
                           textToExtract={searchParams.textToExtract}
                           setTextToExtract={searchParams.setTextToExtract}
@@ -274,7 +274,7 @@ const App: React.FC = () => {
 
                     {/* YouTube Transcript (collapsible) */}
                     <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('youtubeTranscript')}</summary>
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('youtubeTranscript')}</summary>
                         <YoutubeTranscriptButton
                           onClick={() => setIsTranscriptMethodSelectorOpen(true)}
                           isLoading={searchParams.isExtracting}
@@ -283,7 +283,7 @@ const App: React.FC = () => {
 
                     {/* Import Transcript Data (collapsible) */}
                     <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
                         <TranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
@@ -292,7 +292,7 @@ const App: React.FC = () => {
 
                     {/* Import SRT Transcript (collapsible) */}
                     <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('importSrtTranscriptTitle')}</summary>
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importSrtTranscriptTitle')}</summary>
                         <SrtTranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
@@ -301,7 +301,7 @@ const App: React.FC = () => {
 
                     {/* Import Analysis Data (collapsible) */}
                     <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg">{t('importAnalysisTitle')}</summary>
+                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importAnalysisTitle')}</summary>
                         <AnalysisImporter
                           onImport={handleImportAnalysis}
                           isLoading={searchParams.isExtracting}

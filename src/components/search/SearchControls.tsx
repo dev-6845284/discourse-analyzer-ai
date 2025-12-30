@@ -232,7 +232,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
             <button
               key={lang.code}
               onClick={() => languages.onChange(lang.code)}
-              className={`px-2 py-1 text-sm rounded-md transition-colors ${
+              className={`px-2 py-1 text-sm rounded-md transition-colors cursor-pointer ${
                 languages.selected.includes(lang.code)
                   ? 'bg-cyan-600 text-white'
                   : 'bg-gray-700 hover:bg-gray-600'
