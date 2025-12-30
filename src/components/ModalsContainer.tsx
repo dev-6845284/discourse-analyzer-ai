@@ -3,6 +3,7 @@ import AddQuoteModal from './AddQuoteModal';
 import ApiKeySettingsModal from './ApiKeySettingsModal';
 import { TranscriptMethodSelector } from './TranscriptMethodSelector';
 import { PasswordModal } from './users/PasswordModal';
+import { UserChangePasswordModal } from './users/UserChangePasswordModal';
 import { EditProfileModal } from './users/EditProfileModal';
 import { UsageStatsDashboard } from './admin/UsageStatsDashboard';
 const AdminCategoriesLazy = React.lazy(() => import('./admin/AdminCategories'));
@@ -122,8 +123,7 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
       />
 
       {isChangePasswordModalOpen && user && (
-        <PasswordModal
-          user={{ _id: user._id, name: user.name }}
+        <UserChangePasswordModal
           onClose={() => closeChangePasswordModal()}
           onSubmit={() => onPasswordUpdated()}
         />

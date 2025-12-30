@@ -5,6 +5,36 @@ import { isAdmin } from '../middleware/admin';
 import authorizeMiddleware from '../middleware/authorize';
 
 const router = express.Router();
+// Protect all user routes with authentication and admin check
+router.use(isAuthenticated);
+router.use(authorizeMiddleware);
+// admin-only checks for listing/creating/deleting users
+router.use(isAdmin);
+
+// PUT /api/users/me/password - user changes their own password with verification
+router.put('/me/password', isAuthenticated, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Both old and new passwords are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+    }
+
+    await userService.changePasswordWithVerification(userId, oldPassword, newPassword);
+    res.json({ message: 'Password updated successfully' });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message || 'Error updating password' });
+  }
+});
 
 router.put('/:id/password', isAuthenticated, async (req, res) => {
   try {
@@ -97,11 +127,7 @@ router.put('/:id/keyset', isAuthenticated, async (req, res) => {
   }
 });
 
-// Protect all user routes with authentication and admin check
-router.use(isAuthenticated);
-router.use(authorizeMiddleware);
-// admin-only checks for listing/creating/deleting users
-router.use(isAdmin);
+
 
 router.get('/', async (req, res) => {
   try {

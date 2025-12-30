@@ -63,6 +63,23 @@ export const changePassword = async (id: string, newPassword: string) => {
   return { message: 'Password updated successfully' };
 };
 
+export const changePasswordWithVerification = async (id: string, oldPassword: string, newPassword: string) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Verify old password using bcrypt comparison (passwords are encrypted)
+  const isPasswordValid = await user.comparePassword(oldPassword);
+  if (!isPasswordValid) {
+    throw new Error('Old password is incorrect');
+  }
+
+  user.password = newPassword;
+  await user.save();
+  return { message: 'Password updated successfully' };
+};
+
 export const findUserByEmail = async (email: string) => {
   return User.findOne({ email });
 };

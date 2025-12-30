@@ -105,6 +105,8 @@ const lt = {
   failedToDeleteUser: 'Nepavyko ištrinti vartotojo',
   failedToFetchUsers: 'Nepavyko gauti vartotojų',
   passwordUpdated: 'Slaptažodis sėkmingai atnaujintas',
+  oldPassword: 'Senas Slaptažodis',
+  oldPasswordRequired: 'Senas slaptažodis yra privalomas',
   failedToResumeSession: 'Nepavyko atnaujinti sesijos',
   quoteNotLinkedToContentAnalysis: 'Ši citata nėra susieta su turinio analizės sesija.',
   failedToLoadSourceAnalysis: 'Nepavyko įkelti šaltinio analizės.',

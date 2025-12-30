@@ -103,6 +103,8 @@ const en = {
   failedToDeleteUser: 'Failed to delete user',
   failedToFetchUsers: 'Failed to fetch users',
   passwordUpdated: 'Password updated successfully',
+  oldPassword: 'Old Password',
+  oldPasswordRequired: 'Old password is required',
   failedToResumeSession: 'Failed to resume session',
   quoteNotLinkedToContentAnalysis: 'This quote is not linked to a content analysis session.',
   failedToLoadSourceAnalysis: 'Failed to load source analysis.',

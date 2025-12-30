@@ -14,7 +14,9 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { getAccessControlList, updateAccessControl, createAccessControl } from '../../utils/api';
+import { getAccessControlList, updateAccessControl, createAccessControl, importAccessControl } from '../../utils/api';
+import ExportPermissionsModal from './ExportPermissionsModal';
+import ImportPermissionsModal from './ImportPermissionsModal';
 
 interface AccessItem {
   _id?: string;
@@ -32,6 +34,9 @@ const AccessControlManagement: React.FC<{ onClose: () => void; inline?: boolean 
   const [filterText, setFilterText] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importMessage, setImportMessage] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -77,6 +82,19 @@ const AccessControlManagement: React.FC<{ onClose: () => void; inline?: boolean 
     }
   };
 
+  const handleImport = async (permissions: AccessItem[]) => {
+    try {
+      const res = await importAccessControl(permissions);
+      setImportMessage(`Successfully imported ${res.data.imported || permissions.length} permission(s)`);
+      setTimeout(() => setImportMessage(''), 3000);
+      // Refresh the list
+      const updatedRes = await getAccessControlList();
+      setItems(updatedRes.data || []);
+    } catch (e: any) {
+      throw new Error(e.response?.data?.message || 'Failed to import permissions');
+    }
+  };
+
   // derived / computed view: apply text + role filters then group by second path segment
   const filteredGroups = useMemo(() => {
     const filtered = items.filter((it) => {
@@ -105,7 +123,27 @@ const AccessControlManagement: React.FC<{ onClose: () => void; inline?: boolean 
     <>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Access Control Management</h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Export
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="px-3 py-1 text-sm rounded bg-purple-600 text-white hover:bg-purple-700"
+          >
+            Import
+          </button>
+        </div>
       </div>
+
+      {importMessage && (
+        <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded text-sm">
+          {importMessage}
+        </div>
+      )}
 
       {loading ? (
         <div>Loading...</div>
@@ -201,6 +239,8 @@ const AccessControlManagement: React.FC<{ onClose: () => void; inline?: boolean 
     return (
       <div className="p-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-xl rounded-lg overflow-auto">
         {inner}
+        {showExportModal && <ExportPermissionsModal permissions={items} onClose={() => setShowExportModal(false)} />}
+        {showImportModal && <ImportPermissionsModal onClose={() => setShowImportModal(false)} onImport={handleImport} />}
       </div>
     );
   }
@@ -210,6 +250,8 @@ const AccessControlManagement: React.FC<{ onClose: () => void; inline?: boolean 
       <div className="flex-1 bg-black/50" onClick={onClose} />
       <div className="w-full md:w-3/5 lg:w-2/5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-xl p-6 overflow-auto">
         {inner}
+        {showExportModal && <ExportPermissionsModal permissions={items} onClose={() => setShowExportModal(false)} />}
+        {showImportModal && <ImportPermissionsModal onClose={() => setShowImportModal(false)} onImport={handleImport} />}
       </div>
     </div>
   );
