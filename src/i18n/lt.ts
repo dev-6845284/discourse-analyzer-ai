@@ -475,8 +475,8 @@ const lt = {
   analysisCategories_placeholder_promptGuidance: 'gairės',
 
   // Admin: Keyset Management
-  keyset_management: 'Keysetų valdymas',
-  keyset_title: 'API keysetai',
+  keyset_management: 'API raktų rinkiniai',
+  keyset_title: 'API raktai',
   keyset_create: 'Sukurti',
   keyset_update: 'Atnaujinti',
   keyset_delete: 'Ištrinti',

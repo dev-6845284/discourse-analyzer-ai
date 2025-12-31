@@ -12,6 +12,9 @@ Todo:
     [x] Security alerts system for suspicious activity
     [x] Admin dashboard for usage stats and alerts
     [x] Admin alert banner with real-time notifications
+    [] First create session id from server before accepting browsing or login requests
+    [] Do throttle protection on session creation endpoint
+    [] Cache active sessions in Redis for quick validation
     [] Check for more security and DDoS protection measures
     [] Add WebSocket for real-time alert updates
     [] Implement Vercel Edge Middleware for edge-level rate limiting
@@ -32,28 +35,33 @@ Todo:
       [] Allow save session state multiple times
       [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
   user management:
-    [] Role assignments to users
+    [x] Role assignments to users
     [] Use DB stored api keys instead of environment variables
-    [] Create form for admin to enter extra keysets for users
-    [] Admin assign keysets to users
+    [x] Create form for admin to enter extra keysets for users
+    [x] Admin assign keysets to users
     [x] Ensure every API call checks user role and permissions
     [x] Define required roles for each API endpoint
     [x] Store API role configurations in DB
     [x] On application start, register all API endpoints in DB; register missing endpoints with default admin role
     [x] Create DB migration to add role-based access control to existing users
   public quotes:
+    [] Api just for public quotes listing
+    [] Ensure protection of public quotes endpoints with proper quard against abuse, DDoS, injection attacks
+    [] Make effective caching for public quotes listing endpoint
     [] Quotes can be promoted to public quotes from admin dashboard
     [] Add moderation system for public quotes
     [] Roles based access control for admin dashboard
     [] Public quotes display: hide audit metadata: who added, initial analysis, AI model used
   Quote display:
-    [] Show facebook embeded iframe for facebook quotes
+    [x] Show facebook embeded iframe for facebook quotes
+    [] Don't activate embedded preview until user clicks 'Load Preview' button
   Quote analysis:
     [x] Create different 'flavors' of quote analysis: fact check, toxi
   TickTok videos:
     [] Load from URL
   Bugs:
     [x] Person name is not sent for quote analysis
+    [] Quote analysis don't use corrent analysis categories according selected analysis type
     [] Re-evaluating quote does not use latest updated context content
     [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
     [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
