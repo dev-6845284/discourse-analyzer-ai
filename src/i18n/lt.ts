@@ -335,6 +335,14 @@ const lt = {
   category_NarrativeControl: 'Naratyvo kontrolė / propaganda',
   category_NarrativeControlPropaganda: 'Naratyvo kontrolė / propaganda',
 
+  // Flaws categories
+  category_Dehumanization: 'Dehumanizacija',
+  'category_SymbolicViolenceDeath-Wishing': 'Simbolinis smurtas / mirties linkėjimas',
+  'category_Hate-SpeechAdjacentRhetoric': 'Su neapykantos kalba susijusi retorika',
+  category_AuthoritarianMobLogic: 'Autoritarinė / minios logika',
+  category_DemocraticNormViolation: 'Demokratinių normų pažeidimas',
+  category_PsychologicalRhetoricalProfile: 'Psichologinis ir retorinis profilis',
+
   // Vertimai: rimtumo lygiai / įvertinimai
   severity_NONE: 'Nėra',
   severity_LOW: 'Žemas',

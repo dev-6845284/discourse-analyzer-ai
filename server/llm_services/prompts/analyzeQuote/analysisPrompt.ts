@@ -1,7 +1,7 @@
 import { AnalyzeQuotePromptParams, PersonInfo } from '../types';
-import { getCategoriesForMode } from '../../..//services/categoryService';
+import { getCategoriesForMode } from '../../../services/categoryService';
 
-function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
+function renderCategoryListMarkdown(mode: 'audit' | 'flaws'): string {
   return getCategoriesForMode(mode)
     .map((c, i) => `### ${i + 1}. ${c.title}\n${c.promptGuidance}`)
     .join('\n\n');

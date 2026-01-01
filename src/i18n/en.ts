@@ -326,6 +326,14 @@ const en = {
   category_NarrativeControl: 'Narrative Control / Propaganda',
   category_NarrativeControlPropaganda: 'Narrative Control / Propaganda',
 
+  // Flaws categories
+  category_Dehumanization: 'Dehumanization',
+  'category_SymbolicViolenceDeath-Wishing': 'Symbolic Violence / Death-Wishing',
+  'category_Hate-SpeechAdjacentRhetoric': 'Hate-Speech Adjacent Rhetoric',
+  category_AuthoritarianMobLogic: 'Authoritarian / Mob Logic',
+  category_DemocraticNormViolation: 'Democratic Norm Violation',
+  category_PsychologicalRhetoricalProfile: 'Psychological & Rhetorical Profile',
+
   // Severity/Rating translations
   severity_NONE: 'None',
   severity_LOW: 'Low',

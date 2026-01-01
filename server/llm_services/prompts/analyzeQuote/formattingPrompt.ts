@@ -1,5 +1,5 @@
 import { AnalyzeQuoteFormattingPromptParams } from '../types';
-import { getCategoriesForMode } from '../../..//services/categoryService';
+import { getCategoriesForMode } from '../../../services/categoryService';
 
 /**
  * Builds the formatting prompt to convert audit notes into structured JSON.
@@ -13,9 +13,13 @@ function buildCategoriesJsonForAudit(quoteLanguageName: string): string {
 function buildCategoriesJsonForFlaws(quoteLanguageName: string): string {
   const cats = getCategoriesForMode('flaws');
   return cats.map(c => `"${c.title}": {\n      "severity": "<LEVEL>",\n      "evidence": "<evidence in ${quoteLanguageName}>"\n    }`).join(',\n    ');
-} 
+}
 export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormattingPromptParams): string {
-  const { quoteLanguageName, analysisNotes } = params;
+  const { quoteLanguageName, analysisNotes, analysisType = 'audit' } = params;
+
+  if (analysisType === 'flaws') {
+    return buildAnalyzeFlawsFormattingPrompt(params);
+  }
 
   const categoriesJson = buildCategoriesJsonForAudit(quoteLanguageName);
 
@@ -45,7 +49,7 @@ export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormatting
 ${analysisNotes}
 >>>
 
-Return only the JSON object.`; 
+Return only the JSON object.`;
 }
 
 /**
@@ -123,4 +127,15 @@ ${analysisNotes}
 >>>
 
 Return ONLY the JSON object.`;
+}
+
+export function buildAnalyzeFormattingPromptByType(type: 'audit' | 'flaws', params: AnalyzeQuoteFormattingPromptParams): string {
+  switch (type) {
+    case 'audit':
+      return buildAnalyzeQuoteFormattingPrompt({ ...params, analysisType: 'audit' });
+    case 'flaws':
+      return buildAnalyzeFlawsFormattingPrompt({ ...params, analysisType: 'flaws' });
+    default:
+      throw new Error(`Unknown analysis type: ${type}`);
+  }
 }

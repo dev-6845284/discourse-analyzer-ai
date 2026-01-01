@@ -3,19 +3,19 @@ import { getSourceProvenancePolicySection } from '../shared/sourceProvenancePoli
 import { getEntityDisambiguationSection } from '../shared/entityDisambiguation';
 import { getWebSearchPlanSection } from '../shared/webSearchPlan';
 import { TimePeriod, PersonInfo } from '../types';
-import { getCategoriesForMode } from '../../..//services/categoryService';
+import { getCategoriesForMode } from '../../../services/categoryService';
 
-function renderCategoryListMarkdown(mode: 'audit'|'flaws'): string {
+function renderCategoryListMarkdown(mode: 'audit' | 'flaws'): string {
   return getCategoriesForMode(mode)
     .map((c, i) => `1. **${c.title}**: ${c.description}`)
     .join('\n');
 }
 
-function buildCategoriesJsonForGrok(quoteLanguageName: string): string {
-  return getCategoriesForMode('audit')
+function buildCategoriesJsonForGrok(quoteLanguageName: string, mode: 'audit' | 'flaws' = 'audit'): string {
+  return getCategoriesForMode(mode)
     .map(c => `    "${c.title}": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" }`)
     .join(',\n');
-} 
+}
 
 export interface GrokFetchQuotesPromptParams {
   personName: string;
@@ -177,7 +177,7 @@ Return a single JSON object with this structure:
   "verdict": "<TRUE|FALSE|MISLEADING|MANIPULATIVE|UNFOUNDED>",
   "rationale": "<2-4 sentences in ${quoteLanguageName} explaining why this verdict is unavoidable>",
   "categories": {
-${buildCategoriesJsonForGrok(quoteLanguageName)}
+${buildCategoriesJsonForGrok(quoteLanguageName, 'audit')}
   }
 }
 
@@ -281,7 +281,7 @@ Return a single JSON object with this structure:
   "classification": "<CLASSIFICATION>",
   "finalAssessment": "<final assessment in ${quoteLanguageName}>",
   "categories": {
-${buildCategoriesJsonForGrok(quoteLanguageName)}
+${buildCategoriesJsonForGrok(quoteLanguageName, 'flaws')}
   }
 }
 

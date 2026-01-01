@@ -26,6 +26,7 @@
 - [ ] Promoted stage
 
 ### Improvements:
+- [ ] Support translations for dynamic analysis categories.
 - [ ] Improve audit verdict prompt (currently ambiguous) or remove it.
 - [ ] Allow saving session state multiple times.
 - [ ] Allow selection of specific AI models for different analysis stages:

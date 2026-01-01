@@ -15,7 +15,9 @@ import { extractJson } from './utils';
 import {
   buildFetchQuotesResearchPrompt,
   buildFetchQuotesFormattingPrompt,
+  buildAnalyzePromptByType,
   buildAnalyzeQuoteFormattingPrompt,
+  buildAnalyzeFormattingPromptByType,
   buildExtractQuotesFromTextPrompt,
   buildExtractQuotesFormattingPrompt,
   buildExtractQuotesFromArticlePrompt,
@@ -303,7 +305,7 @@ class ChatGptService implements LlmService {
 
     try {
       // Step 1: Deep Analysis with Search
-      const analysisPrompt = (prompts as any).buildAnalyzePromptByType(analysisType, {
+      const analysisPrompt = buildAnalyzePromptByType(analysisType, {
         quoteText,
         quoteLanguageName,
         person,
@@ -330,7 +332,7 @@ class ChatGptService implements LlmService {
       }
 
       // Step 2: Format to JSON
-      const formattingPrompt = buildAnalyzeQuoteFormattingPrompt({
+      const formattingPrompt = buildAnalyzeFormattingPromptByType(analysisType, {
         quoteLanguageName,
         analysisNotes,
       });
