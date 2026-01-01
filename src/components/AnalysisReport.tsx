@@ -1,24 +1,24 @@
 
 import React from 'react';
 import { useI18n } from '../i18n';
-import { 
-  AnalysisResult, 
-  AnalysisCategory, 
-  AnalysisDetail, 
-  AuditResult, 
-  AuditCategory, 
+import {
+  AnalysisResult,
+  AnalysisCategory,
+  AnalysisDetail,
+  AuditResult,
+  AuditCategory,
   AuditDetail,
-  SeverityLevel 
+  SeverityLevel
 } from '../types';
-import { 
-  CATEGORY_COLORS, 
-  RATING_COLORS, 
+import {
+  CATEGORY_COLORS,
+  RATING_COLORS,
   RATING_HEX,
-  AUDIT_CATEGORY_COLORS, 
-  SEVERITY_COLORS, 
+  AUDIT_CATEGORY_COLORS,
+  SEVERITY_COLORS,
   SEVERITY_HEX,
   VERDICT_COLORS,
-  severityToDisplay 
+  severityToDisplay
 } from '../constants';
 import StrengthBar from './StrengthBar';
 
@@ -50,17 +50,35 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
     const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
     return (
       <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
-        {/* Verdict Badge */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-cyan-300">{t('auditReport')}</h3>
-          <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${VERDICT_COLORS[audit.verdict]}`}>
-            {t(`verdict_${audit.verdict}`) || audit.verdict}
-          </span>
-        </div>
-        {/* Rationale */}
-        <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-cyan-500">
-          <p className="text-gray-200 text-sm italic">{audit.rationale}</p>
-        </div>
+        {'classification' in audit ? (
+          <>
+            {/* Flaws Classification */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-cyan-300">{t('flawsReport') || 'Rhetorical Analysis'}</h3>
+              <span className="px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset bg-purple-600/20 text-purple-300 ring-purple-500/30 text-right">
+                {t(`verdict_${audit.classification}`) || audit.classification}
+              </span>
+            </div>
+            {/* Final Assessment */}
+            <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-purple-500">
+              <p className="text-gray-200 text-sm italic">{audit.finalAssessment}</p>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Verdict Badge */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-cyan-300">{t('auditReport')}</h3>
+              <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${VERDICT_COLORS[audit.verdict]}`}>
+                {t(`verdict_${audit.verdict}`) || audit.verdict}
+              </span>
+            </div>
+            {/* Rationale */}
+            <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-cyan-500">
+              <p className="text-gray-200 text-sm italic">{audit.rationale}</p>
+            </div>
+          </>
+        )}
         {/* Categories */}
         {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => (
           <div
@@ -83,7 +101,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
                   {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
                 </span>
                 <StrengthBar
-                  level={['NONE','LOW','MEDIUM','HIGH','SEVERE'].indexOf(detail.severity)}
+                  level={['NONE', 'LOW', 'MEDIUM', 'HIGH', 'SEVERE'].indexOf(detail.severity)}
                   max={5}
                   color={SEVERITY_HEX[detail.severity]}
                   tooltip={t(`severity_${detail.severity}`) || severityToDisplay(detail.severity)}
@@ -122,7 +140,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
                 {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
               </span>
               <StrengthBar
-                level={['None','Low','Medium','High','Severe'].indexOf(detail.rating)}
+                level={['None', 'Low', 'Medium', 'High', 'Severe'].indexOf(detail.rating)}
                 max={5}
                 color={RATING_HEX[detail.rating]}
                 tooltip={t(`rating_${detail.rating}`) || detail.rating}

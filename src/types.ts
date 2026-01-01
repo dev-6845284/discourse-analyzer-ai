@@ -53,13 +53,30 @@ export type AnalysisResult = {
 };
 
 // New audit result with verdict and rationale
-export interface AuditResult {
+export interface StrictAuditResult {
   verdict: Verdict;
   rationale: string;
   categories: {
     [key in AuditCategory]: AuditDetail;
   };
 }
+
+export type FlawsClassification =
+  | "TOXIC POLITICAL RHETORIC"
+  | "DEHUMANIZING SPEECH"
+  | "SYMBOLIC VIOLENCE"
+  | "AUTHORITARIAN AGITATION"
+  | "DEMOCRATICALLY DANGEROUS SPEECH";
+
+export interface FlawsResult {
+  classification: FlawsClassification;
+  finalAssessment: string;
+  categories: {
+    [key in AuditCategory]: AuditDetail;
+  };
+}
+
+export type AuditResult = StrictAuditResult | FlawsResult;
 
 export interface Quote {
   id?: string;

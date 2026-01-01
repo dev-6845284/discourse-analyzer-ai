@@ -38,12 +38,10 @@ export {
 // Gemini-specific prompts (single-stage JSON)
 export {
   buildGeminiFetchQuotesPrompt,
-  buildGeminiAnalyzeQuotePrompt,
   buildGeminiExtractQuotesFromTextPrompt,
   buildGeminiExtractQuotesFromArticlePrompt,
   buildGeminiImproveQuotePrompt,
   type GeminiFetchQuotesPromptParams,
-  type GeminiAnalyzeQuotePromptParams,
   type GeminiExtractQuotesFromTextPromptParams,
   type GeminiExtractQuotesFromArticlePromptParams,
   type GeminiImproveQuotePromptParams,
@@ -52,12 +50,10 @@ export {
 // Grok-specific prompts (single-stage JSON)
 export {
   buildGrokFetchQuotesPrompt,
-  buildGrokAnalyzeQuotePrompt,
   buildGrokExtractQuotesFromTextPrompt,
   buildGrokExtractQuotesFromArticlePrompt,
   buildGrokImproveQuotePrompt,
   type GrokFetchQuotesPromptParams,
-  type GrokAnalyzeQuotePromptParams,
   type GrokExtractQuotesFromTextPromptParams,
   type GrokExtractQuotesFromArticlePromptParams,
   type GrokImproveQuotePromptParams,

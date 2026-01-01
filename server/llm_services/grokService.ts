@@ -11,15 +11,15 @@ import {
 import { extractJson } from './utils';
 import {
   buildGrokFetchQuotesPrompt,
-  buildGrokAnalyzeQuotePrompt,
   buildGrokExtractQuotesFromTextPrompt,
   buildGrokExtractQuotesFromArticlePrompt,
   buildGrokImproveQuotePrompt,
   createTopicExtractionPrompt,
+  buildAnalyzePromptByType,
+  buildAnalyzeFormattingPromptByType,
 } from './prompts';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { LlmService } from './LlmService';
-import { buildGrokAnalyzeFlawsPrompt } from './prompts/grok';
 
 // Grok API uses OpenAI-compatible endpoints
 const GROK_API_BASE_URL = "https://api.x.ai/v1";
@@ -200,15 +200,45 @@ class GrokService implements LlmService {
     if (!apiKey) throw new Error("Grok API key is missing.");
 
     try {
-      const prompt = analysisType === 'flaws'
-        ? buildGrokAnalyzeFlawsPrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links })
-        : buildGrokAnalyzeQuotePrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links });
+      // Step 1: Generate Analysis Notes (Text)
+      const analysisPrompt = buildAnalyzePromptByType(analysisType, {
+        quoteText,
+        quoteLanguageName,
+        person,
+        personName: person?.name,
+        analysisContext,
+        links,
+      });
 
-      const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
+      // Step 1: Analysis (Reasoning)
+      const analysisNotes = await callGrokAPI(
+        apiKey,
+        [{ role: 'user', content: analysisPrompt }],
+        logId,
+        sessionId,
+        temperature
+      );
 
-      const jsonText = extractJson(rawText);
+      // Step 2: Format to JSON
+      const formattingPrompt = buildAnalyzeFormattingPromptByType(analysisType, {
+        quoteLanguageName,
+        analysisNotes,
+        analysisType // Explicitly pass the type
+      });
+
+      // Step 2: Formatting (JSON)
+      // Use lower temperature for formatting to ensure strict JSON adherence
+      const rawJsonText = await callGrokAPI(
+        apiKey,
+        [{ role: 'user', content: formattingPrompt }],
+        logId,
+        sessionId,
+        0.2
+      );
+
+      const jsonText = extractJson(rawJsonText);
       if (!jsonText) {
-        console.error("No valid JSON object found in the Grok API analysis response:", rawText);
+        console.error("No valid JSON object found in the Grok API analysis response:", rawJsonText);
         throw new Error("Could not find a valid JSON object in the AI's analysis response.");
       }
 

@@ -17,13 +17,13 @@ import { LlmService } from './LlmService';
 import { extractJson } from './utils';
 import {
   buildGeminiFetchQuotesPrompt,
-  buildGeminiAnalyzeQuotePrompt,
   buildGeminiExtractQuotesFromTextPrompt,
   buildGeminiExtractQuotesFromArticlePrompt,
   buildGeminiImproveQuotePrompt,
   createTopicExtractionPrompt,
+  buildAnalyzePromptByType,
+  buildAnalyzeFormattingPromptByType,
 } from './prompts';
-import { buildGeminiAnalyzeFlawsPrompt } from "./prompts/gemini";
 
 // The AI client will be initialized on-demand within each function.
 
@@ -216,49 +216,97 @@ class GeminiService implements LlmService {
     const ai = new GoogleGenAI({ apiKey });
 
     try {
-      const prompt = analysisType === 'flaws'
-        ? buildGeminiAnalyzeFlawsPrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links })
-        : buildGeminiAnalyzeQuotePrompt({ quoteText, quoteLanguageName, person, personName: person?.name, analysisContext, links });
+      // Step 1: Generate Analysis Notes (Text)
+      const analysisPrompt = buildAnalyzePromptByType(analysisType, {
+        quoteText,
+        quoteLanguageName,
+        person,
+        personName: person?.name,
+        analysisContext,
+        links,
+      });
 
-      appendLogRequestPayload(sessionId, logId, { prompt });
+      appendLogRequestPayload(sessionId, logId, { prompt: analysisPrompt, step: 'analysis' });
 
-      const requestDetails = {
-        model: 'gemini-2.5-flash',
-        contents: prompt,
+      const analysisRequestDetails = {
+        model: 'gemini-2.0-flash-exp', // Use a stronger model for reasoning if available, or fall back to 1.5-flash
+        contents: analysisPrompt,
         config: {
           tools: [{ googleSearch: {} }],
           temperature: temperature,
         }
       };
 
-      const interactionId = addModelInteractionLog(sessionId, logId, {
+      const analysisInteractionId = addModelInteractionLog(sessionId, logId, {
         provider: 'Google',
-        model: requestDetails.model,
+        model: analysisRequestDetails.model,
         operation: 'generateContent',
-        requestPayload: requestDetails,
-        metadata: { task: 'analyzeQuote' },
+        requestPayload: analysisRequestDetails,
+        metadata: { task: 'analyzeQuote', step: 'analysis' },
       });
 
-      let response: GenerateContentResponse;
-      let responseSnapshot: any;
-      let capturedError: any;
+      let analysisResponse: GenerateContentResponse;
+      let analysisResponseSnapshot: any;
+      let analysisCapturedError: any;
 
       try {
-        response = await ai.models.generateContent(requestDetails);
-        responseSnapshot = response;
+        analysisResponse = await ai.models.generateContent(analysisRequestDetails);
+        analysisResponseSnapshot = analysisResponse;
       } catch (error) {
-        capturedError = error;
+        analysisCapturedError = error;
         throw error;
       } finally {
-        completeModelInteractionLog(sessionId, logId, interactionId, responseSnapshot, capturedError);
+        completeModelInteractionLog(sessionId, logId, analysisInteractionId, analysisResponseSnapshot, analysisCapturedError);
       }
 
-      const rawText = getValidatedResponseText(response, "analyzing the quote");
+      const analysisNotes = getValidatedResponseText(analysisResponse, "analyzing the quote");
 
-      const jsonText = extractJson(rawText);
+      // Step 2: Format to JSON
+      const formattingPrompt = buildAnalyzeFormattingPromptByType(analysisType, {
+        quoteLanguageName,
+        analysisNotes,
+        analysisType // Explicitly pass the type
+      });
+
+      appendLogRequestPayload(sessionId, logId, { prompt: formattingPrompt, step: 'formatting' });
+
+      const formattingRequestDetails = {
+        model: 'gemini-2.5-flash', // Faster model for formatting
+        contents: formattingPrompt,
+        config: {
+          temperature: 0.2, // Lower temperature for strict formatting
+          responseMimeType: "application/json",
+        }
+      };
+
+      const formattingInteractionId = addModelInteractionLog(sessionId, logId, {
+        provider: 'Google',
+        model: formattingRequestDetails.model,
+        operation: 'generateContent',
+        requestPayload: formattingRequestDetails,
+        metadata: { task: 'analyzeQuote', step: 'formatting' },
+      });
+
+      let formattingResponse: GenerateContentResponse;
+      let formattingResponseSnapshot: any;
+      let formattingCapturedError: any;
+
+      try {
+        formattingResponse = await ai.models.generateContent(formattingRequestDetails);
+        formattingResponseSnapshot = formattingResponse;
+      } catch (error) {
+        formattingCapturedError = error;
+        throw error;
+      } finally {
+        completeModelInteractionLog(sessionId, logId, formattingInteractionId, formattingResponseSnapshot, formattingCapturedError);
+      }
+
+      const rawJsonText = getValidatedResponseText(formattingResponse, "formatting analysis result");
+      const jsonText = extractJson(rawJsonText);
+
       if (!jsonText) {
-        console.error("No valid JSON object found in the AI analysis response:", rawText);
-        throw new Error("Could not find a valid JSON object in the AI's analysis response.");
+        console.error("No valid JSON object found in the AI formatting response:", rawJsonText);
+        throw new Error("Could not find a valid JSON object in the AI's formatting response.");
       }
 
       try {
@@ -290,6 +338,7 @@ class GeminiService implements LlmService {
       throw new Error("Failed to analyze the quote. The API may be unavailable or the response was invalid.");
     }
   }
+
 
   public async extractQuotesFromText(apiKey: string, personName: string, textContent: string, temperature: number, logId: string, sessionId: string): Promise<Quote[]> {
     if (!apiKey) throw new Error("Gemini API key is missing.");
