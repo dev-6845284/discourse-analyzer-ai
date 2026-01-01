@@ -68,7 +68,7 @@ export const useCategories = () => {
      * The LLM response usually uses the Base Title as the key.
      */
     const getCategory = (key: string) =>
-        categories.find(c => c.id === key || c.title === key);
+        Array.isArray(categories) ? categories.find(c => c.id === key || c.title === key) : undefined;
 
     /**
      * Helper to get a translated title for a category.

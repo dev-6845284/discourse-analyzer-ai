@@ -168,6 +168,32 @@ const AdminCategories: React.FC = () => {
             >
               Lietuvių (LT)
             </button>
+            <div className="w-px bg-gray-700 mx-1"></div>
+            <button
+              type="button"
+              className="px-3 py-1 text-xs rounded text-cyan-400 hover:text-cyan-300 hover:bg-gray-800 flex items-center gap-1"
+              title="Copy current fields as JSON for translation"
+              onClick={() => {
+                const data = {
+                  title: getFieldValue('title'),
+                  description: getFieldValue('description'),
+                  promptGuidance: getFieldValue('promptGuidance')
+                };
+                navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+                // Optional: show a small toast or temporary text change
+                const btn = document.activeElement as HTMLButtonElement;
+                if (btn) {
+                  const original = btn.innerHTML;
+                  btn.innerHTML = 'Copied!';
+                  setTimeout(() => btn.innerHTML = original, 1000);
+                }
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copy JSON
+            </button>
           </div>
         </div>
 

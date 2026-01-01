@@ -47,7 +47,7 @@ const isAuditResult = (props: AnalysisReportProps): props is AuditReportProps =>
 
 const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
   const { t, language } = useI18n();
-  const { getCategoryTitle } = useCategories();
+  const { getCategory } = useCategories();
 
   if (isAuditResult(props)) {
     const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
@@ -84,16 +84,26 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
         )}
         {/* Categories */}
         {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => {
-          // Determine the display title: either from dynamic DB-fetched categories OR fallback to existing logic
-          let displayTitle = getCategoryTitle(category, language);
+          const cat = getCategory ? getCategory(category) : undefined;
+          let displayTitle = category;
 
-          // If the getCategoryTitle just returned the ID, it means it wasn't found in dynamic categories. 
-          // Try the i18n key fallback for standard categories.
-          if (displayTitle === category) {
+          // 1. Try Dynamic Translation (DB)
+          const dynamicTitle = cat?.translations?.[language]?.title;
+
+          if (dynamicTitle) {
+            displayTitle = dynamicTitle;
+          } else {
+            // 2. Try Static Translation (i18n file)
+            // Construct key from the category string (likely English Title "Verifiable Falsehood")
             const i18nKey = `category_${category.replace(/ |&|\//g, '')}`;
             const translated = t(i18nKey);
-            // If t returns the key or similar, maintain the ID fallback, otherwise use t result
-            if (translated !== i18nKey) displayTitle = translated;
+
+            if (translated !== i18nKey) {
+              displayTitle = translated;
+            } else {
+              // 3. Fallback to Base English Title from DB, or the key itself
+              displayTitle = cat?.title || category;
+            }
           }
 
           return (
