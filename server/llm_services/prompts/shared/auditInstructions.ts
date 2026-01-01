@@ -1,6 +1,6 @@
 
 import { PersonInfo } from '../types';
-import { getCategoriesForMode } from '../../../services/categoryService';
+import { getCategoriesForMode } from '../../../config/auditCategories';
 
 export function renderCategoryListMarkdown(mode: 'audit' | 'flaws'): string {
     if (mode === 'audit') {

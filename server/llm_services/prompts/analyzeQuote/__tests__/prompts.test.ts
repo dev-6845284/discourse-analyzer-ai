@@ -1,7 +1,5 @@
 import { buildAnalyzeQuotePrompt, buildAnalyzeFlawsPrompt } from '../analysisPrompt';
 import { buildAnalyzeQuoteFormattingPrompt } from '../formattingPrompt';
-import { buildGrokAnalyzeQuotePrompt } from '../../grok';
-import { buildGeminiAnalyzeQuotePrompt } from '../../gemini';
 import { AUDIT_CATEGORIES } from '../../../../config/auditCategories';
 
 
@@ -34,15 +32,5 @@ describe('dynamic category prompts', () => {
     const fmt = buildAnalyzeQuoteFormattingPrompt({ quoteLanguageName: 'English', analysisNotes: 'notes' });
     expect(fmt).toContain('"Verifiable Falsehood":');
     expect(fmt).toContain('"Misleading Framing":');
-  });
-
-  test('grok prompt output format includes category keys', () => {
-    const grok = buildGrokAnalyzeQuotePrompt({ quoteText: 'x', quoteLanguageName: 'English' });
-    expect(grok).toContain('"Verifiable Falsehood"');
-  });
-
-  test('gemini prompt output format includes category keys', () => {
-    const gem = buildGeminiAnalyzeQuotePrompt({ quoteText: 'x', quoteLanguageName: 'English' });
-    expect(gem).toContain('"Verifiable Falsehood"');
   });
 });

@@ -1,5 +1,5 @@
 import { AnalyzeQuoteFormattingPromptParams } from '../types';
-import { getCategoriesForMode } from '../../../services/categoryService';
+import { getCategoriesForMode } from '../../../config/auditCategories';
 
 /**
  * Builds the formatting prompt to convert audit notes into structured JSON.

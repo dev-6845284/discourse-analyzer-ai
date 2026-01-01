@@ -40,6 +40,7 @@ export async function loadCategoriesFromDb(db?: Db): Promise<void> {
         modes: d.modes || ['audit'],
         legacyNames: d.legacyNames || [],
         uiOrder: d.uiOrder || 0,
+        translations: d.translations || {},
       } as CategoryDefinition));
 
       cachedCategories = mapped.sort((a, b) => (a.uiOrder || 0) - (b.uiOrder || 0));
@@ -80,6 +81,7 @@ export async function createCategory(cat: Partial<CategoryDefinition>): Promise<
     modes: cat.modes || ['audit'],
     uiOrder: cat.uiOrder || 0,
     legacyNames: cat.legacyNames || [],
+    translations: cat.translations || {},
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -118,7 +120,7 @@ export async function updateCategory(id: string, patch: Partial<CategoryDefiniti
   if ((patch as any).id !== undefined) throw new Error('Cannot change category id');
 
   const updateDoc: any = { $set: { updatedAt: new Date() } };
-  const allowed = ['title','description','promptGuidance','modes','legacyNames','uiOrder'];
+  const allowed = ['title', 'description', 'promptGuidance', 'modes', 'legacyNames', 'uiOrder', 'translations'];
   for (const key of allowed) {
     if ((patch as any)[key] !== undefined) {
       (updateDoc.$set as any)[key] = (patch as any)[key];

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useI18n } from '../i18n';
+import { useCategories } from '../hooks/useCategories';
 import {
   AnalysisResult,
   AnalysisCategory,
@@ -45,7 +46,9 @@ const isAuditResult = (props: AnalysisReportProps): props is AuditReportProps =>
 
 
 const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const { getCategoryTitle } = useCategories();
+
   if (isAuditResult(props)) {
     const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
     return (
@@ -80,39 +83,53 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
           </>
         )}
         {/* Categories */}
-        {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => (
-          <div
-            key={category}
-            className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}
-          >
-            {selectable && onToggleCategory && (
-              <div className="pt-1">
-                <input
-                  type="checkbox"
-                  checked={selectedCategories.includes(category as AuditCategory)}
-                  onChange={() => onToggleCategory(category as AuditCategory)}
-                  className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
-                />
+        {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => {
+          // Determine the display title: either from dynamic DB-fetched categories OR fallback to existing logic
+          let displayTitle = getCategoryTitle(category, language);
+
+          // If the getCategoryTitle just returned the ID, it means it wasn't found in dynamic categories. 
+          // Try the i18n key fallback for standard categories.
+          if (displayTitle === category) {
+            const i18nKey = `category_${category.replace(/ |&|\//g, '')}`;
+            const translated = t(i18nKey);
+            // If t returns the key or similar, maintain the ID fallback, otherwise use t result
+            if (translated !== i18nKey) displayTitle = translated;
+          }
+
+          return (
+            <div
+              key={category}
+              className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}
+            >
+              {selectable && onToggleCategory && (
+                <div className="pt-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(category as AuditCategory)}
+                    onChange={() => onToggleCategory(category as AuditCategory)}
+                    className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${AUDIT_CATEGORY_COLORS[category]}`}>
+                    {displayTitle}
+                  </span>
+                  <StrengthBar
+                    level={['NONE', 'LOW', 'MEDIUM', 'HIGH', 'SEVERE'].indexOf(detail.severity)}
+                    max={5}
+                    color={SEVERITY_HEX[detail.severity]}
+                    tooltip={t(`severity_${detail.severity}`) || severityToDisplay(detail.severity)}
+                    height={12}
+                    width={60}
+                  />
+                </div>
+                <p className="mt-2 text-gray-300 text-sm">{detail.evidence}</p>
               </div>
-            )}
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ring-1 ring-inset ${AUDIT_CATEGORY_COLORS[category]}`}>
-                  {t(`category_${category.replace(/ |&|\//g, '')}`) || category}
-                </span>
-                <StrengthBar
-                  level={['NONE', 'LOW', 'MEDIUM', 'HIGH', 'SEVERE'].indexOf(detail.severity)}
-                  max={5}
-                  color={SEVERITY_HEX[detail.severity]}
-                  tooltip={t(`severity_${detail.severity}`) || severityToDisplay(detail.severity)}
-                  height={12}
-                  width={60}
-                />
-              </div>
-              <p className="mt-2 text-gray-300 text-sm">{detail.evidence}</p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

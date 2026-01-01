@@ -8,6 +8,11 @@ export interface CategoryDefinition {
   modes: CategoryMode[]; // which prompt flavors should include this category
   legacyNames?: string[]; // optional legacy display names for migration compatibility
   uiOrder?: number;
+  translations?: Record<string, {
+    title?: string;
+    description?: string;
+    promptGuidance?: string;
+  }>;
 }
 
 export const AUDIT_CATEGORIES: CategoryDefinition[] = [

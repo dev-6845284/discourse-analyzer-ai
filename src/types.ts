@@ -245,3 +245,18 @@ export interface QuoteUpdatePayload {
   improvedByProvider?: string;
   improvedAt?: string;
 }
+
+export interface CategoryDefinition {
+  id: string;
+  title: string;
+  description: string;
+  promptGuidance: string;
+  modes: ('audit' | 'flaws')[];
+  legacyNames?: string[];
+  uiOrder?: number;
+  translations?: Record<string, {
+    title?: string;
+    description?: string;
+    promptGuidance?: string;
+  }>;
+}
