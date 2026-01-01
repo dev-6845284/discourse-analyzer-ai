@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import Person from '../models/Person';
-import { 
-  calculateNameSimilarity, 
-  normalizeName, 
+import {
+  calculateNameSimilarity,
+  normalizeName,
   DEFAULT_SIMILARITY_THRESHOLD,
-  SimilarityMatch 
+  SimilarityMatch
 } from '../utils/nameMatching';
 
 export interface PersonSimilarityMatch extends SimilarityMatch {
@@ -25,7 +25,7 @@ export const findSimilarPersons = async (
   threshold = DEFAULT_SIMILARITY_THRESHOLD
 ): Promise<PersonSimilarityMatch[]> => {
   const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
-  
+
   // Get all persons - we need to do similarity matching in memory
   // For large datasets, consider adding a normalizedName field to the schema
   const allPersons = await Person.find({})
@@ -37,7 +37,7 @@ export const findSimilarPersons = async (
   for (const person of allPersons) {
     // Check similarity with the main name
     const nameSimilarity = calculateNameSimilarity(searchName, person.name);
-    
+
     // Check similarity with aliases
     let bestAliasSimilarity = 0;
     let bestAliasMatch = '';
@@ -102,7 +102,7 @@ export const getOrCreatePersonByName = async (
 ): Promise<{ person: any; isNew: boolean; matchedVia?: string }> => {
   // First, try to find a similar existing person
   const match = await findBestMatchingPerson(name, threshold);
-  
+
   if (match) {
     const person = await Person.findById(match.personId);
     if (person) {
@@ -110,7 +110,7 @@ export const getOrCreatePersonByName = async (
       const normalizedSearch = normalizeName(name);
       const normalizedName = normalizeName(person.name);
       const aliasesNormalized = (person.aliases || []).map(normalizeName);
-      
+
       if (normalizedSearch !== normalizedName && !aliasesNormalized.includes(normalizedSearch)) {
         // Add the new name variation as an alias if it's not already there
         if (!person.aliases.includes(name)) {
@@ -118,19 +118,19 @@ export const getOrCreatePersonByName = async (
           await person.save();
         }
       }
-      
-      return { 
-        person, 
-        isNew: false, 
-        matchedVia: match.isExact ? 'exact' : 'similar' 
+
+      return {
+        person,
+        isNew: false,
+        matchedVia: match.isExact ? 'exact' : 'similar'
       };
     }
   }
-  
+
   // No match found, create new person
   const newPerson = new Person({ name, aliases: [] });
   await newPerson.save();
-  
+
   return { person: newPerson, isNew: true };
 };
 
@@ -166,13 +166,16 @@ export const createPerson = async (req: Request, res: Response) => {
   }
 };
 
+import { escapeRegExp } from '../utils/escape';
+
 export const getPeople = async (req: Request, res: Response) => {
   try {
     const { search } = req.query;
     let query = {};
 
     if (search) {
-      const searchRegex = new RegExp(search as string, 'i');
+      const searchSafe = escapeRegExp(search as string);
+      const searchRegex = new RegExp(searchSafe, 'i');
       query = {
         $or: [
           { name: searchRegex },
@@ -233,7 +236,7 @@ export const deletePerson = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const timeout = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '30000', 10);
-    
+
     const person = await Person.findByIdAndDelete(id).maxTimeMS(timeout);
 
     if (!person) {
