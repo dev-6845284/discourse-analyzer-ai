@@ -16,6 +16,12 @@ export const AUDIT_CATEGORY_COLORS: Record<AuditCategory, string> = {
   [AuditCategory.ResponsibilityShifting]: "bg-orange-600/20 text-orange-300 ring-orange-500/30",
   [AuditCategory.UnsupportedAssertion]: "bg-blue-600/20 text-blue-300 ring-blue-500/30",
   [AuditCategory.NarrativeControl]: "bg-pink-600/20 text-pink-300 ring-pink-500/30",
+  [AuditCategory.Dehumanization]: "bg-red-900/20 text-red-400 ring-red-500/30",
+  [AuditCategory.SymbolicViolence]: "bg-fuchsia-600/20 text-fuchsia-300 ring-fuchsia-500/30",
+  [AuditCategory.HateSpeechAdjacent]: "bg-rose-600/20 text-rose-300 ring-rose-500/30",
+  [AuditCategory.AuthoritarianMobLogic]: "bg-zinc-600/20 text-zinc-300 ring-zinc-500/30",
+  [AuditCategory.DemocraticNormViolation]: "bg-amber-600/20 text-amber-300 ring-amber-500/30",
+  [AuditCategory.PsychologicalProfile]: "bg-indigo-600/20 text-indigo-300 ring-indigo-500/30",
 };
 
 // Legacy rating colors (title-case)
@@ -90,14 +96,14 @@ export const ALL_CATEGORIES = Object.values(AnalysisCategory);
 export const ALL_AUDIT_CATEGORIES = Object.values(AuditCategory);
 
 export const SUPPORTED_LANGUAGES: { code: string; name: string }[] = [
-    { code: 'en', name: 'English' },
-    { code: 'ru', name: 'Russian' },
-    { code: 'lt', name: 'Lithuanian' },
-    { code: 'pl', name: 'Polish' },
-    { code: 'uk', name: 'Ukrainian' },
-    { code: 'fr', name: 'French' },
-    { code: 'se', name: 'Swedish' },
-    { code: 'no', name: 'Norwegian' },
-    { code: 'dk', name: 'Danish' },
-    { code: 'es', name: 'Spanish' },
+  { code: 'en', name: 'English' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'lt', name: 'Lithuanian' },
+  { code: 'pl', name: 'Polish' },
+  { code: 'uk', name: 'Ukrainian' },
+  { code: 'fr', name: 'French' },
+  { code: 'se', name: 'Swedish' },
+  { code: 'no', name: 'Norwegian' },
+  { code: 'dk', name: 'Danish' },
+  { code: 'es', name: 'Spanish' },
 ];

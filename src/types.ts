@@ -14,6 +14,13 @@ export enum AuditCategory {
   ResponsibilityShifting = "Responsibility Shifting",
   UnsupportedAssertion = "Unsupported Assertion",
   NarrativeControl = "Narrative Control / Propaganda",
+  // Flaws Categories
+  Dehumanization = "Dehumanization",
+  SymbolicViolence = "Symbolic Violence / Death-Wishing",
+  HateSpeechAdjacent = "Hate-Speech Adjacent Rhetoric",
+  AuthoritarianMobLogic = "Authoritarian / Mob Logic",
+  DemocraticNormViolation = "Democratic Norm Violation",
+  PsychologicalProfile = "Psychological & Rhetorical Profile",
 }
 
 // Legacy rating type - kept for migration compatibility
@@ -178,7 +185,7 @@ export interface ArticleRecommendation {
   publishedDate?: string;
 }
 
-export type AgenticSearchResult = 
+export type AgenticSearchResult =
   | { type: 'quotes'; data: Quote[] }
   | { type: 'articles'; data: ArticleRecommendation[] };
 

@@ -215,8 +215,12 @@ class GrokService implements LlmService {
       try {
         const parsed = JSON.parse(jsonText);
         try {
-          const { validateAuditResult } = await import('../services/analysisValidator');
-          validateAuditResult(parsed, jsonText);
+          const { validateAuditResult, validateFlawsResult } = await import('../services/analysisValidator');
+          if (analysisType === 'flaws') {
+            validateFlawsResult(parsed, jsonText);
+          } else {
+            validateAuditResult(parsed, jsonText);
+          }
         } catch (validationError) {
           console.error('Model validation failed:', (validationError as Error).message);
           throw validationError;
@@ -468,7 +472,7 @@ class GrokService implements LlmService {
     sessionId?: string
   ): Promise<TopicAnalysisResult> {
     const prompt = createTopicExtractionPrompt(text, language);
-    
+
     const responseText = await this.generateContent(apiKey, {
       model: GROK_MODEL,
       prompt,
@@ -521,12 +525,12 @@ class GrokService implements LlmService {
 
     const interactionId = sessionId && logId
       ? addModelInteractionLog(sessionId, logId, {
-          provider: 'xAI',
-          model: requestDetails.body.model,
-          operation: 'chat.completions',
-          requestPayload: requestDetails,
-          metadata,
-        })
+        provider: 'xAI',
+        model: requestDetails.body.model,
+        operation: 'chat.completions',
+        requestPayload: requestDetails,
+        metadata,
+      })
       : null;
 
     let responseSnapshot: any;

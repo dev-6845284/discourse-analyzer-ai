@@ -44,7 +44,7 @@ export type ChatGptCallOptions = {
  */
 export const callChatGptAPI = async (
   apiKey: string,
-  messages: Array<{ role: string; content: string }> ,
+  messages: Array<{ role: string; content: string }>,
   logId: string,
   sessionId: string,
   options: ChatGptCallOptions = {}
@@ -192,7 +192,7 @@ class ChatGptService implements LlmService {
         maxQuoteLength: effectiveMaxQuoteLength,
         limitQuoteLength: LIMIT_QUOTE_LENGTH,
       });
-      
+
       const researchNotes = await callChatGptAPI(
         apiKey,
         [{ role: 'user', content: prompt }],
@@ -358,8 +358,12 @@ class ChatGptService implements LlmService {
         const parsed = JSON.parse(jsonText);
         // Validate parsed response against configured audit categories
         try {
-          const { validateAuditResult } = await import('../services/analysisValidator');
-          validateAuditResult(parsed, jsonText);
+          const { validateAuditResult, validateFlawsResult } = await import('../services/analysisValidator');
+          if (analysisType === 'flaws') {
+            validateFlawsResult(parsed, jsonText);
+          } else {
+            validateAuditResult(parsed, jsonText);
+          }
         } catch (validationError) {
           if (validationError instanceof Error) {
             console.error('Model validation failed:', validationError.message);
@@ -586,7 +590,7 @@ class ChatGptService implements LlmService {
 
       // Join multiple quotes into a single quote with ' | ' separator
       const joinedText = validQuotes.map(q => q.text.trim()).join(' | ');
-      
+
       // Use the language from the first quote (assuming all quotes are in the same language)
       const firstQuote = validQuotes[0];
 
@@ -682,7 +686,7 @@ class ChatGptService implements LlmService {
         console.error("Failed to parse JSON response:", jsonText);
         throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
       }
-      
+
       // Return the improved quote
       return {
         id: quote.id,
@@ -713,7 +717,7 @@ class ChatGptService implements LlmService {
     sessionId?: string
   ): Promise<TopicAnalysisResult> {
     const prompt = createTopicExtractionPrompt(text, language);
-    
+
     const responseText = await this.generateContent(apiKey, {
       model: 'gpt-4o-mini',
       prompt,
@@ -770,12 +774,12 @@ class ChatGptService implements LlmService {
 
     const interactionId = sessionId && logId
       ? addModelInteractionLog(sessionId, logId, {
-          provider: 'OpenAI',
-          model: requestBody.model,
-          operation: 'chat.completions',
-          requestPayload: requestDetails,
-          metadata,
-        })
+        provider: 'OpenAI',
+        model: requestBody.model,
+        operation: 'chat.completions',
+        requestPayload: requestDetails,
+        metadata,
+      })
       : null;
 
     let responseSnapshot: any;
