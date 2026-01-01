@@ -59,8 +59,11 @@ const ExportPermissionsModal: React.FC<ExportPermissionsModalProps> = ({ permiss
 
   const handleExport = () => {
     const selected = permissions.filter((p) => selectedIds.has(getPermKey(p)));
-    if (selected.length > 0) {
-      exportPermissionsToFile(selected);
+    const success = exportPermissionsToFile(selected, (message) => {
+      console.error('Export failed:', message);
+      // You can add UI error handling here if needed
+    });
+    if (success) {
       onClose();
     }
   };
@@ -108,7 +111,6 @@ const ExportPermissionsModal: React.FC<ExportPermissionsModalProps> = ({ permiss
 
         <div className="flex-1 overflow-y-auto mb-4 space-y-3">
           {groups.map((group) => {
-            const groupPermKeys = group.items.map(getPermKey);
             const groupSelected = group.items.filter((p) => selectedIds.has(getPermKey(p))).length;
             const allGroupSelected = groupSelected === group.items.length;
 

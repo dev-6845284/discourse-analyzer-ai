@@ -85,10 +85,7 @@ function extractRoutes(app: express.Express | express.Router) {
           routes.push({ method: m, path: prefix + routePath });
         }
       } else if (layer.name === 'router' && layer.handle && layer.handle.stack) {
-        // This is a mounted router - may have a "regexp" or path
-        const mountPath = layer.regexp && layer.regexp.fast_slash ? '' : (layer.regexp && layer.regexp.source && layer.regexp.source !== '^\\/?$' ? layer.regexp.source : '');
         // Try to get path from layer
-        const p = (layer.regexp && layer.regexp.source && layer.regexp.source !== '^\\/?$') ? '' : '';
         // Express doesn't easily expose the mount path; rely on layer?.path if present
         if (layer?.path) {
           traverse(layer.handle.stack, prefix + layer.path);
@@ -151,7 +148,7 @@ export async function registerEndpoints(app: express.Express) {
     }
 
     const now = new Date();
-    for (const [key, r] of unique) {
+    for (const r of unique.values()) {
       const requiredRole = inferDefaultRole(r.method, r.path);
       await ApiPermission.updateOne(
         { method: r.method, path: r.path },

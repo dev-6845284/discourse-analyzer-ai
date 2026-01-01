@@ -123,7 +123,7 @@ export const KeysetAssignmentModal: React.FC<KeysetAssignmentModalProps> = ({
             <select
               value={selectedKeysetId || ''}
               onChange={e => setSelectedKeysetId(e.target.value || null)}
-              disabled={loading || keysets.length === 0}
+              disabled={keysets.length === 0}
               className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 focus:border-blue-500 focus:outline-none transition-colors disabled:opacity-50"
             >
               <option value="">{t('keyset_none')}</option>

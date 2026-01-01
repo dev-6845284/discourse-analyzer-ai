@@ -1,6 +1,5 @@
 import User, { IUser, USER_ROLES } from '../models/User';
 import * as apiKeyService from './apiKeyService';
-import mongoose from 'mongoose';
 
 export const getAllUsers = async () => {
   const users = await User.find({}, '-password').sort({ createdAt: -1 });

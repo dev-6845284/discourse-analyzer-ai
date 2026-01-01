@@ -2,7 +2,6 @@ import React, { Suspense } from 'react';
 import AddQuoteModal from './AddQuoteModal';
 import ApiKeySettingsModal from './ApiKeySettingsModal';
 import { TranscriptMethodSelector } from './TranscriptMethodSelector';
-import { PasswordModal } from './users/PasswordModal';
 import { UserChangePasswordModal } from './users/UserChangePasswordModal';
 import { EditProfileModal } from './users/EditProfileModal';
 import { UsageStatsDashboard } from './admin/UsageStatsDashboard';

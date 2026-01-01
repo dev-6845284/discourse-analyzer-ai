@@ -22,7 +22,6 @@ import ModalsContainer from './components/ModalsContainer';
 import MainContent from './components/MainContent';
 import { useI18n } from './i18n';
 import type { Person } from './types';
-import AccessControlManagement from './components/admin/AccessControlManagement';
 
 const App: React.FC = () => {
   const ctrl = useAppController();
@@ -102,8 +101,8 @@ const App: React.FC = () => {
     handleEditSource,
     handleSaveQuote,
 
-    quotesState: { quotes, articles, isLoading, error, rawApiResponseError, handleLoadQuotes, handleClearQuotes, markQuoteAsStored, handleCancelSearch },
-    quoteFilters: { sortOrder, setSortOrder, filterCategory, filterRating, filteredAndSortedQuotes }
+    quotesState: { quotes, articles, isLoading, error, rawApiResponseError, markQuoteAsStored },
+    quoteFilters: { sortOrder, setSortOrder, filteredAndSortedQuotes }
   } = ctrl;
   if (!user) {
     return (
@@ -536,7 +535,7 @@ const App: React.FC = () => {
 
             isChangePasswordModalOpen={isChangePasswordModalOpen}
             isEditProfileModalOpen={isEditProfileModalOpen}
-            user={user ? { _id: user._id, name: user.name } : null}
+            user={{ _id: user._id, name: user.name }}
             onPasswordUpdated={() => {
               setIsChangePasswordModalOpen(false);
               alert(t('passwordUpdated'));

@@ -1,3 +1,5 @@
+import { isYouTubeUrl } from '../utils/urlHelpers';
+
 export interface LinkData {
   url: string;
   title?: string;
@@ -5,7 +7,7 @@ export interface LinkData {
   selected?: boolean;
 }
 
-import { isYouTubeUrl } from '../utils/urlHelpers';
+
 
 export const initializeLinksWithSelection = (inputLinks: LinkData[]): LinkData[] => {
   return (inputLinks || []).map(link => ({

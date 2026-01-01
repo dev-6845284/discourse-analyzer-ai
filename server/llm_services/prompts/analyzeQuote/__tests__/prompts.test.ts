@@ -1,5 +1,5 @@
 import { buildAnalyzeQuotePrompt, buildAnalyzeFlawsPrompt } from '../analysisPrompt';
-import { buildAnalyzeQuoteFormattingPrompt, buildAnalyzeFlawsFormattingPrompt } from '../formattingPrompt';
+import { buildAnalyzeQuoteFormattingPrompt } from '../formattingPrompt';
 import { buildGrokAnalyzeQuotePrompt } from '../../grok';
 import { buildGeminiAnalyzeQuotePrompt } from '../../gemini';
 import { AUDIT_CATEGORIES } from '../../../../config/auditCategories';

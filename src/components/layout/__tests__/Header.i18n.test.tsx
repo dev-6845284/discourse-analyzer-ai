@@ -3,7 +3,6 @@ import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Header } from '../Header';
 import { I18nProvider } from '../../../i18n';
-import { Quote } from '../../../types';
 
 // Small test consumer that displays a translated string so we can observe language changes
 const ResultsConsumer: React.FC<{ count: number }> = ({ count }) => {

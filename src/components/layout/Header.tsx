@@ -30,7 +30,6 @@ export const Header: React.FC<HeaderProps> = ({
   openSidebarMobile,
 }) => {
   const { t, language, setLanguage } = useI18n();
-  const isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development';
 
   return (
     <header className="mb-6 w-full">

@@ -16,11 +16,18 @@ export interface PermissionsExportData {
 
 /**
  * Export selected permissions to a JSON file
+ * @param selectedPermissions - Array of permissions to export
+ * @param onError - Optional callback for error handling
+ * @returns true if export was successful, false otherwise
  */
-export const exportPermissionsToFile = (selectedPermissions: AccessItem[]) => {
+export const exportPermissionsToFile = (
+  selectedPermissions: AccessItem[],
+  onError?: (message: string) => void
+): boolean => {
   if (selectedPermissions.length === 0) {
-    alert('No permissions selected for export.');
-    return;
+    const message = 'No permissions selected for export.';
+    onError?.(message);
+    return false;
   }
 
   const dataToExport: PermissionsExportData = {
@@ -47,6 +54,7 @@ export const exportPermissionsToFile = (selectedPermissions: AccessItem[]) => {
   document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
+  return true;
 };
 
 /**

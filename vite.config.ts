@@ -13,7 +13,4 @@ export default defineConfig({
       '@': path.resolve(__dirname, '.'),
     }
   },
-  define: {
-    'import.meta.env': process.env,
-  },
 });

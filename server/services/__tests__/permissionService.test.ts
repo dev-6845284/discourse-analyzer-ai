@@ -1,5 +1,4 @@
 import permissionService from '../permissionService';
-import express from 'express';
 import apiRouter from '../../routes/api';
 import ApiPermission from '../../models/ApiPermission';
 
