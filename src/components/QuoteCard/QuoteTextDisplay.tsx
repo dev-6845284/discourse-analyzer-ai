@@ -1,4 +1,6 @@
 import React from 'react';
+import { Eye } from 'lucide-react';
+
 import { Quote } from '../../types';
 import { SUPPORTED_LANGUAGES } from '../../constants';
 import { useI18n } from '../../i18n';
@@ -23,6 +25,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
   const { t } = useI18n();
   const [iframeHeight, setIframeHeight] = React.useState<number>(220);
   const [expanded, setExpanded] = React.useState<boolean>(false);
+  const [showIframe, setShowIframe] = React.useState<boolean>(false);
   const prevHeightRef = React.useRef<number | null>(null);
 
   const increaseHeight = () => setIframeHeight((h) => Math.min(800, h + 120));
@@ -45,7 +48,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
     });
   };
 
-  
+
 
   return (
     <>
@@ -76,50 +79,62 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
               const iframeSrc = match ? match[1] : null;
               return iframeSrc ? (
                 <div className="mt-3 w-full">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={toggleExpanded}
-                        title={expanded ? t('collapse') : t('expand')}
-                        className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
-                      >
-                        {expanded ? '-' : '+'}
-                      </button>
-                      <button
-                        onClick={increaseHeight}
-                        title={t('increase')}
-                        className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
-                      >
-                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M12 6v4" />
-                          <path d="M8 8l4-4 4 4" />
-                          <path d="M12 18v-4" />
-                          <path d="M8 16l4 4 4-4" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={decreaseHeight}
-                        title={t('decrease')}
-                        className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}>
-                          <path d="M6 8l4 4-4 4" />
-                          <path d="M18 8l-4 4 4 4" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="text-xs text-gray-400">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
-                  </div>
-                  <div className={`rounded-md overflow-hidden border-0 ${expanded ? 'w-full' : 'w-full'}`} style={{ backgroundColor: '#ffffff' }}>
-                    <iframe
-                      src={iframeSrc}
-                      title={displayQuote.title || 'Embedded Post'}
-                      className="w-full rounded-md border-0 overflow-hidden"
-                      style={{ height: expanded ? Math.max(iframeHeight, 420) : iframeHeight, backgroundColor: '#ffffff' }}
-                      loading="lazy"
-                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                    />
-                  </div>
+                  {!showIframe ? (
+                    <button
+                      onClick={() => setShowIframe(true)}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-cyan-400 text-xs rounded transition-colors w-full justify-center border border-gray-600 border-dashed"
+                    >
+                      <Eye className="h-4 w-4" />
+                      {t('loadEmbeddedContent') || 'Load Embedded Content'}
+                    </button>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={toggleExpanded}
+                            title={expanded ? t('collapse') : t('expand')}
+                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                          >
+                            {expanded ? '-' : '+'}
+                          </button>
+                          <button
+                            onClick={increaseHeight}
+                            title={t('increase')}
+                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M12 6v4" />
+                              <path d="M8 8l4-4 4 4" />
+                              <path d="M12 18v-4" />
+                              <path d="M8 16l4 4 4-4" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={decreaseHeight}
+                            title={t('decrease')}
+                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}>
+                              <path d="M6 8l4 4-4 4" />
+                              <path d="M18 8l-4 4 4 4" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="text-xs text-gray-400">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
+                      </div>
+                      <div className={`rounded-md overflow-hidden border-0 ${expanded ? 'w-full' : 'w-full'}`} style={{ backgroundColor: '#ffffff' }}>
+                        <iframe
+                          src={iframeSrc}
+                          title={displayQuote.title || 'Embedded Post'}
+                          className="w-full rounded-md border-0 overflow-hidden"
+                          style={{ height: expanded ? Math.max(iframeHeight, 420) : iframeHeight, backgroundColor: '#ffffff' }}
+                          loading="lazy"
+                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="mt-3">

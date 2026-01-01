@@ -9,14 +9,11 @@ import {
   AuditResult,
   AuditCategory,
   AuditDetail,
-  SeverityLevel
 } from '../types';
 import {
   CATEGORY_COLORS,
-  RATING_COLORS,
   RATING_HEX,
   AUDIT_CATEGORY_COLORS,
-  SEVERITY_COLORS,
   SEVERITY_HEX,
   VERDICT_COLORS,
   severityToDisplay

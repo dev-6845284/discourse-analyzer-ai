@@ -619,6 +619,7 @@ const en = {
   createdAt: 'Created At',
   actions: 'Actions',
   deleteUser: 'Delete User',
+  loadEmbeddedContent: 'Load Embedded Content',
 
 };
 

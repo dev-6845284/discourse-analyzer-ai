@@ -620,6 +620,7 @@ const lt = {
   createdAt: 'Sukurta',
   actions: 'Veiksmai',
   deleteUser: 'Ištrinti vartotoją',
+  loadEmbeddedContent: 'Užkrauti įterptą turinį',
 
 };
 
