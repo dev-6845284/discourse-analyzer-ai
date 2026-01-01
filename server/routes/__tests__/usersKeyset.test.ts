@@ -1,10 +1,19 @@
 import request from 'supertest';
 import express from 'express';
 import session from 'express-session';
+import usersRoutes from '../../routes/users';
+import * as apiKeySvc from '../../services/apiKeyService';
+import * as userService from '../../services/userService';
 
 jest.mock('../../services/apiKeyService');
 jest.mock('../../services/userService');
-const apiKeySvc = require('../../services/apiKeyService');
+// Mock authorizeMiddleware to bypass DB calls and permission checks
+jest.mock('../../middleware/authorize', () => ({
+  __esModule: true,
+  default: (req: any, res: any, next: any) => next(),
+  authorizeMiddleware: (req: any, res: any, next: any) => next(),
+}));
+
 
 function makeAppWithSession(user: any) {
   const app = express();
@@ -18,8 +27,7 @@ function makeAppWithSession(user: any) {
     if (user) req.session.user = { ...user };
     next();
   });
-  // require routes after mocks are set up to avoid loading mongoose models
-  const usersRoutes = require('../../routes/users').default;
+  // require routes after mocks are set up - actually imports work fine with jest.mock
   app.use('/api/users', usersRoutes as any);
   return app;
 }
@@ -35,7 +43,7 @@ describe('User keyset routes', () => {
     const agent = request.agent(app as any);
 
     const returned = { alias: 'USERS_KEYSET', GEMINI_API_KEY: 'g1' };
-    apiKeySvc.upsertUserKeyset.mockResolvedValue(returned);
+    (apiKeySvc.upsertUserKeyset as jest.Mock).mockResolvedValue(returned);
 
     const res = await agent.put(`/api/users/${userId}/keyset`).send({ GEMINI_API_KEY: 'g1' });
     expect(res.status).toBe(200);
@@ -59,7 +67,7 @@ describe('User keyset routes', () => {
     const agent = request.agent(app as any);
 
     const returned = { alias: 'USERS_KEYSET', GEMINI_API_KEY: 'g1' };
-    apiKeySvc.upsertUserKeyset.mockResolvedValue(returned);
+    (apiKeySvc.upsertUserKeyset as jest.Mock).mockResolvedValue(returned);
 
     const res = await agent.put(`/api/users/${userId}/keyset`).send({ GEMINI_API_KEY: 'g1' });
     expect(res.status).toBe(200);
@@ -73,7 +81,7 @@ describe('User keyset routes', () => {
     const agent = request.agent(app as any);
 
     const returned = { alias: 'USERS_KEYSET', GEMINI_API_KEY: 'g1' };
-    apiKeySvc.getApiKeySetByAliasAndCreator.mockResolvedValue(returned);
+    (apiKeySvc.getApiKeySetByAliasAndCreator as jest.Mock).mockResolvedValue(returned);
 
     const res = await agent.get(`/api/users/${userId}/keyset`);
     expect(res.status).toBe(200);

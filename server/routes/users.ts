@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(isAuthenticated);
 router.use(authorizeMiddleware);
 // admin-only checks for listing/creating/deleting users
-router.use(isAdmin);
+// admin-only checks for listing/creating/deleting users moved to specific routes
 
 // PUT /api/users/me/password - user changes their own password with verification
 router.put('/me/password', isAuthenticated, async (req, res) => {
@@ -79,7 +79,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
     }
 
     const user = await userService.updateUser(req.params.id, updates);
-    
+
     // If self-update, update session
     if (isSelf) {
       req.session.user = {
@@ -129,7 +129,7 @@ router.put('/:id/keyset', isAuthenticated, async (req, res) => {
 
 
 
-router.get('/', async (req, res) => {
+router.get('/', isAdmin, async (req, res) => {
   try {
     const users = await userService.getAllUsers();
     res.json(users);
@@ -138,7 +138,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', isAdmin, async (req, res) => {
   try {
     const user = await userService.createUser(req.body);
     res.status(201).json(user);
@@ -150,7 +150,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', isAdmin, async (req, res) => {
   try {
     await userService.deleteUser(req.params.id);
     res.json({ message: 'User deleted successfully' });
