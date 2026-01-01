@@ -23,7 +23,17 @@ app.set('trust proxy', 1);
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "frame-src": ["'self'", "https://*.facebook.com", "https://*.youtube.com", "https://youtube.com"],
+      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.gstatic.com", "https://*.facebook.net"],
+      "img-src": ["'self'", "data:", "https:", "http:"],
+    },
+  },
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -183,7 +193,7 @@ app.post('/api/login', loginRateLimiter, async (req, res) => {
     // Check if user exists in DB
     const User = (await import('./models/User')).default;
     const dbUser = await User.findOne({ email });
-    
+
     if (dbUser) {
       userRole = dbUser.role;
       userAlias = dbUser.alias;
@@ -244,18 +254,18 @@ app.post('/api/login/password', loginRateLimiter, async (req, res) => {
     email,
     sessionID: req.sessionID
   });
-  
+
   try {
     const User = (await import('./models/User')).default;
     const user = await User.findOne({ email: email.toLowerCase() });
-    
+
     if (!user) {
       console.log('[LOGIN_PASSWORD_FAILED] User not found:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const isMatch = await user.comparePassword(password);
-    
+
     if (!isMatch) {
       console.log('[LOGIN_PASSWORD_FAILED] Password mismatch for:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -319,7 +329,7 @@ app.get('/api/session/debug', (req, res) => {
       BYPASS_AUTH: process.env.BYPASS_AUTH
     }
   };
-  
+
   console.log('[SESSION_DEBUG]', JSON.stringify(debugInfo, null, 2));
   res.json(debugInfo);
 });
