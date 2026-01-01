@@ -8,9 +8,9 @@
     "build": "npm run migrate:deploy && vite build",
     "migrate:deploy": "cd server && npm install && npm run migrate:up",
     "preview": "vite preview",
-    "test:frontend": "jest --config=jest.config.js",
+    "test:frontend": "jest --config=jest.config.frontend.js",
     "test:server": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config=server/jest.config.cjs",
-    "test": "npm run test:frontend && npm run test:server"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

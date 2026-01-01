@@ -1,16 +1,25 @@
+const path = require('path');
+
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>'],
+  rootDir: path.resolve(__dirname),
+
+  roots: [
+    '<rootDir>/services',
+    '<rootDir>/routes',
+    '<rootDir>/middleware',
+    '<rootDir>/models',
+    '<rootDir>/utils',
+    '<rootDir>/llm_services',
+    '<rootDir>/config',
+    '<rootDir>/__tests__'
+  ],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: path.resolve(__dirname, 'tsconfig.json') }],
     '^.+\\.(js|mjs)$': 'babel-jest'
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.json'
-    },
-  },
+
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   moduleNameMapper: {
