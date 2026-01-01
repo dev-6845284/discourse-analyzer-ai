@@ -12,7 +12,6 @@ import { saveQuote } from '../utils/api';
 import { TranscriptData } from '../utils/transcriptStorage';
 import { FullAnalysisData } from '../utils/analysisStorage';
 import type { Quote, Person, AnalysisSession, ExportData } from '../types';
-import { loadFromStorage } from '../utils/localStorage';
 
 export type UseAppController = ReturnType<typeof useAppController>;
 
