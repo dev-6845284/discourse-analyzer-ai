@@ -26,8 +26,8 @@
 - [ ] Promoted stage
 
 ### Improvements:
-- [ ] Support translations for dynamic analysis categories.
-- [ ] Improve audit verdict prompt (currently ambiguous) or remove it.
+- [x] Support translations for dynamic analysis categories.
+- [x] Improve audit verdict prompt (currently ambiguous) or remove it.
 - [ ] Allow saving session state multiple times.
 - [ ] Allow selection of specific AI models for different analysis stages:
     - Rough grouping analysis
@@ -37,7 +37,7 @@
 
 ## 👥 User & Access Management
 - [ ] Use DB-stored API keys instead of environment variables.
-- [ ] Implement Role-Based Access Control (RBAC) for the admin dashboard.
+- [x] Implement Role-Based Access Control (RBAC) for the admin dashboard.
 
 ## 📜 Public Quotes
 - [ ] Create dedicated API for public quotes listing.
@@ -49,7 +49,7 @@
 
 ## 📺 Media & Display
 - [ ] **TikTok:** Support loading videos from URL.
-- [ ] **Previews:** Do not activate embedded previews (e.g., Facebook) until the user clicks the "Load Preview" button.
+- [x] **Previews:** Do not activate embedded previews (e.g., Facebook) until the user clicks the "Load Preview" button.
 
 ---
 

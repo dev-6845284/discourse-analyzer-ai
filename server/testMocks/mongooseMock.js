@@ -1,16 +1,16 @@
 // Minimal mock for mongoose used in server tests
 const Types = {
-  ObjectId: function(id) { this._id = id || 'mockid'; this.toString = () => String(this._id); },
-  Mixed: class {},
+  ObjectId: function (id) { this._id = id || 'mockid'; this.toString = () => String(this._id); },
+  Mixed: class { },
 };
 
 function Schema(definition) {
   this.definition = definition;
 }
 Schema.Types = Types;
-Schema.prototype.index = function() { /* no-op for tests */ };
-Schema.prototype.pre = function() { /* no-op for tests */ };
-Schema.prototype.post = function() { /* no-op for tests */ };
+Schema.prototype.index = function () { /* no-op for tests */ };
+Schema.prototype.pre = function () { /* no-op for tests */ };
+Schema.prototype.post = function () { /* no-op for tests */ };
 Schema.prototype.methods = {};
 Schema.prototype.statics = {};
 
@@ -39,4 +39,5 @@ module.exports = {
   model,
   connect: jest.fn(),
   disconnect: jest.fn(),
+  isValidObjectId: (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id),
 };

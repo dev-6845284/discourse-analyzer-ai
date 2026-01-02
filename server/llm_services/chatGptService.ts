@@ -16,7 +16,6 @@ import {
   buildFetchQuotesResearchPrompt,
   buildFetchQuotesFormattingPrompt,
   buildAnalyzePromptByType,
-  buildAnalyzeQuoteFormattingPrompt,
   buildAnalyzeFormattingPromptByType,
   buildExtractQuotesFromTextPrompt,
   buildExtractQuotesFormattingPrompt,
@@ -25,7 +24,6 @@ import {
   buildImproveQuoteFormattingPrompt,
   createTopicExtractionPrompt,
 } from './prompts';
-import * as prompts from './prompts';
 
 const OPENAI_API_BASE_URL = "https://api.openai.com/v1";
 export const CHATGPT_MODEL = "gpt-5-search-api";

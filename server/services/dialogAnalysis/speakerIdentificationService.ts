@@ -133,16 +133,16 @@ function findSpeakerInRegistry(
   name: string
 ): Speaker | null {
   const normalizedInput = normalizeName(name);
-  
+
   // First check for exact normalized match
   if (registry.speakers.has(normalizedInput)) {
     return registry.speakers.get(normalizedInput)!;
   }
-  
+
   // Check fuzzy similarity against all registered speakers
   let bestMatch: Speaker | null = null;
   let bestSimilarity = 0;
-  
+
   for (const [, speaker] of registry.speakers) {
     const similarity = calculateNameSimilarity(name, speaker.name);
     if (similarity >= registry.threshold && similarity > bestSimilarity) {
@@ -150,7 +150,7 @@ function findSpeakerInRegistry(
       bestMatch = speaker;
     }
   }
-  
+
   return bestMatch;
 }
 
@@ -206,15 +206,15 @@ function matchDialogueToTiming(
     if (line.startTime !== undefined && line.endTime !== undefined) {
       const llmStart = line.startTime;
       const llmEnd = line.endTime;
-      
+
       if (llmStart >= blockStartTime && llmEnd <= blockEndTime + 1) {
         for (let i = 0; i < segmentCount; i++) {
           if (usedSegmentIndices.has(i)) continue;
-          
+
           const seg = segmentTiming[i];
           const overlap = Math.min(llmEnd, seg.end) - Math.max(llmStart, seg.start);
           const segDuration = seg.end - seg.start;
-          
+
           if (overlap > 0) {
             const score = overlap / segDuration;
             if (score > bestScore) {
@@ -231,20 +231,20 @@ function matchDialogueToTiming(
     if (!bestMatch || bestScore < 0.3) {
       const lineWords = line.text.toLowerCase().split(/\s+/).slice(0, 5);
       const lineWordCount = lineWords.length;
-      
+
       for (let i = 0; i < segmentCount; i++) {
         if (usedSegmentIndices.has(i)) continue;
-        
+
         const seg = segmentTiming[i];
         const segWords = seg.text.toLowerCase().split(/\s+/);
-        
+
         let matchCount = 0;
         for (const word of lineWords) {
           if (segWords.some(sw => sw.includes(word) || word.includes(sw))) {
             matchCount++;
           }
         }
-        
+
         const score = lineWordCount > 0 ? matchCount / lineWordCount : 0;
         if (score > bestScore) {
           bestScore = score;
@@ -294,20 +294,20 @@ function matchDialogueToTiming(
  */
 function buildContextForPrompt(context: BlockContext | null): string | null {
   if (!context) return null;
-  
+
   const parts: string[] = [];
-  
+
   // Add known speakers list (always include, even with gaps)
   if (context.knownSpeakers.length > 0) {
     const speakerNames = context.knownSpeakers.map(s => s.name).join(', ');
     parts.push(`IDENTIFIED SPEAKERS SO FAR: ${speakerNames}`);
   }
-  
+
   // Add note about skipped blocks if applicable
   if (context.hasSkippedBlocks) {
     parts.push('NOTE: Some dialogue segments were skipped between previous context and current segment.');
   }
-  
+
   // Add last dialogue lines (only if consecutive, otherwise they may be misleading)
   if (context.lastLines.length > 0 && !context.hasSkippedBlocks) {
     parts.push('LAST LINES FROM PREVIOUS SEGMENT:');
@@ -315,7 +315,7 @@ function buildContextForPrompt(context: BlockContext | null): string | null {
       parts.push(`${line.speaker}: ${line.text}`);
     }
   }
-  
+
   return parts.length > 0 ? parts.join('\n') : null;
 }
 
@@ -331,7 +331,7 @@ function extractContextFromDialogue(
     speaker: d.speaker,
     text: d.text,
   }));
-  
+
   return {
     lastLines,
     knownSpeakers: allSpeakers,
@@ -357,7 +357,7 @@ function getLlmConfig(
       apiKey: apiKeys.chatgpt,
     };
   }
-  
+
   if (model === 'grok' && apiKeys.grok) {
     return {
       provider: MODEL_CONFIG.grok.provider,
@@ -365,12 +365,12 @@ function getLlmConfig(
       apiKey: apiKeys.grok,
     };
   }
-  
-  const geminiKey = apiKeys.gemini || process.env.GEMINI_API_KEY;
+
+  const geminiKey = apiKeys.gemini;
   if (!geminiKey) {
     throw new Error('Gemini API key is missing');
   }
-  
+
   return {
     provider: MODEL_CONFIG.gemini.provider,
     modelName: MODEL_CONFIG.gemini.model,
@@ -388,7 +388,7 @@ async function callLlmService(
   prompt: string
 ): Promise<string> {
   const options = { model: modelName, prompt, temperature: LLM_TEMPERATURE };
-  
+
   switch (provider) {
     case 'chatgpt':
       return chatGptService.generateContent(apiKey, options);
@@ -422,21 +422,21 @@ async function processIdentifiedSpeakers(
   const speakerIdMap = new Map<string, string>();
   const rawToDisplayMap = new Map<string, string>();
   const processedNames = new Set<string>();
-  
+
   for (const rawName of identifiedNames) {
     // Apply pseudonym to generic names
     const displayName = withPseudonymIfGeneric(
       rawName,
       `${sessionId || ''}:${blockId}:${blockStartTime}`
     );
-    
+
     // Track raw to display name mapping (even for non-generic names)
     rawToDisplayMap.set(rawName, displayName);
-    
+
     // Skip if already processed in this block (handles duplicates from LLM)
     if (processedNames.has(displayName)) continue;
     processedNames.add(displayName);
-    
+
     // Check registry for existing speaker (cross-block continuity)
     const existingInRegistry = findSpeakerInRegistry(registry, displayName);
     if (existingInRegistry) {
@@ -447,10 +447,10 @@ async function processIdentifiedSpeakers(
       console.log(`[SpeakerIdentification] Reusing speaker "${existingInRegistry.name}" for "${displayName}" (cross-block match)`);
       continue;
     }
-    
+
     // Check database for existing person
     const existingPerson = await findBestMatchingPerson(displayName);
-    
+
     if (existingPerson) {
       const speaker: Speaker = {
         id: existingPerson.personId,
@@ -478,7 +478,7 @@ async function processIdentifiedSpeakers(
       registerSpeaker(registry, speaker);
     }
   }
-  
+
   return { speakers, speakerIdMap, rawToDisplayMap };
 }
 
@@ -503,16 +503,16 @@ export async function identifySpeakers(
     speakerSimilarityThreshold = DEFAULT_SPEAKER_SIMILARITY_THRESHOLD,
     speakerHint,
   } = request;
-  
+
   // Initialize results and tracking structures
   const results: SpeakerAnalysisResult[] = [];
   const registry = createSpeakerRegistry(speakerSimilarityThreshold);
   let blockContext: BlockContext | null = null;
-  
+
   // Get LLM configuration once before the loop
   const llmConfig = getLlmConfig(model, apiKeys);
   const { provider, modelName, apiKey } = llmConfig;
-  
+
   for (const block of blocks) {
     // Detect if there are skipped blocks
     const currentBlockNumber = extractBlockNumber(block.blockId);
@@ -526,7 +526,7 @@ export async function identifySpeakers(
         console.log(`[SpeakerIdentification] Gap detected: expected block-${expectedBlockNumber}, got ${block.blockId}`);
       }
     }
-    
+
     const contextString = buildContextForPrompt(blockContext);
     const prompt = buildSpeakerIdentificationPrompt(
       block.text,
@@ -535,7 +535,7 @@ export async function identifySpeakers(
       language,
       speakerHint
     );
-    
+
     // Log the LLM request
     let interactionId: string | null = null;
     if (sessionId && logId) {
@@ -550,7 +550,7 @@ export async function identifySpeakers(
 
     try {
       const responseText = await callLlmService(provider, apiKey, modelName, prompt);
-      
+
       // Log successful response
       if (sessionId && logId && interactionId) {
         completeModelInteractionLog(sessionId, logId, interactionId, { responseText });
@@ -560,10 +560,10 @@ export async function identifySpeakers(
       if (!jsonText) {
         throw new Error('No valid JSON found in response');
       }
-      
+
       const llmResult = JSON.parse(jsonText);
       const identifiedNames: string[] = llmResult.identifiedSpeakers || [];
-      
+
       // Process speakers with registry for cross-block continuity
       const { speakers, speakerIdMap, rawToDisplayMap } = await processIdentifiedSpeakers(
         identifiedNames,
@@ -618,7 +618,7 @@ export async function identifySpeakers(
         completeModelInteractionLog(sessionId, logId, interactionId, undefined, error);
       }
       console.error(`[SpeakerIdentification] Error analyzing block ${block.blockId}:`, error);
-      
+
       // Create fallback speaker
       const unknownName = withPseudonymIfGeneric(
         'Unknown',
@@ -626,30 +626,30 @@ export async function identifySpeakers(
       );
       const unknownSpeakerId = randomUUID();
       const fallbackSpeaker: Speaker = { id: unknownSpeakerId, name: unknownName };
-      
+
       // Register fallback speaker for continuity
       registerSpeaker(registry, fallbackSpeaker);
-      
+
       // Build fallback dialogue
       const fallbackDialogue: SpeakerDialogueLine[] = block.segmentTiming.length > 0
         ? block.segmentTiming.map(seg => ({
-            id: randomUUID(),
-            speakerId: unknownSpeakerId,
-            speaker: unknownName,
-            text: seg.text,
-            startTime: seg.start,
-            endTime: seg.end,
-            timingMismatch: false,
-          }))
+          id: randomUUID(),
+          speakerId: unknownSpeakerId,
+          speaker: unknownName,
+          text: seg.text,
+          startTime: seg.start,
+          endTime: seg.end,
+          timingMismatch: false,
+        }))
         : [{
-            id: randomUUID(),
-            speakerId: unknownSpeakerId,
-            speaker: unknownName,
-            text: block.text,
-            startTime: block.startTime,
-            endTime: block.endTime,
-            timingMismatch: true,
-          }];
+          id: randomUUID(),
+          speakerId: unknownSpeakerId,
+          speaker: unknownName,
+          text: block.text,
+          startTime: block.startTime,
+          endTime: block.endTime,
+          timingMismatch: true,
+        }];
 
       results.push({
         blockId: block.blockId,
@@ -659,7 +659,7 @@ export async function identifySpeakers(
         speakers: [fallbackSpeaker],
         identifiedSpeakers: [unknownName],
       });
-      
+
       // Update context even on error for continuity
       const currentBlockNum = extractBlockNumber(block.blockId);
       blockContext = extractContextFromDialogue(fallbackDialogue, getAllSpeakers(registry), currentBlockNum);
