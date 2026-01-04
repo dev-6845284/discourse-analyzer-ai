@@ -34,8 +34,26 @@ app.use(helmet({
   },
 }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// ============================================
+// BODY PARSER & PAYLOAD LIMITS
+// ============================================
+
+// 1. Large Payload Routes (Must be defined BEFORE global default)
+// Analysis routes need large payloads for saving transcripts/sessions
+app.use('/api/analysis', express.json({ limit: '50mb' }));
+app.use('/api/analysis', express.urlencoded({ limit: '50mb', extended: true }));
+
+// Admin routes might need larger payloads for configuration/backups
+app.use('/api/admin', express.json({ limit: '50mb' }));
+app.use('/api/admin', express.urlencoded({ limit: '50mb', extended: true }));
+
+// Quote extraction needs to accept large text blocks
+app.use('/api/quotes/extract', express.json({ limit: '10mb' }));
+app.use('/api/quotes/extract', express.urlencoded({ limit: '10mb', extended: true }));
+
+// 2. Global Default (Strict 10kb limit for all other routes to prevent DoS)
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ limit: '10kb', extended: true }));
 
 // ============================================
 // SECURITY MIDDLEWARE - DDoS Protection Layer

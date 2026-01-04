@@ -6,19 +6,23 @@
 # Discourse Analyzer AI - Project Roadmap
 
 ## 🔴 Critical Issues & Bugs
+- [ ] Youtube transcription fetch don't work from server, due to YouTube protection against API calls. Use Gemini?
 - [ ] **CRITICAL:** Total data loss detected! (Started with 675 lines, ended with 235 lines. Lost 440 lines).
 - [x] Quote analysis does not use correct analysis categories according to selected analysis type.
 - [ ] Re-evaluating quote does not use latest updated context content.
 - [ ] Analysis cleanup may not be working correctly; refresh session data everywhere after cleanup or update.
 
 ## 🛡️ Security & DDoS Protection
-- [ ] Initial session ID generation from server before accepting browsing or login requests.
-- [ ] Implement throttle protection on session creation endpoint.
-- [ ] Cache active sessions in Redis for quick validation.
-- [ ] Implement Vercel Edge Middleware for edge-level rate limiting.
+- [ ] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets.
+- [ ] **Smart CAPTCHA:** Implement Cloudflare Turnstile on session creation/login to stop bot floods.
+- [ ] **Session Hardening:**
+    - [ ] Generate session IDs for anonymous users immediately to enable tracking.
+    - [ ] Implement strict throttling on the session creation endpoint.
+    - [ ] Enforce short TTL (Time-To-Live) for unauthenticated sessions to prevent storage exhaustion.
+    - [ ] Cache active sessions in Redis for sub-millisecond validation.
+- [x] **Payload Safety:** Enforce strict JSON body limits (e.g., 10kb) on all APIs.
 - [ ] Add email/webhook notifications for critical alerts.
 - [ ] Add WebSocket for real-time alert updates.
-- [ ] Research and implement further security and DDoS protection measures.
 
 ## 🎙️ Transcription & Dialog Analysis
 ### Normalize GUI flows:
@@ -36,16 +40,20 @@
     - Topic merging
 
 ## 👥 User & Access Management
-- [ ] Use DB-stored API keys instead of environment variables.
+- [x] Use DB-stored API keys instead of environment variables.
 - [x] Implement Role-Based Access Control (RBAC) for the admin dashboard.
 
 ## 📜 Public Quotes
-- [ ] Create dedicated API for public quotes listing.
-- [ ] Ensure protection of public quotes endpoints against abuse, DDoS, and injection attacks.
-- [ ] Implement effective caching for the public quotes listing endpoint.
-- [ ] System for promoting quotes to "Public" from the admin dashboard.
-- [ ] Moderation system for public quotes.
-- [ ] Public display: Hide audit metadata (creator ID, initial analysis, AI model used).
+- [ ] **Create and Manage Public Quotes**
+    - [ ] **Prerequisite:** Mechanism to mark quotes as public/private with audit history (logging who changed status).
+    - [ ] **Permissions:** Changing quote status is restricted to roles: `admin`, `editor`, `moderator`.
+    - [ ] **Management API:** Specific API for changing status with proper role authorization.
+    - [ ] **Fetch API:** Special API for fetching public quotes.
+        - [ ] Strict filtering only; no free-text search (security risk).
+        - [ ] Filter by Person: Send person ID only, not the full object.
+    - [ ] **Public View:** Separate view for public quotes.
+        - [ ] Design with support for different viewing layouts.
+        - [ ] Architecture to allow easy future expansion and adoption of different layouts.
 
 ## 📺 Media & Display
 - [ ] **TikTok:** Support loading videos from URL.
