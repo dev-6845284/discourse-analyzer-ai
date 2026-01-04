@@ -2,8 +2,39 @@ import express from 'express';
 import * as userService from '../services/userService';
 import { isAuthenticated } from '../middleware/auth';
 import { isAdmin } from '../middleware/admin';
+import authorizeMiddleware from '../middleware/authorize';
 
 const router = express.Router();
+// Protect all user routes with authentication and admin check
+router.use(isAuthenticated);
+router.use(authorizeMiddleware);
+// admin-only checks for listing/creating/deleting users
+// admin-only checks for listing/creating/deleting users moved to specific routes
+
+// PUT /api/users/me/password - user changes their own password with verification
+router.put('/me/password', isAuthenticated, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.session.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Both old and new passwords are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+    }
+
+    await userService.changePasswordWithVerification(userId, oldPassword, newPassword);
+    res.json({ message: 'Password updated successfully' });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message || 'Error updating password' });
+  }
+});
 
 router.put('/:id/password', isAuthenticated, async (req, res) => {
   try {
@@ -48,7 +79,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
     }
 
     const user = await userService.updateUser(req.params.id, updates);
-    
+
     // If self-update, update session
     if (isSelf) {
       req.session.user = {
@@ -63,10 +94,42 @@ router.put('/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-// Protect all user routes with authentication and admin check
-router.use(isAuthenticated, isAdmin);
+// GET /api/users/:id/keyset - fetch the user's personal keyset (alias = USERS_KEYSET)
+router.get('/:id/keyset', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+    if (!isSelf && !isAdminUser) return res.status(403).json({ message: 'Unauthorized' });
 
-router.get('/', async (req, res) => {
+    const USERS_KEYSET = process.env.USERS_KEYSET_ALIAS || 'USERS_KEYSET';
+    const set = await (await import('../services/apiKeyService')).getApiKeySetByAliasAndCreator(USERS_KEYSET, req.params.id);
+    res.json(set || null);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user keyset', error });
+  }
+});
+
+// PUT /api/users/:id/keyset - create or update the user's personal keyset (alias = USERS_KEYSET)
+router.put('/:id/keyset', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+    if (!isSelf && !isAdminUser) return res.status(403).json({ message: 'Unauthorized' });
+
+    const { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY } = req.body;
+    const svc = await import('../services/apiKeyService');
+    const updated = await svc.upsertUserKeyset(req.params.id, { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user keyset', error });
+  }
+});
+
+
+
+router.get('/', isAdmin, async (req, res) => {
   try {
     const users = await userService.getAllUsers();
     res.json(users);
@@ -75,7 +138,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', isAdmin, async (req, res) => {
   try {
     const user = await userService.createUser(req.body);
     res.status(201).json(user);
@@ -87,12 +150,30 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', isAdmin, async (req, res) => {
   try {
     await userService.deleteUser(req.params.id);
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting user', error });
+  }
+});
+
+// GET user's assigned keyset
+router.get('/:id/assigned-keyset', isAuthenticated, async (req, res) => {
+  try {
+    const requestingUser = req.session.user;
+    const isSelf = requestingUser?._id === req.params.id;
+    const isAdminUser = requestingUser?.role === 'admin';
+
+    if (!isAdminUser && !isSelf) {
+      return res.status(403).json({ message: 'Unauthorized to view this user keyset' });
+    }
+
+    const keyset = await userService.getUserAssignedKeyset(req.params.id);
+    res.json(keyset);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error fetching user keyset', error });
   }
 });
 

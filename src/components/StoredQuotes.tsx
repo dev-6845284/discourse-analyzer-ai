@@ -2,6 +2,18 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
+import { useI18n } from '../i18n';
+
+/*
+ * ⚠️ NOTE: StoredQuotes and SearchResults share similar UI and behavior for displaying quotes
+ * and handling AI-model related actions (e.g., the `selectedAI` prop, `onAnalyze` payloads,
+ * and how analysis results are processed/saved).
+ *
+ * When you update model selection UI, API payload shapes, or analysis/save logic in one
+ * component, please check and apply equivalent changes to the other component to keep
+ * behavior consistent and avoid subtle bugs.
+ */
+
 import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
 import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
 import api, { getStoredQuotes, updateQuote, deleteQuote } from '../utils/api';
@@ -16,6 +28,7 @@ interface StoredQuotesProps {
 }
 
 const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource }) => {
+  const { t } = useI18n();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,15 +62,25 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setSelectedFilterPerson(null);
   }, [resetFilters]);
 
-  const handleAnalyze = async (quote: Quote) => {
+  const handleAnalyze = async (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => {
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
+    const personId = (quote.person && typeof quote.person === 'object')
+      ? (quote.person as Person)._id
+      : (typeof quote.person === 'string' ? quote.person : selectedPerson?._id);
+    const personName = (quote.person && typeof quote.person === 'object')
+      ? (quote.person as Person).name
+      : quote.personName || selectedPerson?.name;
+
     try {
       const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
       const response = await api.post('/quotes/analyze', {
-        model: selectedAI,
+        model,
+        analysisType,
         quoteText: quote.text,
         quoteLanguageCode: quote.languageCode,
         quoteLanguageName: quote.languageName,
+        personId,
+        personName,
         analysisContext: quote.analysisContext,
         links: quote.links,
         apiKeys,
@@ -82,10 +105,13 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: true } : q));
     try {
       const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+      const personName = (quote.person && typeof quote.person === 'object')
+        ? (quote.person as Person).name
+        : quote.personName || selectedPerson?.name || 'Unknown';
       const response = await api.post('/quotes/improve', {
         model: selectedAI,
         quote,
-        personName: quote.personName || selectedPerson?.name || 'Unknown',
+        personName,
         apiKeys,
       });
       const improvedQuote = response.data;
@@ -260,6 +286,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           analysis: q.metadata?.analysis,
           audit: q.metadata?.audit,
           personName: q.person?.name,
+          person: q.person,
           analysisContext: q.analysisContext,
           links: q.metadata?.links,
           metadata: q.metadata,
@@ -309,8 +336,8 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <h2 className="text-2xl font-bold text-gray-100 mb-4">
-        {selectedFilterPerson ? `Stored Quotes for ${selectedFilterPerson.name}` : 'All Stored Quotes'}
+      <h2 className="text-2xl font-bold text-cyan-400 mb-4">
+        {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
       </h2>
       
       {/* Filter Bar */}
@@ -328,7 +355,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       {error && <div className="text-red-500 p-4">{error}</div>}
       
       {!isLoading && !error && quotes.length === 0 ? (
-        <p className="text-gray-500">No quotes found{hasActiveFilters ? ' matching your filters' : ''}.</p>
+        <p className="text-gray-500">{hasActiveFilters ? t('noQuotesMatchingFilters') : t('noQuotesFound')}.</p>
       ) : !isLoading && !error && (
         <div className="space-y-4">
           {quotes.map((quote) => (
@@ -345,6 +372,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onEditSource={onEditSource}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
+              selectedAI={selectedAI} 
             />
           ))}
         </div>

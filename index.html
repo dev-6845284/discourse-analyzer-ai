@@ -2,18 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/jpeg" href="/image32.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Discourse Analyzer AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Add Babel Standalone for in-browser JSX/TS transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="module">
+      // Expose Vite env var at runtime to avoid referencing import.meta in modules
+      (function(){
+        try {
+          // import.meta.env is available when served by Vite; copy to window for runtime
+          window.__VITE_API_URL = (import.meta && import.meta.env && import.meta.env.VITE_API_URL) || '';
+        } catch (e) {
+          window.__VITE_API_URL = '';
+        }
+      })();
+    </script>
   <script type="importmap">
 </script>
 </head>
-  <body class="bg-gray-900 text-gray-100">
-    <div id="root"></div>
+  <body class="m-0 bg-gray-900 text-gray-100">
+    <div id="root" class="w-full"></div>
     <!-- Change script type to text/babel to enable Babel transpilation -->
     <script type="module" src="./src/main.tsx"></script>
   </body>

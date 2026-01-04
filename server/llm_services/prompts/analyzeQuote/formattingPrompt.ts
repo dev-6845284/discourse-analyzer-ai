@@ -1,10 +1,27 @@
 import { AnalyzeQuoteFormattingPromptParams } from '../types';
+import { getCategoriesForMode } from '../../../config/auditCategories';
 
 /**
  * Builds the formatting prompt to convert audit notes into structured JSON.
  */
+
+function buildCategoriesJsonForAudit(quoteLanguageName: string): string {
+  const cats = getCategoriesForMode('audit');
+  return cats.map(c => `"${c.title}": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" }`).join(',\n    ');
+}
+
+function buildCategoriesJsonForFlaws(quoteLanguageName: string): string {
+  const cats = getCategoriesForMode('flaws');
+  return cats.map(c => `"${c.title}": {\n      "severity": "<LEVEL>",\n      "evidence": "<evidence in ${quoteLanguageName}>"\n    }`).join(',\n    ');
+}
 export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormattingPromptParams): string {
-  const { quoteLanguageName, analysisNotes } = params;
+  const { quoteLanguageName, analysisNotes, analysisType = 'audit' } = params;
+
+  if (analysisType === 'flaws') {
+    return buildAnalyzeFlawsFormattingPrompt(params);
+  }
+
+  const categoriesJson = buildCategoriesJsonForAudit(quoteLanguageName);
 
   return `You are a structured data formatter. Convert the audit notes below into a strict JSON payload.
 
@@ -16,12 +33,7 @@ export function buildAnalyzeQuoteFormattingPrompt(params: AnalyzeQuoteFormatting
   "verdict": "<VERDICT>",
   "rationale": "<rationale in ${quoteLanguageName}>",
   "categories": {
-    "Verifiable Falsehood": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Misleading Framing": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Reality Inversion": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Responsibility Shifting": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Unsupported Assertion": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" },
-    "Narrative Control / Propaganda": { "severity": "<LEVEL>", "evidence": "<evidence in ${quoteLanguageName}>" }
+    ${categoriesJson}
   }
 }
 
@@ -38,4 +50,92 @@ ${analysisNotes}
 >>>
 
 Return only the JSON object.`;
+}
+
+/**
+ * Builds the formatting prompt to convert audit notes into structured JSON for flaws analysis.
+ */
+export function buildAnalyzeFlawsFormattingPrompt(params: AnalyzeQuoteFormattingPromptParams): string {
+  const { quoteLanguageName, analysisNotes } = params;
+
+  const categoriesJson = buildCategoriesJsonForFlaws(quoteLanguageName);
+
+  return `You are a structured data formatter.
+
+Your ONLY task is to transform the audit notes below into a strict JSON payload.
+DO NOT perform analysis.
+DO NOT adjust severity levels.
+DO NOT reinterpret evidence.
+DO NOT add new reasoning.
+DO NOT omit categories.
+
+All severity levels, classifications, and evidence text MUST be taken directly
+from the provided audit notes.
+
+---
+
+### OUTPUT REQUIREMENTS
+- Return EXACTLY one JSON object.
+- Do NOT include comments, markdown, or explanations.
+- Preserve wording as-is from the audit notes.
+- If wording differs stylistically, keep the audit notes verbatim.
+
+---
+
+### REQUIRED JSON STRUCTURE
+
+{
+  "classification": "<CLASSIFICATION>",
+  "finalAssessment": "<final assessment in ${quoteLanguageName}>",
+  "categories": {
+    ${categoriesJson}
+  }
+}
+
+---
+
+### FIELD CONSTRAINTS
+
+#### classification
+- Copy EXACTLY from the audit notes.
+- Must be one of:
+  "TOXIC POLITICAL RHETORIC"
+  "DEHUMANIZING SPEECH"
+  "SYMBOLIC VIOLENCE"
+  "AUTHORITARIAN AGITATION"
+  "DEMOCRATICALLY DANGEROUS SPEECH"
+
+#### severity
+- Copy EXACTLY as provided.
+- Must be one of:
+  "NONE", "LOW", "MEDIUM", "HIGH", "SEVERE"
+- Do NOT normalize, escalate, or downgrade.
+
+#### evidence
+- Copy or lightly reformat ONLY for JSON compatibility.
+- Do NOT summarize or explain.
+
+#### finalAssessment
+- Copy EXACTLY from the audit notes.
+- Do NOT expand or shorten.
+
+---
+
+### AUDIT NOTES (AUTHORITATIVE SOURCE)
+<<<
+${analysisNotes}
+>>>
+
+Return ONLY the JSON object.`;
+}
+
+export function buildAnalyzeFormattingPromptByType(type: 'audit' | 'flaws', params: AnalyzeQuoteFormattingPromptParams): string {
+  switch (type) {
+    case 'audit':
+      return buildAnalyzeQuoteFormattingPrompt({ ...params, analysisType: 'audit' });
+    case 'flaws':
+      return buildAnalyzeFlawsFormattingPrompt({ ...params, analysisType: 'flaws' });
+    default:
+      throw new Error(`Unknown analysis type: ${type}`);
+  }
 }

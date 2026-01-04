@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { requireAdmin } from '../middleware/admin';
 import ApiUsage from '../models/ApiUsage';
+import adminCategoriesRouter from './adminCategories';
 import BlockedIP from '../models/BlockedIP';
 import SecurityAlert from '../models/SecurityAlert';
 import { blockIP, unblockIP, getBlockedIPs } from '../middleware/ipBlocker';
@@ -9,6 +10,9 @@ const router = express.Router();
 
 // All admin routes require admin authentication
 router.use(requireAdmin);
+// Additionally enforce configured role permissions where applicable
+import authorizeMiddleware from '../middleware/authorize';
+router.use(authorizeMiddleware);
 
 /**
  * GET /api/admin/usage-stats
@@ -316,5 +320,16 @@ router.get('/dashboard-summary', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to get dashboard summary' });
   }
 });
+
+// Mount admin categories management endpoints
+router.use('/categories', adminCategoriesRouter);
+
+// Access control management (role assignments for endpoints)
+import accessControlRouter from './adminAccessControl';
+router.use('/access-control', accessControlRouter);
+
+// Admin API key sets management
+import adminApiKeysRouter from './adminApiKeys';
+router.use('/api-key-sets', adminApiKeysRouter);
 
 export default router;

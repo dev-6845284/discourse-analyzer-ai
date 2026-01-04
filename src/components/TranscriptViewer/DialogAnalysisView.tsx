@@ -146,7 +146,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30 space-y-6">
       {isSelectionMode && (
         <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur p-4 -mx-6 -mt-6 mb-6 border-b border-cyan-700/50 flex justify-between items-center shadow-lg">
           <div className="flex items-center gap-4">
@@ -245,7 +245,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
           className="bg-gray-800/60 border border-gray-700 rounded-lg overflow-hidden"
         >
           <div className="p-4 bg-gray-900/50 border-b border-gray-700">
-            <h3 className="text-lg font-bold text-white mb-2">{group.title}</h3>
+            <h3 className="text-lg font-bold text-cyan-400 mb-2">{group.title}</h3>
             {group.analysis && (
               <div className="bg-gray-800/50 p-3 rounded border border-gray-700/50">
                 <ul className="list-disc list-inside space-y-2">

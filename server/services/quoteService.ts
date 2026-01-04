@@ -2,10 +2,11 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Quote from '../models/Quote';
 import Person from '../models/Person';
+import { getAllCategories } from './categoryService';
 
 export const saveQuote = async (req: Request, res: Response) => {
   try {
-    const { 
+    const {
       text, personName, source, date, context, tags, metadata, analysisContext, links,
       // Audit fields from request
       savedByUser, savedByName, analyzedByUser, analyzedByName, analyzedByProvider, analyzedAt,
@@ -21,7 +22,7 @@ export const saveQuote = async (req: Request, res: Response) => {
     if (!person) {
       // Try to find by alias if not found by name
       person = await Person.findOne({ aliases: personName });
-      
+
       if (!person) {
         // Create new person if still not found
         person = new Person({
@@ -72,8 +73,8 @@ export const saveQuote = async (req: Request, res: Response) => {
 
 export const getQuotes = async (req: Request, res: Response) => {
   try {
-    const { 
-      personId, 
+    const {
+      personId,
       text,        // text search
       dateFrom,    // quote date range start
       dateTo,      // quote date range end
@@ -91,7 +92,7 @@ export const getQuotes = async (req: Request, res: Response) => {
       sortField,   // field to sort by: savedAt, analyzedAt, improvedAt, date
       sortOrder    // newest or oldest
     } = req.query;
-    
+
     const query: any = {};
 
     // Exclude deprecated quotes by default
@@ -166,29 +167,30 @@ export const getQuotes = async (req: Request, res: Response) => {
     // New severity levels: NONE, LOW, MEDIUM, HIGH, SEVERE (uppercase)
     const legacyRatings = ['None', 'Low', 'Medium', 'High', 'Severe'];
     const newSeverityLevels = ['NONE', 'LOW', 'MEDIUM', 'HIGH', 'SEVERE'];
-    
+
     if (rating && typeof rating === 'string') {
       // Normalize to uppercase for comparison
       const upperRating = rating.toUpperCase();
       const titleRating = rating.charAt(0).toUpperCase() + rating.slice(1).toLowerCase();
-      
+
       if (newSeverityLevels.includes(upperRating) || legacyRatings.includes(titleRating)) {
         // Match quotes where any category has the specified severity/rating
         // Support both legacy analysis structure and new audit structure
-        query.$or = [
-          // Legacy analysis structure (title-case ratings)
-          { 'metadata.analysis.Populism.rating': titleRating },
-          { 'metadata.analysis.Fact Twisting.rating': titleRating },
-          { 'metadata.analysis.Lies & False Claims.rating': titleRating },
-          { 'metadata.analysis.Inflammatory Language.rating': titleRating },
-          // New audit structure (uppercase severity)
-          { 'metadata.audit.categories.Verifiable Falsehood.severity': upperRating },
-          { 'metadata.audit.categories.Misleading Framing.severity': upperRating },
-          { 'metadata.audit.categories.Reality Inversion.severity': upperRating },
-          { 'metadata.audit.categories.Responsibility Shifting.severity': upperRating },
-          { 'metadata.audit.categories.Unsupported Assertion.severity': upperRating },
-          { 'metadata.audit.categories.Narrative Control / Propaganda.severity': upperRating },
-        ];
+        query.$or = [];
+
+        const categories = getAllCategories();
+        // Dynamically build query for all active categories
+        for (const cat of categories) {
+          // New audit structure
+          query.$or.push({ [`metadata.audit.categories.${cat.title}.severity`]: upperRating });
+
+          // Legacy mappings from config
+          if (cat.legacyNames && cat.legacyNames.length > 0) {
+            for (const legacyName of cat.legacyNames) {
+              query.$or.push({ [`metadata.analysis.${legacyName}.rating`]: titleRating });
+            }
+          }
+        }
       }
     }
 
@@ -212,7 +214,7 @@ export const getQuotes = async (req: Request, res: Response) => {
     const validSortFields = ['savedAt', 'analyzedAt', 'improvedAt', 'date'];
     const field = validSortFields.includes(sortField as string) ? sortField as string : 'savedAt';
     const order = sortOrder === 'oldest' ? 1 : -1;
-    
+
     // Build sort object with fallback to savedAt for missing values
     // MongoDB will use the primary sort field, falling back naturally
     const sortConfig: any = { [field]: order };
@@ -235,7 +237,7 @@ export const updateQuote = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
+
     // Convert string user IDs to ObjectIds for audit fields
     if (updateData.analyzedByUser) {
       updateData.analyzedByUser = new mongoose.Types.ObjectId(updateData.analyzedByUser);

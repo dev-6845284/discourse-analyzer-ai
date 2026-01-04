@@ -4,6 +4,7 @@ import * as personService from '../services/personService';
 import * as quoteService from '../services/quoteService';
 import { isAuthenticated } from '../middleware/auth';
 import { isAdminOrDev } from '../middleware/admin';
+import authorizeMiddleware from '../middleware/authorize';
 
 const router = express.Router();
 
@@ -27,6 +28,8 @@ router.use((req, res, next) => {
 
 // All API routes are protected
 router.use(isAuthenticated);
+// Authorization middleware checks role-based access for each API call
+router.use(authorizeMiddleware);
 
 router.post('/quotes/search', (req, res) => apiService.fetchQuotes(req, res));
 router.post('/quotes/agentic-search', (req, res) => apiService.agenticSearch(req, res));
@@ -76,19 +79,25 @@ router.delete('/people/:id', (req, res) => personService.deletePerson(req, res))
 router.get('/people/find-similar', async (req, res) => {
   try {
     const { name, threshold } = req.query;
-    
+
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: 'Name parameter is required' });
     }
-    
+
     const similarityThreshold = threshold ? parseFloat(threshold as string) : undefined;
     const matches = await personService.findSimilarPersons(name, similarityThreshold);
-    
+
     res.json({ matches });
   } catch (error: any) {
     console.error('Error finding similar persons:', error);
     res.status(500).json({ error: 'Failed to find similar persons', details: error.message });
   }
+});
+
+// Categories route (authenticated users need read access to all categories)
+router.get('/categories', (req, res) => {
+  const { getAllCategories } = require('../services/categoryService');
+  res.json(getAllCategories());
 });
 
 export default router;

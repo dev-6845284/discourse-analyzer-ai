@@ -1,39 +1,46 @@
 import React, { useState } from 'react';
 import { SUPPORTED_LANGUAGES } from '../constants';
+import { useI18n } from '../i18n';
 
 interface AddQuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }) => void;
+  onSave: (details: { source: string; title: string; date: string; languageCode: string; languageName: string; }, analysisType?: 'audit'|'flaws') => void;
   mode?: 'add' | 'extract';
   initialSource?: string;
+  initialAnalysisType?: 'audit'|'flaws';
 }
 
-const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add', initialSource = '' }) => {
+const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, mode = 'add', initialSource = '', initialAnalysisType = 'audit' }) => {
   const [source, setSource] = useState(initialSource);
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [languageCode, setLanguageCode] = useState('en');
+  const [date, setDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [languageCode, setLanguageCode] = useState('lt');
+  const { t } = useI18n();
   const [error, setError] = useState('');
+  const [analysisType, setAnalysisType] = useState<'audit'|'flaws'>(initialAnalysisType);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
     if (!source.trim() || !date) {
-      setError('Source URL and Date are required.');
+      setError(t('sourceUrlAndDateRequired'));
       return;
     }
     setError('');
     const languageName = SUPPORTED_LANGUAGES.find(lang => lang.code === languageCode)?.name || 'English';
-    onSave({ source, title, date, languageCode, languageName });
+    onSave({ source, title, date, languageCode, languageName }, analysisType);
   };
 
-  const titleText = mode === 'extract' ? 'Extract Quotes Details' : 'Add Quote Details';
-  const buttonText = mode === 'extract' ? 'Extract & Analyze' : 'Save and Analyze';
+  const titleText = mode === 'extract' ? t('extractQuotesDetails') : t('addQuoteDetails');
+  const buttonText = mode === 'extract' ? t('extractAndAnalyze') : t('saveAndAnalyze');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
-      <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
+      <div className="bg-gray-800 rounded-lg shadow-xl p-4 w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
         <style>{`
           @keyframes fade-in-scale {
             from { opacity: 0; transform: scale(0.95); }
@@ -44,35 +51,35 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
           }
         `}</style>
         <h2 className="text-2xl font-bold text-cyan-400 mb-4">{titleText}</h2>
-        <p className="text-gray-400 mb-6">Please provide the source, date, and language for the quote.</p>
+        <p className="text-gray-400 mb-6">{t('addQuoteInstructions')}</p>
         
         {error && <p className="text-red-400 mb-4 text-sm">{error}</p>}
         
         <div className="space-y-4">
           <div>
-            <label htmlFor="quoteSource" className="block text-sm font-medium text-gray-300 mb-1">Source URL</label>
+            <label htmlFor="quoteSource" className="block text-sm font-medium text-gray-300 mb-1">{t('sourceUrlLabel')}</label>
             <input
               type="text"
               id="quoteSource"
               value={source}
               onChange={(e) => setSource(e.target.value)}
               className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="https://example.com/article"
+              placeholder={t('linkPlaceholder')}
             />
           </div>
           <div>
-            <label htmlFor="quoteTitle" className="block text-sm font-medium text-gray-300 mb-1">Source Title (Optional)</label>
+            <label htmlFor="quoteTitle" className="block text-sm font-medium text-gray-300 mb-1">{t('sourceTitleLabelOptional')}</label>
             <input
               type="text"
               id="quoteTitle"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
-              placeholder="Article Title"
+              placeholder={t('sourceTitlePlaceholder')}
             />
           </div>
           <div>
-            <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-300 mb-1">Date</label>
+            <label htmlFor="quoteDate" className="block text-sm font-medium text-gray-300 mb-1">{t('dateLabel')}</label>
             <input
               type="date"
               id="quoteDate"
@@ -82,7 +89,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
             />
           </div>
           <div>
-            <label htmlFor="quoteLanguage" className="block text-sm font-medium text-gray-300 mb-1">Language</label>
+            <label htmlFor="quoteLanguage" className="block text-sm font-medium text-gray-300 mb-1">{t('languageLabel')}</label>
             <select
               id="quoteLanguage"
               value={languageCode}
@@ -96,22 +103,52 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
           </div>
         </div>
 
-        <div className="mt-8 flex justify-end gap-4">
-          <button
-            onClick={onClose}
-            type="button"
-            className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            type="button"
-            className="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 transition-colors"
-          >
-            {buttonText}
-          </button>
-        </div>
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-300 mb-2">{t('analysisTypeLabel')}</label>
+            <div className="flex gap-6">
+              <label className="flex items-center" htmlFor="addquote-analysis-audit">
+                <input
+                  id="addquote-analysis-audit"
+                  type="radio"
+                  name="addQuoteAnalysisType"
+                  value="audit"
+                  checked={analysisType === 'audit'}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  className="mr-2 accent-cyan-600 focus:ring-cyan-500"
+                />
+                <span className="text-sm text-gray-300">{t('analysisType_audit')}</span>
+              </label>
+              <label className="flex items-center" htmlFor="addquote-analysis-flaws">
+                <input
+                  id="addquote-analysis-flaws"
+                  type="radio"
+                  name="addQuoteAnalysisType"
+                  value="flaws"
+                  checked={analysisType === 'flaws'}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  className="mr-2 accent-cyan-600 focus:ring-cyan-500"
+                />
+                <span className="text-sm text-gray-300">{t('analysisType_flaws')}</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end gap-4">
+            <button
+              onClick={onClose}
+              type="button"
+              className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              onClick={() => handleSave()}
+              type="button"
+              className="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700 transition-colors"
+            >
+              {buttonText}
+            </button>
+          </div>
       </div>
     </div>
   );

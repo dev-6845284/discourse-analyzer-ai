@@ -2,7 +2,7 @@ import { getSecurityGuardsSection } from '../shared/securityGuards';
 import { getSourceProvenancePolicySection } from '../shared/sourceProvenancePolicy';
 import { getEntityDisambiguationSection } from '../shared/entityDisambiguation';
 import { getWebSearchPlanSection } from '../shared/webSearchPlan';
-import { TimePeriod } from '../types';
+import { TimePeriod, PersonInfo } from '../types';
 
 export interface GrokFetchQuotesPromptParams {
   personName: string;
@@ -65,89 +65,9 @@ Example format: { "quotes": [{"text": "This is the quote.", "source": "https://e
 - Do not include any other text or markdown formatting outside of the JSON object.`;
 }
 
-export interface GrokAnalyzeQuotePromptParams {
-  quoteText: string;
-  quoteLanguageName: string;
-  analysisContext?: string;
-  links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>;
-}
 
-/**
- * Builds the strict audit prompt for Grok.
- */
-export function buildGrokAnalyzeQuotePrompt(params: GrokAnalyzeQuotePromptParams): string {
-  const { quoteText, quoteLanguageName, analysisContext, links } = params;
 
-  let contextInstruction = '';
-  if (analysisContext) {
-    contextInstruction = `\n\n### User-Provided Context\nThe user has provided the following context to help with the analysis:\n"${analysisContext}"\nUse this context to better understand the intent and background of the quote.`;
-  }
 
-  let linksInstruction = '';
-  if (links && links.length > 0) {
-    const linkList = links.map(l => `- ${l.url} (${l.type}${l.title ? `: ${l.title}` : ''})`).join('\n');
-    linksInstruction = `\n\n### Reference Material\nThe user has provided the following links as reference material:\n${linkList}\nPlease consult these sources if possible to verify facts or understand the context.`;
-  }
-
-  return `You are an independent political communication auditor and media fact-checker.
-
-Your task is to perform a strict, evidence-based audit of the following statement.
-Do NOT be neutral, empathetic, or diplomatic. Do NOT soften conclusions.
-Strong critical language is allowed where justified.
-
-Your goal is to:
-- identify falsehoods,
-- expose misleading framing,
-- detect manipulation and responsibility shifting,
-- clearly separate facts from narrative control.
-
-Do NOT treat "personal opinion", "self-assessment", or "belief" as automatically valid.
-If a statement contradicts observable reality, public reaction, or documented facts, it must be classified as misleading or false.
-
-Avoid vague language such as: "may", "might", "appears", "could be".
-Every analysis MUST end with a clear verdict.
-
-The statement is in ${quoteLanguageName}. Analyze the original text directly in ${quoteLanguageName} to understand its full meaning and nuance.
-Fact-check all claims using your knowledge.${contextInstruction}${linksInstruction}
-
-Follow these steps carefully:
-1.  **Analyze the original text directly in ${quoteLanguageName}** to understand its full meaning and nuance.
-2.  **Think step-by-step in English** to determine the severity and evidence for each category.
-3.  **Translate your English evidence** into high-quality, natural-sounding ${quoteLanguageName}.
-4.  **Construct the final JSON object**. The entire response must be a single, valid JSON object (do not wrap it in markdown).
-
-## REQUIRED CATEGORIES
-Rate each using: NONE, LOW, MEDIUM, HIGH, SEVERE
-
-1. **Verifiable Falsehood**: Statement contradicts documented facts or is demonstrably untrue.
-2. **Misleading Framing**: Facts selectively presented, negative reality reframed as success.
-3. **Reality Inversion**: Backlash portrayed as approval, failure as achievement.
-4. **Responsibility Shifting**: Blame moved to "politics", "media", or "opponents".
-5. **Unsupported Assertion**: No evidence, data, or metric provided.
-6. **Narrative Control / Propaganda**: Language attempts to normalize controversy or delegitimize critics.
-
-## HARD RULES
-* Do NOT excuse claims because they are "opinions".
-* Do NOT downgrade severity due to politeness or balance.
-* Evaluate impact and factual alignment only, not intent.
-
-## OUTPUT FORMAT
-Return a single JSON object with this structure:
-{
-  "verdict": "<TRUE|FALSE|MISLEADING|MANIPULATIVE|UNFOUNDED>",
-  "rationale": "<2-4 sentences in ${quoteLanguageName} explaining why this verdict is unavoidable>",
-  "categories": {
-    "Verifiable Falsehood": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Misleading Framing": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Reality Inversion": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Responsibility Shifting": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Unsupported Assertion": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" },
-    "Narrative Control / Propaganda": { "severity": "<LEVEL>", "evidence": "<in ${quoteLanguageName}>" }
-  }
-}
-
-Analyze this statement: "${quoteText}"`;
-}
 
 export interface GrokExtractQuotesFromTextPromptParams {
   personName: string;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../../i18n';
 
 interface LinkData {
   url: string;
@@ -40,6 +41,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
   onSelectAllLinks,
   onDeselectAllLinks,
 }) => {
+  const { t } = useI18n();
   const selectedCount = links.filter(l => l.selected !== false).length;
   const allSelected = selectedCount === links.length;
   const noneSelected = selectedCount === 0;
@@ -50,17 +52,17 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
         onClick={onToggleAdvanced}
         className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mb-2"
       >
-        {showAdvanced ? '▼ Hide Advanced Analysis' : '▶ Advanced Analysis'}
+        {showAdvanced ? t('hideAdvancedAnalysis') : t('advancedAnalysis')}
       </button>
 
       {showAdvanced && (
         <div className="bg-gray-900/50 p-3 rounded-lg space-y-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Context for Analysis</label>
+            <label className="block text-xs text-gray-400 mb-1">{t('contextForAnalysis')}</label>
             <textarea
               value={analysisContext}
               onChange={(e) => onAnalysisContextChange(e.target.value)}
-              placeholder="Provide context to help the AI determine truthfulness (e.g., 'This was said during a debate about tax reform...')"
+              placeholder={t('contextPlaceholder')}
               className="w-full bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
               rows={2}
             />
@@ -68,7 +70,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs text-gray-400">Fact-Checking Links</label>
+              <label className="block text-xs text-gray-400">{t('factCheckingLinks')}</label>
               {links.length > 0 && (
                 <div className="flex gap-2">
                   <button
@@ -76,7 +78,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                     disabled={allSelected}
                     className="text-[10px] text-cyan-400 hover:text-cyan-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                   >
-                    Select All
+                    {t('selectAll')}
                   </button>
                   <span className="text-gray-600">|</span>
                   <button
@@ -84,7 +86,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                     disabled={noneSelected}
                     className="text-[10px] text-cyan-400 hover:text-cyan-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                   >
-                    Deselect All
+                    {t('deselectAll')}
                   </button>
                 </div>
               )}
@@ -110,7 +112,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                         link.type === 'quote' ? 'bg-blue-900 text-blue-300' : 'bg-purple-900 text-purple-300'
                       }`}
                     >
-                      {link.type}
+                      {link.type === 'quote' ? t('quoteSource') : t('contextLabelShort')}
                     </span>
                     <a 
                       href={link.url} 
@@ -134,7 +136,7 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                   type="text"
                   value={newLinkUrl}
                   onChange={(e) => onNewLinkUrlChange(e.target.value)}
-                  placeholder="https://..."
+                  placeholder={t('linkPlaceholder')}
                   className="flex-1 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-1.5 focus:border-cyan-500"
                 />
                 <select
@@ -142,15 +144,15 @@ const AdvancedAnalysisSection: React.FC<AdvancedAnalysisSectionProps> = ({
                   onChange={(e) => onNewLinkTypeChange(e.target.value as 'quote' | 'context')}
                   className="bg-gray-800 text-gray-300 text-xs rounded border border-gray-700 p-1.5"
                 >
-                  <option value="context">Context</option>
-                  <option value="quote">Quote Source</option>
+                  <option value="context">{t('contextLabelShort')}</option>
+                  <option value="quote">{t('quoteSource')}</option>
                 </select>
                 <button
                   onClick={onAddLink}
                   disabled={!newLinkUrl}
                   className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded disabled:opacity-50"
                 >
-                  Add
+                  {t('add')}
                 </button>
               </div>
             </div>

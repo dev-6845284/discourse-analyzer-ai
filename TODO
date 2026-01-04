@@ -1,36 +1,95 @@
-
 # Instruction for AI model: 
-## - do not suggest new sentedences, only current in progress
-## - you may suggest improvements to existing sentences
+- Do not suggest new sentences, only current in progress
+- You may suggest improvements to existing sentences
+- Do not suggest done items
 
-Todo:
-  DDoS Protection & Security:
-    [x] Redis-based rate limiting (express-rate-limit + rate-limit-redis)
-    [x] IP blocking middleware with auto-block capability
-    [x] API usage tracking and logging to MongoDB
-    [x] Security alerts system for suspicious activity
-    [x] Admin dashboard for usage stats and alerts
-    [x] Admin alert banner with real-time notifications
-    [] Add WebSocket for real-time alert updates
-    [] Implement Vercel Edge Middleware for edge-level rate limiting
-    [] Add email/webhook notifications for critical alerts
-  Transcription analysis:
-    Normalize GUI flows:
-      [] Session stage
-      [] Promoted stage
-    Dialog analysys improvements:
-      [x] When grouping text for initial text grouping, in the group of 5min, join texts by 30s part chunks and provide timestamps
-      [x] when identifying speakers, output with timestamps, do overlap for 30-45s of previous analysed part
-      [x] when sending text to speaker identification, provide timestamps for each line
-      [x] when analyzing dialog into topics, provide timestamps for each line
-      [x] Edit list of speakers
-      [x] Allow update speaker
-      [] Identify key act
-      [] Allow save session state multiple times
-      [] Allow choose AI for dialog analysis diffenent stages: rough grouping analysis, speaker identification, dialog analysis into topics, merge topics
-  TickTok videos:
-    [] Load from URL
-  Bugs:
-    [] CRITICAL: Total data loss detected! Started with 675 lines, ended with 235 lines. Lost 440 lines.
-    [] Analysis clean up my not working correctly, refresh session data everywhere after clean up or update
-    
+# Discourse Analyzer AI - Project Roadmap
+
+## 🔴 Critical Issues & Bugs
+- [ ] Youtube transcription fetch don't work from server, due to YouTube protection against API calls. Use Gemini?
+- [ ] **CRITICAL:** Total data loss detected! (Started with 675 lines, ended with 235 lines. Lost 440 lines).
+- [x] Quote analysis does not use correct analysis categories according to selected analysis type.
+- [ ] Re-evaluating quote does not use latest updated context content.
+- [ ] Analysis cleanup may not be working correctly; refresh session data everywhere after cleanup or update.
+
+## 🛡️ Security & DDoS Protection
+- [ ] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets.
+- [ ] **Smart CAPTCHA:** Implement Cloudflare Turnstile on session creation/login to stop bot floods.
+- [x] **Session Hardening:**
+    - [x] Generate session IDs for anonymous users immediately to enable tracking.
+    - [x] Implement strict throttling on the session creation endpoint.
+    - [x] Enforce short TTL (Time-To-Live) for unauthenticated sessions to prevent storage exhaustion.
+    - [x] Cache active sessions in Redis for sub-millisecond validation.
+- [x] **Payload Safety:** Enforce strict JSON body limits (e.g., 10kb) on all APIs.
+- [ ] Add email/webhook notifications for critical alerts.
+- [ ] Add WebSocket for real-time alert updates.
+
+## 🎙️ Transcription & Dialog Analysis
+### Normalize GUI flows:
+- [ ] Session stage
+- [ ] Promoted stage
+
+### Improvements:
+- [x] Support translations for dynamic analysis categories.
+- [x] Improve audit verdict prompt (currently ambiguous) or remove it.
+- [ ] Allow saving session state multiple times.
+- [ ] Allow selection of specific AI models for different analysis stages:
+    - Rough grouping analysis
+    - Speaker identification
+    - Dialog analysis into topics
+    - Topic merging
+
+## 👥 User & Access Management
+- [x] Use DB-stored API keys instead of environment variables.
+- [x] Implement Role-Based Access Control (RBAC) for the admin dashboard.
+
+## 📜 Public Quotes
+- [ ] **Create and Manage Public Quotes**
+    - [ ] **Prerequisite:** Mechanism to mark quotes as public/private with audit history (logging who changed status).
+    - [ ] **Permissions:** Changing quote status is restricted to roles: `admin`, `editor`, `moderator`.
+    - [ ] **Management API:** Specific API for changing status with proper role authorization.
+    - [ ] **Fetch API:** Special API for fetching public quotes.
+        - [ ] Strict filtering only; no free-text search (security risk).
+        - [ ] Filter by Person: Send person ID only, not the full object.
+    - [ ] **Public View:** Separate view for public quotes.
+        - [ ] Design with support for different viewing layouts.
+        - [ ] Architecture to allow easy future expansion and adoption of different layouts.
+
+## 📺 Media & Display
+- [ ] **TikTok:** Support loading videos from URL.
+- [x] **Previews:** Do not activate embedded previews (e.g., Facebook) until the user clicks the "Load Preview" button.
+
+---
+
+## ✅ Completed Tasks
+
+### Security
+- [x] Redis-based rate limiting (express-rate-limit + rate-limit-redis)
+- [x] IP blocking middleware with auto-block capability
+- [x] API usage tracking and logging to MongoDB
+- [x] Security alerts system for suspicious activity
+- [x] Admin dashboard for usage stats and alerts
+- [x] Admin alert banner with real-time notifications
+- [x] Ensure every API call checks user role and permissions
+- [x] Define required roles for each API endpoint
+- [x] Store API role configurations in DB
+- [x] On application start, register all API endpoints in DB; register missing endpoints with default admin role
+- [x] Create DB migration to add role-based access control to existing users
+
+### Dialog Analysis
+- [x] Group 5min chunks by 30s parts with timestamps.
+- [x] Speaker identification with timestamps and 30-45s overlap.
+- [x] Timestamps provided for speaker identification input lines.
+- [x] Timestamps provided for topic analysis lines.
+- [x] UI: Edit list of speakers and update functionality.
+- [x] UI: Replace strength texts with "horizontal bars" (segments for levels, hover for tooltip).
+
+### User Management
+- [x] Role assignments to users.
+- [x] Admin form for entering extra keysets for users.
+- [x] Admin ability to assign keysets to users.
+
+### Quote Features
+- [x] Facebook embedded iframe for Facebook quotes.
+- [x] Different "flavors" of quote analysis: fact check, toxicity.
+- [x] Bugfix: Person name is now correctly sent for quote analysis.

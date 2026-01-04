@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { Quote, QuoteUpdatePayload, AuditResult } from '../types';
-import { SUPPORTED_LANGUAGES } from '../constants';
 import api, { updateQuote, extractFromUrl, formatApiError } from '../utils/api';
 import { loadFromStorage } from '../utils/localStorage';
 
@@ -12,7 +11,7 @@ export function useQuoteActions(
   handleLogout: () => void
 ) {
   const handleAnalyzeQuote = useCallback(
-    async (quote: Quote, selectedAI: string) => {
+    async (quote: Quote, selectedAI: string, analysisType: 'audit'|'flaws' = 'audit') => {
       setQuotes((prev) =>
         prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: true } : q))
       );
@@ -21,14 +20,27 @@ export function useQuoteActions(
 
       try {
         const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+        let personId: string | undefined;
+        let personName = quote.personName;
+
+        if (quote.person && typeof quote.person === 'string') {
+          personId = quote.person;
+        } else if (quote.person && typeof quote.person === 'object') {
+          personId = quote.person._id || quote.person.id;
+          personName = quote.person.name || personName;
+        }
+
         const response = await api.post('/quotes/analyze', {
           model: selectedAI,
           quoteText: quote.text,
           quoteLanguageCode: quote.languageCode,
           quoteLanguageName: quote.languageName,
+          personId,
+          personName,
           analysisContext: quote.analysisContext,
           links: quote.links,
           apiKeys,
+          analysisType
         });
         // Server now returns AuditResult instead of AnalysisResult
         const audit: AuditResult = response.data;
@@ -109,7 +121,7 @@ export function useQuoteActions(
           date: updatedQuote.date,
           metadata: {
             // Support both legacy analysis and new audit
-            ...(updatedQuote.analysis ? { analysis: updatedQuote.analysis } : {}),
+            ...(updatedQuote.audit ? { audit: updatedQuote.audit } : (updatedQuote.analysis ? { legacyAnalysis: updatedQuote.analysis } : {})),
             ...(updatedQuote.audit ? { audit: updatedQuote.audit } : {}),
             languageCode: updatedQuote.languageCode,
             languageName: updatedQuote.languageName,

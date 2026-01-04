@@ -2,6 +2,17 @@ import React from 'react';
 import ErrorDisplay from './ErrorDisplay';
 import QuoteCard from '../QuoteCard';
 import { Quote } from '../../types';
+import { useI18n } from '../../i18n';
+
+/*
+ * ⚠️ NOTE: SearchResults and StoredQuotes share similar UI and behavior for displaying quotes
+ * and handling AI-model related actions (e.g., the `selectedAI` prop, `onAnalyze` payloads,
+ * and how analysis results are processed/saved).
+ *
+ * When you update model selection UI, API payload shapes, or analysis/save logic in one
+ * component, please check and apply equivalent changes to the other component to keep
+ * behavior consistent and avoid subtle bugs.
+ */
 
 interface SearchResultsProps {
   results: Quote[];
@@ -11,7 +22,7 @@ interface SearchResultsProps {
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   onClear: () => void;
-  onAnalyze: (quote: Quote) => void;
+  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => void;
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (id: string, lang: string) => void;
@@ -20,6 +31,15 @@ interface SearchResultsProps {
   onRemove: (quote: Quote) => void;
   onEditSource?: (quote: Quote) => void;
   clearError: () => void;
+  selectedAI: string;
+  statusFilters: {
+    isAnalyzed: 'all' | 'true' | 'false';
+    setIsAnalyzed: (value: 'all' | 'true' | 'false') => void;
+    isImproved: 'all' | 'true' | 'false';
+    setIsImproved: (value: 'all' | 'true' | 'false') => void;
+  };
+  onExport?: () => void;
+  onImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -39,7 +59,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onRemove,
   onEditSource,
   clearError,
+  selectedAI,
+  statusFilters,
+  onExport,
+  onImport,
 }) => {
+  const { t } = useI18n();
+  const sf = statusFilters || { isAnalyzed: 'all' as const, setIsAnalyzed: (_: any) => {}, isImproved: 'all' as const, setIsImproved: (_: any) => {} };
   return (
     <>
       <ErrorDisplay
@@ -50,8 +76,8 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
       <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-cyan-300 mb-2">
-            Results ({results.length})
+          <h2 className="text-2xl font-semibold text-cyan-400 mb-2">
+            {t('results', { count: results.length })}
           </h2>
           {personName && (
             <p className="text-gray-400">
@@ -62,7 +88,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Sort by:</span>
+            <span className="text-sm text-gray-400">{t('sortBy')}</span>
             <div className="flex rounded-md bg-gray-700">
               <button
                 onClick={() => setSortOrder('newest')}
@@ -72,7 +98,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     : 'text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                Newest
+                {t('newest')}
               </button>
               <button
                 onClick={() => setSortOrder('oldest')}
@@ -82,16 +108,63 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     : 'text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                Oldest
+                {t('oldest')}
               </button>
             </div>
           </div>
+
+          {/* Export / Import */}
+          {onExport && (
+            <button
+              onClick={onExport}
+              className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm"
+            >
+              {t('export')}
+            </button>
+          )}
+          {onImport && (
+            <label className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm cursor-pointer">
+              {t('import')}
+              <input type="file" accept=".json" onChange={onImport} className="hidden" />
+            </label>
+          )}
+
           <button
             onClick={onClear}
             className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm"
           >
-            Clear All
+            {t('clearAll')}
           </button>
+        </div>
+      </div>
+
+      {/* Status filters */}
+      <div className="mb-4 p-3 bg-gray-800/40 rounded-md">
+        <div className="grid grid-cols-2 gap-3 max-w-sm">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">{t('analyzed')}</label>
+            <select
+              value={sf.isAnalyzed}
+              onChange={(e) => sf.setIsAnalyzed(e.target.value as 'all' | 'true' | 'false')}
+              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+            >
+              <option value="all">{t('all')}</option>
+              <option value="true">{t('analyzed')}</option>
+              <option value="false">{`Not ${t('analyzed')}`}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">{t('improved')}</label>
+            <select
+              value={sf.isImproved}
+              onChange={(e) => sf.setIsImproved(e.target.value as 'all' | 'true' | 'false')}
+              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+            >
+              <option value="all">{t('all')}</option>
+              <option value="true">{t('improved')}</option>
+              <option value="false">{`Not ${t('improved')}`}</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -109,6 +182,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               onDiscard={onDiscard}
               onRemove={onRemove}
               isApiKeySet={true}
+              selectedAI={selectedAI}
             />
           ))}
         </div>

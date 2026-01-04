@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { loadFromStorage, saveToStorage } from '../utils/localStorage';
+import api from '../utils/api';
+import { useAuth } from '../hooks/useAuth';
+import { useI18n } from '../i18n';
 
 interface ApiKeySettingsModalProps {
   isOpen: boolean;
@@ -10,31 +12,51 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
   const [geminiKey, setGeminiKey] = useState('');
   const [chatGptKey, setChatGptKey] = useState('');
   const [grokKey, setGrokKey] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
+  // Do not load keys from storage or server. Reset inputs when modal opens.
   useEffect(() => {
     if (isOpen) {
-      const keys = loadFromStorage<Record<string, string>>('apiKeys') || {};
-      setGeminiKey(keys.gemini || '');
-      setChatGptKey(keys.chatgpt || '');
-      setGrokKey(keys.grok || '');
+      setGeminiKey('');
+      setChatGptKey('');
+      setGrokKey('');
+      setError(null);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    const keys = {
-      gemini: geminiKey,
-      chatgpt: chatGptKey,
-      grok: grokKey,
-    };
-    saveToStorage('apiKeys', keys);
-    onClose();
+  const { t } = useI18n();
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      if (!user || !user._id) throw new Error('User not available');
+      const payload = {
+        GEMINI_API_KEY: geminiKey || null,
+        GROK_API_KEY: grokKey || null,
+        CHATGPT_API_KEY: chatGptKey || null,
+      };
+      await api.put(`/users/${user._id}/keyset`, payload);
+      // Clear form after successful save
+      setGeminiKey('');
+      setChatGptKey('');
+      setGrokKey('');
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Save failed');
+      console.error('Failed to save API keys', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300">
-      <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
+      <div className="bg-gray-800 rounded-lg shadow-xl p-4 w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
         <style>{`
           @keyframes fade-in-scale {
             from { opacity: 0; transform: scale(0.95); }
@@ -44,54 +66,56 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
             animation: fade-in-scale 0.3s forwards;
           }
         `}</style>
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">API Key Settings</h2>
-        <p className="text-gray-400 mb-6">Enter your API keys to use your own accounts.</p>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">{t('apiKeySettingsTitle')}</h2>
+        <p className="text-gray-400 mb-6">{t('enterApiKeysNote')}</p>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Gemini API Key</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">{t('geminiApiKeyLabel')}</label>
             <input
               type="password"
               value={geminiKey}
               onChange={(e) => setGeminiKey(e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              placeholder="Enter Gemini API Key"
+              placeholder={t('enterGeminiApiKey')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">ChatGPT API Key</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">{t('chatGptApiKeyLabel')}</label>
             <input
               type="password"
               value={chatGptKey}
               onChange={(e) => setChatGptKey(e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              placeholder="Enter ChatGPT API Key"
+              placeholder={t('enterChatGptApiKey')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Grok API Key</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">{t('grokApiKeyLabel')}</label>
             <input
               type="password"
               value={grokKey}
               onChange={(e) => setGrokKey(e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              placeholder="Enter Grok API Key"
+              placeholder={t('enterGrokApiKey')}
             />
           </div>
         </div>
 
+        {error && <div className="text-sm text-red-400 mb-3">{error}</div>}
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors"
+            disabled={isSaving}
+            className={`px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded transition-colors ${isSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
-            Save Keys
+            {isSaving ? t('saving') : t('saveKeys')}
           </button>
         </div>
       </div>

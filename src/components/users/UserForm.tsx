@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';
+import { useI18n } from '../../i18n';
+import ModalWrapper from '../ui/ModalWrapper';
+import FormInput from '../ui/FormInput';
 
 interface UserFormProps {
   user: User | null;
@@ -15,6 +18,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (user) {
@@ -49,85 +53,52 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">{user ? 'Edit User' : 'Add User'}</h2>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+    <ModalWrapper title={user ? t('editUser') : t('addUser')}>
+      {error && (
+        <div className="mb-4 bg-red-900/30 border border-red-700 rounded text-red-300 px-4 py-3">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <FormInput label={t('aliasLabel')} type="text" value={alias} onChange={(e) => setAlias(e.target.value)} required />
+
+        <FormInput label={t('emailLabel')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+
+        <div className="mb-4">
+          <label className="block text-gray-200 text-sm font-semibold mb-2">{t('roleLabel')}</label>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input type="radio" name="role" value="viewer" checked={role === 'viewer'} onChange={() => setRole('viewer')} className="form-radio text-cyan-400 bg-gray-900" />
+              <span>Viewer</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input type="radio" name="role" value="moderator" checked={role === 'moderator'} onChange={() => setRole('moderator')} className="form-radio text-cyan-400 bg-gray-900" />
+              <span>Moderator</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input type="radio" name="role" value="editor" checked={role === 'editor'} onChange={() => setRole('editor')} className="form-radio text-cyan-400 bg-gray-900" />
+              <span>Editor</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-gray-200">
+              <input type="radio" name="role" value="admin" checked={role === 'admin'} onChange={() => setRole('admin')} className="form-radio text-cyan-400 bg-gray-900" />
+              <span>Admin</span>
+            </label>
           </div>
+        </div>
+
+        {!user && (
+          <FormInput label={t('passwordLabel')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Alias</label>
-            <input
-              type="text"
-              value={alias}
-              onChange={(e) => setAlias(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Role</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            >
-              <option value="viewer">Viewer</option>
-              <option value="moderator">Moderator</option>
-              <option value="editor">Editor</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          {!user && (
-            <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-                minLength={6}
-              />
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-            >
-              {isSubmitting ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none">{t('cancel')}</button>
+          <button type="submit" disabled={isSubmitting} className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 px-4 rounded focus:outline-none disabled:opacity-50">{isSubmitting ? t('saving') : t('save')}</button>
+        </div>
+      </form>
+    </ModalWrapper>
   );
 };

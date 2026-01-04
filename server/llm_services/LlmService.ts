@@ -5,6 +5,7 @@ import {
   AnalysisCategory,
   AnalysisRating,
   TopicAnalysisResult,
+  PersonInfo,
 } from '../types';
 
 export interface LlmService {
@@ -32,8 +33,10 @@ export interface LlmService {
     temperature: number,
     logId: string,
     sessionId: string,
+    person?: PersonInfo,
     analysisContext?: string,
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+    analysisType?: 'audit' | 'flaws'
   ): Promise<AuditResult>;
 
   extractQuotesFromText(

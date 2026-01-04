@@ -10,6 +10,7 @@ import {
   Settings,
   Youtube
 } from 'lucide-react';
+import { useI18n } from '../i18n';
 import { TranscriptData } from '../utils/transcriptStorage';
 import { YoutubeTranscriptCopyPaste } from './YoutubeTranscriptCopyPaste';
 // import { BookmarkletImporter } from './BookmarkletImporter';
@@ -31,53 +32,46 @@ const STORAGE_KEY = 'discourse-analyzer-transcript-method';
 
 const METHOD_INFO: Record<TranscriptFetchMethod, {
   icon: React.ReactNode;
-  title: string;
-  description: string;
-  pros: string[];
-  cons: string[];
+  titleKey: string;
+  descriptionKey: string;
+  prosKeys: string[];
+  consKeys: string[];
 }> = {
   auto: {
     icon: <Zap size={20} />,
-    title: 'Automatic (Server)',
-    description: 'Server fetches transcript directly from YouTube',
-    pros: ['One-click, fastest method', 'No extra steps needed'],
-    cons: ['May be blocked by YouTube', 'Requires working server'],
+    titleKey: 'method_auto_title',
+    descriptionKey: 'method_auto_description',
+    prosKeys: ['method_auto_pro_1', 'method_auto_pro_2'],
+    consKeys: ['method_auto_con_1', 'method_auto_con_2'],
   },
   'copy-paste': {
     icon: <Copy size={20} />,
-    title: 'YouTube Copy & Paste',
-    description: 'Copy transcript text from YouTube\'s interface',
-    pros: ['Works when server is blocked', 'No installation needed', 'Uses your YouTube session'],
-    cons: ['Manual copy-paste steps', 'Requires transcript panel to be visible'],
+    titleKey: 'method_copy_paste_title',
+    descriptionKey: 'method_copy_paste_description',
+    prosKeys: ['method_copy_paste_pro_1', 'method_copy_paste_pro_2', 'method_copy_paste_pro_3'],
+    consKeys: ['method_copy_paste_con_1', 'method_copy_paste_con_2'],
   },
   // bookmarklet removed
   'plain-text': {
     icon: <FileText size={20} />,
-    title: 'Plain Text (Timestamps)',
-    description: 'Paste or upload plain text with lines like (hh:mm:ss) or (mm:ss) followed by text. Example: (00:00) Hello world.',
-    pros: [
-      'Works with exported or manually formatted transcripts',
-      'Supports (hh:mm:ss) and (mm:ss) timestamps',
-      'No YouTube or server required',
-    ],
-    cons: [
-      'Manual formatting required',
-      'No speaker/metadata support',
-    ],
+    titleKey: 'method_plain_text_title',
+    descriptionKey: 'method_plain_text_description',
+    prosKeys: ['method_plain_text_pro_1', 'method_plain_text_pro_2', 'method_plain_text_pro_3'],
+    consKeys: ['method_plain_text_con_1', 'method_plain_text_con_2'],
   },
   srt: {
     icon: <FileText size={20} />,
-    title: 'SRT File Import',
-    description: 'Upload an SRT subtitle file',
-    pros: ['Works with downloaded subtitles', 'Compatible with external tools'],
-    cons: ['Need to obtain SRT file first'],
+    titleKey: 'method_srt_title',
+    descriptionKey: 'method_srt_description',
+    prosKeys: ['method_srt_pro_1', 'method_srt_pro_2'],
+    consKeys: ['method_srt_con_1'],
   },
   json: {
     icon: <FileText size={20} />,
-    title: 'JSON/Text Import',
-    description: 'Import previously exported transcript data',
-    pros: ['Good for reusing saved transcripts', 'Supports multiple formats'],
-    cons: ['Need existing transcript file'],
+    titleKey: 'method_json_title',
+    descriptionKey: 'method_json_description',
+    prosKeys: ['method_json_pro_1', 'method_json_pro_2'],
+    consKeys: ['method_json_con_1'],
   },
 };
 
@@ -89,6 +83,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
   autoFetchError,
   isLoading = false,
 }) => {
+  const { t } = useI18n();
   const [selectedMethod, setSelectedMethod] = useState<TranscriptFetchMethod>('auto');
   const [defaultMethod, setDefaultMethod] = useState<TranscriptFetchMethod>('auto');
   const [autoFetchUrl, setAutoFetchUrl] = useState('');
@@ -118,14 +113,14 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-full sm:max-w-lg md:max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center gap-3">
             <Youtube className="text-red-500" size={24} />
             <div>
-              <h2 className="text-xl font-bold text-white">Get YouTube Transcript</h2>
-              <p className="text-sm text-gray-400">Choose your preferred method</p>
+              <h2 className="text-xl font-bold text-cyan-400">{t('getYouTubeTranscriptTitle')}</h2>
+              <p className="text-sm text-gray-400">{t('choosePreferredMethod')}</p>
             </div>
           </div>
           <button
@@ -147,17 +142,17 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
               <button
                 key={method}
                 onClick={() => setSelectedMethod(method)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-normal sm:whitespace-nowrap transition-colors border-b-2 ${
                   isSelected
                     ? 'text-cyan-400 border-cyan-400 bg-gray-800/50'
                     : 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-800/30'
                 }`}
               >
                 {info.icon}
-                <span>{info.title}</span>
+                <span>{t(info.titleKey)}</span>
                 {isDefault && (
                   <span className="px-1.5 py-0.5 text-xs bg-cyan-600/30 text-cyan-300 rounded">
-                    Default
+                    {t('default')}
                   </span>
                 )}
               </button>
@@ -175,8 +170,8 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
                   {METHOD_INFO[selectedMethod].icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{METHOD_INFO[selectedMethod].title}</h3>
-                  <p className="text-sm text-gray-400">{METHOD_INFO[selectedMethod].description}</p>
+                  <h3 className="font-semibold text-cyan-400">{t(METHOD_INFO[selectedMethod].titleKey)}</h3>
+                  <p className="text-sm text-gray-400">{t(METHOD_INFO[selectedMethod].descriptionKey)}</p>
                 </div>
               </div>
               <button
@@ -189,25 +184,25 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
                 }`}
               >
                 <Settings size={14} />
-                {defaultMethod === selectedMethod ? 'Default Method' : 'Set as Default'}
+                {defaultMethod === selectedMethod ? t('defaultMethod') : t('setAsDefault')}
               </button>
             </div>
             
             {/* Pros/Cons */}
             <div className="mt-3 grid grid-cols-2 gap-4 text-xs">
               <div>
-                {METHOD_INFO[selectedMethod].pros.map((pro, i) => (
+                {METHOD_INFO[selectedMethod].prosKeys.map((proKey, i) => (
                   <div key={i} className="flex items-center gap-1 text-green-400 mb-1">
                     <CheckCircle size={12} />
-                    <span>{pro}</span>
+                    <span>{t(proKey)}</span>
                   </div>
                 ))}
               </div>
               <div>
-                {METHOD_INFO[selectedMethod].cons.map((con, i) => (
+                {METHOD_INFO[selectedMethod].consKeys.map((conKey, i) => (
                   <div key={i} className="flex items-center gap-1 text-yellow-400 mb-1">
                     <AlertTriangle size={12} />
-                    <span>{con}</span>
+                    <span>{t(conKey)}</span>
                   </div>
                 ))}
               </div>
@@ -219,9 +214,9 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
             <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg text-red-300 text-sm flex items-start gap-2">
               <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Server fetch failed</p>
+                <p className="font-medium">{t('serverFetchFailed')}</p>
                 <p className="text-red-400">{autoFetchError}</p>
-                <p className="mt-1 text-gray-400">Try one of the alternative methods below.</p>
+                <p className="mt-1 text-gray-400">{t('tryAlternativeMethods')}</p>
               </div>
             </div>
           )}
@@ -231,7 +226,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
             <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
               <h3 className="font-medium text-white flex items-center gap-2">
                 <Zap size={18} className="text-yellow-400" />
-                Automatic Server Fetch
+                {t('method_auto_title')}
               </h3>
               <div className="space-y-3">
                 <input
@@ -247,7 +242,7 @@ export const TranscriptMethodSelector: React.FC<TranscriptMethodSelectorProps> =
                   className="w-full px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Zap size={18} />
-                  {isLoading ? 'Fetching...' : 'Fetch Transcript'}
+                  {isLoading ? t('fetching') : t('fetchTranscript')}
                 </button>
               </div>
             </div>

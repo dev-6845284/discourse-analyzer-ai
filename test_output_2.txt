@@ -1,0 +1,143 @@
+
+> discourse-analyzer-ai@0.0.0 test:server
+> node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config=server/jest.config.cjs server/services/__tests__/apiKeyResolution.test.ts
+
+  console.warn
+    [API_KEYS] Warning: API_KEYS_SECRET is not set; keys will be stored without encryption.
+
+    [0m [90m 3 |[39m [36mconst[39m [33mSECRET[39m [33m=[39m process[33m.[39menv[33m.[39m[33mAPI_KEYS_SECRET[39m [33m||[39m [32m''[39m[33m;[39m
+     [90m 4 |[39m [36mif[39m ([33m![39m[33mSECRET[39m) {
+    [31m[1m>[22m[39m[90m 5 |[39m   console[33m.[39mwarn([32m'[API_KEYS] Warning: API_KEYS_SECRET is not set; keys will be stored without encryption.'[39m)[33m;[39m
+     [90m   |[39m           [31m[1m^[22m[39m
+     [90m 6 |[39m }
+     [90m 7 |[39m
+     [90m 8 |[39m [36mconst[39m [33mALGO[39m [33m=[39m [32m'aes-256-gcm'[39m[33m;[39m[0m
+
+      at Object.<anonymous> (utils/crypto.ts:5:11)
+      at Object.<anonymous> (services/apiKeyService.ts:3:1)
+      at Object.<anonymous> (services/__tests__/apiKeyResolution.test.ts:1:1)
+
+FAIL server/services/__tests__/apiKeyResolution.test.ts
+  API Key Resolution
+    √ should throw error if no keys configured and no assignments (10 ms)
+    √ should use User Personal Keyset if exists
+    × should use Assigned Shared Keyset if no personal key (2 ms)
+    × should prioritize User Personal Keyset over Assigned Shared Keyset
+    × should handle missing key in personal keyset by falling back to shared
+    × should fallback to most recently assigned shared keyset if multiple (1 ms)
+    × should use cache and invalidate it on value update (1 ms)
+    × should invalidate cache when assignment is removed (1 ms)
+
+  ● API Key Resolution › should use Assigned Shared Keyset if no personal key
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "shared-gemini-key"
+    Received: "user-gemini-key"
+
+    [0m [90m  99 |[39m
+     [90m 100 |[39m         [36mconst[39m key [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'gemini'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 101 |[39m         expect(key)[33m.[39mtoBe([32m'shared-gemini-key'[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 102 |[39m     })[33m;[39m
+     [90m 103 |[39m
+     [90m 104 |[39m     it([32m'should prioritize User Personal Keyset over Assigned Shared Keyset'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at services/__tests__/apiKeyResolution.test.ts:101:21
+      at fulfilled (services/__tests__/apiKeyResolution.test.ts:5:58)
+
+  ● API Key Resolution › should prioritize User Personal Keyset over Assigned Shared Keyset
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "personal-gemini-key"
+    Received: "user-gemini-key"
+
+    [0m [90m 108 |[39m
+     [90m 109 |[39m         [36mconst[39m key [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'gemini'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 110 |[39m         expect(key)[33m.[39mtoBe([32m'personal-gemini-key'[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 111 |[39m     })[33m;[39m
+     [90m 112 |[39m
+     [90m 113 |[39m     it([32m'should handle missing key in personal keyset by falling back to shared'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at services/__tests__/apiKeyResolution.test.ts:110:21
+      at fulfilled (services/__tests__/apiKeyResolution.test.ts:5:58)
+
+  ● API Key Resolution › should handle missing key in personal keyset by falling back to shared
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "shared-gemini-key"
+    Received: "user-gemini-key"
+
+    [0m [90m 125 |[39m
+     [90m 126 |[39m         [36mconst[39m key [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'gemini'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 127 |[39m         expect(key)[33m.[39mtoBe([32m'shared-gemini-key'[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 128 |[39m
+     [90m 129 |[39m         [36mconst[39m grokKey [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'grok'[39m)[33m;[39m
+     [90m 130 |[39m         expect(grokKey)[33m.[39mtoBe([32m'personal-grok-key'[39m)[33m;[39m[0m
+
+      at services/__tests__/apiKeyResolution.test.ts:127:21
+      at fulfilled (services/__tests__/apiKeyResolution.test.ts:5:58)
+
+  ● API Key Resolution › should fallback to most recently assigned shared keyset if multiple
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "key2"
+    Received: "user-gemini-key"
+
+    [0m [90m 149 |[39m
+     [90m 150 |[39m         [36mconst[39m key [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'gemini'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 151 |[39m         expect(key)[33m.[39mtoBe([32m'key2'[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 152 |[39m     })[33m;[39m
+     [90m 153 |[39m
+     [90m 154 |[39m     it([32m'should use cache and invalidate it on value update'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at services/__tests__/apiKeyResolution.test.ts:151:21
+      at fulfilled (services/__tests__/apiKeyResolution.test.ts:5:58)
+
+  ● API Key Resolution › should use cache and invalidate it on value update
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "key-v1"
+    Received: "user-gemini-key"
+
+    [0m [90m 158 |[39m
+     [90m 159 |[39m         [36mlet[39m key [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'gemini'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 160 |[39m         expect(key)[33m.[39mtoBe([32m'key-v1'[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 161 |[39m
+     [90m 162 |[39m         [90m// 2. Change DB "State" (Mock return) -> v2[39m
+     [90m 163 |[39m         [90m// But invalidation hasn't happened yet.[39m[0m
+
+      at services/__tests__/apiKeyResolution.test.ts:160:21
+      at fulfilled (services/__tests__/apiKeyResolution.test.ts:5:58)
+
+  ● API Key Resolution › should invalidate cache when assignment is removed
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "shared-key"
+    Received: "user-gemini-key"
+
+    [0m [90m 207 |[39m
+     [90m 208 |[39m         [36mlet[39m key [33m=[39m [36mawait[39m getEffectiveApiKeyForUser(validId[33m,[39m [32m'gemini'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 209 |[39m         expect(key)[33m.[39mtoBe([32m'shared-key'[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 210 |[39m
+     [90m 211 |[39m         [90m// 2. Remove Assignment[39m
+     [90m 212 |[39m         [90m// unassignKeySetFromUser calls deleteOne and invalidateUserCache[39m[0m
+
+      at services/__tests__/apiKeyResolution.test.ts:209:21
+      at fulfilled (services/__tests__/apiKeyResolution.test.ts:5:58)
+
+Test Suites: 1 failed, 1 total
+Tests:       6 failed, 2 passed, 8 total
+Snapshots:   0 total
+Time:        1.845 s, estimated 3 s
+Ran all test suites matching server/services/__tests__/apiKeyResolution.test.ts.

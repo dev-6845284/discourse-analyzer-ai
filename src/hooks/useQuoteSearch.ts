@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Quote, ArticleRecommendation } from '../types';
+import { Quote, ArticleRecommendation, Person } from '../types';
 import { TimePeriodResult } from '../utils/timePeriod';
 import { AnalysisCategory, AnalysisRating } from '../types';
 import api, { agenticSearch, formatApiError } from '../utils/api';
@@ -48,7 +48,8 @@ export function useQuoteSearch(handleLogout: () => void) {
       filterRating: AnalysisRating | 'all',
       sortOrder: 'newest' | 'oldest',
       isAgentic: boolean = false,
-      agenticMode: 'quotes' | 'articles' = 'quotes'
+      agenticMode: 'quotes' | 'articles' = 'quotes',
+      person?: Person
     ) => {
       if (!personName) {
         setError("Please enter a person's name.");
@@ -64,6 +65,7 @@ export function useQuoteSearch(handleLogout: () => void) {
 
       try {
         const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
+        const personPayload = person || (personName ? { name: personName } : undefined);
 
         if (isAgentic) {
           const response = await agenticSearch(
@@ -76,7 +78,12 @@ export function useQuoteSearch(handleLogout: () => void) {
           );
 
           if (response.data.type === 'quotes') {
-            setQuotes(response.data.data as Quote[]);
+            const quotesWithPerson = (response.data.data as Quote[]).map((q) => ({
+              ...q,
+              personName: q.personName || personPayload?.name || personName,
+              person: (q as any).person || personPayload,
+            }));
+            setQuotes(quotesWithPerson);
           } else if (response.data.type === 'articles') {
             setArticles(response.data.data as ArticleRecommendation[]);
             setQuotes([]);
@@ -98,7 +105,11 @@ export function useQuoteSearch(handleLogout: () => void) {
             apiKeys,
           }, { signal: abortControllerRef.current.signal });
 
-          const newQuotes = response.data;
+          const newQuotes = (response.data as Quote[]).map((q) => ({
+            ...q,
+            personName: q.personName || personPayload?.name || personName,
+            person: (q as any).person || personPayload,
+          }));
           setQuotes(newQuotes);
         }
       } catch (e: any) {

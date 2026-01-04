@@ -16,24 +16,48 @@ export const AUDIT_CATEGORY_COLORS: Record<AuditCategory, string> = {
   [AuditCategory.ResponsibilityShifting]: "bg-orange-600/20 text-orange-300 ring-orange-500/30",
   [AuditCategory.UnsupportedAssertion]: "bg-blue-600/20 text-blue-300 ring-blue-500/30",
   [AuditCategory.NarrativeControl]: "bg-pink-600/20 text-pink-300 ring-pink-500/30",
+  [AuditCategory.Dehumanization]: "bg-red-900/20 text-red-400 ring-red-500/30",
+  [AuditCategory.SymbolicViolence]: "bg-fuchsia-600/20 text-fuchsia-300 ring-fuchsia-500/30",
+  [AuditCategory.HateSpeechAdjacent]: "bg-rose-600/20 text-rose-300 ring-rose-500/30",
+  [AuditCategory.AuthoritarianMobLogic]: "bg-zinc-600/20 text-zinc-300 ring-zinc-500/30",
+  [AuditCategory.DemocraticNormViolation]: "bg-amber-600/20 text-amber-300 ring-amber-500/30",
+  [AuditCategory.PsychologicalProfile]: "bg-indigo-600/20 text-indigo-300 ring-indigo-500/30",
 };
 
 // Legacy rating colors (title-case)
 export const RATING_COLORS: Record<AnalysisRating, string> = {
-  "None": "text-gray-400",
+  "None": "bg-gray-600/20 text-gray-400 ring-gray-500/30",
   "Low": "text-green-400",
   "Medium": "text-yellow-400",
   "High": "text-orange-400",
   "Severe": "text-red-500",
 };
 
+// Hex color mappings for legacy ratings (used by StrengthBar)
+export const RATING_HEX: Record<AnalysisRating, string> = {
+  "None": "#6b7280",
+  "Low": "#34d399",
+  "Medium": "#facc15",
+  "High": "#fb923c",
+  "Severe": "#ef4444",
+};
+
 // New severity level colors (uppercase)
 export const SEVERITY_COLORS: Record<SeverityLevel, string> = {
-  "NONE": "text-gray-400",
+  "NONE": "bg-gray-600/20 text-gray-400 ring-gray-500/30",
   "LOW": "text-green-400",
   "MEDIUM": "text-yellow-400",
   "HIGH": "text-orange-400",
   "SEVERE": "text-red-500",
+};
+
+// Hex color mappings for use in inline styles (e.g., StrengthBar)
+export const SEVERITY_HEX: Record<SeverityLevel, string> = {
+  "NONE": "#6b7280",
+  "LOW": "#34d399",
+  "MEDIUM": "#facc15",
+  "HIGH": "#fb923c",
+  "SEVERE": "#ef4444",
 };
 
 // Verdict colors
@@ -72,14 +96,14 @@ export const ALL_CATEGORIES = Object.values(AnalysisCategory);
 export const ALL_AUDIT_CATEGORIES = Object.values(AuditCategory);
 
 export const SUPPORTED_LANGUAGES: { code: string; name: string }[] = [
-    { code: 'en', name: 'English' },
-    { code: 'ru', name: 'Russian' },
-    { code: 'lt', name: 'Lithuanian' },
-    { code: 'pl', name: 'Polish' },
-    { code: 'uk', name: 'Ukrainian' },
-    { code: 'fr', name: 'French' },
-    { code: 'se', name: 'Swedish' },
-    { code: 'no', name: 'Norwegian' },
-    { code: 'dk', name: 'Danish' },
-    { code: 'es', name: 'Spanish' },
+  { code: 'en', name: 'English' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'lt', name: 'Lithuanian' },
+  { code: 'pl', name: 'Polish' },
+  { code: 'uk', name: 'Ukrainian' },
+  { code: 'fr', name: 'French' },
+  { code: 'se', name: 'Swedish' },
+  { code: 'no', name: 'Norwegian' },
+  { code: 'dk', name: 'Danish' },
+  { code: 'es', name: 'Spanish' },
 ];

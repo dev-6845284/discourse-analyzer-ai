@@ -1,6 +1,6 @@
-import { AnalysisCategory, AnalysisRating, AuditCategory, SeverityLevel, Verdict, AuditResult } from '../../types';
+import { AnalysisCategory, AnalysisRating, AuditCategory, SeverityLevel, Verdict, AuditResult, PersonInfo } from '../../types';
 
-export { AuditCategory, SeverityLevel, Verdict, AuditResult };
+export type { AuditCategory, SeverityLevel, Verdict, AuditResult, PersonInfo };
 
 /**
  * Time period for filtering quotes
@@ -63,6 +63,8 @@ export interface FetchQuotesFormattingPromptParams {
 export interface AnalyzeQuotePromptParams {
   quoteText: string;
   quoteLanguageName: string;
+  person?: PersonInfo;
+  personName?: string;
   analysisContext?: string;
   links?: ReferenceLink[];
 }
@@ -70,12 +72,8 @@ export interface AnalyzeQuotePromptParams {
 export interface AnalyzeQuoteFormattingPromptParams {
   quoteLanguageName: string;
   analysisNotes: string;
+  analysisType?: 'audit' | 'flaws';
 }
-
-// ============================================================================
-// Extract Quotes Prompt Parameters
-// ============================================================================
-
 export interface ExtractQuotesFromTextPromptParams {
   personName: string;
   textContent: string;

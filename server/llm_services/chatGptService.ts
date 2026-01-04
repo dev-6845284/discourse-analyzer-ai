@@ -7,6 +7,7 @@ import {
   AnalysisRating,
   ModelResponseError,
   TopicAnalysisResult,
+  PersonInfo,
 } from '../types';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { LlmService } from './LlmService';
@@ -14,8 +15,8 @@ import { extractJson } from './utils';
 import {
   buildFetchQuotesResearchPrompt,
   buildFetchQuotesFormattingPrompt,
-  buildAnalyzeQuotePrompt,
-  buildAnalyzeQuoteFormattingPrompt,
+  buildAnalyzePromptByType,
+  buildAnalyzeFormattingPromptByType,
   buildExtractQuotesFromTextPrompt,
   buildExtractQuotesFormattingPrompt,
   buildExtractQuotesFromArticlePrompt,
@@ -43,7 +44,7 @@ export type ChatGptCallOptions = {
  */
 export const callChatGptAPI = async (
   apiKey: string,
-  messages: Array<{ role: string; content: string }> ,
+  messages: Array<{ role: string; content: string }>,
   logId: string,
   sessionId: string,
   options: ChatGptCallOptions = {}
@@ -117,7 +118,7 @@ export const callChatGptAPI = async (
 
         // Make the message user-friendly if it contains technical details
         if (message.includes('Rate limit reached')) {
-          const waitTimeMatch = message.match(/Please try again in ([\d\.]+)s/);
+          const waitTimeMatch = message.match(/(?:Please try again in|Please wait|try again in)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:s|seconds?)/i);
           if (waitTimeMatch) {
             message = `OpenAI rate limit reached. Please wait ${waitTimeMatch[1]} seconds before trying again.`;
           } else {
@@ -191,7 +192,7 @@ class ChatGptService implements LlmService {
         maxQuoteLength: effectiveMaxQuoteLength,
         limitQuoteLength: LIMIT_QUOTE_LENGTH,
       });
-      
+
       const researchNotes = await callChatGptAPI(
         apiKey,
         [{ role: 'user', content: prompt }],
@@ -293,16 +294,20 @@ class ChatGptService implements LlmService {
     temperature: number,
     logId: string,
     sessionId: string,
+    person?: PersonInfo,
     analysisContext?: string,
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+    analysisType: 'audit' | 'flaws' = 'audit'
   ): Promise<AuditResult> {
     if (!apiKey) throw new Error("OpenAI API key is missing.");
 
     try {
       // Step 1: Deep Analysis with Search
-      const analysisPrompt = buildAnalyzeQuotePrompt({
+      const analysisPrompt = buildAnalyzePromptByType(analysisType, {
         quoteText,
         quoteLanguageName,
+        person,
+        personName: person?.name,
         analysisContext,
         links,
       });
@@ -325,7 +330,7 @@ class ChatGptService implements LlmService {
       }
 
       // Step 2: Format to JSON
-      const formattingPrompt = buildAnalyzeQuoteFormattingPrompt({
+      const formattingPrompt = buildAnalyzeFormattingPromptByType(analysisType, {
         quoteLanguageName,
         analysisNotes,
       });
@@ -350,8 +355,28 @@ class ChatGptService implements LlmService {
       }
 
       try {
-        return JSON.parse(jsonText);
+        const parsed = JSON.parse(jsonText);
+        // Validate parsed response against configured audit categories
+        try {
+          const { validateAuditResult, validateFlawsResult } = await import('../services/analysisValidator');
+          if (analysisType === 'flaws') {
+            validateFlawsResult(parsed, jsonText);
+          } else {
+            validateAuditResult(parsed, jsonText);
+          }
+        } catch (validationError) {
+          if (validationError instanceof Error) {
+            console.error('Model validation failed:', validationError.message);
+            throw validationError;
+          }
+          throw validationError;
+        }
+
+        return parsed;
       } catch (e) {
+        if (e instanceof JsonParsingError || e instanceof Error && (e as any).name === 'ModelValidationError') {
+          throw e;
+        }
         console.error("Failed to parse JSON from analysis response:", jsonText);
         throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
       }
@@ -565,7 +590,7 @@ class ChatGptService implements LlmService {
 
       // Join multiple quotes into a single quote with ' | ' separator
       const joinedText = validQuotes.map(q => q.text.trim()).join(' | ');
-      
+
       // Use the language from the first quote (assuming all quotes are in the same language)
       const firstQuote = validQuotes[0];
 
@@ -661,7 +686,7 @@ class ChatGptService implements LlmService {
         console.error("Failed to parse JSON response:", jsonText);
         throw new JsonParsingError("Could not parse the AI's response. The format was unexpected.", jsonText);
       }
-      
+
       // Return the improved quote
       return {
         id: quote.id,
@@ -692,7 +717,7 @@ class ChatGptService implements LlmService {
     sessionId?: string
   ): Promise<TopicAnalysisResult> {
     const prompt = createTopicExtractionPrompt(text, language);
-    
+
     const responseText = await this.generateContent(apiKey, {
       model: 'gpt-4o-mini',
       prompt,
@@ -749,12 +774,12 @@ class ChatGptService implements LlmService {
 
     const interactionId = sessionId && logId
       ? addModelInteractionLog(sessionId, logId, {
-          provider: 'OpenAI',
-          model: requestBody.model,
-          operation: 'chat.completions',
-          requestPayload: requestDetails,
-          metadata,
-        })
+        provider: 'OpenAI',
+        model: requestBody.model,
+        operation: 'chat.completions',
+        requestPayload: requestDetails,
+        metadata,
+      })
       : null;
 
     let responseSnapshot: any;

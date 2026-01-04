@@ -1,6 +1,9 @@
 import React from 'react';
-import { Quote } from '../types';
+import { Eye } from 'lucide-react';
+
+import { Quote } from '../../types';
 import { SUPPORTED_LANGUAGES } from '../../constants';
+import { useI18n } from '../../i18n';
 
 interface QuoteTextDisplayProps {
   displayQuote: Quote;
@@ -19,17 +22,44 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
   onLanguageChange,
   isBusy,
 }) => {
+  const { t } = useI18n();
+  const [iframeHeight, setIframeHeight] = React.useState<number>(220);
+  const [expanded, setExpanded] = React.useState<boolean>(false);
+  const [showIframe, setShowIframe] = React.useState<boolean>(false);
+  const prevHeightRef = React.useRef<number | null>(null);
+
+  const increaseHeight = () => setIframeHeight((h) => Math.min(800, h + 120));
+  const decreaseHeight = () => setIframeHeight((h) => Math.max(120, h - 120));
+  const toggleExpanded = () => {
+    setExpanded((v) => {
+      if (!v) {
+        // expanding: remember previous height and ensure a larger minimum for readability
+        prevHeightRef.current = iframeHeight;
+        const target = Math.max(iframeHeight, 650);
+        setIframeHeight(target);
+        return true;
+      } else {
+        // collapsing: restore previous height if available
+        const prev = prevHeightRef.current ?? 220;
+        setIframeHeight(prev);
+        prevHeightRef.current = null;
+        return false;
+      }
+    });
+  };
+
+
 
   return (
     <>
       {hasDraft && (
         <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-          <div className="text-yellow-500 text-xs font-bold uppercase mb-2">Original Content</div>
+          <div className="text-yellow-500 text-xs font-bold uppercase mb-2">{t('originalContent')}</div>
           <blockquote className="border-l-4 border-yellow-600 pl-4">
             <p className="text-gray-400 italic text-sm">"{quote.text}"</p>
           </blockquote>
-          {quote.analysis && !quote.draft?.analysis && (
-            <div className="mt-2 text-xs text-gray-500">Original analysis available</div>
+          {((quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) && !(quote.draft?.audit || quote.draft?.metadata?.legacyAnalysis || quote.draft?.analysis)) && (
+            <div className="mt-2 text-xs text-gray-500">{t('originalAnalysisAvailable')}</div>
           )}
         </div>
       )}
@@ -41,33 +71,115 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
       </blockquote>
 
       {!isCollapsed && (
-        <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
-          <a
-            href={displayQuote.source}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
-            title={displayQuote.title}
-          >
-            {displayQuote.title}
-          </a>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <select
-              value={displayQuote.languageCode}
-              onChange={(e) => onLanguageChange(quote.id, e.target.value)}
-              disabled={isBusy || hasDraft}
-              className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Quote language"
-            >
-              {SUPPORTED_LANGUAGES.map((lang: any) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-            <span className="text-gray-400">{displayQuote.date}</span>
-          </div>
-        </div>
+        <>
+          {/* If the source contains a Facebook plugin iframe, render the embed instead of a plain link */}
+          {typeof displayQuote.source === 'string' && displayQuote.source.includes('<iframe') && displayQuote.source.includes('facebook.com/plugins/post.php') ? (
+            (() => {
+              const match = displayQuote.source.match(/<iframe[^>]*src="([^"]*facebook\.com\/plugins\/post\.php[^"]*)"[^>]*><\/iframe>/i);
+              const iframeSrc = match ? match[1] : null;
+              return iframeSrc ? (
+                <div className="mt-3 w-full">
+                  {!showIframe ? (
+                    <button
+                      onClick={() => setShowIframe(true)}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-cyan-400 text-xs rounded transition-colors w-full justify-center border border-gray-600 border-dashed"
+                    >
+                      <Eye className="h-4 w-4" />
+                      {t('loadEmbeddedContent') || 'Load Embedded Content'}
+                    </button>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={toggleExpanded}
+                            title={expanded ? t('collapse') : t('expand')}
+                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                          >
+                            {expanded ? '-' : '+'}
+                          </button>
+                          <button
+                            onClick={increaseHeight}
+                            title={t('increase')}
+                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M12 6v4" />
+                              <path d="M8 8l4-4 4 4" />
+                              <path d="M12 18v-4" />
+                              <path d="M8 16l4 4 4-4" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={decreaseHeight}
+                            title={t('decrease')}
+                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}>
+                              <path d="M6 8l4 4-4 4" />
+                              <path d="M18 8l-4 4 4 4" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="text-xs text-gray-400">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
+                      </div>
+                      <div className={`rounded-md overflow-hidden border-0 ${expanded ? 'w-full' : 'w-full'}`} style={{ backgroundColor: '#ffffff' }}>
+                        <iframe
+                          src={iframeSrc}
+                          title={displayQuote.title || 'Embedded Post'}
+                          className="w-full rounded-md border-0 overflow-hidden"
+                          style={{ height: expanded ? Math.max(iframeHeight, 420) : iframeHeight, backgroundColor: '#ffffff' }}
+                          loading="lazy"
+                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <a
+                    href={displayQuote.source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
+                    title={displayQuote.title}
+                  >
+                    {displayQuote.title}
+                  </a>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
+              <a
+                href={displayQuote.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
+                title={displayQuote.title}
+              >
+                {displayQuote.title}
+              </a>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <select
+                  value={displayQuote.languageCode}
+                  onChange={(e) => onLanguageChange(quote.id, e.target.value)}
+                  disabled={isBusy || hasDraft}
+                  className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={t('quoteLanguageLabel')}
+                >
+                  {SUPPORTED_LANGUAGES.map((lang: any) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-gray-400">{displayQuote.date}</span>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );

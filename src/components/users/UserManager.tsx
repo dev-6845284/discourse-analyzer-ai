@@ -4,7 +4,9 @@ import api from '../../utils/api';
 import { UserList } from './UserList.tsx';
 import { UserForm } from './UserForm.tsx';
 import { PasswordModal } from './PasswordModal.tsx';
+import { KeysetAssignmentModal } from './KeysetAssignmentModal.tsx';
 import Spinner from '../Spinner';
+import { useI18n } from '../../i18n';
 
 export const UserManager: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -12,7 +14,10 @@ export const UserManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isKeysetModalOpen, setIsKeysetModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserKeysetId, setSelectedUserKeysetId] = useState<string | undefined>();
+  const { t } = useI18n();
 
   const fetchUsers = async () => {
     try {
@@ -21,7 +26,7 @@ export const UserManager: React.FC = () => {
       setUsers(response.data);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch users');
+      setError(err.response?.data?.message || t('failedToFetchUsers'));
     } finally {
       setIsLoading(false);
     }
@@ -46,14 +51,20 @@ export const UserManager: React.FC = () => {
     setIsPasswordModalOpen(true);
   };
 
+  const handleAssignKeyset = (user: User) => {
+    setSelectedUser(user);
+    setSelectedUserKeysetId(user.assignedKeysetId);
+    setIsKeysetModalOpen(true);
+  };
+
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    if (!window.confirm(t('confirmDeleteUser'))) return;
     
     try {
       await api.delete(`/users/${userId}`);
       setUsers(users.filter(u => u._id !== userId));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete user');
+      alert(err.response?.data?.message || t('failedToDeleteUser'));
     }
   };
 
@@ -64,20 +75,20 @@ export const UserManager: React.FC = () => {
 
   const handlePasswordSubmit = () => {
     setIsPasswordModalOpen(false);
-    alert('Password updated successfully');
+    alert(t('passwordUpdated'));
   };
 
   if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+    <div className="max-w-6xl mx-auto w-full">
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-lg font-semibold text-cyan-400">{t('userManagement')}</h1>
         <button
           onClick={handleAddUser}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
         >
-          Add User
+          {t('addUser')}
         </button>
       </div>
 
@@ -92,6 +103,7 @@ export const UserManager: React.FC = () => {
         onEdit={handleEditUser}
         onDelete={handleDeleteUser}
         onChangePassword={handleChangePassword}
+        onAssignKeyset={handleAssignKeyset}
       />
 
       {isFormOpen && (
@@ -107,6 +119,17 @@ export const UserManager: React.FC = () => {
           user={selectedUser}
           onClose={() => setIsPasswordModalOpen(false)}
           onSubmit={handlePasswordSubmit}
+        />
+      )}
+
+      {isKeysetModalOpen && selectedUser && (
+        <KeysetAssignmentModal
+          user={selectedUser}
+          assignedKeysetId={selectedUserKeysetId}
+          onClose={() => setIsKeysetModalOpen(false)}
+          onSuccess={() => {
+            fetchUsers();
+          }}
         />
       )}
     </div>

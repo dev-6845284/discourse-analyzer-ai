@@ -21,7 +21,7 @@ export const TranscriptSegmentList: React.FC<TranscriptSegmentListProps> = ({
       );
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30">
       {filteredSegments.length > 0 ? (
         <div className="space-y-3 font-mono text-sm">
           {filteredSegments.map((segment, index) => {
@@ -44,7 +44,7 @@ export const TranscriptSegmentList: React.FC<TranscriptSegmentListProps> = ({
                 }`}
               >
                 <div className="flex gap-3">
-                  <span className="text-blue-400 font-bold flex-shrink-0 min-w-fit group-hover:text-blue-300">
+                  <span className="text-blue-400 font-bold flex-shrink-0 min-w-0 group-hover:text-blue-300">
                     [{formatTimestamp(segment.start)}]
                   </span>
                   <span className="flex-1 leading-relaxed break-words">{segment.text}</span>

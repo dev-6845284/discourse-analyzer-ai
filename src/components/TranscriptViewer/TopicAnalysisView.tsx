@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Check, Zap } from 'lucide-react';
+import { useI18n } from '../../i18n';
 import { formatTimestamp } from '../../utils/transcriptHelpers';
 import TopicTagCloud from '../TopicTagCloud';
 import Spinner from '../Spinner';
@@ -42,13 +43,15 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
   onSpeakerHintChange,
   expandedBlocks,
 }) => {
+  const { t } = useI18n();
+
   if (isAnalyzing) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-800/30">
         <div className="text-center">
           <Spinner />
           <p className="mt-4 text-gray-300">
-            Analyzing topics... {Math.round(analysisProgress)}%
+            {t('analyzingTopics')} {Math.round(analysisProgress)}%
           </p>
         </div>
       </div>
@@ -59,7 +62,7 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-800/30">
         <div className="text-center text-red-400">
-          <p>Error analyzing topics:</p>
+          <p>{t('errorAnalyzingTopics')}</p>
           <p className="text-sm text-red-300 mt-2">{error}</p>
         </div>
       </div>
@@ -71,29 +74,29 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30 space-y-4">
       <div className="flex justify-between items-center mb-4">
         <p className="text-gray-300">
-          Found <strong>{results.length}</strong> transcript blocks with topics
+          {t('foundTranscriptBlocksWithTopics', { count: results.length })}
         </p>
         <div className="flex gap-2">
           <button
             onClick={onSelectAllBlocks}
             className="text-xs px-3 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50"
           >
-            Select All
+            {t('selectAll')}
           </button>
           <button
             onClick={onClearSelections}
             className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
           >
-            Clear Selections
+            {t('clearSelections')}
           </button>
           <button
             onClick={onClearAnalysis}
             className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
           >
-            Clear Analysis
+            {t('clearAnalysis')}
           </button>
         </div>
       </div>
@@ -133,7 +136,7 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
                   }}
                   className="text-xs px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50"
                 >
-                  Jump to Video
+                  {t('jumpToVideo')}
                 </button>
               </div>
               <p className="text-sm text-gray-300 line-clamp-2">{block.summary}</p>
@@ -150,7 +153,7 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
             <div className="p-4 border-t border-gray-700 bg-gray-900/50 space-y-4">
               <TopicTagCloud tags={block.tags} mainTopics={block.mainTopics} />
               <div className="mt-3 pt-3 border-t border-gray-700">
-                <p className="text-xs text-gray-400 mb-2 font-semibold">Segments:</p>
+                <p className="text-xs text-gray-400 mb-2 font-semibold">{t('segmentsLabel')}</p>
                 {block.segments && block.segments.length > 0 ? (
                   <div className="space-y-2 text-xs">
                     {block.segments.map((segment, idx) => (
@@ -186,12 +189,12 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
           {/* Speaker Hint Input */}
           <div className="mb-3">
             <label className="block text-xs text-gray-400 mb-1">
-              Speaker hint for AI (optional):
+              {t('speakerHintOptional')}
             </label>
             <textarea
               value={speakerHint}
               onChange={(e) => onSpeakerHintChange?.(e.target.value)}
-              placeholder="e.g., '2 speakers: Host named John and guest Dr. Jane Smith'"
+              placeholder={t('speakerHintPlaceholder')}
               rows={2}
               className="w-full bg-gray-800 text-gray-300 text-sm rounded border border-gray-600 px-3 py-2 focus:border-purple-500 focus:outline-none resize-none"
             />
@@ -203,7 +206,7 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
             className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSpeakerAnalyzing ? <Spinner /> : <Zap size={18} />}
-            Analyze Selected Blocks (Identify Speakers)
+            {t('analyzeSelectedBlocksIdentifySpeakers')}
           </button>
         </div>
       )}

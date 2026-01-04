@@ -14,6 +14,13 @@ export enum AuditCategory {
   ResponsibilityShifting = "Responsibility Shifting",
   UnsupportedAssertion = "Unsupported Assertion",
   NarrativeControl = "Narrative Control / Propaganda",
+  // Flaws Categories
+  Dehumanization = "Dehumanization",
+  SymbolicViolence = "Symbolic Violence / Death-Wishing",
+  HateSpeechAdjacent = "Hate-Speech Adjacent Rhetoric",
+  AuthoritarianMobLogic = "Authoritarian / Mob Logic",
+  DemocraticNormViolation = "Democratic Norm Violation",
+  PsychologicalProfile = "Psychological & Rhetorical Profile",
 }
 
 // Legacy rating type - kept for migration compatibility
@@ -46,13 +53,30 @@ export type AnalysisResult = {
 };
 
 // New audit result with verdict and rationale
-export interface AuditResult {
+export interface StrictAuditResult {
   verdict: Verdict;
   rationale: string;
   categories: {
     [key in AuditCategory]: AuditDetail;
   };
 }
+
+export type FlawsClassification =
+  | "TOXIC POLITICAL RHETORIC"
+  | "DEHUMANIZING SPEECH"
+  | "SYMBOLIC VIOLENCE"
+  | "AUTHORITARIAN AGITATION"
+  | "DEMOCRATICALLY DANGEROUS SPEECH";
+
+export interface FlawsResult {
+  classification: FlawsClassification;
+  finalAssessment: string;
+  categories: {
+    [key in AuditCategory]: AuditDetail;
+  };
+}
+
+export type AuditResult = StrictAuditResult | FlawsResult;
 
 export interface Quote {
   id?: string;
@@ -153,12 +177,21 @@ export type GroundingChunk = {
 };
 
 export interface UserInfo {
-  _id?: string;
+  _id: string;
   email: string;
   name: string;
+  alias?: string;
   picture?: string;
-  role?: string;
+  // Constrain role to known values used in the UI
+  role?: 'admin' | 'viewer' | 'moderator' | 'editor';
+  createdAt?: string;
+  updatedAt?: string;
+  assignedKeysetId?: string;
+  assignedKeysetAlias?: string;
 }
+
+// Backwards-compatible alias used by components that import 'User'
+export type User = UserInfo;
 
 export interface ArticleRecommendation {
   url: string;
@@ -169,7 +202,7 @@ export interface ArticleRecommendation {
   publishedDate?: string;
 }
 
-export type AgenticSearchResult = 
+export type AgenticSearchResult =
   | { type: 'quotes'; data: Quote[] }
   | { type: 'articles'; data: ArticleRecommendation[] };
 
@@ -186,14 +219,15 @@ export interface ExportData {
 }
 
 export interface Person {
-  _id: string;
+  _id?: string;
   name: string;
   firstname?: string;
   surname?: string;
-  aliases: string[];
+  aliases?: string[];
   description?: string;
-  createdAt: string;
-  updatedAt: string;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface QuoteUpdatePayload {
@@ -210,4 +244,19 @@ export interface QuoteUpdatePayload {
   analyzedAt?: string;
   improvedByProvider?: string;
   improvedAt?: string;
+}
+
+export interface CategoryDefinition {
+  id: string;
+  title: string;
+  description: string;
+  promptGuidance: string;
+  modes: ('audit' | 'flaws')[];
+  legacyNames?: string[];
+  uiOrder?: number;
+  translations?: Record<string, {
+    title?: string;
+    description?: string;
+    promptGuidance?: string;
+  }>;
 }

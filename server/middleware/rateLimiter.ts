@@ -1,15 +1,20 @@
 import rateLimit, { RateLimitRequestHandler, Options } from 'express-rate-limit';
 import { Request, Response } from 'express';
+import { RedisStore } from 'rate-limit-redis';
+const redisClient = require('../services/redis').default;
 
-// Note: Using memory store for rate limiting
-// Memory store works for single-instance deployments (including Vercel serverless)
-// For multi-instance deployments with shared state, Redis can be configured
-
-// Helper to create rate limiter with memory store
+// Helper to create rate limiter with memory or Redis store
 function createRateLimiter(options: Partial<Options>): RateLimitRequestHandler {
+  const store = redisClient
+    ? new RedisStore({
+      sendCommand: (...args: string[]) => redisClient.call(...args),
+    })
+    : undefined; // Default to memory store
+
   const baseOptions: Partial<Options> = {
     standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
     legacyHeaders: false, // Disable `X-RateLimit-*` headers
+    store: store,
     keyGenerator: (req: Request) => {
       // Use IP address + user ID if authenticated
       const ip = req.ip || req.socket.remoteAddress || 'unknown';
@@ -30,7 +35,7 @@ function createRateLimiter(options: Partial<Options>): RateLimitRequestHandler {
     },
     ...options,
   };
-  
+
   return rateLimit(baseOptions);
 }
 

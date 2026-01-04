@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import {
-  Quote,
-  AnalysisResult,
-  AuditResult,
   ModelResponseError,
   JsonParsingError,
+  PersonInfo,
 } from '../types';
+import Person from '../models/Person';
 import geminiService from '../llm_services/geminiService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
@@ -19,19 +18,50 @@ import { extractTranscriptTopics } from './dialogAnalysis/topicExtractorService'
 import { identifySpeakers } from './dialogAnalysis/speakerIdentificationService';
 import { analyzeDialogTopics as analyzeDialogTopicsService } from './dialogAnalysis';
 import { updateSessionStep, updateSessionStatus, createSession } from './analysisSessionService';
+import { getEffectiveApiKeyForUser } from './apiKeyService';
 
-const getService = (model: string, apiKeys?: Record<string, string>): { service: LlmService; apiKey: string } => {
+const getServiceInstance = (model: string): LlmService => {
   switch (model) {
     case 'gemini':
-      return { service: geminiService, apiKey: apiKeys?.gemini || process.env.GEMINI_API_KEY! };
+      return geminiService;
     case 'chatgpt':
-      return { service: chatGptService, apiKey: apiKeys?.chatgpt || process.env.CHATGPT_API_KEY! };
+      return chatGptService;
     case 'grok':
-      return { service: grokService, apiKey: apiKeys?.grok || process.env.GROK_API_KEY! };
+      return grokService;
     default:
       throw new Error('Invalid model specified');
   }
 };
+
+const getProviderFromModel = (model: string): 'gemini' | 'chatgpt' | 'grok' => {
+  if (model === 'gemini') return 'gemini';
+  if (model === 'chatgpt') return 'chatgpt';
+  if (model === 'grok') return 'grok';
+  throw new Error(`Unknown model provider for model: ${model}`);
+};
+
+async function getApiKey(req: Request, modelOrProvider: string): Promise<string> {
+  const userId = req.session?.user?._id;
+  if (!userId) {
+    throw new Error('User authentication required to access AI services.');
+  }
+  // Map inputs like 'gpt-4' or 'gemini-1.5' if necessary, but current app uses 'gemini', 'chatgpt', 'grok' mostly.
+  // agenticSearch passes 'openai' sometimes.
+  let provider: 'gemini' | 'chatgpt' | 'grok';
+
+  if (modelOrProvider === 'openai') provider = 'chatgpt';
+  else if (modelOrProvider === 'gemini') provider = 'gemini';
+  else if (modelOrProvider === 'grok') provider = 'grok';
+  else {
+    // fallback for specific model names if used directly as keys
+    if (modelOrProvider.startsWith('gpt')) provider = 'chatgpt';
+    else if (modelOrProvider.startsWith('gemini')) provider = 'gemini';
+    else if (modelOrProvider.startsWith('grok')) provider = 'grok';
+    else provider = 'gemini'; // default
+  }
+
+  return getEffectiveApiKeyForUser(userId.toString(), provider);
+}
 
 export const fetchQuotes = async (req: Request, res: Response) => {
   const {
@@ -46,13 +76,14 @@ export const fetchQuotes = async (req: Request, res: Response) => {
     category,
     rating,
     sortOrder,
-    apiKeys,
   } = req.body;
 
   const logId = addLogEntry(req.session.id!, 'fetchQuotes', { personName, model, context, maxQuotes, languages, category, rating, sortOrder, maxQuoteLength, timePeriod });
 
   try {
-    const { service, apiKey } = getService(model, apiKeys);
+    const service = getServiceInstance(model);
+    const apiKey = await getApiKey(req, model);
+
     const quotes = await service.fetchQuotesForPerson(
       apiKey,
       personName,
@@ -79,7 +110,7 @@ export const fetchQuotes = async (req: Request, res: Response) => {
     if (error instanceof ModelResponseError) {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
-    res.status(500).json({ message: 'Failed to fetch quotes' });
+    res.status(500).json({ message: error.message || 'Failed to fetch quotes' });
   }
 };
 
@@ -89,20 +120,14 @@ export const agenticSearch = async (req: Request, res: Response) => {
     timePeriod,
     languages,
     options,
-    apiKeys,
     provider = 'gemini',
   } = req.body;
 
   const logId = addLogEntry(req.session.id!, 'agenticSearch', { personName, timePeriod, languages, options, provider });
 
   try {
-    let apiKey: string;
-    if (provider === 'openai') {
-      apiKey = apiKeys?.openai || process.env.OPENAI_API_KEY!;
-    } else {
-      apiKey = apiKeys?.gemini || process.env.GEMINI_API_KEY!;
-    }
-    
+    const apiKey = await getApiKey(req, provider);
+
     const result = await agenticService.search(
       provider,
       apiKey,
@@ -113,7 +138,7 @@ export const agenticSearch = async (req: Request, res: Response) => {
       logId,
       req.session.id!
     );
-    
+
     updateLogEntry(req.session.id!, logId, result);
     res.json(result);
   } catch (error: any) {
@@ -130,12 +155,51 @@ export const agenticSearch = async (req: Request, res: Response) => {
 };
 
 export const analyzeQuote = async (req: Request, res: Response) => {
-  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, apiKeys, analysisContext, links } = req.body;
-  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, analysisContext, links });
+  const { quoteText, quoteLanguageCode, quoteLanguageName, model, temperature, analysisContext, links, personName, personId, analysisType } = req.body;
+
+  let personPayload: PersonInfo | undefined;
+  if (personId) {
+    try {
+      const personDoc = await Person.findById(personId);
+      if (!personDoc) {
+        return res.status(404).json({ message: 'Person not found' });
+      }
+      personPayload = {
+        _id: personDoc._id.toString(),
+        name: personDoc.name,
+        firstname: personDoc.firstname,
+        surname: personDoc.surname,
+        aliases: personDoc.aliases,
+        description: personDoc.description,
+        metadata: personDoc.metadata,
+      };
+    } catch (err) {
+      console.error('Error fetching person by ID:', err);
+      return res.status(500).json({ message: 'Failed to fetch person data' });
+    }
+  } else if (personName) {
+    personPayload = { name: personName };
+  }
+
+  const logId = addLogEntry(req.session.id!, 'analyzeQuote', { quoteText, quoteLanguageCode, quoteLanguageName, model, person: personPayload, personName: personPayload?.name, analysisContext, links, analysisType });
 
   try {
-    const { service, apiKey } = getService(model, apiKeys);
-    const auditResult = await service.analyzeQuoteText(apiKey, quoteText, quoteLanguageCode, quoteLanguageName, temperature, logId, req.session.id!, analysisContext, links);
+    const service = getServiceInstance(model);
+    const apiKey = await getApiKey(req, model);
+
+    const auditResult = await service.analyzeQuoteText(
+      apiKey,
+      quoteText,
+      quoteLanguageCode,
+      quoteLanguageName,
+      temperature,
+      logId,
+      req.session.id!,
+      personPayload,
+      analysisContext,
+      links,
+      analysisType || 'audit'
+    );
     updateLogEntry(req.session.id!, logId, auditResult);
     res.json(auditResult);
   } catch (error: any) {
@@ -144,19 +208,21 @@ export const analyzeQuote = async (req: Request, res: Response) => {
     if (error instanceof JsonParsingError) {
       return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
     }
-     if (error instanceof ModelResponseError) {
+    if (error instanceof ModelResponseError) {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
-    res.status(500).json({ message: 'Failed to analyze quote' });
+    res.status(500).json({ message: error.message || 'Failed to analyze quote' });
   }
 };
 
 export const extractQuotes = async (req: Request, res: Response) => {
-  const { personName, textContent, model, temperature, apiKeys, source, title, date, languageCode, languageName } = req.body;
+  const { personName, textContent, model, temperature, source, title, date, languageCode, languageName } = req.body;
   const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, textContent, model });
 
   try {
-    const { service, apiKey } = getService(model, apiKeys);
+    const service = getServiceInstance(model);
+    const apiKey = await getApiKey(req, model);
+
     const quotes = await service.extractQuotesFromText(apiKey, personName, textContent, temperature, logId, req.session.id!);
 
     const enrichedQuotes = postProcessResponse('extractQuotesFromText', quotes, {
@@ -178,12 +244,12 @@ export const extractQuotes = async (req: Request, res: Response) => {
     if (error instanceof ModelResponseError) {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
-    res.status(500).json({ message: 'Failed to extract quotes' });
+    res.status(500).json({ message: error.message || 'Failed to extract quotes' });
   }
 };
 
 export const extractQuotesFromUrl = async (req: Request, res: Response) => {
-  const { url, personName, model, temperature, apiKeys } = req.body;
+  const { url, personName, model, temperature } = req.body;
   const logId = addLogEntry(req.session.id!, 'extractQuote', { personName, url, model, extractionType: 'url' });
 
   try {
@@ -191,7 +257,9 @@ export const extractQuotesFromUrl = async (req: Request, res: Response) => {
     const article = await fetchArticle(url);
 
     // Step 2: Use LLM to extract quotes from article content
-    const { service, apiKey } = getService(model, apiKeys);
+    const service = getServiceInstance(model);
+    const apiKey = await getApiKey(req, model);
+
     const quotes = await service.extractQuotesFromArticle(
       apiKey,
       personName,
@@ -208,7 +276,7 @@ export const extractQuotesFromUrl = async (req: Request, res: Response) => {
     );
 
     updateLogEntry(req.session.id!, logId, quotes);
-    
+
     // Return quotes along with article metadata for the frontend
     const response: any = {
       quotes,
@@ -235,31 +303,33 @@ export const extractQuotesFromUrl = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error extracting quotes from URL:', error);
     updateLogEntry(req.session.id!, logId, undefined, error);
-    
+
     // Handle article fetch errors with user-friendly messages
-    if (error.message?.includes('Access denied') || 
-        error.message?.includes('not found') || 
-        error.message?.includes('Server error') ||
-        error.message?.includes('Could not extract article')) {
+    if (error.message?.includes('Access denied') ||
+      error.message?.includes('not found') ||
+      error.message?.includes('Server error') ||
+      error.message?.includes('Could not extract article')) {
       return res.status(400).json({ message: error.message, errorType: 'ArticleExtractionError' });
     }
-    
+
     if (error instanceof JsonParsingError) {
       return res.status(500).json({ message: error.message, rawResponse: error.rawResponse, errorType: error.name });
     }
     if (error instanceof ModelResponseError) {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
-    res.status(500).json({ message: 'Failed to extract quotes from URL' });
+    res.status(500).json({ message: error.message || 'Failed to extract quotes from URL' });
   }
 };
 
 export const improveSingleQuote = async (req: Request, res: Response) => {
-  const { quote, personName, model, temperature, apiKeys } = req.body;
+  const { quote, personName, model, temperature } = req.body;
   const logId = addLogEntry(req.session.id!, 'improveQuote', { quote, personName, model });
 
   try {
-    const { service, apiKey } = getService(model, apiKeys);
+    const service = getServiceInstance(model);
+    const apiKey = await getApiKey(req, model);
+
     const improvedQuote = await service.improveQuote(apiKey, quote, personName, temperature, logId, req.session.id!);
     updateLogEntry(req.session.id!, logId, improvedQuote);
     res.json(improvedQuote);
@@ -272,7 +342,7 @@ export const improveSingleQuote = async (req: Request, res: Response) => {
     if (error instanceof ModelResponseError) {
       return res.status(500).json({ message: error.message, errorType: error.name });
     }
-    res.status(500).json({ message: 'Failed to improve quote' });
+    res.status(500).json({ message: error.message || 'Failed to improve quote' });
   }
 };
 
@@ -291,10 +361,10 @@ export const getApiLogs = (req: Request, res: Response) => {
 
 export const fetchArticleContent = async (req: Request, res: Response) => {
   const { url, language } = req.body;
-  
+
   try {
     const article = await fetchArticle(url, language);
-    
+
     const response: any = {
       textContent: article.textContent,
       metadata: {
@@ -319,21 +389,21 @@ export const fetchArticleContent = async (req: Request, res: Response) => {
     res.json(response);
   } catch (error: any) {
     console.error('Error fetching article content:', error);
-    
-    if (error.message?.includes('Access denied') || 
-        error.message?.includes('not found') || 
-        error.message?.includes('Server error') ||
-        error.message?.includes('Could not extract article')) {
+
+    if (error.message?.includes('Access denied') ||
+      error.message?.includes('not found') ||
+      error.message?.includes('Server error') ||
+      error.message?.includes('Could not extract article')) {
       return res.status(400).json({ message: error.message, errorType: 'ArticleExtractionError' });
     }
-    
+
     res.status(500).json({ message: 'Failed to fetch article content' });
   }
 };
 
 export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
   const { url, language, sessionId, save } = req.body;
-  
+
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
@@ -361,15 +431,15 @@ export const fetchYoutubeTranscript = async (req: Request, res: Response) => {
     res.json({ ...transcript, sessionId: currentSessionId });
   } catch (error: any) {
     console.error('Error fetching transcript:', error);
-    
+
     // Let's use currentSessionId if it exists
     if (currentSessionId) {
-       await updateSessionStatus(currentSessionId, 'failed', error.message);
+      await updateSessionStatus(currentSessionId, 'failed', error.message);
     }
 
-    const status = error.code === 'CAPTIONS_NOT_FOUND' ? 404 : 
-                   error.code === 'VIDEO_RESTRICTED' ? 403 :
-                   error.code === 'INVALID_VIDEO_ID' ? 400 : 500;
+    const status = error.code === 'CAPTIONS_NOT_FOUND' ? 404 :
+      error.code === 'VIDEO_RESTRICTED' ? 403 :
+        error.code === 'INVALID_VIDEO_ID' ? 400 : 500;
     res.status(status).json({ error: error.message, code: error.code });
   }
 };
@@ -381,14 +451,10 @@ import { groupTranscriptByTime } from './dialogAnalysis/transcriptGrouper';
  * Groups transcript into 15-minute blocks and extracts topics using fast models
  */
 export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
-  const { segments, language, model, apiKeys, sessionId } = req.body;
+  const { segments, language, model, sessionId } = req.body;
 
   if (!segments || !Array.isArray(segments) || segments.length === 0) {
     return res.status(400).json({ error: 'Segments array is required and must not be empty' });
-  }
-
-  if (!apiKeys || typeof apiKeys !== 'object') {
-    return res.status(400).json({ error: 'API keys are required' });
   }
 
   try {
@@ -401,12 +467,23 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
       await updateSessionStep(sessionId, 'transcriptBlocks', blocks, 'analyzing_topics');
     }
 
-    console.log(`[TopicAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
-    
+    const effectiveModel = model || 'gemini';
+    console.log(`[TopicAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${effectiveModel}`);
+
+    const apiKey = await getApiKey(req, effectiveModel);
+
+    // Reconstruct apiKeys object for the extractor service (it works with object still?)
+    // Note: extractTranscriptTopics assumes it receives a map of keys? 
+    // Let's check extractTranscriptTopics signature. 
+    // It takes apiKeys: Record<string, string>. 
+    // We should probably assume it uses the same provider as model.
+    // Ideally we refactor extractTranscriptTopics too, but for now let's pass a constructed object.
+    const apiKeys = { [getProviderFromModel(effectiveModel)]: apiKey };
+
     const results = await extractTranscriptTopics({
       blocks,
       language: language || 'lt',
-      model: model || 'gemini',
+      model: effectiveModel,
       apiKeys,
     });
 
@@ -421,9 +498,9 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
     if (sessionId) {
       await updateSessionStatus(sessionId, 'failed', error.message);
     }
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message || 'Failed to analyze transcript topics',
-      details: error.stack 
+      details: error.stack
     });
   }
 };
@@ -432,14 +509,10 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
  * Analyze YouTube transcript blocks for speaker identification
  */
 export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => {
-  const { blocks, language, model, apiKeys, sessionId } = req.body;
+  const { blocks, language, model, sessionId } = req.body;
 
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
     return res.status(400).json({ error: 'Blocks array is required and must not be empty' });
-  }
-
-  if (!apiKeys || typeof apiKeys !== 'object') {
-    return res.status(400).json({ error: 'API keys are required' });
   }
 
   let logId: string | undefined;
@@ -454,12 +527,16 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
       });
     }
 
-    console.log(`[SpeakerAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${model || 'gemini'}`);
-    
+    const effectiveModel = model || 'gemini';
+    console.log(`[SpeakerAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${effectiveModel}`);
+
+    const apiKey = await getApiKey(req, effectiveModel);
+    const apiKeys = { [getProviderFromModel(effectiveModel)]: apiKey };
+
     const results = await identifySpeakers({
       blocks,
       language: language || 'lt',
-      model: model || 'gemini',
+      model: effectiveModel,
       apiKeys,
       sessionId,
       logId,
@@ -482,9 +559,9 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
       }
       await updateSessionStatus(sessionId, 'failed', error.message);
     }
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message || 'Failed to analyze transcript speakers',
-      details: error.stack 
+      details: error.stack
     });
   }
 };
@@ -493,14 +570,10 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
  * Analyze dialog for topic segmentation and analysis
  */
 export const analyzeDialogTopics = async (req: Request, res: Response) => {
-  const { dialog, language, fastModel, betterModel, apiKeys, sessionId } = req.body;
+  const { dialog, language, fastModel, betterModel, sessionId } = req.body;
 
   if (!dialog || !Array.isArray(dialog) || dialog.length === 0) {
     return res.status(400).json({ error: 'Dialog array is required and must not be empty' });
-  }
-
-  if (!apiKeys || typeof apiKeys !== 'object') {
-    return res.status(400).json({ error: 'API keys are required' });
   }
 
   let logId: string | undefined;
@@ -518,7 +591,28 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
     }
 
     console.log(`[DialogAnalysis] Analyzing dialog with ${dialog.length} blocks`);
-    
+
+    // We need keys for BOTH fastModel and betterModel.
+    // They might be the same provider or different.
+    const apiKeys: Record<string, string> = {};
+
+    if (fastModel) {
+      const provider = getProviderFromModel(fastModel);
+      if (!apiKeys[provider]) {
+        apiKeys[provider] = await getApiKey(req, provider);
+      }
+    }
+    if (betterModel) {
+      const provider = getProviderFromModel(betterModel);
+      if (!apiKeys[provider]) {
+        apiKeys[provider] = await getApiKey(req, provider);
+      }
+    }
+    // ensure at least default (gemini) is there if models undefined (defaults in service?)
+    if (!fastModel && !betterModel && !apiKeys['gemini']) {
+      apiKeys['gemini'] = await getApiKey(req, 'gemini');
+    }
+
     const results = await analyzeDialogTopicsService({
       dialog,
       language: language || 'lt',
@@ -534,7 +628,7 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
     }
 
     console.log(`[DialogAnalysis] Successfully analyzed ${results.length} topic groups`);
-    
+
     // Update log entry with response
     if (logId) {
       updateLogEntry(req.session.id || sessionId || 'unknown', logId, {
@@ -549,15 +643,15 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
     if (sessionId) {
       await updateSessionStatus(sessionId, 'failed', error.message);
     }
-    
+
     // Update log entry with error
     if (logId) {
       updateLogEntry(req.session.id || sessionId || 'unknown', logId, undefined, error);
     }
 
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message || 'Failed to analyze dialog topics',
-      details: error.stack 
+      details: error.stack
     });
   }
 };

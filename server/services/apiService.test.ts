@@ -4,9 +4,11 @@ import geminiService from '../llm_services/geminiService';
 import chatGptService from '../llm_services/chatGptService';
 import grokService from '../llm_services/grokService';
 import * as logService from './logService';
+import * as apiKeyService from './apiKeyService';
 import { postProcessResponse } from './responseProcessor';
 import { JsonParsingError, ModelResponseError } from '../types';
 import { createQuoteFixture } from '../testUtils/quoteFactory';
+import Person from '../models/Person';
 
 jest.mock('../llm_services/geminiService');
 jest.mock('../llm_services/chatGptService');
@@ -18,6 +20,13 @@ jest.mock('./responseProcessor', () => ({
 jest.mock('../utils/articleExtractor', () => ({
   fetchArticle: jest.fn(),
   isValidUrl: jest.fn(),
+}));
+jest.mock('./apiKeyService', () => ({
+  getEffectiveApiKeyForUser: jest.fn(),
+}));
+jest.mock('../models/Person', () => ({
+  __esModule: true,
+  default: { findById: jest.fn() },
 }));
 
 const createMockResponse = () => {
@@ -41,10 +50,23 @@ describe('apiService', () => {
     res = createMockResponse();
     req = {
       body: {},
-      session: { id: sessionId } as any,
+      session: {
+        id: sessionId,
+        user: { _id: 'test-user-id', email: 'test@test.com', role: 'admin' }
+      } as any,
     };
     (logService.addLogEntry as jest.Mock).mockReturnValue(logId);
     (postProcessResponse as jest.Mock).mockImplementation((_operation: string, data: any) => data);
+    (Person.findById as jest.Mock).mockResolvedValue({
+      _id: 'person-123',
+      name: 'DB Person',
+      aliases: ['Tester'],
+      firstname: 'Db',
+      surname: 'Person',
+      description: 'desc',
+      metadata: { role: 'test' },
+    });
+    (apiKeyService.getEffectiveApiKeyForUser as jest.Mock).mockResolvedValue('test-api-key');
   });
 
   describe('analyzeQuote', () => {
@@ -53,29 +75,49 @@ describe('apiService', () => {
       quoteText: 'Test Quote',
       quoteLanguageCode: 'en',
       quoteLanguageName: 'English',
+      personId: 'person-123',
       temperature: 0.3,
       apiKeys: { chatgpt: 'chat-key' },
       analysisContext: 'context',
       links: [{ url: 'https://example.com', type: 'quote' as const, title: 'Example' }],
     });
 
-    it('routes analysis to chatgpt with full payload', async () => {
+    it('routes analysis to chatgpt with DB person data', async () => {
       req.body = baseAnalyzeBody();
       const mockAnalysis = { sentiment: 'positive' };
       (chatGptService.analyzeQuoteText as jest.Mock).mockResolvedValue(mockAnalysis);
+      (Person.findById as jest.Mock).mockResolvedValue({
+        _id: 'person-123',
+        name: 'DB Person',
+        aliases: ['Tester'],
+        firstname: 'Db',
+        surname: 'Person',
+        description: 'desc',
+        metadata: { role: 'test' },
+      });
 
       await apiService.analyzeQuote(req as Request, res as Response);
 
       expect(chatGptService.analyzeQuoteText).toHaveBeenCalledWith(
-        'chat-key',
+        'test-api-key',
         'Test Quote',
         'en',
         'English',
         0.3,
         logId,
         sessionId,
+        {
+          _id: 'person-123',
+          name: 'DB Person',
+          aliases: ['Tester'],
+          firstname: 'Db',
+          surname: 'Person',
+          description: 'desc',
+          metadata: { role: 'test' },
+        },
         'context',
-        [{ url: 'https://example.com', type: 'quote', title: 'Example' }]
+        [{ url: 'https://example.com', type: 'quote', title: 'Example' }],
+        'audit'
       );
       expect(res.json).toHaveBeenCalledWith(mockAnalysis);
       expect(logService.updateLogEntry).toHaveBeenCalledWith(sessionId, logId, mockAnalysis);
@@ -137,7 +179,7 @@ describe('apiService', () => {
       await apiService.fetchQuotes(req as Request, res as Response);
 
       expect(geminiService.fetchQuotesForPerson).toHaveBeenCalledWith(
-        'gem-key',
+        'test-api-key',
         'Test Person',
         ['en', 'lt'],
         5,
@@ -211,7 +253,7 @@ describe('apiService', () => {
       await apiService.extractQuotes(req as Request, res as Response);
 
       expect(grokService.extractQuotesFromText).toHaveBeenCalledWith(
-        'grok-key',
+        'test-api-key',
         'Person',
         'raw text',
         0.2,
@@ -263,7 +305,7 @@ describe('apiService', () => {
       await apiService.improveSingleQuote(req as Request, res as Response);
 
       expect(chatGptService.improveQuote).toHaveBeenCalledWith(
-        'chat-key',
+        'test-api-key',
         req.body.quote,
         'Person',
         0.1,

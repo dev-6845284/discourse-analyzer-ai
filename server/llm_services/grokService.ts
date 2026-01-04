@@ -6,15 +6,17 @@ import {
   AnalysisCategory,
   AnalysisRating,
   TopicAnalysisResult,
+  PersonInfo,
 } from '../types';
 import { extractJson } from './utils';
 import {
   buildGrokFetchQuotesPrompt,
-  buildGrokAnalyzeQuotePrompt,
   buildGrokExtractQuotesFromTextPrompt,
   buildGrokExtractQuotesFromArticlePrompt,
   buildGrokImproveQuotePrompt,
   createTopicExtractionPrompt,
+  buildAnalyzePromptByType,
+  buildAnalyzeFormattingPromptByType,
 } from './prompts';
 import { appendLogRequestPayload, addModelInteractionLog, completeModelInteractionLog } from '../services/logService';
 import { LlmService } from './LlmService';
@@ -190,30 +192,74 @@ class GrokService implements LlmService {
     temperature: number,
     logId: string,
     sessionId: string,
+    person?: PersonInfo,
     analysisContext?: string,
-    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>
+    links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
+    analysisType: 'audit' | 'flaws' = 'audit'
   ): Promise<AuditResult> {
     if (!apiKey) throw new Error("Grok API key is missing.");
 
     try {
-      const prompt = buildGrokAnalyzeQuotePrompt({
+      // Step 1: Generate Analysis Notes (Text)
+      const analysisPrompt = buildAnalyzePromptByType(analysisType, {
         quoteText,
         quoteLanguageName,
+        person,
+        personName: person?.name,
         analysisContext,
         links,
       });
 
-      const rawText = await callGrokAPI(apiKey, [{ role: 'user', content: prompt }], logId, sessionId, temperature);
+      // Step 1: Analysis (Reasoning)
+      const analysisNotes = await callGrokAPI(
+        apiKey,
+        [{ role: 'user', content: analysisPrompt }],
+        logId,
+        sessionId,
+        temperature
+      );
 
-      const jsonText = extractJson(rawText);
+      // Step 2: Format to JSON
+      const formattingPrompt = buildAnalyzeFormattingPromptByType(analysisType, {
+        quoteLanguageName,
+        analysisNotes,
+        analysisType // Explicitly pass the type
+      });
+
+      // Step 2: Formatting (JSON)
+      // Use lower temperature for formatting to ensure strict JSON adherence
+      const rawJsonText = await callGrokAPI(
+        apiKey,
+        [{ role: 'user', content: formattingPrompt }],
+        logId,
+        sessionId,
+        0.2
+      );
+
+      const jsonText = extractJson(rawJsonText);
       if (!jsonText) {
-        console.error("No valid JSON object found in the Grok API analysis response:", rawText);
+        console.error("No valid JSON object found in the Grok API analysis response:", rawJsonText);
         throw new Error("Could not find a valid JSON object in the AI's analysis response.");
       }
 
       try {
-        return JSON.parse(jsonText);
+        const parsed = JSON.parse(jsonText);
+        try {
+          const { validateAuditResult, validateFlawsResult } = await import('../services/analysisValidator');
+          if (analysisType === 'flaws') {
+            validateFlawsResult(parsed, jsonText);
+          } else {
+            validateAuditResult(parsed, jsonText);
+          }
+        } catch (validationError) {
+          console.error('Model validation failed:', (validationError as Error).message);
+          throw validationError;
+        }
+        return parsed;
       } catch (e) {
+        if (e instanceof JsonParsingError || e instanceof Error && (e as any).name === 'ModelValidationError') {
+          throw e;
+        }
         console.error("Failed to parse JSON from analysis response:", jsonText);
         throw new JsonParsingError("Could not parse the AI's analysis response. The format was unexpected.", jsonText);
       }
@@ -456,7 +502,7 @@ class GrokService implements LlmService {
     sessionId?: string
   ): Promise<TopicAnalysisResult> {
     const prompt = createTopicExtractionPrompt(text, language);
-    
+
     const responseText = await this.generateContent(apiKey, {
       model: GROK_MODEL,
       prompt,
@@ -509,12 +555,12 @@ class GrokService implements LlmService {
 
     const interactionId = sessionId && logId
       ? addModelInteractionLog(sessionId, logId, {
-          provider: 'xAI',
-          model: requestDetails.body.model,
-          operation: 'chat.completions',
-          requestPayload: requestDetails,
-          metadata,
-        })
+        provider: 'xAI',
+        model: requestDetails.body.model,
+        operation: 'chat.completions',
+        requestPayload: requestDetails,
+        metadata,
+      })
       : null;
 
     let responseSnapshot: any;

@@ -1,6 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { getAdminDashboardSummary } from '../../utils/api';
 
+/**
+ * AdminAlertBanner
+ *
+ * Purpose: Displays a compact, persistent banner for administrators that summarizes
+ * key security/health metrics from the admin dashboard (alerts, rate limits, blocked IPs, etc.).
+ *
+ * Behavior:
+ * - Fetches summary data via `getAdminDashboardSummary()` when the component mounts
+ *   and refreshes it on a 2-minute interval.
+ * - Renders a collapsible banner fixed to the top of the viewport. When collapsed,
+ *   a small badge remains visible for quick access.
+ * - Uses visual severity (colors and icons) to draw attention to critical issues.
+ * - Honors `isAdmin` prop and renders nothing for non-admin users.
+ *
+ * Props:
+ * - `isAdmin`: whether the current user is an admin (required to display the banner)
+ * - `onViewDashboard`: optional callback to open the full dashboard
+ * - `isCollapsed` / `onCollapsedChange`: optional controlled collapse state
+ *
+ * Note: This is a purely client-side UI helper; it relies on a backend endpoint
+ * to supply the summary data.
+ */
+
 interface DashboardSummary {
   unacknowledgedAlerts: number;
   criticalAlerts: number;

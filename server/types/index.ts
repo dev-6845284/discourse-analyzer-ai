@@ -37,6 +37,16 @@ export interface AuditDetail {
   evidence: string;
 }
 
+export interface PersonInfo {
+  _id?: string;
+  name: string;
+  firstname?: string;
+  surname?: string;
+  aliases?: string[];
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
 // Legacy analysis result - kept for migration compatibility
 export type AnalysisResult = {
   [key in AnalysisCategory]: AnalysisDetail;
@@ -141,6 +151,28 @@ export interface UserInfo {
   role?: string;
 }
 
+// API Key set types
+export interface ApiKeySet {
+  _id?: string;
+  alias: string;
+  GEMINI_API_KEY?: string | null;
+  GROK_API_KEY?: string | null;
+  CHATGPT_API_KEY?: string | null;
+  createdBy?: string; // user id
+  updatedBy?: string; // user id
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserApiKeySet {
+  _id?: string;
+  userId: string;
+  apiKeySetId: string;
+  assignedAt?: string;
+  assignedBy?: string;
+  role?: string;
+}
+
 export interface ExportData {
   personName: string;
   quotes: Quote[];
@@ -199,6 +231,20 @@ export class ModelResponseError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ModelResponseError';
+  }
+}
+
+/**
+ * Custom error class for model validation failures (structure, missing categories, etc.).
+ * Includes the raw text response to aid debugging and deterministic retries.
+ */
+export class ModelValidationError extends Error {
+  public rawResponse: string;
+
+  constructor(message: string, rawResponse: string) {
+    super(message);
+    this.name = 'ModelValidationError';
+    this.rawResponse = rawResponse;
   }
 }
 

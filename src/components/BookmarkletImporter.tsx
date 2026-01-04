@@ -8,6 +8,7 @@ import {
   MousePointer,
   Youtube
 } from 'lucide-react';
+import { useI18n } from '../i18n';
 import { generateBookmarkletUrl } from '../utils/bookmarklet';
 import { parseTranscriptFromJson, TranscriptData } from '../utils/transcriptStorage';
 
@@ -20,6 +21,7 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
   onImport,
   isLoading = false,
 }) => {
+  const { t } = useI18n();
   const [pastedJson, setPastedJson] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showInstructions, setShowInstructions] = useState(true);
@@ -61,7 +63,7 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
 
   const handleImport = () => {
     if (!pastedJson.trim()) {
-      setError('Please paste the JSON copied from the bookmarklet');
+      setError(t('pleasePasteBookmarkletJson'));
       return;
     }
 
@@ -86,7 +88,7 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
       onImport(transcript);
       setPastedJson('');
     } catch (err: any) {
-      setError('Invalid JSON format. Make sure you copied the complete output from the bookmarklet.');
+      setError(t('invalidBookmarkletJsonFormat'));
     }
   };
 
@@ -95,12 +97,12 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-cyan-400 flex items-center gap-2">
           <Bookmark size={20} />
-          Bookmarklet Method
+          {t('bookmarkletMethodTitle')}
         </h2>
       </div>
 
       <p className="text-sm text-gray-400">
-        Use our bookmarklet to extract transcripts directly from YouTube with one click
+        {t('bookmarkletNote')}
       </p>
 
       {/* Bookmarklet Installation */}
@@ -122,16 +124,16 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
                   onClick={(e) => e.preventDefault()}
                   draggable
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold rounded-lg shadow-lg cursor-grab active:cursor-grabbing border border-red-500"
-                  title="Drag this button to your bookmarks bar"
+                  title={t('dragButtonToBookmarks')}
                 >
                   <Youtube size={18} />
-                  Get YT Transcript
+                  {t('bookmarkletGetLabel')}
                 </a>
               </div>
               <div className="text-sm text-gray-300">
                 <p className="flex items-center gap-1">
                   <span className="text-cyan-400">←</span> 
-                  Drag this button to your bookmarks bar
+                  {t('dragButtonToBookmarks')}
                 </p>
               </div>
             </div>
@@ -139,13 +141,13 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
             {/* Method B: Manual installation */}
             <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
               <p className="text-xs text-gray-400 mb-2">
-                <strong>Alternative:</strong> If dragging doesn't work, create a bookmark manually:
+                <strong>{t('alternativeLabel')}</strong> {t('bookmarkletAlternativeNote')}
               </p>
               <ol className="text-xs text-gray-400 space-y-1 list-decimal list-inside mb-3">
-                <li>Click the button below to copy the bookmarklet code</li>
-                <li>Create a new bookmark in your browser</li>
-                <li>Name it "Get YT Transcript"</li>
-                <li>Paste the copied code as the URL</li>
+                <li>{t('bookmarklet_step_copy')}</li>
+                <li>{t('bookmarklet_step_create')}</li>
+                <li>{t('bookmarklet_step_name')}</li>
+                <li>{t('bookmarklet_step_paste')}</li>
               </ol>
               <button
                 onClick={handleCopyBookmarklet}
@@ -156,7 +158,7 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
                 }`}
               >
                 <Copy size={14} />
-                {copied ? 'Copied!' : 'Copy Bookmarklet Code'}
+                {copied ? t('copied') : t('copyBookmarkletCode')}
               </button>
             </div>
           </div>
@@ -164,15 +166,15 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
           <div className="text-xs text-gray-400 space-y-1 border-t border-gray-700 pt-3 mt-3">
             <p className="flex items-center gap-1">
               <CheckCircle size={12} className="text-green-400" />
-              Works on any YouTube video with captions
+              {t('worksOnAnyYouTubeVideoWithCaptions')}
             </p>
             <p className="flex items-center gap-1">
               <CheckCircle size={12} className="text-green-400" />
-              Uses your browser session (no server needed)
+              {t('usesYourBrowserSession')}
             </p>
             <p className="flex items-center gap-1">
               <CheckCircle size={12} className="text-green-400" />
-              One-click extraction with auto-copy
+              {t('oneClickExtraction')}
             </p>
           </div>
         </div>
@@ -182,13 +184,13 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
       <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-600 space-y-3">
         <h3 className="font-medium text-cyan-300 flex items-center gap-2">
           <ExternalLink size={16} />
-          Step 2: Use the Bookmarklet
+          {t('bookmarklet_step2_title')}
         </h3>
         <ol className="text-sm text-gray-300 space-y-2 list-decimal list-inside">
-          <li>Go to any YouTube video page</li>
-          <li>Click the <strong className="text-white">"Get YT Transcript"</strong> bookmarklet</li>
-          <li>The transcript JSON will be copied to your clipboard</li>
-          <li>Paste it in the box below</li>
+          <li>{t('bookmarklet_step_go_to')}</li>
+          <li>{t('bookmarklet_step_click_bookmarklet')}</li>
+          <li>{t('bookmarklet_step_json_copied')}</li>
+          <li>{t('bookmarklet_step_paste_in_box')}</li>
         </ol>
       </div>
 
@@ -196,18 +198,18 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
       <div>
         <label className="text-sm font-medium text-gray-300 mb-2 flex items-center justify-between">
           <span>
-            Step 3: Paste JSON <span className="text-red-400">*</span>
+            {t('bookmarklet_paste_json_title')} <span className="text-red-400">*</span>
           </span>
           {pastedJson && (
             <span className="text-xs text-gray-500">
-              {pastedJson.length.toLocaleString()} characters
+              {pastedJson.length.toLocaleString()} {t('characters')}
             </span>
           )}
         </label>
         <textarea
           value={pastedJson}
           onChange={handlePaste}
-          placeholder='Paste the JSON here (from bookmarklet)...'
+          placeholder={t('pasteBookmarkletJsonPlaceholder')}
           disabled={isLoading}
           rows={6}
           className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed font-mono text-xs ${
@@ -225,7 +227,7 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
         className="w-full px-4 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         <Copy size={18} />
-        {isLoading ? 'Processing...' : 'Import from Bookmarklet'}
+        {isLoading ? t('processing') : t('importFromBookmarklet')}
       </button>
 
       {/* Error Message */}
@@ -241,7 +243,7 @@ export const BookmarkletImporter: React.FC<BookmarkletImporterProps> = ({
         onClick={() => setShowInstructions(!showInstructions)}
         className="w-full text-sm text-gray-500 hover:text-gray-300 transition-colors"
       >
-        {showInstructions ? 'Hide' : 'Show'} installation instructions
+        {showInstructions ? t('hide') : t('show')} {t('installationInstructions')}
       </button>
     </div>
   );
