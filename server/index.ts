@@ -107,6 +107,9 @@ app.use((req, res, next) => {
   next();
 });
 
+const redisClient = require('./services/redis').default;
+import RedisStore from 'connect-redis';
+
 // Configure session store
 const sessionConfig: session.SessionOptions = {
   secret: sessionSecret,
@@ -115,13 +118,20 @@ const sessionConfig: session.SessionOptions = {
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // Default 24 hours
     sameSite: 'lax',
   },
 };
 
-// Use MongoDB store if connection string is available, otherwise use memory store with warning
-if (mongoUri) {
+// Use Redis store if available, otherwise fallback to MongoDB, then Memory
+if (redisClient) {
+  console.log('[SESSION_STORE] Configuring Redis session store');
+  sessionConfig.store = new RedisStore({
+    client: redisClient,
+    prefix: 'sess:',
+    ttl: 24 * 60 * 60, // 24 hours default
+  });
+} else if (mongoUri) {
   console.log('[SESSION_STORE] Configuring MongoDB session store');
   const collectionSuffix = process.env.DB_COLLECTION_SUFFIX || '';
   sessionConfig.store = MongoStore.create({
@@ -138,6 +148,20 @@ if (mongoUri) {
 }
 
 app.use(session(sessionConfig));
+
+// Dynamic TTL Middleware: Short TTL for anonymous, Long TTL for authenticated
+app.use((req, res, next) => {
+  if (!req.session) return next();
+
+  if (!req.session.user) {
+    // strict TTL for anonymous users (1 hour) to save Redis memory
+    req.session.cookie.maxAge = 60 * 60 * 1000;
+  } else {
+    // extended TTL for logged-in users (24 hours)
+    req.session.cookie.maxAge = 24 * 60 * 60 * 1000;
+  }
+  next();
+});
 
 // Log after session middleware
 app.use((req, res, next) => {

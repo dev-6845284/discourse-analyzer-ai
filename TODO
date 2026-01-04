@@ -15,11 +15,11 @@
 ## 🛡️ Security & DDoS Protection
 - [ ] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets.
 - [ ] **Smart CAPTCHA:** Implement Cloudflare Turnstile on session creation/login to stop bot floods.
-- [ ] **Session Hardening:**
-    - [ ] Generate session IDs for anonymous users immediately to enable tracking.
-    - [ ] Implement strict throttling on the session creation endpoint.
-    - [ ] Enforce short TTL (Time-To-Live) for unauthenticated sessions to prevent storage exhaustion.
-    - [ ] Cache active sessions in Redis for sub-millisecond validation.
+- [x] **Session Hardening:**
+    - [x] Generate session IDs for anonymous users immediately to enable tracking.
+    - [x] Implement strict throttling on the session creation endpoint.
+    - [x] Enforce short TTL (Time-To-Live) for unauthenticated sessions to prevent storage exhaustion.
+    - [x] Cache active sessions in Redis for sub-millisecond validation.
 - [x] **Payload Safety:** Enforce strict JSON body limits (e.g., 10kb) on all APIs.
 - [ ] Add email/webhook notifications for critical alerts.
 - [ ] Add WebSocket for real-time alert updates.
