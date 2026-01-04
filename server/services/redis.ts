@@ -1,7 +1,7 @@
 import Redis from 'ioredis';
 
 let redisClient: Redis | null = null;
-const REDIS_URL = process.env.discourse_redis__REDIS_URL || process.env.REDIS_URL;
+const REDIS_URL = process.env.REDIS_URL;
 
 if (REDIS_URL) {
     console.log('[REDIS] Initializing Redis client...');
