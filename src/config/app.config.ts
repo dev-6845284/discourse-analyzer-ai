@@ -11,7 +11,7 @@ const _viteClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export const GOOGLE_CLIENT_ID = _viteClientId || (typeof process !== 'undefined' && process.env ? (process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) : undefined) || 'missing-client-id';
 
-export const DEFAULT_AI_PROVIDER = 'chatgpt';
+export const DEFAULT_AI_PROVIDER = 'openai';
 
 export const DEFAULT_SEARCH_PARAMS = {
   resultCount: 10,

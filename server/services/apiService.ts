@@ -21,22 +21,25 @@ import { updateSessionStep, updateSessionStatus, createSession } from './analysi
 import { getEffectiveApiKeyForUser } from './apiKeyService';
 
 const getServiceInstance = (model: string): LlmService => {
-  switch (model) {
-    case 'gemini':
-      return geminiService;
-    case 'chatgpt':
-      return chatGptService;
-    case 'grok':
-      return grokService;
-    default:
-      throw new Error('Invalid model specified');
-  }
+  // Normalize legacy aliases to canonical model identifiers
+  const normalizedModel = (model === 'chatgpt' || model.startsWith('gpt')) ? 'openai' : model;
+
+  if (normalizedModel === 'gemini' || normalizedModel.startsWith('gemini')) return geminiService;
+  if (normalizedModel === 'openai') return chatGptService; // canonical OpenAI provider
+  if (normalizedModel === 'grok' || normalizedModel.startsWith('grok')) return grokService;
+  
+  throw new Error(`Invalid model specified: ${model}`);
 };
 
-const getProviderFromModel = (model: string): 'gemini' | 'chatgpt' | 'grok' => {
-  if (model === 'gemini') return 'gemini';
-  if (model === 'chatgpt') return 'chatgpt';
-  if (model === 'grok') return 'grok';
+const getProviderFromModel = (model: string): 'gemini' | 'openai' | 'grok' => {
+  // Normalize legacy aliases to canonical provider names
+  const normalizedModel = (model === 'chatgpt' || model.startsWith('gpt')) ? 'openai' : model;
+
+  if (normalizedModel === 'gemini' || normalizedModel.startsWith('gemini')) return 'gemini';
+  // Use canonical 'openai' only
+  if (normalizedModel === 'openai') return 'openai';
+  if (normalizedModel === 'grok' || normalizedModel.startsWith('grok')) return 'grok';
+  
   throw new Error(`Unknown model provider for model: ${model}`);
 };
 
@@ -47,14 +50,15 @@ async function getApiKey(req: Request, modelOrProvider: string): Promise<string>
   }
   // Map inputs like 'gpt-4' or 'gemini-1.5' if necessary, but current app uses 'gemini', 'chatgpt', 'grok' mostly.
   // agenticSearch passes 'openai' sometimes.
-  let provider: 'gemini' | 'chatgpt' | 'grok';
+  let provider: 'gemini' | 'openai' | 'grok';
 
-  if (modelOrProvider === 'openai') provider = 'chatgpt';
+  if (modelOrProvider === 'openai') provider = 'openai';
+  else if (modelOrProvider === 'chatgpt') provider = 'openai'; // legacy alias
   else if (modelOrProvider === 'gemini') provider = 'gemini';
   else if (modelOrProvider === 'grok') provider = 'grok';
   else {
     // fallback for specific model names if used directly as keys
-    if (modelOrProvider.startsWith('gpt')) provider = 'chatgpt';
+    if (modelOrProvider.startsWith('gpt')) provider = 'openai';
     else if (modelOrProvider.startsWith('gemini')) provider = 'gemini';
     else if (modelOrProvider.startsWith('grok')) provider = 'grok';
     else provider = 'gemini'; // default

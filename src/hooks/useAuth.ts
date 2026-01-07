@@ -44,7 +44,10 @@ export function useAuth() {
         setLoginError(null);
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Login failed.';
+      let message = error.response?.data?.message || 'Login failed.';
+      if (error.response?.data?.retryAfter) {
+        message += ` Wait ${error.response.data.retryAfter} seconds.`;
+      }
       setLoginError(message);
     }
   }, []);

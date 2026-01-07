@@ -1,8 +1,8 @@
 import { DialogLine, TopicGroup } from '../../types';
 import { buildInferInitialTopicPrompt, buildProcessChunkPrompt } from '../../llm_services/prompts';
-import geminiService from '../../llm_services/geminiService';
 import { extractJsonFromResponse } from './utils';
 import { withTimeout, mapLinesToOriginal } from './segmentationUtils';
+import { generateContent } from './llmHelper';
 
 export interface SegmentationResponse {
   dialogToAdd: DialogLine[];
@@ -24,15 +24,8 @@ export async function inferInitialTopic(
   console.log(`[DialogAnalysis] Inferring initial topic (model: ${model})...`);
   const startTime = Date.now();
 
-  // Use GEMINI_API_KEY specifically
-  const apiKey = apiKeys['gemini'];
-  if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing in apiKeys");
-  }
-
   const response = await withTimeout(
-    geminiService.generateContent(apiKey, {
-      model,
+    generateContent(model, apiKeys, {
       prompt,
       sessionId,
       logId,
@@ -60,15 +53,8 @@ export async function processChunk(
   console.log(`[DialogAnalysis] Sending chunk to LLM (model: ${model}, lines: ${chunkLines.length})...`);
   const startTime = Date.now();
 
-  // Use GEMINI_API_KEY specifically
-  const apiKey = apiKeys['gemini'];
-  if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing in apiKeys");
-  }
-
   const responseText = await withTimeout(
-    geminiService.generateContent(apiKey, {
-      model,
+    generateContent(model, apiKeys, {
       prompt,
       sessionId,
       logId,

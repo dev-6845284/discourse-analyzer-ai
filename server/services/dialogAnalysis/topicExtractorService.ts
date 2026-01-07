@@ -41,22 +41,25 @@ export async function extractBlockTopics(
   try {
     let result: TopicAnalysisResult;
 
-    if (model === 'gemini' || model === 'gemini-flash') {
+    // Normalize legacy aliases to canonical provider names
+    const normalizedModel = (model === 'chatgpt' || model.startsWith('gpt')) ? 'openai' : model;
+
+    if (normalizedModel === 'gemini' || normalizedModel === 'gemini-flash') {
       const apiKey = apiKeys['gemini'];
       if (!apiKey) {
         throw new Error('Gemini API key not found');
       }
       result = await geminiService.extractTopics(apiKey, text, language, 0.3);
-    } else if (model === 'grok' || model === 'grok-fast') {
+    } else if (normalizedModel === 'grok' || normalizedModel === 'grok-fast') {
       const apiKey = apiKeys['grok'];
       if (!apiKey) {
         throw new Error('Grok API key not found');
       }
       result = await grokService.extractTopics(apiKey, text, language, 0.3);
-    } else if (model === 'chatgpt') {
-      const apiKey = apiKeys['chatgpt'] || apiKeys['openai'];
+    } else if (normalizedModel === 'openai') {
+      const apiKey = apiKeys['openai'];
       if (!apiKey) {
-        throw new Error('ChatGPT API key not found');
+        throw new Error('OpenAI API key not found');
       }
       result = await chatGptService.extractTopics(apiKey, text, language, 0.3);
     } else {

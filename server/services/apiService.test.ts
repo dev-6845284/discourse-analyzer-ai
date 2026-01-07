@@ -71,13 +71,13 @@ describe('apiService', () => {
 
   describe('analyzeQuote', () => {
     const baseAnalyzeBody = () => ({
-      model: 'chatgpt',
+      model: 'openai',
       quoteText: 'Test Quote',
       quoteLanguageCode: 'en',
       quoteLanguageName: 'English',
       personId: 'person-123',
       temperature: 0.3,
-      apiKeys: { chatgpt: 'chat-key' },
+      apiKeys: { openai: 'chat-key' },
       analysisContext: 'context',
       links: [{ url: 'https://example.com', type: 'quote' as const, title: 'Example' }],
     });
@@ -290,11 +290,11 @@ describe('apiService', () => {
 
   describe('improveSingleQuote', () => {
     const baseImproveBody = () => ({
-      model: 'chatgpt',
+      model: 'openai',
       quote: createQuoteFixture({ text: 'Needs polishing' }),
       personName: 'Person',
       temperature: 0.1,
-      apiKeys: { chatgpt: 'chat-key' },
+      apiKeys: { openai: 'chat-key' },
     });
 
     it('returns improved quote from service', async () => {

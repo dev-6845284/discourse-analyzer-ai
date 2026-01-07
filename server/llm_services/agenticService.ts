@@ -348,6 +348,7 @@ class OpenAIAgenticProvider implements AgenticProvider {
 
 class AgenticService {
   public async search(
+    // ToDo add support for grok
     providerName: 'gemini' | 'openai',
     apiKey: string,
     personName: string,
@@ -359,8 +360,11 @@ class AgenticService {
   ): Promise<AgenticSearchResult> {
     if (!apiKey) throw new Error(`${providerName} API key is missing.`);
 
+    // Normalize legacy alias 'chatgpt' if present
+    const normalizedProvider = (providerName as string) === 'chatgpt' ? 'openai' : providerName;
+
     let provider: AgenticProvider;
-    if (providerName === 'gemini') {
+    if (normalizedProvider === 'gemini') {
       provider = new GeminiAgenticProvider(apiKey);
     } else {
       provider = new OpenAIAgenticProvider(apiKey);

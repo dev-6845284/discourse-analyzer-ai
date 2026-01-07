@@ -75,7 +75,7 @@ const decryptKeyset = (doc: any) => {
 
 // --- Core Logic: Effective API Key Resolution ---
 
-export async function getEffectiveApiKeyForUser(userId: string, provider: 'gemini' | 'chatgpt' | 'grok'): Promise<string> {
+export async function getEffectiveApiKeyForUser(userId: string, provider: 'gemini' | 'openai' | 'grok'): Promise<string> {
   if (!userId) {
     throw new Error(`Authentication required to access ${provider} API.`);
   }
@@ -99,7 +99,7 @@ export async function getEffectiveApiKeyForUser(userId: string, provider: 'gemin
   // internal mapping of provider to DB field
   const fieldMap: Record<string, string> = {
     'gemini': 'GEMINI_API_KEY',
-    'chatgpt': 'CHATGPT_API_KEY',
+    'openai': 'CHATGPT_API_KEY', // OpenAI provider is backed by CHATGPT_API_KEY DB field for compatibility
     'grok': 'GROK_API_KEY'
   };
   const dbField = fieldMap[provider];
@@ -159,9 +159,10 @@ export async function getApiKeySetByAliasAndCreator_Internal(alias: string, crea
   return decryptKeyset(d);
 }
 
-// Keep old name for backward compatibility
+// Keep old name for backward compatibility, but now SAFE (Sanitized)
 export async function getApiKeySetByAliasAndCreator(alias: string, createdBy: string | null) {
-  return getApiKeySetByAliasAndCreator_Internal(alias, createdBy);
+  const d = await getApiKeySetByAliasAndCreator_Internal(alias, createdBy);
+  return sanitizeKeyset(d);
 }
 
 export async function upsertUserKeyset(userId: string, keys: Partial<{ GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }>) {
@@ -190,12 +191,12 @@ export async function upsertUserKeyset(userId: string, keys: Partial<{ GEMINI_AP
   if (existing) {
     await ApiKeySet.updateOne({ _id: existing._id }, { $set: payload });
     const d: any = await ApiKeySet.findById(existing._id).lean();
-    return decryptKeyset(d);
+    return sanitizeKeyset(d);
   }
 
   const created = new ApiKeySet({ alias, createdBy: mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : null, ...payload });
   await created.save();
-  return decryptKeyset(created.toObject());
+  return sanitizeKeyset(created.toObject());
 }
 
 // Public: List keysets for API (sanitized, no actual keys)

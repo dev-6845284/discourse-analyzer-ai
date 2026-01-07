@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Quote, QuoteUpdatePayload, AuditResult } from '../types';
 import api, { updateQuote, extractFromUrl, formatApiError } from '../utils/api';
-import { loadFromStorage } from '../utils/localStorage';
+
 
 export function useQuoteActions(
   quotes: Quote[],
@@ -11,7 +11,7 @@ export function useQuoteActions(
   handleLogout: () => void
 ) {
   const handleAnalyzeQuote = useCallback(
-    async (quote: Quote, selectedAI: string, analysisType: 'audit'|'flaws' = 'audit') => {
+    async (quote: Quote, selectedAI: string, analysisType: 'audit' | 'flaws' = 'audit') => {
       setQuotes((prev) =>
         prev.map((q) => (q.id === quote.id ? { ...q, isAnalyzing: true } : q))
       );
@@ -19,7 +19,6 @@ export function useQuoteActions(
       setRawApiResponseError(null);
 
       try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         let personId: string | undefined;
         let personName = quote.personName;
 
@@ -39,19 +38,18 @@ export function useQuoteActions(
           personName,
           analysisContext: quote.analysisContext,
           links: quote.links,
-          apiKeys,
           analysisType
         });
         // Server now returns AuditResult instead of AnalysisResult
         const audit: AuditResult = response.data;
 
         setQuotes((prev) =>
-          prev.map((q) => (q.id === quote.id ? { 
-            ...q, 
+          prev.map((q) => (q.id === quote.id ? {
+            ...q,
             analysisContext: quote.analysisContext,
             links: quote.links,
-            draft: { ...q, audit }, 
-            isAnalyzing: false 
+            draft: { ...q, audit },
+            isAnalyzing: false
           } : q))
         );
       } catch (e: any) {
@@ -78,12 +76,10 @@ export function useQuoteActions(
       setRawApiResponseError(null);
 
       try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const response = await api.post('/quotes/improve', {
           model: selectedAI,
           quote,
           personName,
-          apiKeys,
         });
         const improvedQuote = response.data;
 
@@ -103,9 +99,9 @@ export function useQuoteActions(
   const handleAcceptQuote = useCallback(async (quote: Quote, selectedAI?: string) => {
     if (!quote.draft) return;
 
-    const updatedQuote = { 
-      ...quote, 
-      ...quote.draft, 
+    const updatedQuote = {
+      ...quote,
+      ...quote.draft,
       draft: undefined,
       isAnalyzing: false,
       isImproving: false

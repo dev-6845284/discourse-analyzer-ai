@@ -213,14 +213,14 @@ const App: React.FC = () => {
                           Grok
                         </button>
                         <button
-                          onClick={() => searchParams.handleAISelectionChange('chatgpt')}
+                          onClick={() => searchParams.handleAISelectionChange('openai')}
                           className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${
-                            searchParams.selectedAI === 'chatgpt'
+                            searchParams.selectedAI === 'openai'
                               ? 'bg-cyan-600 text-white'
                               : 'text-gray-300 hover:bg-gray-600'
                           }`}
                         >
-                          ChatGPT
+                          OpenAI
                         </button>
                       </div>
                     </div>

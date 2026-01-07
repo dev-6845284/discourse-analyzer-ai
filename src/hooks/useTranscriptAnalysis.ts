@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { TranscriptSegment } from '../utils/transcriptHelpers';
-import { 
-  analyzeSessionTopics, 
-  saveSelectedBlocks, 
-  analyzeSessionSpeakers, 
+import {
+  analyzeSessionTopics,
+  saveSelectedBlocks,
+  analyzeSessionSpeakers,
   analyzeSessionDialog,
   findSimilarPersons,
   mergeSpeakers as mergeSpeakersApi,
@@ -126,7 +126,6 @@ export function useTranscriptAnalysis(initialData?: {
       segments: TranscriptSegment[],
       languageCode: string,
       model: string,
-      apiKeys: Record<string, string>,
       sessionId?: string
     ) => {
       if (!sessionId) {
@@ -151,8 +150,7 @@ export function useTranscriptAnalysis(initialData?: {
         const response = await analyzeSessionTopics(
           sessionId,
           languageCode,
-          model || 'gemini',
-          apiKeys
+          model || 'gemini'
         );
 
         const analysisResults: TopicAnalysisResult[] = response.data;
@@ -184,7 +182,6 @@ export function useTranscriptAnalysis(initialData?: {
     async (
       languageCode: string,
       model: string,
-      apiKeys: Record<string, string>,
       sessionId?: string,
       speakerHint?: string
     ) => {
@@ -197,7 +194,7 @@ export function useTranscriptAnalysis(initialData?: {
       }
 
       const selectedBlocks = state.results.filter(r => r.isSelected);
-      
+
       if (selectedBlocks.length === 0) {
         setState(prev => ({
           ...prev,
@@ -218,12 +215,10 @@ export function useTranscriptAnalysis(initialData?: {
         const selectedBlockIds = selectedBlocks.map(block => block.blockId);
         await saveSelectedBlocks(sessionId, selectedBlockIds);
 
-        // Call session-based backend API - backend reads selected blocks from session
         const response = await analyzeSessionSpeakers(
           sessionId,
           languageCode,
           model || 'gemini',
-          apiKeys,
           speakerHint
         );
 
@@ -255,7 +250,6 @@ export function useTranscriptAnalysis(initialData?: {
       languageCode: string,
       fastModel: string,
       betterModel: string,
-      apiKeys: Record<string, string>,
       sessionId?: string
     ) => {
       if (!sessionId) {
@@ -289,8 +283,7 @@ export function useTranscriptAnalysis(initialData?: {
           sessionId,
           languageCode,
           fastModel,
-          betterModel,
-          apiKeys
+          betterModel
         );
 
         const analysisResults: TopicGroup[] = response.data;
@@ -483,7 +476,7 @@ export function useTranscriptAnalysis(initialData?: {
    * Returns the updated speakerResults for saving
    */
   const addSpeaker = useCallback((
-    speakerName: string, 
+    speakerName: string,
     existingPerson?: { personId: string; name: string }
   ): SpeakerAnalysisResult[] => {
     const speakerId = existingPerson?.personId || crypto.randomUUID();
@@ -491,16 +484,16 @@ export function useTranscriptAnalysis(initialData?: {
     let updatedResults: SpeakerAnalysisResult[] = [];
     setState(prev => {
       updatedResults = prev.speakerResults.map(block => {
-        const speakerExists = block.speakers?.some(s => s.name === displayName || s.id === speakerId) || 
-                             block.identifiedSpeakers.includes(displayName);
+        const speakerExists = block.speakers?.some(s => s.name === displayName || s.id === speakerId) ||
+          block.identifiedSpeakers.includes(displayName);
         if (speakerExists) return block;
         return {
           ...block,
-          speakers: [...(block.speakers || []), { 
-            id: speakerId, 
+          speakers: [...(block.speakers || []), {
+            id: speakerId,
             name: displayName,
             personId: existingPerson?.personId,
-            isExistingPerson: !!existingPerson 
+            isExistingPerson: !!existingPerson
           }],
           identifiedSpeakers: [...block.identifiedSpeakers, displayName],
         };
@@ -533,7 +526,7 @@ export function useTranscriptAnalysis(initialData?: {
         return {
           ...block,
           speakers: block.speakers?.filter(s => s.id !== speakerId) || [],
-          identifiedSpeakers: speakerToRemove 
+          identifiedSpeakers: speakerToRemove
             ? block.identifiedSpeakers.filter(s => s !== speakerToRemove.name)
             : block.identifiedSpeakers,
         };
@@ -585,9 +578,9 @@ export function useTranscriptAnalysis(initialData?: {
         return {
           ...block,
           // Update speaker with person link AND rename to person's name
-          speakers: block.speakers?.map(s => 
-            s.id === speakerId 
-              ? { ...s, personId, personName, isExistingPerson: true, name: personName } 
+          speakers: block.speakers?.map(s =>
+            s.id === speakerId
+              ? { ...s, personId, personName, isExistingPerson: true, name: personName }
               : s
           ) || [],
           // Update identifiedSpeakers array with new name
@@ -615,9 +608,9 @@ export function useTranscriptAnalysis(initialData?: {
     setState(prev => {
       updatedResults = prev.speakerResults.map(block => ({
         ...block,
-        speakers: block.speakers?.map(s => 
-          s.id === speakerId 
-            ? { ...s, personId: undefined, personName: undefined, isExistingPerson: false } 
+        speakers: block.speakers?.map(s =>
+          s.id === speakerId
+            ? { ...s, personId: undefined, personName: undefined, isExistingPerson: false }
             : s
         ) || [],
       }));

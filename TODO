@@ -11,6 +11,7 @@
 - [x] Quote analysis does not use correct analysis categories according to selected analysis type.
 - [ ] Re-evaluating quote does not use latest updated context content.
 - [ ] Analysis cleanup may not be working correctly; refresh session data everywhere after cleanup or update.
+- [ ] Error tooltip close button not working.
 
 ## 🛡️ Security & DDoS Protection
 - [ ] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets.

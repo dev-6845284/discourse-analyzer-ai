@@ -10,7 +10,7 @@ const AI_PROVIDERS = [
   { value: 'all', labelKey: 'allProviders' },
   { value: 'gemini', labelKey: 'provider_Gemini' },
   { value: 'grok', labelKey: 'provider_Grok' },
-  { value: 'chatgpt', labelKey: 'provider_ChatGPT' },
+  { value: 'openai', labelKey: 'provider_ChatGPT' },
 ];
 
 // Rating/Severity options for filtering (supports both legacy and new formats)

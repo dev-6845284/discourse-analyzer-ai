@@ -333,7 +333,7 @@ const KeysetManagement: React.FC = () => {
                         <span className="flex gap-1 flex-wrap">
                           {k.has_GEMINI_API_KEY && <span className="px-2 py-1 bg-blue-900/30 rounded text-blue-300 text-xs">Gemini</span>}
                           {k.has_GROK_API_KEY && <span className="px-2 py-1 bg-purple-900/30 rounded text-purple-300 text-xs">Grok</span>}
-                          {k.has_CHATGPT_API_KEY && <span className="px-2 py-1 bg-green-900/30 rounded text-green-300 text-xs">ChatGPT</span>}
+                          {k.has_CHATGPT_API_KEY && <span className="px-2 py-1 bg-green-900/30 rounded text-green-300 text-xs">OpenAI</span>}
                         </span>
                       )}
                     </td>
