@@ -290,12 +290,23 @@ app.post('/api/login', loginRateLimiter, async (req, res) => {
 });
 
 app.post('/api/login/password', loginRateLimiter, async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, turnstileToken } = req.body;
   console.log('[LOGIN_PASSWORD]', {
     timestamp: new Date().toISOString(),
     email,
-    sessionID: req.sessionID
+    sessionID: req.sessionID,
+    hasTurnstile: !!turnstileToken
   });
+
+  // Verify CAPTCHA (Turnstile)
+  const { verifyTurnstileToken } = await import('./services/turnstileService');
+  const ip = req.ip || req.socket.remoteAddress;
+  const isCaptchaValid = await verifyTurnstileToken(turnstileToken, ip);
+
+  if (!isCaptchaValid) {
+    console.log('[LOGIN_PASSWORD_FAILED] CAPTCHA validation failed for:', email);
+    return res.status(400).json({ message: 'CAPTCHA verification failed. Please try again.' });
+  }
 
   try {
     const User = (await import('./models/User')).default;

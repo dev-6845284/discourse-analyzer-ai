@@ -41,14 +41,15 @@ function createRateLimiter(options: Partial<Options>): RateLimitRequestHandler {
 
 /**
  * Strict rate limiter for login endpoints
- * - 5 attempts per 15 minutes per IP
+ * - 5 attempts per 15 minutes per IP (Production)
+ * - 100 attempts per 15 minutes per IP (Development)
  * - Prevents brute force attacks
  */
 export const loginRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: process.env.NODE_ENV === 'development' ? 100 : 5, // Relaxed for dev
   message: 'Too many login attempts, please try again after 15 minutes',
-  skipSuccessfulRequests: false, // Count all attempts
+  skipSuccessfulRequests: process.env.NODE_ENV === 'development', // Don't count successful logins in dev
   keyGenerator: (req: Request) => {
     // For login, only use IP (user not authenticated yet)
     return req.ip || req.socket.remoteAddress || 'unknown';

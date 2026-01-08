@@ -36,9 +36,9 @@ export function useAuth() {
     }
   }, []);
 
-  const loginWithPassword = useCallback(async (email, password) => {
+  const loginWithPassword = useCallback(async (email, password, turnstileToken?: string) => {
     try {
-      const res = await api.post('/login/password', { email, password });
+      const res = await api.post('/login/password', { email, password, turnstileToken });
       if (res.data.user) {
         setUser(res.data.user);
         setLoginError(null);

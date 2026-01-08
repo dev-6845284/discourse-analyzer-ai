@@ -1,28 +1,35 @@
 import React, { useState } from 'react';
 
+import { TurnstileWidget } from './TurnstileWidget';
+
 interface LoginScreenProps {
   googleButtonRef: React.RefObject<HTMLDivElement>;
   loginError: string | null;
-  onLogin: (email: string, password: string) => Promise<void>;
+  onLogin: (email: string, password: string, token?: string) => Promise<void>;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await onLogin(email, password);
+    // If site key is configured, token is required. If not, token is undefined.
+    // However, we pass whatever we have. Logic is handled by onLogin / backend.
+    await onLogin(email, password, turnstileToken);
     setIsSubmitting(false);
+    // Reset token after submit (Turnstile usually requires reset, but we'll assume reload or simple retry for now)
+    setTurnstileToken(undefined);
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <h1 className="hidden md:block text-4xl font-bold text-cyan-400 mb-4">Discourse Analyzer AI</h1>
       <p className="text-gray-400 mb-8">Please sign in to continue</p>
-      
+
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md mb-8">
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -45,6 +52,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
               required
             />
           </div>
+
+          <TurnstileWidget
+            onVerify={(token) => setTurnstileToken(token)}
+            onError={(err) => console.error('Turnstile Error:', err)}
+          />
+
           <button
             type="submit"
             disabled={isSubmitting}
