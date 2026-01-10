@@ -22,8 +22,8 @@ interface ExtractionControlsProps {
   setTextToExtract: (text: string) => void;
   isExtracting: boolean;
   personName: string;
-  onExtract: (analysisType?: 'audit' | 'flaws') => void,
-  onAdd: (analysisType?: 'audit' | 'flaws') => void,
+  onExtract: () => void,
+  onAdd: () => void,
   onExtractFromUrl?: () => void;
   onAutoExtract?: (url: string) => void;
   extractionStatus?: string;
@@ -48,7 +48,6 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
 }) => {
   const { t } = useI18n();
   const isUrl = isValidUrl(textToExtract);
-  const [analysisType, setAnalysisType] = useState<'audit' | 'flaws'>('audit');
   const lastExtractionRef = React.useRef<{ url: string, lang: string } | null>(null);
 
   useEffect(() => {
@@ -140,35 +139,8 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
           // Show regular extraction buttons when not a URL
           <>
             <div className="flex flex-col gap-2 w-full">
-              <div className="flex items-center gap-3">
-                <label className="flex items-center" htmlFor="extraction-analysis-audit">
-                  <input
-                    id="extraction-analysis-audit"
-                    type="radio"
-                    name="extractionAnalysisType"
-                    value="audit"
-                    checked={analysisType === 'audit'}
-                    onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
-                    className="mr-1 accent-cyan-600 focus:ring-cyan-500"
-                  />
-                  <span className="text-xs text-gray-300">Audit</span>
-                </label>
-                <label className="flex items-center" htmlFor="extraction-analysis-flaws">
-                  <input
-                    id="extraction-analysis-flaws"
-                    type="radio"
-                    name="extractionAnalysisType"
-                    value="flaws"
-                    checked={analysisType === 'flaws'}
-                    onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
-                    className="mr-1 accent-cyan-600 focus:ring-cyan-500"
-                  />
-                  <span className="text-xs text-gray-300">Flaws</span>
-                </label>
-              </div>
-
               <button
-                onClick={() => onExtract(analysisType)}
+                onClick={() => onExtract()}
                 disabled={isExtracting || !textToExtract || !personName}
                 title={!personName ? t('pleaseEnterPersonName') : (!textToExtract ? t('pleaseEnterTextToExtract') : '')}
                 className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
@@ -179,7 +151,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
 
             <div className="flex flex-col sm:flex-row gap-2 mt-2">
               <button
-                onClick={() => onAdd(analysisType)}
+                onClick={() => onAdd()}
                 disabled={isExtracting || !textToExtract || !personName}
                 title={!personName ? t('pleaseEnterPersonName') : (!textToExtract ? t('pleaseEnterTextToAdd') : '')}
                 className="w-full sm:flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"

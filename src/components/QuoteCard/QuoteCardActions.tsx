@@ -73,45 +73,40 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
         <>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 border-r border-gray-700 pr-4 mr-2">
-              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Model</span>
-              {['gemini', 'grok', 'openai'].map((model) => (
-                <label key={model} className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name={`analysis-model-${quote.id}`}
-                    value={model}
-                    checked={localSelectedAI === model}
-                    onChange={(e) => setLocalSelectedAI(e.target.value)}
-                    className="mr-1 text-cyan-600 focus:ring-cyan-500 bg-gray-700 border-gray-600"
-                  />
-                  <span className="text-xs text-gray-300 capitalize">{model === 'openai' ? 'OpenAI' : model}</span>
-                </label>
-              ))}
+              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mr-1">Model</span>
+              <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+                {['gemini', 'grok', 'openai'].map((model, idx, arr) => (
+                  <button
+                    key={model}
+                    type="button"
+                    onClick={() => setLocalSelectedAI(model)}
+                    className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${localSelectedAI === model
+                        ? 'bg-cyan-600 text-white shadow-sm'
+                        : 'text-gray-400 hover:bg-gray-700'
+                      } ${idx === 0 ? 'rounded-l-[4px]' : ''} ${idx === arr.length - 1 ? 'rounded-r-[4px]' : ''}`}
+                  >
+                    {model === 'gemini' ? 'Gemini' : model === 'grok' ? 'Grok' : 'OpenAI'}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name={`analysis-type-${quote.id}`}
-                  value="audit"
-                  checked={analysisType === 'audit'}
-                  onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
-                  className="mr-1 text-cyan-600 focus:ring-cyan-500"
-                />
-                <span className="text-xs text-gray-300">Audit</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name={`analysis-type-${quote.id}`}
-                  value="flaws"
-                  checked={analysisType === 'flaws'}
-                  onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
-                  className="mr-1 text-cyan-600 focus:ring-cyan-500"
-                />
-                <span className="text-xs text-gray-300">Flaws</span>
-              </label>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+                {(['audit', 'flaws'] as const).map((type, idx, arr) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setAnalysisType(type)}
+                    className={`px-2 py-0.5 text-[10px] font-medium transition-colors capitalize ${analysisType === type
+                        ? 'bg-cyan-600 text-white shadow-sm'
+                        : 'text-gray-400 hover:bg-gray-700'
+                      } ${idx === 0 ? 'rounded-l-[4px]' : ''} ${idx === arr.length - 1 ? 'rounded-r-[4px]' : ''}`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button

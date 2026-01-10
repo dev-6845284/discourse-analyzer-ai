@@ -230,15 +230,15 @@ export function useAppController() {
 
   const [modalAnalysisType, setModalAnalysisType] = React.useState<'audit' | 'flaws'>('audit');
 
-  const openExtractModal = React.useCallback((analysisType: 'audit' | 'flaws' = 'audit') => {
+  const openExtractModal = React.useCallback(() => {
     setModalMode('extract');
-    setModalAnalysisType(analysisType);
+    setModalAnalysisType('audit');
     uiState.openAddModal();
   }, [uiState]);
 
-  const openAddQuoteModal = React.useCallback((analysisType: 'audit' | 'flaws' = 'audit') => {
+  const openAddQuoteModal = React.useCallback(() => {
     setModalMode('add');
-    setModalAnalysisType(analysisType);
+    setModalAnalysisType('audit');
     uiState.openAddModal();
   }, [uiState]);
 

@@ -109,50 +109,39 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
 
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">AI Model</label>
-          <div className="flex gap-4">
-            {['gemini', 'grok', 'openai'].map((model) => (
-              <label key={model} className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="addQuoteModel"
-                  value={model}
-                  checked={selectedAI === model}
-                  onChange={(e) => setSelectedAI(e.target.value)}
-                  className="mr-2 text-cyan-600 focus:ring-cyan-500 bg-gray-700 border-gray-600"
-                />
-                <span className="text-sm text-gray-300 capitalize">{model === 'openai' ? 'OpenAI' : model}</span>
-              </label>
+          <div className="flex rounded-md bg-gray-700 p-0.5">
+            {['gemini', 'grok', 'openai'].map((model, idx, arr) => (
+              <button
+                key={model}
+                type="button"
+                onClick={() => setSelectedAI(model)}
+                className={`flex-1 px-3 py-1 text-xs font-medium transition-colors ${selectedAI === model
+                    ? 'bg-cyan-600 text-white shadow-sm'
+                    : 'text-gray-300 hover:bg-gray-600'
+                  } ${idx === 0 ? 'rounded-l-md' : ''} ${idx === arr.length - 1 ? 'rounded-r-md' : ''}`}
+              >
+                {model === 'gemini' ? 'Gemini' : model === 'grok' ? 'Grok' : 'OpenAI'}
+              </button>
             ))}
           </div>
         </div>
 
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">{t('analysisTypeLabel')}</label>
-          <div className="flex gap-6">
-            <label className="flex items-center" htmlFor="addquote-analysis-audit">
-              <input
-                id="addquote-analysis-audit"
-                type="radio"
-                name="addQuoteAnalysisType"
-                value="audit"
-                checked={analysisType === 'audit'}
-                onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
-                className="mr-2 accent-cyan-600 focus:ring-cyan-500"
-              />
-              <span className="text-sm text-gray-300">{t('analysisType_audit')}</span>
-            </label>
-            <label className="flex items-center" htmlFor="addquote-analysis-flaws">
-              <input
-                id="addquote-analysis-flaws"
-                type="radio"
-                name="addQuoteAnalysisType"
-                value="flaws"
-                checked={analysisType === 'flaws'}
-                onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
-                className="mr-2 accent-cyan-600 focus:ring-cyan-500"
-              />
-              <span className="text-sm text-gray-300">{t('analysisType_flaws')}</span>
-            </label>
+          <div className="flex rounded-md bg-gray-700 p-0.5">
+            {(['audit', 'flaws'] as const).map((type, idx, arr) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setAnalysisType(type)}
+                className={`flex-1 px-4 py-1 text-xs font-medium transition-colors ${analysisType === type
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-gray-300 hover:bg-gray-600'
+                  } ${idx === 0 ? 'rounded-l-md' : ''} ${idx === arr.length - 1 ? 'rounded-r-md' : ''}`}
+              >
+                {t(`analysisType_${type}`)}
+              </button>
+            ))}
           </div>
         </div>
 
