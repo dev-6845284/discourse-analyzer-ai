@@ -1,7 +1,7 @@
 import { TopicGroup } from '../../types';
 import { buildMergeTopicsPrompt } from '../../llm_services/prompts';
-import geminiService from '../../llm_services/geminiService';
 import { extractJsonFromResponse } from './utils';
+import { generateContent } from './llmHelper';
 
 /**
  * Phase 2: Merge adjacent topic groups that discuss the same broader topic
@@ -23,8 +23,7 @@ export async function mergeTopics(
   const prompt = buildMergeTopicsPrompt(groups, language);
 
   try {
-    const responseText = await geminiService.generateContent(apiKeys['gemini'], {
-      model,
+    const responseText = await generateContent(model, apiKeys, {
       prompt,
       sessionId,
       logId,

@@ -11,10 +11,12 @@
 - [x] Quote analysis does not use correct analysis categories according to selected analysis type.
 - [ ] Re-evaluating quote does not use latest updated context content.
 - [ ] Analysis cleanup may not be working correctly; refresh session data everywhere after cleanup or update.
+- [ ] Error tooltip close button not working.
+- [ ] Quote Tile does not show quote author.
 
 ## 🛡️ Security & DDoS Protection
-- [ ] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets.
-- [ ] **Smart CAPTCHA:** Implement Cloudflare Turnstile on session creation/login to stop bot floods.
+- [x] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets. (See `docs/WAF_CONFIGURATION.md`)
+- [x] **Smart CAPTCHA:** Implement Cloudflare Turnstile on session creation/login to stop bot floods.
 - [x] **Session Hardening:**
     - [x] Generate session IDs for anonymous users immediately to enable tracking.
     - [x] Implement strict throttling on the session creation endpoint.

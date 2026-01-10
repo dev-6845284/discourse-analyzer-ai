@@ -42,7 +42,7 @@ describe('User keyset routes', () => {
     const app = makeAppWithSession({ _id: userId, role: 'viewer' });
     const agent = request.agent(app as any);
 
-    const returned = { alias: 'USERS_KEYSET', GEMINI_API_KEY: 'g1' };
+    const returned = { alias: 'USERS_KEYSET', has_GEMINI_API_KEY: true };
     (apiKeySvc.upsertUserKeyset as jest.Mock).mockResolvedValue(returned);
 
     const res = await agent.put(`/api/users/${userId}/keyset`).send({ GEMINI_API_KEY: 'g1' });
@@ -66,7 +66,7 @@ describe('User keyset routes', () => {
     const app = makeAppWithSession({ _id: 'admin1', role: 'admin' });
     const agent = request.agent(app as any);
 
-    const returned = { alias: 'USERS_KEYSET', GEMINI_API_KEY: 'g1' };
+    const returned = { alias: 'USERS_KEYSET', has_GEMINI_API_KEY: true };
     (apiKeySvc.upsertUserKeyset as jest.Mock).mockResolvedValue(returned);
 
     const res = await agent.put(`/api/users/${userId}/keyset`).send({ GEMINI_API_KEY: 'g1' });
@@ -80,7 +80,7 @@ describe('User keyset routes', () => {
     const app = makeAppWithSession({ _id: userId, role: 'viewer' });
     const agent = request.agent(app as any);
 
-    const returned = { alias: 'USERS_KEYSET', GEMINI_API_KEY: 'g1' };
+    const returned = { alias: 'USERS_KEYSET', has_GEMINI_API_KEY: true };
     (apiKeySvc.getApiKeySetByAliasAndCreator as jest.Mock).mockResolvedValue(returned);
 
     const res = await agent.get(`/api/users/${userId}/keyset`);

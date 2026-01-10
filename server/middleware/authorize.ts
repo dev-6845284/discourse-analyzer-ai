@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import permissionService from '../services/permissionService';
+import { isLocal } from '../constants/env';
 
 const PUBLIC_WHITELIST = [
   '/api/login',
@@ -20,9 +21,9 @@ export async function authorizeMiddleware(req: Request, res: Response, next: Nex
       return next();
     }
 
-    // Explicitly allow dev-only endpoints when running in development and deny in other envs.
+    // Explicitly allow dev-only endpoints when running in local and deny in other envs.
     if (fullPath.startsWith('/api/dev')) {
-      if (process.env.NODE_ENV === 'development') return next();
+      if (isLocal()) return next();
       return res.status(404).json({ message: 'Not found' });
     }
 
@@ -51,7 +52,7 @@ export async function authorizeMiddleware(req: Request, res: Response, next: Nex
     next();
   } catch (error) {
     console.error('[AUTHZ_ERROR]', error);
-    res.status(500).json({ message: 'Authorization failure', error });
+    res.status(500).json({ message: 'Authorization failure', error: error instanceof Error ? error.message : String(error) });
   }
 }
 

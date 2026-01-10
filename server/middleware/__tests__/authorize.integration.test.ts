@@ -66,9 +66,9 @@ describe('authorizeMiddleware integration', () => {
     expect(res.text).toBe('ok');
   });
 
-  test('dev endpoints are allowed in development without session', async () => {
+  test('dev endpoints are allowed in local environment without session', async () => {
     const orig = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'local';
 
     // Ensure permission service would say viewer (not public) to prove bypass happens
     jest.spyOn(permissionService, 'getRequiredRoleForRequest').mockResolvedValue('viewer');

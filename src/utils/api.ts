@@ -117,19 +117,17 @@ export const analyzeQuote = async (
   quoteText: string,
   quoteLanguageCode: string,
   quoteLanguageName: string,
-  apiKeys: Record<string, string>,
   analysisContext?: string,
   links?: Array<{ url: string; title?: string; type: 'quote' | 'context' }>,
   personId?: string,
   personName?: string,
-  analysisType: 'audit'|'flaws' = 'audit'
+  analysisType: 'audit' | 'flaws' = 'audit'
 ) => {
   return api.post('/quotes/analyze', {
     model,
     quoteText,
     quoteLanguageCode,
     quoteLanguageName,
-    apiKeys,
     analysisContext,
     links,
     personId,
@@ -142,15 +140,13 @@ export const extractFromUrl = async (
   url: string,
   personName: string,
   model: string,
-  temperature: number,
-  apiKeys: Record<string, string>
+  temperature: number
 ) => {
   return api.post('/quotes/extract-from-url', {
     url,
     personName,
     model,
     temperature,
-    apiKeys,
   });
 };
 
@@ -168,7 +164,7 @@ export const agenticSearch = async (
   timePeriod: TimePeriodResult,
   languages: string[],
   options: AgenticSearchOptions,
-  apiKeys: Record<string, string>,
+  provider: string,
   signal?: AbortSignal
 ) => {
   return api.post<AgenticSearchResult>('/quotes/agentic-search', {
@@ -176,7 +172,7 @@ export const agenticSearch = async (
     timePeriod,
     languages,
     options,
-    apiKeys,
+    provider,
   }, { signal });
 };
 
@@ -214,12 +210,11 @@ export const updateQuoteSource = async (quoteId: string, contentAnalysisId: stri
 
 // Session-based analysis endpoints
 export const analyzeSessionTopics = async (
-  sessionId: string, 
-  language: string, 
-  model: string, 
-  apiKeys: Record<string, string>
+  sessionId: string,
+  language: string,
+  model: string
 ) => {
-  return api.post(`/analysis/sessions/${sessionId}/analyze-topics`, { language, model, apiKeys });
+  return api.post(`/analysis/sessions/${sessionId}/analyze-topics`, { language, model });
 };
 
 export const saveSelectedBlocks = async (sessionId: string, selectedBlockIds: string[]) => {
@@ -230,20 +225,18 @@ export const analyzeSessionSpeakers = async (
   sessionId: string,
   language: string,
   model: string,
-  apiKeys: Record<string, string>,
   speakerHint?: string
 ) => {
-  return api.post(`/analysis/sessions/${sessionId}/analyze-speakers`, { language, model, apiKeys, speakerHint });
+  return api.post(`/analysis/sessions/${sessionId}/analyze-speakers`, { language, model, speakerHint });
 };
 
 export const analyzeSessionDialog = async (
   sessionId: string,
   language: string,
   fastModel: string,
-  betterModel: string,
-  apiKeys: Record<string, string>
+  betterModel: string
 ) => {
-  return api.post(`/analysis/sessions/${sessionId}/analyze-dialog`, { language, fastModel, betterModel, apiKeys });
+  return api.post(`/analysis/sessions/${sessionId}/analyze-dialog`, { language, fastModel, betterModel });
 };
 
 export const mergeSpeakers = async (
@@ -278,13 +271,13 @@ export const findSimilarPersons = async (name: string, threshold?: number) => {
 export const formatApiError = (error: any, context?: string): string => {
   const errorData = error.response?.data;
   let message = errorData?.message || error.message || 'An unknown error occurred';
-  
+
   // Check for rate limit errors (OpenAI, Gemini, etc.)
-    if (message.toLowerCase().includes('rate limit')) {
+  if (message.toLowerCase().includes('rate limit')) {
     // Extract wait time if present (support decimals and multiple phrasings)
     const waitTimeMatch = message.match(/(?:please try again in|please wait|try again in)\s*([0-9]+(?:\.[0-9]+)?)\s*(?:s|seconds?)/i);
     const waitTime = waitTimeMatch ? waitTimeMatch[1] : null;
-    
+
     if (waitTime) {
       message = `⏳ Rate limit reached. Please wait ${waitTime} seconds and try again.`;
     } else {
@@ -300,7 +293,7 @@ export const formatApiError = (error: any, context?: string): string => {
   } else if (error.response?.status >= 500) {
     message = `Server error: ${message}`;
   }
-  
+
   return context ? `${context}: ${message}` : message;
 };
 
@@ -314,7 +307,7 @@ export const getAdminUsageStats = (hours: number = 24) => api.get(`/admin/usage-
 export const getAdminSecurityAlerts = (limit: number = 50) => api.get(`/admin/security-alerts?limit=${limit}`);
 export const acknowledgeSecurityAlert = (alertId: string) => api.post(`/admin/security-alerts/${alertId}/acknowledge`);
 export const getBlockedIPs = () => api.get('/admin/blocked-ips');
-export const blockIP = (ipAddress: string, reason: string, expiresInMinutes?: number) => 
+export const blockIP = (ipAddress: string, reason: string, expiresInMinutes?: number) =>
   api.post('/admin/blocked-ips', { ipAddress, reason, expiresInMinutes });
 export const unblockIP = (ipAddress: string) => api.delete(`/admin/blocked-ips/${encodeURIComponent(ipAddress)}`);
 
@@ -340,16 +333,16 @@ export const upsertUserKeyset = (userId: string, keys: { GEMINI_API_KEY?: string
 
 // Admin API keyset management
 export const getAdminKeysets = () => api.get('/admin/api-key-sets/available');
-export const createAdminKeyset = (keyset: { alias: string; GEMINI_API_KEY?: string; GROK_API_KEY?: string; CHATGPT_API_KEY?: string }) => 
+export const createAdminKeyset = (keyset: { alias: string; GEMINI_API_KEY?: string; GROK_API_KEY?: string; CHATGPT_API_KEY?: string }) =>
   api.post('/admin/api-key-sets', keyset);
-export const updateAdminKeyset = (id: string, keyset: { alias?: string; GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }) => 
+export const updateAdminKeyset = (id: string, keyset: { alias?: string; GEMINI_API_KEY?: string | null; GROK_API_KEY?: string | null; CHATGPT_API_KEY?: string | null }) =>
   api.put(`/admin/api-key-sets/${id}`, keyset);
 export const deleteAdminKeyset = (id: string) => api.delete(`/admin/api-key-sets/${id}`);
 
 // User keyset assignment
-export const assignKeysetToUser = (keysetId: string, userId: string) => 
+export const assignKeysetToUser = (keysetId: string, userId: string) =>
   api.post(`/admin/api-key-sets/${keysetId}/assign`, { userId });
-export const unassignKeysetFromUser = (keysetId: string, userId: string) => 
+export const unassignKeysetFromUser = (keysetId: string, userId: string) =>
   api.post(`/admin/api-key-sets/${keysetId}/unassign`, { userId });
-export const getUserAssignedKeyset = (userId: string) => 
+export const getUserAssignedKeyset = (userId: string) =>
   api.get(`/users/${userId}/assigned-keyset`);

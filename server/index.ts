@@ -1,4 +1,7 @@
 import 'dotenv/config';
+import { validateEnvironment, isProduction, isTest, isLocal, isStrictSecurity } from './constants/env';
+validateEnvironment();
+
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -30,9 +33,15 @@ app.use(helmet({
       "frame-src": ["'self'", "https://*.facebook.com", "https://*.youtube.com", "https://youtube.com"],
       "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.gstatic.com", "https://*.facebook.net"],
       "img-src": ["'self'", "data:", "https:", "http:"],
+      "frame-ancestors": ["'self'"],
     },
   },
+  xXssProtection: true,
+  frameguard: {
+    action: 'sameorigin',
+  },
 }));
+
 
 // ============================================
 // BODY PARSER & PAYLOAD LIMITS
@@ -116,7 +125,7 @@ const sessionConfig: session.SessionOptions = {
   resave: false,
   saveUninitialized: true, // Changed to true to ensure session ID is generated for all visitors
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction(),
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // Default 24 hours
     sameSite: 'lax',
@@ -193,7 +202,7 @@ app.use(
         allowedOrigins.indexOf(origin) !== -1 ||
         /^https:\/\/([a-zA-Z0-9-]+\.)*pasitikrink\.org$/.test(origin);
 
-      if (!isAllowed) {
+      if (!isAllowed && isStrictSecurity()) {
         const msg =
           'The CORS policy for this site does not ' +
           'allow access from the specified Origin.';
@@ -285,17 +294,28 @@ app.post('/api/login', loginRateLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error('[LOGIN_ERROR]', { error: (error as any).message });
-    res.status(401).json({ message: 'Authentication failed', error });
+    res.status(401).json({ message: 'Authentication failed', error: (error as any).message });
   }
 });
 
 app.post('/api/login/password', loginRateLimiter, async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, turnstileToken } = req.body;
   console.log('[LOGIN_PASSWORD]', {
     timestamp: new Date().toISOString(),
     email,
-    sessionID: req.sessionID
+    sessionID: req.sessionID,
+    hasTurnstile: !!turnstileToken
   });
+
+  // Verify CAPTCHA (Turnstile)
+  const { verifyTurnstileToken } = await import('./services/turnstileService');
+  const ip = req.ip || req.socket.remoteAddress;
+  const isCaptchaValid = await verifyTurnstileToken(turnstileToken, ip);
+
+  if (!isCaptchaValid || (process.env.TURNSTILE_SECRET_KEY && !turnstileToken)) {
+    console.log('[LOGIN_PASSWORD_FAILED] CAPTCHA validation failed for:', email);
+    return res.status(400).json({ message: 'CAPTCHA verification failed. Please try again.' });
+  }
 
   try {
     const User = (await import('./models/User')).default;
@@ -343,7 +363,7 @@ app.post('/api/login/password', loginRateLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error('[LOGIN_PASSWORD_ERROR]', { error: (error as any).message });
-    res.status(500).json({ message: 'Login failed', error });
+    res.status(500).json({ message: 'Login failed', error: (error as any).message });
   }
 });
 
@@ -368,7 +388,8 @@ app.get('/api/session/debug', (req, res) => {
     },
     environment: {
       NODE_ENV: process.env.NODE_ENV,
-      BYPASS_AUTH: process.env.BYPASS_AUTH
+      BYPASS_AUTH: process.env.BYPASS_AUTH,
+      currentEnv: require('./constants/env').getCurrentEnv()
     }
   };
 
@@ -387,7 +408,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 // DEV-only endpoints (role switcher, etc.) — always public but only available in non-production
-if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+if (isLocal() || isTest()) {
   try {
     // Synchronously require dev routes so they are mounted before the generic `/api` router
     // in environments used by tests.
@@ -420,7 +441,7 @@ app.use('/api/analysis', apiRateLimiter, (req, res, next) => {
   return analysisRoutes(req, res, next);
 });
 // If dev routes are not mounted (non-development/test), ensure /api/dev/* returns 404
-if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
+if (!isLocal() && !isTest()) {
   app.use('/api/dev', (req, res) => res.status(404).json({ message: 'Not found' }));
 }
 
@@ -431,7 +452,7 @@ app.use('/api', apiRateLimiter, (req, res, next) => {
 });
 
 // Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
+if (isProduction()) {
   const buildPath = path.resolve(__dirname, '../../dist');
   app.use(express.static(buildPath));
 

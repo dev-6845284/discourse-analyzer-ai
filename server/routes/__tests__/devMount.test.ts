@@ -11,8 +11,8 @@ describe('dev routes mounting', () => {
     jest.resetModules();
   });
 
-  test('dev routes are mounted when NODE_ENV=development', async () => {
-    process.env.NODE_ENV = 'development';
+  test('dev routes are mounted when NODE_ENV=local', async () => {
+    process.env.NODE_ENV = 'local';
     // Ensure no real Mongo session store is configured during test
     process.env.MONGODB_URI = '';
 
@@ -31,7 +31,7 @@ describe('dev routes mounting', () => {
     expect(Array.isArray(res.body.roles)).toBe(true);
   });
 
-  test('dev routes are not mounted when NODE_ENV!=development', async () => {
+  test('dev routes are not mounted when NODE_ENV is not local', async () => {
     process.env.NODE_ENV = 'production';
     process.env.MONGODB_URI = '';
 

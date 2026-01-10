@@ -89,7 +89,7 @@ test('Analyze button passes selected model and analysis type', async () => {
           onRemove={() => {}}
           onEditSource={() => {}}
           clearError={() => {}}
-          selectedAI={'chatgpt'}
+          selectedAI={'openai'}
         />
       </div>
     </I18nProvider>
@@ -101,5 +101,5 @@ test('Analyze button passes selected model and analysis type', async () => {
   await user.click(screen.getByTitle(/Analizuoti citatą|Analyze Quote/i));
 
   expect(onAnalyze).toHaveBeenCalledTimes(1);
-  expect(onAnalyze).toHaveBeenCalledWith(expect.objectContaining({ id: 'q1' }), 'chatgpt', 'audit');
+  expect(onAnalyze).toHaveBeenCalledWith(expect.objectContaining({ id: 'q1' }), 'openai', 'audit');
 });

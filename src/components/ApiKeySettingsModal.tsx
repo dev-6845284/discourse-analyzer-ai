@@ -10,7 +10,7 @@ interface ApiKeySettingsModalProps {
 
 const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClose }) => {
   const [geminiKey, setGeminiKey] = useState('');
-  const [chatGptKey, setChatGptKey] = useState('');
+  const [openAiKey, setOpenAiKey] = useState('');
   const [grokKey, setGrokKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +20,7 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
   useEffect(() => {
     if (isOpen) {
       setGeminiKey('');
-      setChatGptKey('');
+      setOpenAiKey('');
       setGrokKey('');
       setError(null);
     }
@@ -34,16 +34,16 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
     setIsSaving(true);
     setError(null);
     try {
-      if (!user || !user._id) throw new Error('User not available');
       const payload = {
         GEMINI_API_KEY: geminiKey || null,
         GROK_API_KEY: grokKey || null,
-        CHATGPT_API_KEY: chatGptKey || null,
+        CHATGPT_API_KEY: openAiKey || null,
       };
-      await api.put(`/users/${user._id}/keyset`, payload);
+      // Use /users/me/keyset endpoint which gets userId from authenticated session
+      await api.put('/users/me/keyset', payload);
       // Clear form after successful save
       setGeminiKey('');
-      setChatGptKey('');
+      setOpenAiKey('');
       setGrokKey('');
       onClose();
     } catch (err: any) {
@@ -84,8 +84,8 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
             <label className="block text-sm font-medium text-gray-300 mb-1">{t('chatGptApiKeyLabel')}</label>
             <input
               type="password"
-              value={chatGptKey}
-              onChange={(e) => setChatGptKey(e.target.value)}
+              value={openAiKey}
+              onChange={(e) => setOpenAiKey(e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
               placeholder={t('enterChatGptApiKey')}
             />

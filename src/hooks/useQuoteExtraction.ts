@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Quote, ExportData, Person } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
 import api, { extractFromUrl } from '../utils/api';
-import { loadFromStorage } from '../utils/localStorage';
+
 
 export function useQuoteExtraction(
   quotes: Quote[],
@@ -33,14 +33,12 @@ export function useQuoteExtraction(
       setRawApiResponseError(null);
 
       try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const personPayload = person || { name: personName };
         const response = await api.post('/quotes/extract', {
           model: selectedAI,
           personName,
           textContent: textToExtract,
           ...details,
-          apiKeys,
         });
         const extractedQuotes = (response.data as Quote[]).map((q) => ({
           ...q,
@@ -84,11 +82,10 @@ export function useQuoteExtraction(
 
       try {
         onStatusChange('Fetching article...');
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
-        
+
         onStatusChange('Extracting quotes from article...');
-        const response = await extractFromUrl(url, personName, selectedAI, temperature, apiKeys || {});
-        
+        const response = await extractFromUrl(url, personName, selectedAI, temperature);
+
         const { quotes: extractedQuotes } = response.data;
 
         if (extractedQuotes && extractedQuotes.length > 0) {
@@ -100,7 +97,7 @@ export function useQuoteExtraction(
           }));
           setQuotes((prevQuotes) => [...prevQuotes, ...enrichedQuotes]);
         }
-        
+
         onSuccess();
       } catch (e: any) {
         setError(`URL extraction failed: ${e.response?.data?.message || e.message}`);
@@ -123,7 +120,7 @@ export function useQuoteExtraction(
         languageCode: string;
         languageName: string;
       },
-      onAnalyze: (quote: Quote, analysisType?: 'audit'|'flaws') => void,
+      onAnalyze: (quote: Quote, analysisType?: 'audit' | 'flaws') => void,
       person?: Person
     ) => {
       if (!textToExtract.trim() || !personName) {

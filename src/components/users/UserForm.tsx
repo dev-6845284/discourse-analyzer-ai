@@ -96,7 +96,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
 
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none">{t('cancel')}</button>
-          <button type="submit" disabled={isSubmitting} className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 px-4 rounded focus:outline-none disabled:opacity-50">{isSubmitting ? t('saving') : t('save')}</button>
+          <button type="submit" disabled={isSubmitting} className="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold py-2 px-4 rounded focus:outline-none disabled:opacity-50">{isSubmitting ? t('saving') : t('save')}</button>
         </div>
       </form>
     </ModalWrapper>

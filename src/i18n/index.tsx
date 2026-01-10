@@ -47,7 +47,7 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const t = (key: keyof Translations | string, vars?: Record<string, any>) => {
-    const isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development';
+    const isDev = typeof process !== 'undefined' && process.env && (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development');
     const dict = LANGS[language] || LANGS['en'];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = (dict as any)[key];

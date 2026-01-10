@@ -36,15 +36,18 @@ export function useAuth() {
     }
   }, []);
 
-  const loginWithPassword = useCallback(async (email, password) => {
+  const loginWithPassword = useCallback(async (email, password, turnstileToken?: string) => {
     try {
-      const res = await api.post('/login/password', { email, password });
+      const res = await api.post('/login/password', { email, password, turnstileToken });
       if (res.data.user) {
         setUser(res.data.user);
         setLoginError(null);
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Login failed.';
+      let message = error.response?.data?.message || 'Login failed.';
+      if (error.response?.data?.retryAfter) {
+        message += ` Wait ${error.response.data.retryAfter} seconds.`;
+      }
       setLoginError(message);
     }
   }, []);

@@ -17,7 +17,7 @@ import { useI18n } from '../i18n';
 import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
 import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
 import api, { getStoredQuotes, updateQuote, deleteQuote } from '../utils/api';
-import { loadFromStorage } from '../utils/localStorage';
+
 import { SUPPORTED_LANGUAGES } from '../constants';
 
 interface StoredQuotesProps {
@@ -32,7 +32,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const overrides = useMemo(() => {
     return selectedPerson ? { personId: selectedPerson._id } : {};
   }, [selectedPerson]);
@@ -62,7 +62,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     setSelectedFilterPerson(null);
   }, [resetFilters]);
 
-  const handleAnalyze = async (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => {
+  const handleAnalyze = async (quote: Quote, model: string, analysisType?: 'audit' | 'flaws') => {
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: true } : q));
     const personId = (quote.person && typeof quote.person === 'object')
       ? (quote.person as Person)._id
@@ -72,7 +72,6 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       : quote.personName || selectedPerson?.name;
 
     try {
-      const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
       const response = await api.post('/quotes/analyze', {
         model,
         analysisType,
@@ -83,16 +82,15 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         personName,
         analysisContext: quote.analysisContext,
         links: quote.links,
-        apiKeys,
       });
       // Server now returns AuditResult
       const audit = response.data;
-      setQuotes(prev => prev.map(q => q.id === quote.id ? { 
-        ...q, 
+      setQuotes(prev => prev.map(q => q.id === quote.id ? {
+        ...q,
         analysisContext: quote.analysisContext,
         links: quote.links,
-        draft: { ...q, audit }, 
-        isAnalyzing: false 
+        draft: { ...q, audit },
+        isAnalyzing: false
       } : q));
     } catch (err) {
       console.error('Analysis failed:', err);
@@ -104,7 +102,6 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   const handleImprove = async (quote: Quote) => {
     setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: true } : q));
     try {
-      const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
       const personName = (quote.person && typeof quote.person === 'object')
         ? (quote.person as Person).name
         : quote.personName || selectedPerson?.name || 'Unknown';
@@ -112,7 +109,6 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         model: selectedAI,
         quote,
         personName,
-        apiKeys,
       });
       const improvedQuote = response.data;
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: { ...q, ...improvedQuote }, isImproving: false } : q));
@@ -126,14 +122,14 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     if (!quote.draft) return;
 
     // Ensure we reset loading states when merging draft
-    const updatedQuoteData = { 
-      ...quote, 
-      ...quote.draft, 
+    const updatedQuoteData = {
+      ...quote,
+      ...quote.draft,
       draft: undefined,
       isAnalyzing: false,
       isImproving: false
     };
-    
+
     // Optimistic update
     setQuotes(prev => prev.map(q => q.id === quote.id ? updatedQuoteData : q));
 
@@ -142,20 +138,20 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       // We need to map the frontend Quote structure back to what the backend expects for update
       // Or simply send the fields we want to update.
       // The backend updateQuote expects the body to be the fields to update.
-      
+
       const updatePayload: QuoteUpdatePayload = {
         text: updatedQuoteData.text,
         analysisContext: updatedQuoteData.analysisContext,
         sourceUrl: updatedQuoteData.source,
         date: updatedQuoteData.date,
         metadata: {
-            // Support both legacy analysis and new audit
-            ...(updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {}),
-            ...(updatedQuoteData.audit ? { audit: updatedQuoteData.audit } : {}),
-            languageCode: updatedQuoteData.languageCode,
-            languageName: updatedQuoteData.languageName,
-            title: updatedQuoteData.title,
-            links: updatedQuoteData.links
+          // Support both legacy analysis and new audit
+          ...(updatedQuoteData.analysis ? { analysis: updatedQuoteData.analysis } : {}),
+          ...(updatedQuoteData.audit ? { audit: updatedQuoteData.audit } : {}),
+          languageCode: updatedQuoteData.languageCode,
+          languageName: updatedQuoteData.languageName,
+          title: updatedQuoteData.title,
+          links: updatedQuoteData.links
         }
       };
 
@@ -167,7 +163,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       };
 
       await updateQuote(quote.id, auditPayload);
-      
+
     } catch (err) {
       console.error('Failed to persist accepted quote:', err);
       setError('Failed to save changes to the server.');
@@ -191,14 +187,14 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       const newLanguageName = selectedLanguage?.name || quote.languageName;
 
       // Optimistic update
-      setQuotes(prev => prev.map(q => 
-        q.id === quoteId 
-          ? { 
-              ...q, 
-              languageCode: newLanguageCode, 
-              languageName: newLanguageName,
-              metadata: { ...q.metadata, languageCode: newLanguageCode, languageName: newLanguageName } 
-            }
+      setQuotes(prev => prev.map(q =>
+        q.id === quoteId
+          ? {
+            ...q,
+            languageCode: newLanguageCode,
+            languageName: newLanguageName,
+            metadata: { ...q.metadata, languageCode: newLanguageCode, languageName: newLanguageName }
+          }
           : q
       ));
 
@@ -224,14 +220,14 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       // Revert optimistic update
       const quote = quotes.find(q => q.id === quoteId);
       if (quote) {
-        setQuotes(prev => prev.map(q => 
-          q.id === quoteId 
-            ? { 
-                ...q, 
-                languageCode: quote.languageCode, 
-                languageName: quote.languageName,
-                metadata: { ...q.metadata, languageCode: quote.languageCode, languageName: quote.languageName } 
-              }
+        setQuotes(prev => prev.map(q =>
+          q.id === quoteId
+            ? {
+              ...q,
+              languageCode: quote.languageCode,
+              languageName: quote.languageName,
+              metadata: { ...q.metadata, languageCode: quote.languageCode, languageName: quote.languageName }
+            }
             : q
         ));
       }
@@ -265,15 +261,15 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           credentials: 'include'
         };
         console.log('[FETCH_QUOTES]', JSON.stringify(debugInfo, null, 2));
-        
+
         const response = await getStoredQuotes(queryParams);
-        
+
         console.log('[FETCH_QUOTES_SUCCESS]', {
           timestamp: new Date().toISOString(),
           quotesCount: response.data?.length || 0,
           status: response.status
         });
-        
+
         // Map backend quotes to frontend Quote interface
         const mappedQuotes: Quote[] = response.data.map((q: any) => ({
           id: q._id,
@@ -339,7 +335,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       <h2 className="text-2xl font-bold text-cyan-400 mb-4">
         {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
       </h2>
-      
+
       {/* Filter Bar */}
       <StoredQuoteFilterBar
         filters={filters}
@@ -353,7 +349,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
 
       {isLoading && <div className="flex justify-center p-8"><Spinner /></div>}
       {error && <div className="text-red-500 p-4">{error}</div>}
-      
+
       {!isLoading && !error && quotes.length === 0 ? (
         <p className="text-gray-500">{hasActiveFilters ? t('noQuotesMatchingFilters') : t('noQuotesFound')}.</p>
       ) : !isLoading && !error && (
@@ -364,7 +360,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               quote={{ ...quote, isStored: true }}
               onAnalyze={handleAnalyze}
               onImprove={handleImprove}
-              onSave={() => {}} // Stored quotes are already saved
+              onSave={() => { }} // Stored quotes are already saved
               onLanguageChange={handleLanguageChange}
               onAccept={handleAccept}
               onDiscard={handleDiscard}
@@ -372,7 +368,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onEditSource={onEditSource}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
-              selectedAI={selectedAI} 
+              selectedAI={selectedAI}
             />
           ))}
         </div>

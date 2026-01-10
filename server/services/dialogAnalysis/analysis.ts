@@ -1,7 +1,7 @@
 import { TopicGroup, TopicAnalysis } from '../../types';
 import { buildAnalyzeSingleTopicPrompt } from '../../llm_services/prompts';
-import geminiService from '../../llm_services/geminiService';
 import { extractJsonFromResponse } from './utils';
+import { generateContent } from './llmHelper';
 
 /**
  * Phase 3: Analyze each topic group using a better model
@@ -48,8 +48,7 @@ async function analyzeSingleTopic(
 ): Promise<TopicAnalysis> {
   const prompt = buildAnalyzeSingleTopicPrompt(group, language);
 
-  const responseText = await geminiService.generateContent(apiKeys['gemini'], {
-    model,
+  const responseText = await generateContent(model, apiKeys, {
     prompt,
     sessionId,
     logId,

@@ -10,7 +10,7 @@ export const DevRoleSelector: React.FC = () => {
   const [available, setAvailable] = React.useState<Role[]>(Array.from(ROLES));
   const [selected, setSelected] = React.useState<Role | null>((user?.role as Role) || null);
   const [loading, setLoading] = React.useState(false);
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = typeof process !== 'undefined' && (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development');
 
   React.useEffect(() => {
     if (!isDev) return;
@@ -22,7 +22,7 @@ export const DevRoleSelector: React.FC = () => {
         const rolesFromServer = (res.data.roles as string[]).filter((r): r is Role => (ROLES as readonly string[]).includes(r));
         if (rolesFromServer.length > 0) setAvailable(rolesFromServer);
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, [user, isDev]);
 
   const apply = async (role: Role) => {

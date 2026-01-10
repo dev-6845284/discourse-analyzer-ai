@@ -61,7 +61,7 @@ router.put('/sessions/:id/step', async (req, res) => {
   try {
     const { step, data, status } = req.body;
     const sessionId = req.params.id;
-    
+
     const session = await analysisSessionService.getSession(sessionId);
     if (!session) {
       return res.status(404).json({ message: 'Session not found' });
@@ -83,7 +83,7 @@ router.delete('/sessions/:id', async (req, res) => {
   try {
     const sessionId = req.params.id;
     const session = await analysisSessionService.getSession(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({ message: 'Session not found' });
     }
@@ -104,7 +104,7 @@ router.post('/sessions/:id/merge-speakers', async (req, res) => {
   try {
     const sessionId = req.params.id;
     const { speakerIdsToMerge, targetSpeakerId } = req.body;
-    
+
     const session = await analysisSessionService.getSession(sessionId);
     if (!session) {
       return res.status(404).json({ message: 'Session not found' });
@@ -133,7 +133,7 @@ router.post('/promote', async (req, res) => {
   try {
     const { sessionId, quoteGroups, languageCode } = req.body;
     const userId = req.session.user!._id as string;
-    
+
     const result = await contentAnalysisService.promoteSession(sessionId, quoteGroups, userId, languageCode);
     res.json(result);
   } catch (error) {
@@ -148,7 +148,7 @@ router.post('/content/:id/update-quotes', async (req, res) => {
     const { quoteGroups } = req.body;
     const contentAnalysisId = req.params.id;
     const userId = req.session.user!._id as string;
-    
+
     const result = await contentAnalysisService.updateQuotes(contentAnalysisId, quoteGroups, userId);
     res.json(result);
   } catch (error) {
@@ -179,7 +179,7 @@ router.post('/update-quote-source', async (req, res) => {
   try {
     const { quoteId, contentAnalysisId, statementIds } = req.body;
     const userId = req.session.user!._id as string;
-    
+
     const result = await contentAnalysisService.updateQuoteSource(quoteId, contentAnalysisId, statementIds, userId);
     res.json(result);
   } catch (error) {
@@ -244,7 +244,6 @@ router.post('/sessions/:id/analyze-topics', async (req, res) => {
     await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
     res.status(500).json({
       message: error.message || 'Failed to analyze transcript topics',
-      details: error.stack
     });
   }
 });
@@ -307,7 +306,7 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
     }
 
     // Filter blocks to only include selected ones
-    const selectedBlocks = analysisData.transcriptBlocks.filter(block => 
+    const selectedBlocks = analysisData.transcriptBlocks.filter(block =>
       analysisData.selectedBlockIds.includes(block.blockId)
     );
 
@@ -349,7 +348,6 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
     await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
     res.status(500).json({
       message: error.message || 'Failed to analyze transcript speakers',
-      details: error.stack
     });
   }
 });
@@ -422,7 +420,6 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
     await analysisSessionService.updateSessionStatus(sessionId, 'failed', error.message);
     res.status(500).json({
       message: error.message || 'Failed to analyze dialog topics',
-      details: error.stack
     });
   }
 });

@@ -3,7 +3,6 @@ import { Quote, ArticleRecommendation, Person } from '../types';
 import { TimePeriodResult } from '../utils/timePeriod';
 import { AnalysisCategory, AnalysisRating } from '../types';
 import api, { agenticSearch, formatApiError } from '../utils/api';
-import { loadFromStorage } from '../utils/localStorage';
 
 export function useQuoteSearch(handleLogout: () => void) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -64,7 +63,6 @@ export function useQuoteSearch(handleLogout: () => void) {
       abortControllerRef.current = new AbortController();
 
       try {
-        const apiKeys = loadFromStorage<Record<string, string>>('apiKeys');
         const personPayload = person || (personName ? { name: personName } : undefined);
 
         if (isAgentic) {
@@ -73,7 +71,7 @@ export function useQuoteSearch(handleLogout: () => void) {
             timePeriod,
             selectedLanguages,
             { mode: agenticMode },
-            apiKeys,
+            selectedAI,
             abortControllerRef.current.signal
           );
 
@@ -102,7 +100,6 @@ export function useQuoteSearch(handleLogout: () => void) {
             category: filterCategory,
             rating: filterRating,
             sortBy: sortOrder,
-            apiKeys,
           }, { signal: abortControllerRef.current.signal });
 
           const newQuotes = (response.data as Quote[]).map((q) => ({

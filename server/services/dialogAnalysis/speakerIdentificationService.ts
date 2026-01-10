@@ -350,15 +350,18 @@ function getLlmConfig(
   model: string,
   apiKeys: Record<string, string>
 ): { provider: string; modelName: string; apiKey: string } {
-  if (model === 'chatgpt' && apiKeys.chatgpt) {
+  // Prefer canonical 'openai' provider; accept legacy 'chatgpt' and gpt-* model names
+  const normalizedModel = (model === 'chatgpt' || model.startsWith('gpt')) ? 'openai' : model;
+
+  if (normalizedModel === 'openai' && apiKeys.openai) {
     return {
-      provider: MODEL_CONFIG.chatgpt.provider,
+      provider: 'openai',
       modelName: MODEL_CONFIG.chatgpt.model,
-      apiKey: apiKeys.chatgpt,
+      apiKey: apiKeys.openai,
     };
   }
 
-  if (model === 'grok' && apiKeys.grok) {
+  if ((model === 'grok' || model.startsWith('grok')) && apiKeys.grok) {
     return {
       provider: MODEL_CONFIG.grok.provider,
       modelName: MODEL_CONFIG.grok.model,
@@ -390,7 +393,8 @@ async function callLlmService(
   const options = { model: modelName, prompt, temperature: LLM_TEMPERATURE };
 
   switch (provider) {
-    case 'chatgpt':
+    case 'openai':
+    case 'chatgpt': // legacy
       return chatGptService.generateContent(apiKey, options);
     case 'grok':
       return grokService.generateContent(apiKey, options);
