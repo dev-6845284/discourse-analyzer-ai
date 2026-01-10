@@ -152,15 +152,34 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
             })()
           ) : (
             <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
-              <a
-                href={displayQuote.source}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
-                title={displayQuote.title}
-              >
-                {displayQuote.title}
-              </a>
+              <div className="flex flex-col min-w-0 flex-1 mr-4">
+                {(() => {
+                  const person = displayQuote.person;
+                  // Try to get the alias from the person object first, fallback to name, then personName field
+                  let authorName: string | undefined;
+
+                  if (typeof person === 'object' && person) {
+                    authorName = person.aliases && person.aliases.length > 0 ? person.aliases[0] : person.name;
+                  } else {
+                    authorName = displayQuote.personName;
+                  }
+
+                  return authorName ? (
+                    <span className="text-gray-300 font-bold truncate mb-0.5" title={authorName}>
+                      {authorName}
+                    </span>
+                  ) : null;
+                })()}
+                <a
+                  href={displayQuote.source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-400 truncate hover:underline text-[11px]"
+                  title={displayQuote.title}
+                >
+                  {displayQuote.title}
+                </a>
+              </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <select
                   value={displayQuote.languageCode}

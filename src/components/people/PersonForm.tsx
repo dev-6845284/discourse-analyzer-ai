@@ -21,9 +21,15 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Auto-fill aliases from name if empty
+      let finalAliases = formData.aliases.split(',').map(a => a.trim()).filter(a => a);
+      if (finalAliases.length === 0 && formData.name) {
+        finalAliases = [formData.name];
+      }
+
       await onSubmit({
         ...formData,
-        aliases: formData.aliases.split(',').map(a => a.trim()).filter(a => a),
+        aliases: finalAliases,
       });
       if (!initialData) {
         setFormData({ name: '', firstname: '', surname: '', aliases: '', description: '' });
@@ -66,7 +72,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300">Aliases (comma separated)</label>
+        <label className="block text-sm font-medium text-gray-300">Aliases (comma separated) <span className="text-gray-500 text-xs">(Auto-filled from name if empty)</span></label>
         <input
           type="text"
           value={formData.aliases}

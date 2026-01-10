@@ -95,7 +95,8 @@ export function formatSpeakerSection(person?: PersonInfo, fallbackName?: string)
         return '';
     }
 
-    const speakerLines: string[] = [`Name: ${name}`];
+    const nameLine = person?.description ? `Name: ${name} (${person.description})` : `Name: ${name}`;
+    const speakerLines: string[] = [nameLine];
 
     if (person?.firstname || person?.surname) {
         const structuredName = [person.firstname, person.surname].filter(Boolean).join(' ');
@@ -106,10 +107,6 @@ export function formatSpeakerSection(person?: PersonInfo, fallbackName?: string)
 
     if (person?.aliases && person.aliases.length > 0) {
         speakerLines.push(`Also known as: ${person.aliases.join(', ')}`);
-    }
-
-    if (person?.description) {
-        speakerLines.push(`Profile: ${person.description}`);
     }
 
     const metadataKeys = person?.metadata ? Object.keys(person.metadata).slice(0, 5) : [];
