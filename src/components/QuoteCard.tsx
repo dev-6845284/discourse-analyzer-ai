@@ -13,7 +13,7 @@ import { isYouTubeUrl } from '../utils/urlHelpers';
 
 interface QuoteCardProps {
   quote: Quote;
-  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => void;
+  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit' | 'flaws') => void;
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (quoteId: string, newLanguageCode: string) => void;
@@ -27,26 +27,26 @@ interface QuoteCardProps {
   selectedAI: string;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ 
-  quote, 
-  onAnalyze, 
-  onImprove, 
-  onSave, 
-  onLanguageChange, 
+const QuoteCard: React.FC<QuoteCardProps> = ({
+  quote,
+  onAnalyze,
+  onImprove,
+  onSave,
+  onLanguageChange,
   onAccept,
   onDiscard,
   onDelete,
   onRemove,
   onEditSource,
-  isApiKeySet, 
-  hideSaveButton, 
-  selectedAI 
+  isApiKeySet,
+  hideSaveButton,
+  selectedAI
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [analysisContext, setAnalysisContext] = useState(quote.analysisContext || '');
-  
+
   const [links, setLinks] = useState<LinkData[]>(
     initializeLinksWithSelection(quote.links || quote.metadata?.links || [])
   );
@@ -59,7 +59,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   React.useEffect(() => {
     setAnalysisContext(quote.analysisContext || '');
     setLinks(initializeLinksWithSelection(quote.links || quote.metadata?.links || []));
-    
+
     // Only use audit format for selection
     if (quote.draft?.audit) {
       const initialSelection = (Object.entries(quote.draft.audit.categories) as [AuditCategory, any][])
@@ -85,9 +85,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     }
     const newDraft = quote.draft
       ? {
-          ...quote.draft,
-          ...(filteredAudit ? { audit: filteredAudit } : {}),
-        }
+        ...quote.draft,
+        ...(filteredAudit ? { audit: filteredAudit } : {}),
+      }
       : undefined;
     onSave({ ...quote, analysisContext, links, ...(newDraft ? { draft: newDraft } : {}) });
     setIsSaved(true);
@@ -107,7 +107,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   };
 
   const handleToggleLinkSelection = (index: number) => {
-    setLinks(links.map((link, i) => 
+    setLinks(links.map((link, i) =>
       i === index ? { ...link, selected: link.selected === false ? true : false } : link
     ));
   };
@@ -120,15 +120,15 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setLinks(links.map(link => ({ ...link, selected: false })));
   };
 
-  const handleAnalyze = (analysisType?: 'audit'|'flaws') => {
+  const handleAnalyze = (model: string, analysisType: 'audit' | 'flaws' = 'audit') => {
     // Only include selected links for analysis
     const selectedLinks = links.filter(link => link.selected !== false);
-    onAnalyze({ ...quote, analysisContext, links: selectedLinks }, selectedAI, analysisType);
+    onAnalyze({ ...quote, analysisContext, links: selectedLinks }, model, analysisType || 'audit');
   };
 
   const handleToggleCategory = (category: AnalysisCategory | AuditCategory) => {
-    setSelectedCategories(prev => 
-      prev.includes(category as any) 
+    setSelectedCategories(prev =>
+      prev.includes(category as any)
         ? prev.filter(c => c !== category as any)
         : [...prev, category as any]
     );
@@ -147,9 +147,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     }
     const newDraft = quote.draft
       ? {
-          ...quote.draft,
-          ...(filteredAudit ? { audit: filteredAudit } : {}),
-        }
+        ...quote.draft,
+        ...(filteredAudit ? { audit: filteredAudit } : {}),
+      }
       : undefined;
     onAccept({ ...quote, ...(newDraft ? { draft: newDraft } : {}) });
   };
@@ -175,12 +175,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         onLanguageChange={onLanguageChange}
         isBusy={isBusy}
       />
-      
+
       {!isCollapsed && (
         <>
           {displayQuote.audit && (
-            <AnalysisReport 
-              audit={displayQuote.audit} 
+            <AnalysisReport
+              audit={displayQuote.audit}
               selectable={hasDraft}
               selectedCategories={selectedCategories as AuditCategory[]}
               onToggleCategory={handleToggleCategory as (category: AuditCategory) => void}
@@ -230,6 +230,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             isBusy={isBusy}
             isSaved={isSaved}
             hideSaveButton={hideSaveButton}
+            selectedAI={selectedAI}
             onAnalyze={handleAnalyze}
             onImprove={() => onImprove(quote)}
             onSave={handleSave}

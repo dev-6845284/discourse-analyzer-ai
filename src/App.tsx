@@ -75,6 +75,7 @@ const App: React.FC = () => {
     extractionError,
     setAutoFetchError,
     extractedSourceUrl,
+    shouldAnalyzeImmediately,
     isUsageStatsDashboardOpen,
     setIsUsageStatsDashboardOpen,
     isAdminBannerCollapsed,
@@ -194,8 +195,8 @@ const App: React.FC = () => {
                           <button
                             onClick={() => searchParams.handleAISelectionChange('gemini')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${searchParams.selectedAI === 'gemini'
-                                ? 'bg-cyan-700 text-white'
-                                : 'text-gray-300 hover:bg-gray-600'
+                              ? 'bg-cyan-700 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
                               }`}
                           >
                             Gemini
@@ -203,8 +204,8 @@ const App: React.FC = () => {
                           <button
                             onClick={() => searchParams.handleAISelectionChange('grok')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${searchParams.selectedAI === 'grok'
-                                ? 'bg-cyan-700 text-white'
-                                : 'text-gray-300 hover:bg-gray-600'
+                              ? 'bg-cyan-700 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
                               }`}
                           >
                             Grok
@@ -212,8 +213,8 @@ const App: React.FC = () => {
                           <button
                             onClick={() => searchParams.handleAISelectionChange('openai')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${searchParams.selectedAI === 'openai'
-                                ? 'bg-cyan-700 text-white'
-                                : 'text-gray-300 hover:bg-gray-600'
+                              ? 'bg-cyan-700 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
                               }`}
                           >
                             OpenAI
@@ -516,6 +517,8 @@ const App: React.FC = () => {
               mode={modalMode}
               initialSource={extractedSourceUrl}
               initialAnalysisType={modalAnalysisType}
+              initialSelectedAI={searchParams.selectedAI}
+              initialAnalyzeImmediately={shouldAnalyzeImmediately}
               onImportTranscript={(t) => {
                 handleImportTranscript(t);
                 setIsTranscriptMethodSelectorOpen(false);

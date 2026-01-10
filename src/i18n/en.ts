@@ -620,7 +620,7 @@ const en = {
   actions: 'Actions',
   deleteUser: 'Delete User',
   loadEmbeddedContent: 'Load Embedded Content',
-
+  authorLabel: 'Author',
 };
 
 export default en;

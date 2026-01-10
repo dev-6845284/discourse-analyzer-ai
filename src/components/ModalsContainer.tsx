@@ -12,10 +12,12 @@ interface ModalsProps {
   // Add quote modal
   isAddModalOpen: boolean;
   closeAddModal: () => void;
-  onSave: (details: any, analysisType?: 'audit'|'flaws') => void;
+  onSave: (details: any, model: string, analysisType: 'audit' | 'flaws', analyzeImmediately: boolean) => void;
   mode: 'add' | 'extract';
   initialSource: string;
-  initialAnalysisType?: 'audit'|'flaws';
+  initialAnalysisType?: 'audit' | 'flaws';
+  initialSelectedAI?: string;
+  initialAnalyzeImmediately?: boolean;
 
   // Api key
   isApiKeyModalOpen: boolean;
@@ -52,6 +54,8 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
   mode,
   initialSource,
   initialAnalysisType,
+  initialSelectedAI,
+  initialAnalyzeImmediately,
   isApiKeyModalOpen,
   onCloseApiKeyModal,
   isTranscriptMethodSelectorOpen,
@@ -104,6 +108,8 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
           mode={mode}
           initialSource={initialSource}
           initialAnalysisType={initialAnalysisType}
+          initialSelectedAI={initialSelectedAI}
+          initialAnalyzeImmediately={initialAnalyzeImmediately}
         />
       )}
 

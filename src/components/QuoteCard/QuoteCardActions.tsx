@@ -10,7 +10,8 @@ interface QuoteCardActionsProps {
   isBusy: boolean;
   isSaved: boolean;
   hideSaveButton?: boolean;
-  onAnalyze: (analysisType?: 'audit'|'flaws') => void;
+  selectedAI: string;
+  onAnalyze: (model: string, analysisType: 'audit' | 'flaws') => void;
   onImprove: () => void;
   onSave: () => void;
   onAccept: () => void;
@@ -27,6 +28,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   isBusy,
   isSaved,
   hideSaveButton,
+  selectedAI,
   onAnalyze,
   onImprove,
   onSave,
@@ -37,7 +39,12 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   onEditSource,
 }) => {
   const { t } = useI18n();
-  const [analysisType, setAnalysisType] = React.useState<'audit'|'flaws'>('audit');
+  const [analysisType, setAnalysisType] = React.useState<'audit' | 'flaws'>('audit');
+  const [localSelectedAI, setLocalSelectedAI] = React.useState<string>(selectedAI);
+
+  React.useEffect(() => {
+    setLocalSelectedAI(selectedAI);
+  }, [selectedAI]);
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
@@ -64,7 +71,24 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
         </>
       ) : (
         <>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 border-r border-gray-700 pr-4 mr-2">
+              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Model</span>
+              {['gemini', 'grok', 'openai'].map((model) => (
+                <label key={model} className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`analysis-model-${quote.id}`}
+                    value={model}
+                    checked={localSelectedAI === model}
+                    onChange={(e) => setLocalSelectedAI(e.target.value)}
+                    className="mr-1 text-cyan-600 focus:ring-cyan-500 bg-gray-700 border-gray-600"
+                  />
+                  <span className="text-xs text-gray-300 capitalize">{model === 'openai' ? 'OpenAI' : model}</span>
+                </label>
+              ))}
+            </div>
+
             <div className="flex items-center gap-3">
               <label className="flex items-center">
                 <input
@@ -72,7 +96,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
                   name={`analysis-type-${quote.id}`}
                   value="audit"
                   checked={analysisType === 'audit'}
-                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
                   className="mr-1 text-cyan-600 focus:ring-cyan-500"
                 />
                 <span className="text-xs text-gray-300">Audit</span>
@@ -83,7 +107,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
                   name={`analysis-type-${quote.id}`}
                   value="flaws"
                   checked={analysisType === 'flaws'}
-                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
+                  onChange={(e) => setAnalysisType(e.target.value as 'audit' | 'flaws')}
                   className="mr-1 text-cyan-600 focus:ring-cyan-500"
                 />
                 <span className="text-xs text-gray-300">Flaws</span>
@@ -91,7 +115,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             </div>
 
             <button
-              onClick={() => onAnalyze(analysisType)}
+              onClick={() => onAnalyze(localSelectedAI, analysisType)}
               disabled={!isApiKeySet || isBusy}
               className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title={!isApiKeySet ? t('analyzePleaseSetApiKey') : (quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) ? t('analyzeAgain') : t('analyzeQuote')}
@@ -138,9 +162,8 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             <button
               onClick={onSave}
               disabled={!isApiKeySet || isBusy || quote.isStored}
-              className={`p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
+              className={`p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
               title={isSaved || quote.isStored ? t('saved') : t('saveToDatabase')}
             >
               {isSaved || quote.isStored ? (

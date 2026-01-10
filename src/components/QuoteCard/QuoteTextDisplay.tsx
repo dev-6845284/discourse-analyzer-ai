@@ -28,6 +28,15 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
   const [showIframe, setShowIframe] = React.useState<boolean>(false);
   const prevHeightRef = React.useRef<number | null>(null);
 
+  const person = displayQuote.person;
+  let authorName: string | undefined;
+
+  if (typeof person === 'object' && person) {
+    authorName = (person as any).aliases && (person as any).aliases.length > 0 ? (person as any).aliases[0] : (person as any).name;
+  } else {
+    authorName = displayQuote.personName;
+  }
+
   const increaseHeight = () => setIframeHeight((h) => Math.min(800, h + 120));
   const decreaseHeight = () => setIframeHeight((h) => Math.max(120, h - 120));
   const toggleExpanded = () => {
@@ -61,6 +70,15 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
           {((quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) && !(quote.draft?.audit || quote.draft?.metadata?.legacyAnalysis || quote.draft?.analysis)) && (
             <div className="mt-2 text-xs text-gray-500">{t('originalAnalysisAvailable')}</div>
           )}
+        </div>
+      )}
+
+      {authorName && (
+        <div className="mb-3">
+          <div className="text-cyan-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">{t('authorLabel')}</div>
+          <div className="text-gray-100 font-bold text-lg leading-tight" title={authorName}>
+            {authorName}
+          </div>
         </div>
       )}
 
@@ -153,23 +171,6 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
           ) : (
             <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
               <div className="flex flex-col min-w-0 flex-1 mr-4">
-                {(() => {
-                  const person = displayQuote.person;
-                  // Try to get the alias from the person object first, fallback to name, then personName field
-                  let authorName: string | undefined;
-
-                  if (typeof person === 'object' && person) {
-                    authorName = person.aliases && person.aliases.length > 0 ? person.aliases[0] : person.name;
-                  } else {
-                    authorName = displayQuote.personName;
-                  }
-
-                  return authorName ? (
-                    <span className="text-gray-300 font-bold truncate mb-0.5" title={authorName}>
-                      {authorName}
-                    </span>
-                  ) : null;
-                })()}
                 <a
                   href={displayQuote.source}
                   target="_blank"

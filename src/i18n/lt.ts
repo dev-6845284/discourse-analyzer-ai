@@ -621,7 +621,7 @@ const lt = {
   actions: 'Veiksmai',
   deleteUser: 'Ištrinti vartotoją',
   loadEmbeddedContent: 'Užkrauti įterptą turinį',
-
+  authorLabel: 'Autorius',
 };
 
 export default lt;

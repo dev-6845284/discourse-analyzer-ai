@@ -131,14 +131,14 @@ export function useAppController() {
     quotesState.handleImproveQuote(quote, searchParams.selectedAI, searchParams.personName);
   }, [quotesState, searchParams.selectedAI, searchParams.personName]);
 
-  const performExtraction = React.useCallback(async (details: any, analysisType?: 'audit'|'flaws') => {
+  const performExtraction = React.useCallback(async (details: any, model: string, analysisType?: 'audit' | 'flaws', analyzeImmediately: boolean = true) => {
     // Snapshot existing quote ids so we can detect newly added quotes after extraction
     const existingIds = new Set(quotesState.quotes.map((q: any) => q.id));
     searchParams.setIsExtracting(true);
 
     try {
       await quotesState.handleExtractQuotes(
-        searchParams.selectedAI,
+        model, // Use the passed model
         searchParams.personName,
         searchParams.textToExtract,
         details,
@@ -150,11 +150,11 @@ export function useAppController() {
       );
 
       // If an analysis type was specified, analyze each newly extracted quote
-      if (analysisType) {
+      if (analysisType && analyzeImmediately) {
         const newQuotes = (quotesState.quotes || []).filter((q: any) => !existingIds.has(q.id));
         for (const q of newQuotes) {
           try {
-            await quotesState.handleAnalyzeQuote(q, searchParams.selectedAI, analysisType);
+            await quotesState.handleAnalyzeQuote(q, model, analysisType);
           } catch (e) {
             // Don't fail the whole extraction flow if a single analysis fails
             console.error('Failed to analyze extracted quote:', e);
@@ -207,33 +207,38 @@ export function useAppController() {
     }
   }, [quotesState, searchParams, extractionLanguage, selectedPerson]);
 
-  const handleModalSave = React.useCallback((details: any, analysisType?: 'audit'|'flaws') => {
+  const handleModalSave = React.useCallback((details: any, model: string, analysisType: 'audit' | 'flaws', analyzeImmediately: boolean) => {
     if (modalMode === 'extract') {
-      performExtraction(details, analysisType);
+      // Need to update performExtraction to accept model if it doesn't already, or just use the passed model
+      // Looking at performExtraction, it uses searchParams.selectedAI. We should probably use the one from modal if available.
+      // But verify performExtraction signature first. It uses searchParams.selectedAI inside.
+      // Let's modify performExtraction too to be safe, or just update the signature here and trust it uses global or we override it.
+      // Actually, performExtraction uses searchParams.selectedAI. I should update it to accept model override.
+      performExtraction(details, model, analysisType, analyzeImmediately);
     } else {
       quotesState.handleAddQuoteManually(searchParams.personName, searchParams.textToExtract, details, (quote, chosenType) => {
         const effectiveType = chosenType || analysisType;
-        if (shouldAnalyzeImmediately) {
-          quotesState.handleAnalyzeQuote(quote, searchParams.selectedAI, effectiveType);
+        if (analyzeImmediately) {
+          quotesState.handleAnalyzeQuote(quote, model, effectiveType);
         }
       }, selectedPerson || undefined);
       searchParams.clearTextToExtract();
       setExtractedSourceUrl('');
     }
     uiState.closeAddModal();
-  }, [modalMode, performExtraction, quotesState, searchParams, shouldAnalyzeImmediately, uiState, selectedPerson]);
+  }, [modalMode, performExtraction, quotesState, searchParams, uiState, selectedPerson]);
 
-  const [modalAnalysisType, setModalAnalysisType] = React.useState<'audit'|'flaws'>('audit');
+  const [modalAnalysisType, setModalAnalysisType] = React.useState<'audit' | 'flaws'>('audit');
 
-  const openExtractModal = React.useCallback((analysisType: 'audit'|'flaws' = 'audit') => {
+  const openExtractModal = React.useCallback((analysisType: 'audit' | 'flaws' = 'audit') => {
     setModalMode('extract');
     setModalAnalysisType(analysisType);
     uiState.openAddModal();
   }, [uiState]);
 
-  const openAddQuoteModal = React.useCallback((analyzeImmediately: boolean) => {
+  const openAddQuoteModal = React.useCallback((analysisType: 'audit' | 'flaws' = 'audit') => {
     setModalMode('add');
-    setShouldAnalyzeImmediately(analyzeImmediately);
+    setModalAnalysisType(analysisType);
     uiState.openAddModal();
   }, [uiState]);
 
@@ -275,7 +280,7 @@ export function useAppController() {
   }, [uiState]);
 
   const handleImportAnalysis = React.useCallback((analysis: FullAnalysisData) => {
-    
+
 
     uiState.openTranscriptViewer({
       videoId: analysis.videoId,
