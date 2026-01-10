@@ -61,7 +61,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 transition-colors"
+            className="w-full bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 transition-colors"
           >
             {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>
@@ -70,7 +70,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
 
       <div className="flex items-center w-full max-w-md mb-8">
         <div className="flex-grow border-t border-gray-600"></div>
-        <span className="flex-shrink-0 mx-4 text-gray-500">OR</span>
+        <span className="flex-shrink-0 mx-4 text-gray-400">OR</span>
         <div className="flex-grow border-t border-gray-600"></div>
       </div>
 

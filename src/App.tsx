@@ -108,9 +108,9 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
         <div className="w-full px-4 md:container md:mx-auto md:px-6 lg:px-8">
-          <LoginScreen 
-            googleButtonRef={googleButtonRef} 
-            loginError={loginError} 
+          <LoginScreen
+            googleButtonRef={googleButtonRef}
+            loginError={loginError}
             onLogin={loginWithPassword}
           />
         </div>
@@ -121,20 +121,19 @@ const App: React.FC = () => {
   return (
     <div>
       {/* Provided translations via root I18nProvider */}
-        <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
-      {/* Admin Security Alert Banner - shown in dev mode or for admins */}
-      <AdminAlertBanner 
-        isAdmin={import.meta.env.DEV || user?.role === 'admin'} 
-        onViewDashboard={() => setIsUsageStatsDashboardOpen(true)}
-        isCollapsed={isAdminBannerCollapsed}
-        onCollapsedChange={setIsAdminBannerCollapsed}
-      />
-      
+      <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
+        {/* Admin Security Alert Banner - shown in dev mode or for admins */}
+        <AdminAlertBanner
+          isAdmin={import.meta.env.DEV || user?.role === 'admin'}
+          onViewDashboard={() => setIsUsageStatsDashboardOpen(true)}
+          isCollapsed={isAdminBannerCollapsed}
+          onCollapsedChange={setIsAdminBannerCollapsed}
+        />
 
-      
-      <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${
-        (import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
-      }`}>
+
+
+        <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${(import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
+          }`}>
           <Header
             user={user}
             isFormCollapsed={isFormCollapsed}
@@ -149,85 +148,82 @@ const App: React.FC = () => {
             openSidebarMobile={() => setIsSidebarOpenMobile(true)}
           />
 
-        <div
-          className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
-        >
-          <main className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1 min-w-0 overflow-auto">
+          <div
+            className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
+          >
+            <main className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1 min-w-0 overflow-auto">
 
-            <div className={`${isFormCollapsed ? 'max-h-16 overflow-hidden md:max-h-none' : ''} md:col-span-1`}> 
-              <Sidebar
-                isCollapsed={isFormCollapsed}
-                onToggleCollapse={toggleFormCollapsed}
-                onExport={handleExport}
-                onImport={handleImport}
-                userRole={user.role}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                setAdminView={setAdminView}
-                openAdminCategories={() => setIsAdminCategoriesOpen(true)}
-                logsVisible={logsVisible}
-                setLogsVisible={setLogsVisible}
-                openSection={openSidebarSection}
-                setOpenSection={setOpenSidebarSection}
-                searchContent={
-                  <div className="space-y-4">
-                    {/* Always visible person selector */}
-                    <div className="p-4 bg-gray-800/50 rounded-lg">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('personsName')}</label>
-                      <div>
-                        <PersonSelector 
-                          value={searchParams.personName} 
-                          onChange={(name) => {
-                            searchParams.setPersonName(name);
-                            setSelectedPerson(null);
-                          }}
-                          onSelectPerson={(person) => {
-                            setSelectedPerson(person);
-                            searchParams.setPersonName(person.name);
-                          }}
-                        />
+              <div className={`${isFormCollapsed ? 'max-h-16 overflow-hidden md:max-h-none' : ''} md:col-span-1`}>
+                <Sidebar
+                  isCollapsed={isFormCollapsed}
+                  onToggleCollapse={toggleFormCollapsed}
+                  onExport={handleExport}
+                  onImport={handleImport}
+                  userRole={user.role}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  setAdminView={setAdminView}
+                  openAdminCategories={() => setIsAdminCategoriesOpen(true)}
+                  logsVisible={logsVisible}
+                  setLogsVisible={setLogsVisible}
+                  openSection={openSidebarSection}
+                  setOpenSection={setOpenSidebarSection}
+                  searchContent={
+                    <div className="space-y-4">
+                      {/* Always visible person selector */}
+                      <div className="p-4 bg-gray-800/50 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('personsName')}</label>
+                        <div>
+                          <PersonSelector
+                            value={searchParams.personName}
+                            onChange={(name) => {
+                              searchParams.setPersonName(name);
+                              setSelectedPerson(null);
+                            }}
+                            onSelectPerson={(person) => {
+                              setSelectedPerson(person);
+                              searchParams.setPersonName(person.name);
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="p-3 bg-gray-800/50 rounded-lg">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('aiProvider')}</label>
-                      <div className="flex rounded-md bg-gray-700">
-                        <button
-                          onClick={() => searchParams.handleAISelectionChange('gemini')}
-                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${
-                            searchParams.selectedAI === 'gemini'
-                              ? 'bg-cyan-600 text-white'
-                              : 'text-gray-300 hover:bg-gray-600'
-                          }`}
-                        >
-                          Gemini
-                        </button>
-                        <button
-                          onClick={() => searchParams.handleAISelectionChange('grok')}
-                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                            searchParams.selectedAI === 'grok'
-                              ? 'bg-cyan-600 text-white'
-                              : 'text-gray-300 hover:bg-gray-600'
-                          }`}
-                        >
-                          Grok
-                        </button>
-                        <button
-                          onClick={() => searchParams.handleAISelectionChange('openai')}
-                          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${
-                            searchParams.selectedAI === 'openai'
-                              ? 'bg-cyan-600 text-white'
-                              : 'text-gray-300 hover:bg-gray-600'
-                          }`}
-                        >
-                          OpenAI
-                        </button>
+                      <div className="p-3 bg-gray-800/50 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('aiProvider')}</label>
+                        <div className="flex rounded-md bg-gray-700">
+                          <button
+                            onClick={() => searchParams.handleAISelectionChange('gemini')}
+                            className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${searchParams.selectedAI === 'gemini'
+                                ? 'bg-cyan-700 text-white'
+                                : 'text-gray-300 hover:bg-gray-600'
+                              }`}
+                          >
+                            Gemini
+                          </button>
+                          <button
+                            onClick={() => searchParams.handleAISelectionChange('grok')}
+                            className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${searchParams.selectedAI === 'grok'
+                                ? 'bg-cyan-700 text-white'
+                                : 'text-gray-300 hover:bg-gray-600'
+                              }`}
+                          >
+                            Grok
+                          </button>
+                          <button
+                            onClick={() => searchParams.handleAISelectionChange('openai')}
+                            className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${searchParams.selectedAI === 'openai'
+                                ? 'bg-cyan-700 text-white'
+                                : 'text-gray-300 hover:bg-gray-600'
+                              }`}
+                          >
+                            OpenAI
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Search for Quotes (collapsible) */}
-                    <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('searchForQuotes')}</summary>
+                      {/* Search for Quotes (collapsible) */}
+                      <details className="border rounded-lg bg-gray-800">
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('searchForQuotes')}</summary>
                         <SearchControls
                           searchParams={searchParams}
                           statusFilters={{
@@ -255,11 +251,11 @@ const App: React.FC = () => {
                           onCancel={quotesState.handleCancelSearch}
                           isLoading={isLoading}
                         />
-                    </details>
+                      </details>
 
-                    {/* Extract from Text (collapsible) */}
-                    <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('extractFromText')}</summary>
+                      {/* Extract from Text (collapsible) */}
+                      <details className="border rounded-lg bg-gray-800">
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('extractFromText')}</summary>
                         <ExtractionControls
                           textToExtract={searchParams.textToExtract}
                           setTextToExtract={searchParams.setTextToExtract}
@@ -274,222 +270,50 @@ const App: React.FC = () => {
                           setExtractionLanguage={setExtractionLanguage}
                           extractionError={extractionError}
                         />
-                    </details>
+                      </details>
 
-                    {/* YouTube Transcript (collapsible) */}
-                    <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('youtubeTranscript')}</summary>
+                      {/* YouTube Transcript (collapsible) */}
+                      <details className="border rounded-lg bg-gray-800">
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('youtubeTranscript')}</summary>
                         <YoutubeTranscriptButton
                           onClick={() => setIsTranscriptMethodSelectorOpen(true)}
                           isLoading={searchParams.isExtracting}
                         />
-                    </details>
+                      </details>
 
-                    {/* Import Transcript Data (collapsible) */}
-                    <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
+                      {/* Import Transcript Data (collapsible) */}
+                      <details className="border rounded-lg bg-gray-800">
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
                         <TranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
                         />
-                    </details>
+                      </details>
 
-                    {/* Import SRT Transcript (collapsible) */}
-                    <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importSrtTranscriptTitle')}</summary>
+                      {/* Import SRT Transcript (collapsible) */}
+                      <details className="border rounded-lg bg-gray-800">
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importSrtTranscriptTitle')}</summary>
                         <SrtTranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
                         />
-                    </details>
+                      </details>
 
-                    {/* Import Analysis Data (collapsible) */}
-                    <details className="border rounded-lg bg-gray-800">
-                      <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importAnalysisTitle')}</summary>
+                      {/* Import Analysis Data (collapsible) */}
+                      <details className="border rounded-lg bg-gray-800">
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importAnalysisTitle')}</summary>
                         <AnalysisImporter
                           onImport={handleImportAnalysis}
                           isLoading={searchParams.isExtracting}
                         />
-                    </details>
-                  </div>
-                }
-                peopleContent={
-                  <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
-                    <div className="flex-1 overflow-auto">
-                      <PersonManager
-                        onSelectPerson={(person) => {
-                          setSelectedPerson(person);
-                          setResultsTab('stored');
-                        }}
-                      />
-                    </div>
-                  </div>
-                }
-                sessionsContent={
-                  <AnalysisSessionsList 
-                    onResume={handleResumeSession} 
-                    refreshTrigger={sessionsRefreshTrigger}
-                  />
-                }
-                usersContent={
-                  <UserManager />
-                }
-              />
-            </div>
-
-            <MainContent
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              adminView={adminView}
-              setAdminView={setAdminView}
-              openAdminCategories={() => setIsAdminCategoriesOpen(true)}
-              logsVisible={logsVisible}
-              setLogsVisible={setLogsVisible}
-              resultsTab={resultsTab}
-              setResultsTab={setResultsTab}
-              transcriptData={transcriptData}
-              selectedPerson={selectedPerson}
-              setSelectedPerson={setSelectedPerson}
-
-              quotes={quotes}
-              articles={articles}
-              isLoading={isLoading}
-              error={error}
-              rawApiResponseError={rawApiResponseError}
-              filteredAndSortedQuotes={filteredAndSortedQuotes}
-              sortOrder={sortOrder}
-              setSortOrder={setSortOrder}
-
-              onClearQuotes={quotesState.handleClearQuotes}
-              selectedAI={searchParams.selectedAI}
-              statusFilters={{
-                isAnalyzed: searchParams.isAnalyzed,
-                setIsAnalyzed: searchParams.setIsAnalyzed,
-                isImproved: searchParams.isImproved,
-                setIsImproved: searchParams.setIsImproved,
-              }}
-              onAnalyze={(quote, model, analysisType) => quotesState.handleAnalyzeQuote(quote, model, analysisType)}
-              onImprove={handleImproveQuote}
-              onSave={(quote: any) => {
-                handleSaveQuote({
-                  text: quote.text,
-                  personName: searchParams.personName,
-                  source: quote.source,
-                  date: quote.date,
-                  analysisContext: quote.analysisContext,
-                  links: quote.links,
-                  ...(quote.audit ? {
-                    analyzedByProvider: searchParams.selectedAI,
-                    analyzedAt: new Date().toISOString()
-                  } : {}),
-                  metadata: {
-                    title: quote.title,
-                    languageCode: quote.languageCode,
-                    languageName: quote.languageName,
-                    // Keep legacy backup if present
-                    ...(quote.audit ? { audit: quote.audit } : (quote.analysis ? { legacyAnalysis: quote.analysis } : {}))
-                  }
-                }).then((response) => markQuoteAsStored(quote.id, response.data._id));
-              }}
-              onLanguageChange={quotesState.handleUpdateQuoteLanguage}
-              onAccept={(quote: any) => quotesState.handleAcceptQuote(quote, searchParams.selectedAI)}
-              onDiscard={quotesState.handleDiscardQuote}
-              onRemove={quotesState.handleRemoveQuote}
-              clearError={quotesState.clearError}
-              onEditSource={handleEditSource}
-              onResumeSession={handleResumeSession}
-              onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
-              onExport={handleExport}
-              onImport={handleImport}
-            />            
-          </main>
-
-          {isSidebarOpenMobile && (
-            <div className="fixed inset-0 z-50 md:hidden">
-              <div className="absolute inset-0 bg-black/60" onClick={() => setIsSidebarOpenMobile(false)} />
-              <div className="relative z-50 w-full max-w-xs h-full">
-                <Sidebar
-                  asDrawer
-                  onClose={() => setIsSidebarOpenMobile(false)}
-                  isCollapsed={isFormCollapsed}
-                  onToggleCollapse={toggleFormCollapsed}
-                  onExport={handleExport}
-                  onImport={handleImport}
-                  userRole={user.role}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  setAdminView={setAdminView}
-                  openAdminCategories={() => setIsAdminCategoriesOpen(true)}
-                  logsVisible={logsVisible}
-                  setLogsVisible={setLogsVisible}
-                  openSection={openSidebarSection}
-                  setOpenSection={setOpenSidebarSection}
-                  searchContent={
-                    <div className="space-y-6">
-                      <SearchControls
-                        searchParams={searchParams}
-                        statusFilters={{
-                          isAnalyzed: searchParams.isAnalyzed,
-                          setIsAnalyzed: searchParams.setIsAnalyzed,
-                          isImproved: searchParams.isImproved,
-                          setIsImproved: searchParams.setIsImproved,
-                        }}
-                        timePeriod={{
-                          type: timePeriod.timePeriodType,
-                          value: timePeriod.timePeriodValue,
-                          customDateFrom: timePeriod.customDateFrom,
-                          customDateTo: timePeriod.customDateTo,
-                          handleTypeChange: timePeriod.handleTimePeriodTypeChange,
-                          handleValueChange: timePeriod.handleTimePeriodValueChange,
-                          setCustomDateFrom: timePeriod.setCustomDateFrom,
-                          setCustomDateTo: timePeriod.setCustomDateTo,
-                          description: timePeriod.getTimePeriod().description,
-                        }}
-                        languages={{
-                          selected: searchParams.selectedLanguages,
-                          onChange: searchParams.handleLanguageChange,
-                        }}
-                        onSearch={handleSearch}
-                        onCancel={quotesState.handleCancelSearch}
-                        isLoading={isLoading}
-                      />
-                      <ExtractionControls
-                        textToExtract={searchParams.textToExtract}
-                        setTextToExtract={searchParams.setTextToExtract}
-                        isExtracting={searchParams.isExtracting}
-                        personName={searchParams.personName}
-                        onExtract={openExtractModal}
-                        onAdd={openAddQuoteModal}
-                        onExtractFromUrl={handleExtractFromUrl}
-                        onAutoExtract={handleAutoExtract}
-                        extractionStatus={extractionStatus}
-                        extractionLanguage={extractionLanguage}
-                        setExtractionLanguage={setExtractionLanguage}
-                        extractionError={extractionError}
-                      />
-                      <YoutubeTranscriptButton
-                        onClick={() => setIsTranscriptMethodSelectorOpen(true)}
-                        isLoading={searchParams.isExtracting}
-                      />
-                      <TranscriptImporter
-                        onImport={handleImportTranscript}
-                        isLoading={searchParams.isExtracting}
-                      />
-                      <SrtTranscriptImporter
-                        onImport={handleImportTranscript}
-                        isLoading={searchParams.isExtracting}
-                      />
-                      <AnalysisImporter
-                        onImport={handleImportAnalysis}
-                        isLoading={searchParams.isExtracting}
-                      />
+                      </details>
                     </div>
                   }
                   peopleContent={
                     <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
                       <div className="flex-1 overflow-auto">
                         <PersonManager
-                          onSelectPerson={(person: Person) => {
+                          onSelectPerson={(person) => {
                             setSelectedPerson(person);
                             setResultsTab('stored');
                           }}
@@ -498,62 +322,234 @@ const App: React.FC = () => {
                     </div>
                   }
                   sessionsContent={
-                    <AnalysisSessionsList 
-                      onResume={handleResumeSession} 
+                    <AnalysisSessionsList
+                      onResume={handleResumeSession}
                       refreshTrigger={sessionsRefreshTrigger}
                     />
                   }
                   usersContent={
-                    <div className="text-gray-400 text-sm text-center mt-4">
-                      Manage system users, roles and passwords.
-                    </div>
+                    <UserManager />
                   }
                 />
               </div>
-            </div>
-          )}
 
-          <ModalsContainer
-            isAddModalOpen={isAddModalOpen}
-            closeAddModal={closeAddModal}
-            onSave={handleModalSave}
-            mode={modalMode}
-            initialSource={extractedSourceUrl}
-            initialAnalysisType={modalAnalysisType}
-            onImportTranscript={(t) => {
-              handleImportTranscript(t);
-              setIsTranscriptMethodSelectorOpen(false);
-              setAutoFetchError(null);
-            }}
-            onAutoFetchTranscript={handleFetchYoutubeTranscript}
-            autoFetchError={autoFetchError}
-            isExtracting={searchParams.isExtracting}
-            isApiKeyModalOpen={isApiKeyModalOpen}
-            onCloseApiKeyModal={() => setIsApiKeyModalOpen(false)}
-            isTranscriptMethodSelectorOpen={isTranscriptMethodSelectorOpen}
-            onCloseTranscriptMethodSelector={() => setIsTranscriptMethodSelectorOpen(false)}
+              <MainContent
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                adminView={adminView}
+                setAdminView={setAdminView}
+                openAdminCategories={() => setIsAdminCategoriesOpen(true)}
+                logsVisible={logsVisible}
+                setLogsVisible={setLogsVisible}
+                resultsTab={resultsTab}
+                setResultsTab={setResultsTab}
+                transcriptData={transcriptData}
+                selectedPerson={selectedPerson}
+                setSelectedPerson={setSelectedPerson}
 
-            isChangePasswordModalOpen={isChangePasswordModalOpen}
-            isEditProfileModalOpen={isEditProfileModalOpen}
-            user={{ _id: user._id, name: user.name }}
-            onPasswordUpdated={() => {
-              setIsChangePasswordModalOpen(false);
-              alert(t('passwordUpdated'));
-            }}
-            closeChangePasswordModal={() => setIsChangePasswordModalOpen(false)}
-            onProfileUpdated={(newName) => {
-              setIsEditProfileModalOpen(false);
-              updateUser({ name: newName });
-            }}
+                quotes={quotes}
+                articles={articles}
+                isLoading={isLoading}
+                error={error}
+                rawApiResponseError={rawApiResponseError}
+                filteredAndSortedQuotes={filteredAndSortedQuotes}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+
+                onClearQuotes={quotesState.handleClearQuotes}
+                selectedAI={searchParams.selectedAI}
+                statusFilters={{
+                  isAnalyzed: searchParams.isAnalyzed,
+                  setIsAnalyzed: searchParams.setIsAnalyzed,
+                  isImproved: searchParams.isImproved,
+                  setIsImproved: searchParams.setIsImproved,
+                }}
+                onAnalyze={(quote, model, analysisType) => quotesState.handleAnalyzeQuote(quote, model, analysisType)}
+                onImprove={handleImproveQuote}
+                onSave={(quote: any) => {
+                  handleSaveQuote({
+                    text: quote.text,
+                    personName: searchParams.personName,
+                    source: quote.source,
+                    date: quote.date,
+                    analysisContext: quote.analysisContext,
+                    links: quote.links,
+                    ...(quote.audit ? {
+                      analyzedByProvider: searchParams.selectedAI,
+                      analyzedAt: new Date().toISOString()
+                    } : {}),
+                    metadata: {
+                      title: quote.title,
+                      languageCode: quote.languageCode,
+                      languageName: quote.languageName,
+                      // Keep legacy backup if present
+                      ...(quote.audit ? { audit: quote.audit } : (quote.analysis ? { legacyAnalysis: quote.analysis } : {}))
+                    }
+                  }).then((response) => markQuoteAsStored(quote.id, response.data._id));
+                }}
+                onLanguageChange={quotesState.handleUpdateQuoteLanguage}
+                onAccept={(quote: any) => quotesState.handleAcceptQuote(quote, searchParams.selectedAI)}
+                onDiscard={quotesState.handleDiscardQuote}
+                onRemove={quotesState.handleRemoveQuote}
+                clearError={quotesState.clearError}
+                onEditSource={handleEditSource}
+                onResumeSession={handleResumeSession}
+                onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
+                onExport={handleExport}
+                onImport={handleImport}
+              />
+            </main>
+
+            {isSidebarOpenMobile && (
+              <div className="fixed inset-0 z-50 md:hidden">
+                <div className="absolute inset-0 bg-black/60" onClick={() => setIsSidebarOpenMobile(false)} />
+                <div className="relative z-50 w-full max-w-xs h-full">
+                  <Sidebar
+                    asDrawer
+                    onClose={() => setIsSidebarOpenMobile(false)}
+                    isCollapsed={isFormCollapsed}
+                    onToggleCollapse={toggleFormCollapsed}
+                    onExport={handleExport}
+                    onImport={handleImport}
+                    userRole={user.role}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    setAdminView={setAdminView}
+                    openAdminCategories={() => setIsAdminCategoriesOpen(true)}
+                    logsVisible={logsVisible}
+                    setLogsVisible={setLogsVisible}
+                    openSection={openSidebarSection}
+                    setOpenSection={setOpenSidebarSection}
+                    searchContent={
+                      <div className="space-y-6">
+                        <SearchControls
+                          searchParams={searchParams}
+                          statusFilters={{
+                            isAnalyzed: searchParams.isAnalyzed,
+                            setIsAnalyzed: searchParams.setIsAnalyzed,
+                            isImproved: searchParams.isImproved,
+                            setIsImproved: searchParams.setIsImproved,
+                          }}
+                          timePeriod={{
+                            type: timePeriod.timePeriodType,
+                            value: timePeriod.timePeriodValue,
+                            customDateFrom: timePeriod.customDateFrom,
+                            customDateTo: timePeriod.customDateTo,
+                            handleTypeChange: timePeriod.handleTimePeriodTypeChange,
+                            handleValueChange: timePeriod.handleTimePeriodValueChange,
+                            setCustomDateFrom: timePeriod.setCustomDateFrom,
+                            setCustomDateTo: timePeriod.setCustomDateTo,
+                            description: timePeriod.getTimePeriod().description,
+                          }}
+                          languages={{
+                            selected: searchParams.selectedLanguages,
+                            onChange: searchParams.handleLanguageChange,
+                          }}
+                          onSearch={handleSearch}
+                          onCancel={quotesState.handleCancelSearch}
+                          isLoading={isLoading}
+                        />
+                        <ExtractionControls
+                          textToExtract={searchParams.textToExtract}
+                          setTextToExtract={searchParams.setTextToExtract}
+                          isExtracting={searchParams.isExtracting}
+                          personName={searchParams.personName}
+                          onExtract={openExtractModal}
+                          onAdd={openAddQuoteModal}
+                          onExtractFromUrl={handleExtractFromUrl}
+                          onAutoExtract={handleAutoExtract}
+                          extractionStatus={extractionStatus}
+                          extractionLanguage={extractionLanguage}
+                          setExtractionLanguage={setExtractionLanguage}
+                          extractionError={extractionError}
+                        />
+                        <YoutubeTranscriptButton
+                          onClick={() => setIsTranscriptMethodSelectorOpen(true)}
+                          isLoading={searchParams.isExtracting}
+                        />
+                        <TranscriptImporter
+                          onImport={handleImportTranscript}
+                          isLoading={searchParams.isExtracting}
+                        />
+                        <SrtTranscriptImporter
+                          onImport={handleImportTranscript}
+                          isLoading={searchParams.isExtracting}
+                        />
+                        <AnalysisImporter
+                          onImport={handleImportAnalysis}
+                          isLoading={searchParams.isExtracting}
+                        />
+                      </div>
+                    }
+                    peopleContent={
+                      <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
+                        <div className="flex-1 overflow-auto">
+                          <PersonManager
+                            onSelectPerson={(person: Person) => {
+                              setSelectedPerson(person);
+                              setResultsTab('stored');
+                            }}
+                          />
+                        </div>
+                      </div>
+                    }
+                    sessionsContent={
+                      <AnalysisSessionsList
+                        onResume={handleResumeSession}
+                        refreshTrigger={sessionsRefreshTrigger}
+                      />
+                    }
+                    usersContent={
+                      <div className="text-gray-400 text-sm text-center mt-4">
+                        Manage system users, roles and passwords.
+                      </div>
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
+            <ModalsContainer
+              isAddModalOpen={isAddModalOpen}
+              closeAddModal={closeAddModal}
+              onSave={handleModalSave}
+              mode={modalMode}
+              initialSource={extractedSourceUrl}
+              initialAnalysisType={modalAnalysisType}
+              onImportTranscript={(t) => {
+                handleImportTranscript(t);
+                setIsTranscriptMethodSelectorOpen(false);
+                setAutoFetchError(null);
+              }}
+              onAutoFetchTranscript={handleFetchYoutubeTranscript}
+              autoFetchError={autoFetchError}
+              isExtracting={searchParams.isExtracting}
+              isApiKeyModalOpen={isApiKeyModalOpen}
+              onCloseApiKeyModal={() => setIsApiKeyModalOpen(false)}
+              isTranscriptMethodSelectorOpen={isTranscriptMethodSelectorOpen}
+              onCloseTranscriptMethodSelector={() => setIsTranscriptMethodSelectorOpen(false)}
+
+              isChangePasswordModalOpen={isChangePasswordModalOpen}
+              isEditProfileModalOpen={isEditProfileModalOpen}
+              user={{ _id: user._id, name: user.name }}
+              onPasswordUpdated={() => {
+                setIsChangePasswordModalOpen(false);
+                alert(t('passwordUpdated'));
+              }}
+              closeChangePasswordModal={() => setIsChangePasswordModalOpen(false)}
+              onProfileUpdated={(newName) => {
+                setIsEditProfileModalOpen(false);
+                updateUser({ name: newName });
+              }}
 
               isUsageStatsDashboardOpen={isUsageStatsDashboardOpen}
               onCloseUsageStats={() => setIsUsageStatsDashboardOpen(false)}
               isAdminCategoriesOpen={isAdminCategoriesOpen}
               onCloseAdminCategories={() => setIsAdminCategoriesOpen(false)}
-          />
+            />
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

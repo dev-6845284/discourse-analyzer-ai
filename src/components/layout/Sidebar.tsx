@@ -105,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isCollapsed && (
         <button
           onClick={onToggleCollapse}
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-16 h-16 bg-cyan-600 text-white flex items-center justify-center shadow-lg border-2 border-cyan-400 md:hidden"
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 w-16 h-16 bg-cyan-700 text-white flex items-center justify-center shadow-lg border-2 border-cyan-400 md:hidden"
           style={{ borderRadius: '18px' }}
           aria-label={t('showControls')}
         >
@@ -176,7 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {t('api_management')}
                   </button>
 
-                      <button
+                  <button
                     onClick={() => {
                       setActiveTab && setActiveTab('admin');
                       setAdminView && setAdminView('categories');
@@ -207,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 defaultOpen={true}
               >
                 <div className="flex flex-col gap-2">
-                      <button
+                  <button
                     onClick={() => {
                       setAdminView && setAdminView('logs');
                       setActiveTab && setActiveTab('admin');
