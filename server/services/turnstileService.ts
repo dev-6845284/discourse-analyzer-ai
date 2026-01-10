@@ -32,6 +32,9 @@ export async function verifyTurnstileToken(token: string, ip?: string): Promise<
         const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
             body: formData,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
         });
 
         const result = await response.json() as TurnstileVerifyResponse;

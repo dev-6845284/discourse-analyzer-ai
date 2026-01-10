@@ -33,9 +33,15 @@ app.use(helmet({
       "frame-src": ["'self'", "https://*.facebook.com", "https://*.youtube.com", "https://youtube.com"],
       "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.gstatic.com", "https://*.facebook.net"],
       "img-src": ["'self'", "data:", "https:", "http:"],
+      "frame-ancestors": ["'self'"],
     },
   },
+  xXssProtection: true,
+  frameguard: {
+    action: 'sameorigin',
+  },
 }));
+
 
 // ============================================
 // BODY PARSER & PAYLOAD LIMITS
@@ -306,7 +312,7 @@ app.post('/api/login/password', loginRateLimiter, async (req, res) => {
   const ip = req.ip || req.socket.remoteAddress;
   const isCaptchaValid = await verifyTurnstileToken(turnstileToken, ip);
 
-  if (!isCaptchaValid) {
+  if (!isCaptchaValid || (process.env.TURNSTILE_SECRET_KEY && !turnstileToken)) {
     console.log('[LOGIN_PASSWORD_FAILED] CAPTCHA validation failed for:', email);
     return res.status(400).json({ message: 'CAPTCHA verification failed. Please try again.' });
   }
