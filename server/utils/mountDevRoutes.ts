@@ -1,7 +1,8 @@
 import express from 'express';
+import { isLocal } from '../constants/env';
 
 export async function mountDevRoutes(app: express.Express): Promise<boolean> {
-  if (process.env.NODE_ENV === 'development') {
+  if (isLocal()) {
     try {
       const m = await import('../routes/dev');
       app.use('/api/dev', (m as any).default);

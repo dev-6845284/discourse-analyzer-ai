@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { getCurrentEnv } from '../constants/env';
 
 export const isAuthenticated = (
   req: Request,
@@ -24,10 +25,10 @@ export const isAuthenticated = (
       hasCookie: !!req.headers.cookie,
       cookieHeader: req.headers.cookie ? '[PRESENT]' : '[MISSING]'
     },
-    env: process.env.NODE_ENV,
+    env: getCurrentEnv(),
     bypassAuth: process.env.BYPASS_AUTH
   };
-  
+
   console.log('[AUTH_CHECK]', JSON.stringify(authDebug, null, 2));
 
   if (process.env.BYPASS_AUTH === 'true') {
@@ -41,7 +42,7 @@ export const isAuthenticated = (
         role: 'admin'
       };
       console.log('[AUTH_BYPASS] Created/Updated developer user');
-      
+
       // Save session to ensure cookie is set and session ID persists
       return req.session.save((err) => {
         if (err) {
@@ -52,13 +53,13 @@ export const isAuthenticated = (
     }
     return next();
   }
-  
+
   if (req.session.user) {
     console.log('[AUTH_SUCCESS]', `User authenticated: ${req.session.user.email}`);
     return next();
   } else {
     console.log('[AUTH_FAILED] No user in session - returning 401');
-    res.status(401).json({ 
+    res.status(401).json({
       message: 'Not authenticated',
       debug: {
         hasSession: !!req.session,

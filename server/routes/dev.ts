@@ -1,4 +1,5 @@
 import express from 'express';
+import { isLocal, isTest } from '../constants/env';
 // Keep dev routes lightweight to avoid importing models (and mongoose side-effects) at module load time
 const USER_ROLES = ['admin', 'editor', 'moderator', 'viewer'] as const;
 
@@ -8,7 +9,7 @@ const router = express.Router();
 // Only enable in non-production environments
 // Only enable in non-production environments (allow tests)
 router.use((req, res, next) => {
-  if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
+  if (!isLocal && !isTest) {
     return res.status(404).json({ message: 'Not found' });
   }
   next();

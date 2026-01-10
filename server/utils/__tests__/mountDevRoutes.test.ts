@@ -7,8 +7,8 @@ describe('mountDevRoutes', () => {
     jest.restoreAllMocks();
   });
 
-  test('mounts dev routes in development', async () => {
-    process.env.NODE_ENV = 'development';
+  test('mounts dev routes in local environment', async () => {
+    process.env.NODE_ENV = 'local';
 
     let mountDevRoutes: any;
     jest.isolateModules(() => {
@@ -26,7 +26,7 @@ describe('mountDevRoutes', () => {
     expect(calledArg && (calledArg.__isMockedDevRouter || calledArg.default?.__isMockedDevRouter)).toBeTruthy();
   });
 
-  test('does not mount dev routes outside development', async () => {
+  test('does not mount dev routes in production or remote development', async () => {
     process.env.NODE_ENV = 'production';
 
     let mountDevRoutes: any;

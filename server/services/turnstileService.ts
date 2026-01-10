@@ -1,3 +1,5 @@
+import { isStrictSecurity, getCurrentEnv } from '../constants/env';
+
 
 interface TurnstileVerifyResponse {
     success: boolean;
@@ -10,6 +12,11 @@ export async function verifyTurnstileToken(token: string, ip?: string): Promise<
     const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
     if (!secretKey) {
+        if (isStrictSecurity()) {
+            const error = '[Turnstile] CRITICAL: TURNSTILE_SECRET_KEY is not configured in this security-restricted environment.';
+            console.error(error);
+            throw new Error(error);
+        }
         console.warn('[Turnstile] No TURNSTILE_SECRET_KEY configured. Allowing request (Bypass Mode).');
         return true;
     }

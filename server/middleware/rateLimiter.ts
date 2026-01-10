@@ -1,6 +1,7 @@
 import rateLimit, { RateLimitRequestHandler, Options } from 'express-rate-limit';
 import { Request, Response } from 'express';
 import { RedisStore } from 'rate-limit-redis';
+import { isLocal } from '../constants/env';
 const redisClient = require('../services/redis').default;
 
 // Helper to create rate limiter with memory or Redis store
@@ -47,11 +48,13 @@ function createRateLimiter(options: Partial<Options>): RateLimitRequestHandler {
  */
 export const loginRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 100 : 5, // Relaxed for dev
+  max: isLocal() ? 100 : 5, // Relaxed for local
   message: 'Too many login attempts, please try again after 15 minutes',
-  skipSuccessfulRequests: process.env.NODE_ENV === 'development', // Don't count successful logins in dev
+  skipSuccessfulRequests: isLocal(), // Don't count successful logins in local
   keyGenerator: (req: Request) => {
     // For login, only use IP (user not authenticated yet)
+    // The provided snippet for dev-only endpoints was syntactically incorrect and has been omitted.
+    // If you intended to add specific logic for dev-only endpoints, please provide a complete and correct implementation.
     return req.ip || req.socket.remoteAddress || 'unknown';
   },
 });

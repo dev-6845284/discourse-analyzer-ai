@@ -27,7 +27,7 @@ const getServiceInstance = (model: string): LlmService => {
   if (normalizedModel === 'gemini' || normalizedModel.startsWith('gemini')) return geminiService;
   if (normalizedModel === 'openai') return chatGptService; // canonical OpenAI provider
   if (normalizedModel === 'grok' || normalizedModel.startsWith('grok')) return grokService;
-  
+
   throw new Error(`Invalid model specified: ${model}`);
 };
 
@@ -39,7 +39,7 @@ const getProviderFromModel = (model: string): 'gemini' | 'openai' | 'grok' => {
   // Use canonical 'openai' only
   if (normalizedModel === 'openai') return 'openai';
   if (normalizedModel === 'grok' || normalizedModel.startsWith('grok')) return 'grok';
-  
+
   throw new Error(`Unknown model provider for model: ${model}`);
 };
 
@@ -504,7 +504,6 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
     }
     res.status(500).json({
       error: error.message || 'Failed to analyze transcript topics',
-      details: error.stack
     });
   }
 };
@@ -565,7 +564,6 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
     }
     res.status(500).json({
       error: error.message || 'Failed to analyze transcript speakers',
-      details: error.stack
     });
   }
 };
@@ -655,7 +653,6 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
 
     res.status(500).json({
       error: error.message || 'Failed to analyze dialog topics',
-      details: error.stack
     });
   }
 };
