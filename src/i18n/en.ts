@@ -301,6 +301,8 @@ const en = {
 
   // People list
   searchPeople: 'Search people...',
+  addPerson: 'Add Person',
+  confirmDeletePerson: 'Are you sure you want to delete {name}?',
   languageLabel: 'Language',
   providerLabel: 'AI Provider',
   analysisStatus: 'Analysis Status',
@@ -310,6 +312,13 @@ const en = {
   analyzedDate: 'Analyzed Date',
   improvedDate: 'Improved Date',
   noPeopleFound: 'No people found',
+  fullNameRequired: 'Full Name (Required)',
+  firstName: 'First Name',
+  surname: 'Surname',
+  description: 'Description',
+  updatePerson: 'Update Person',
+  savePerson: 'Save Person',
+  autoFilledFromName: '(Auto-filled from name if empty)',
 
   // Category translations
   // Legacy AnalysisCategory

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Person } from '../../types';
+import { useI18n } from '../../i18n';
+
 
 interface PersonFormProps {
   initialData?: Person;
@@ -8,7 +10,9 @@ interface PersonFormProps {
 }
 
 export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, onCancel }) => {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
+
     name: initialData?.name || '',
     firstname: initialData?.firstname || '',
     surname: initialData?.surname || '',
@@ -42,7 +46,8 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-800 rounded-lg shadow">
       <div>
-        <label className="block text-sm font-medium text-gray-300">Full Name (Required)</label>
+        <label className="block text-sm font-medium text-gray-300">{t('fullNameRequired')}</label>
+
         <input
           type="text"
           required
@@ -53,7 +58,8 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300">First Name</label>
+          <label className="block text-sm font-medium text-gray-300">{t('firstName')}</label>
+
           <input
             type="text"
             value={formData.firstname}
@@ -62,7 +68,8 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300">Surname</label>
+          <label className="block text-sm font-medium text-gray-300">{t('surname')}</label>
+
           <input
             type="text"
             value={formData.surname}
@@ -72,7 +79,10 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300">Aliases (comma separated) <span className="text-gray-500 text-xs">(Auto-filled from name if empty)</span></label>
+        <label className="block text-sm font-medium text-gray-300">
+          {t('aliasesLabel')} <span className="text-gray-500 text-xs">{t('autoFilledFromName')}</span>
+        </label>
+
         <input
           type="text"
           value={formData.aliases}
@@ -81,7 +91,8 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300">Description</label>
+        <label className="block text-sm font-medium text-gray-300">{t('description')}</label>
+
         <textarea
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -95,15 +106,17 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
           onClick={onCancel}
           className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600"
         >
-          Cancel
+          {t('cancel')}
         </button>
+
         <button
           type="submit"
           disabled={isSubmitting}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
         >
-          {isSubmitting ? 'Saving...' : (initialData ? 'Update Person' : 'Save Person')}
+          {isSubmitting ? t('saving') : (initialData ? t('updatePerson') : t('savePerson'))}
         </button>
+
       </div>
     </form>
   );

@@ -315,6 +315,8 @@ const lt = {
 
   // People list
   searchPeople: 'Ieškoti žmonių...',
+  addPerson: 'Pridėti asmenį',
+  confirmDeletePerson: 'Ar tikrai norite ištrinti {name}?',
   languageLabel: 'Kalba',
   providerLabel: 'AI tiekėjas',
   analysisStatus: 'Analizės būsena',
@@ -324,6 +326,13 @@ const lt = {
   analyzedDate: 'Analizuota',
   improvedDate: 'Patobulinta',
   noPeopleFound: 'Žmonių nerasta',
+  fullNameRequired: 'Vardas ir pavardė (Privaloma)',
+  firstName: 'Vardas',
+  surname: 'Pavardė',
+  description: 'Aprašymas',
+  updatePerson: 'Atnaujinti asmenį',
+  savePerson: 'Išsaugoti asmenį',
+  autoFilledFromName: '(Bus užpildyta automatiškai iš vardo, jei tuščia)',
 
   // Kategorijų vertimai
   // Legacy AnalysisCategory

@@ -13,14 +13,14 @@ interface PersonListProps {
   onDelete?: (person: Person) => void;
 }
 
-export const PersonList: React.FC<PersonListProps> = ({ 
-  people = [], 
-  isLoading, 
+export const PersonList: React.FC<PersonListProps> = ({
+  people = [],
+  isLoading,
   error,
   onSearch,
-  onSelect, 
-  onEdit, 
-  onDelete 
+  onSelect,
+  onEdit,
+  onDelete
 }) => {
   const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +68,8 @@ export const PersonList: React.FC<PersonListProps> = ({
                 </div>
 
                 {/* Line 2: Alias */}
-                <div className="text-xs text-gray-400 mt-1 truncate">{person.aliases.length > 0 ? `Aliases: ${person.aliases.join(', ')}` : ''}</div>
+                <div className="text-xs text-gray-400 mt-1 truncate">{person.aliases.length > 0 ? `${t('aliasesLabel')} ${person.aliases.join(', ')}` : ''}</div>
+
 
                 {/* Optional description shown below */}
                 {person.description && (
