@@ -136,6 +136,7 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                 id: q._id,
                 text: q.text,
                 date: q.date,
+                source: q.source, // Include raw source for iframe support
                 sourceUrl: q.sourceUrl,
                 context: q.context,
                 analysisContext: q.analysisContext, // Include analysis context
