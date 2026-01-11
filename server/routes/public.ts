@@ -54,6 +54,7 @@ const ensurePublicOrAuth = (req: express.Request, res: express.Response, next: e
 
 // Public Quotes API
 router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
+    // ToDo remove text filter
     try {
         const {
             personId,
@@ -68,6 +69,7 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
 
         // Default filters
         query.isDeprecated = { $ne: true };
+        query.visibility = 'public'; // Only show public quotes
 
         if (personId) {
             query.person = personId;

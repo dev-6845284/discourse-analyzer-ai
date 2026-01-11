@@ -25,6 +25,8 @@ interface QuoteCardProps {
   isApiKeySet: boolean;
   hideSaveButton?: boolean;
   selectedAI: string;
+  userRole?: string;
+  onVisibilityChange?: (quoteId: string, visibility: 'public' | 'private') => void;
 }
 
 const QuoteCard: React.FC<QuoteCardProps> = ({
@@ -40,7 +42,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   onEditSource,
   isApiKeySet,
   hideSaveButton,
-  selectedAI
+  selectedAI,
+  userRole,
+  onVisibilityChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -231,6 +235,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             isSaved={isSaved}
             hideSaveButton={hideSaveButton}
             selectedAI={selectedAI}
+            userRole={userRole}
             onAnalyze={handleAnalyze}
             onImprove={() => onImprove(quote)}
             onSave={handleSave}
@@ -239,6 +244,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             onDelete={() => onDelete && onDelete(quote)}
             onRemove={() => onRemove && onRemove(quote)}
             onEditSource={onEditSource && quote.originIds && quote.originIds.length > 0 ? () => onEditSource(quote) : undefined}
+            onVisibilityChange={onVisibilityChange}
           />
         </>
       )}

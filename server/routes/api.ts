@@ -62,6 +62,19 @@ router.put('/quotes/:id', (req, res) => {
     req.body.analyzedByName = req.body.analyzedByName || req.session.user.name || req.session.user.email;
     req.body.analyzedAt = req.body.analyzedAt || new Date().toISOString();
   }
+
+  // Security check for visibility update
+  if (req.body.visibility) {
+    const userRole = req.session?.user?.role;
+    // Allowed roles: admin, moderator, editor
+    const allowedRoles = ['admin', 'moderator', 'editor', 'dev']; // 'dev' usually has admin privileges
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      console.warn(`[SECURITY] User ${req.session?.user?.email} (${userRole}) attempted to change quote visibility.`);
+      delete req.body.visibility; // Silently ignore or you could return 403
+      // return res.status(403).json({ error: 'Insufficient permissions to change visibility' });
+    }
+  }
+
   quoteService.updateQuote(req, res);
 });
 

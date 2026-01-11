@@ -412,6 +412,7 @@ const App: React.FC = () => {
                 transcriptData={transcriptData}
                 selectedPerson={selectedPerson}
                 setSelectedPerson={setSelectedPerson}
+                userRole={user?.role}
 
                 quotes={quotes}
                 articles={articles}

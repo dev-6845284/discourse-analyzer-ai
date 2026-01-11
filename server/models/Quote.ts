@@ -27,6 +27,7 @@ export interface IQuote extends Document {
   improvedByProvider?: string;
   improvedAt?: Date;
   metadata: Record<string, any>; // Flexible schema
+  visibility: 'public' | 'private';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +60,7 @@ const QuoteSchema: Schema = new Schema(
     improvedByProvider: { type: String },
     improvedAt: { type: Date },
     metadata: { type: Schema.Types.Mixed, default: {} },
+    visibility: { type: String, enum: ['public', 'private'], default: 'private', index: true },
   },
   {
     timestamps: true,

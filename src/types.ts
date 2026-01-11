@@ -106,6 +106,7 @@ export interface Quote {
   contentAnalysisId?: string;
   originIds?: string[];
   isDeprecated?: boolean;
+  visibility?: 'public' | 'private';
   // Audit fields
   savedByUser?: string;
   savedByName?: string;
@@ -244,6 +245,7 @@ export interface QuoteUpdatePayload {
   analyzedAt?: string;
   improvedByProvider?: string;
   improvedAt?: string;
+  visibility?: 'public' | 'private';
 }
 
 export interface CategoryDefinition {
