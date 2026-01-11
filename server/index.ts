@@ -371,30 +371,34 @@ app.get('/api/user', isAuthenticated, (req, res) => {
   res.json({ user: req.session.user });
 });
 
-app.get('/api/session/debug', (req, res) => {
-  const debugInfo = {
-    timestamp: new Date().toISOString(),
-    sessionID: req.sessionID,
-    hasSession: !!req.session,
-    session: req.session ? {
-      id: req.session.id,
-      hasUser: !!req.session.user,
-      user: req.session.user || null,
-      keys: Object.keys(req.session)
-    } : null,
-    cookies: {
-      hasCookie: !!req.headers.cookie,
-      cookieNames: req.headers.cookie?.split('; ').map(c => c.split('=')[0]) || []
-    },
-    environment: {
-      NODE_ENV: process.env.NODE_ENV,
-      BYPASS_AUTH: process.env.BYPASS_AUTH,
-      currentEnv: require('./constants/env').getCurrentEnv()
-    }
-  };
+app.get('/api/session/debug', isAuthenticated, async (req, res) => {
+  // Require admin role for session debug endpoint
+  const { requireAdmin } = await import('./middleware/admin');
+  requireAdmin(req, res, () => {
+    const debugInfo = {
+      timestamp: new Date().toISOString(),
+      sessionID: req.sessionID,
+      hasSession: !!req.session,
+      session: req.session ? {
+        id: req.session.id,
+        hasUser: !!req.session.user,
+        user: req.session.user || null,
+        keys: Object.keys(req.session)
+      } : null,
+      cookies: {
+        hasCookie: !!req.headers.cookie,
+        cookieNames: req.headers.cookie?.split('; ').map(c => c.split('=')[0]) || []
+      },
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        BYPASS_AUTH: process.env.BYPASS_AUTH,
+        currentEnv: require('./constants/env').getCurrentEnv()
+      }
+    };
 
-  console.log('[SESSION_DEBUG]', JSON.stringify(debugInfo, null, 2));
-  res.json(debugInfo);
+    console.log('[SESSION_DEBUG]', JSON.stringify(debugInfo, null, 2));
+    res.json(debugInfo);
+  });
 });
 
 app.post('/api/logout', (req, res) => {

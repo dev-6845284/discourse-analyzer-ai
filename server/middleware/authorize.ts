@@ -7,7 +7,6 @@ const PUBLIC_WHITELIST = [
   '/api/login/password',
   '/api/logout',
   '/api/dev/role',
-  '/api/session/debug',// ToDo remove from whitelist
 ];
 
 export async function authorizeMiddleware(req: Request, res: Response, next: NextFunction) {
