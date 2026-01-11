@@ -183,7 +183,7 @@ export interface UserInfo {
   alias?: string;
   picture?: string;
   // Constrain role to known values used in the UI
-  role?: 'admin' | 'viewer' | 'moderator' | 'editor';
+  role?: 'admin' | 'viewer' | 'moderator' | 'editor' | 'public_guest';
   createdAt?: string;
   updatedAt?: string;
   assignedKeysetId?: string;

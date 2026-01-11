@@ -449,6 +449,13 @@ if (!isLocal() && !isTest()) {
   app.use('/api/dev', (req, res) => res.status(404).json({ message: 'Not found' }));
 }
 
+// Public routes must come BEFORE generic /api to avoid auth middleware interception
+app.use('/api/public', (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const publicRoutes = require('./routes/public').default;
+  return publicRoutes(req, res, next);
+});
+
 app.use('/api', apiRateLimiter, (req, res, next) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const apiRoutes = require('./routes/api').default;

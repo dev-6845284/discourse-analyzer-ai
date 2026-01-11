@@ -22,6 +22,8 @@ import ModalsContainer from './components/ModalsContainer';
 import MainContent from './components/MainContent';
 import { useI18n } from './i18n';
 import type { Person } from './types';
+import { PublicLanding } from './components/public/PublicLanding';
+import { PublicQuotes } from './components/public/PublicQuotes';
 
 const App: React.FC = () => {
   const ctrl = useAppController();
@@ -105,7 +107,34 @@ const App: React.FC = () => {
     quotesState: { quotes, articles, isLoading, error, rawApiResponseError, markQuoteAsStored },
     quoteFilters: { sortOrder, setSortOrder, filteredAndSortedQuotes }
   } = ctrl;
-  if (!user) {
+
+  // Routing Logic
+  const [currentPath, setCurrentPath] = React.useState(window.location.pathname);
+
+  React.useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
+  // 1. Auth Redirect Effect - Handles post-login / post-logout routing
+  React.useEffect(() => {
+    if (user && user.role !== 'public_guest') {
+      // If real user is at public/login root, send to dashboard
+      if (currentPath === '/login' || currentPath === '/') {
+        navigateTo('/dashboard');
+      }
+    }
+    // If logged out (user became null) and we are on dashboard -> handled by conditional render below
+  }, [user, currentPath]);
+
+  // 1. Login Route
+  if (currentPath === '/login') {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
         <div className="w-full px-4 md:container md:mx-auto md:px-6 lg:px-8">
@@ -119,6 +148,41 @@ const App: React.FC = () => {
     );
   }
 
+  // 2. Public Routes
+  if (currentPath === '/' || currentPath === '/public') {
+    return <PublicLanding
+      onLoginSuccess={(u) => {
+        // Public Guest Login Success
+        updateUser(u); // Update context
+        navigateTo('/public/quotes');
+      }}
+      onOpenLogin={() => navigateTo('/login')}
+    />;
+  }
+
+  if (currentPath === '/public/quotes') {
+    return <PublicQuotes onLogout={() => navigateTo('/')} />;
+  }
+
+  // 3. Dashboard Route (Protected)
+  // If user is not authenticated or is a public guest, verify access
+  const isPublicGuest = user?.role === 'public_guest';
+  const isAuthenticatedRealUser = user && !isPublicGuest;
+
+  if (currentPath.startsWith('/dashboard') || (!currentPath.startsWith('/public') && !currentPath.startsWith('/login'))) {
+    if (!isAuthenticatedRealUser) {
+      // Not authorized, redirect to Landing
+      if (currentPath !== '/') {
+        // Force redirect
+        window.history.replaceState({}, '', '/');
+        setCurrentPath('/');
+        return null;
+      }
+    }
+  }
+
+  // If we are here, we are likely at /dashboard or valid internal route AND authenticated
+  // Render Main App
   return (
     <div>
       {/* Provided translations via root I18nProvider */}
@@ -131,19 +195,20 @@ const App: React.FC = () => {
           onCollapsedChange={setIsAdminBannerCollapsed}
         />
 
-
-
         <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${(import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
           }`}>
           <Header
-            user={user}
+            user={user!}
             isFormCollapsed={isFormCollapsed}
             toggleFormCollapsed={toggleFormCollapsed}
             logsVisible={logsVisible}
             setLogsVisible={setLogsVisible}
             setIsApiKeyModalOpen={setIsApiKeyModalOpen}
             googleButtonRef={googleButtonRef}
-            handleLogout={handleLogout}
+            handleLogout={() => {
+              handleLogout();
+              navigateTo('/');
+            }}
             onChangePassword={openChangePasswordModal}
             onEditProfile={openEditProfileModal}
             openSidebarMobile={() => setIsSidebarOpenMobile(true)}
@@ -160,7 +225,7 @@ const App: React.FC = () => {
                   onToggleCollapse={toggleFormCollapsed}
                   onExport={handleExport}
                   onImport={handleImport}
-                  userRole={user.role}
+                  userRole={user!.role}
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
                   setAdminView={setAdminView}
@@ -314,7 +379,7 @@ const App: React.FC = () => {
                     <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
                       <div className="flex-1 overflow-auto">
                         <PersonManager
-                          onSelectPerson={(person) => {
+                          onSelectPerson={(person: Person) => {
                             setSelectedPerson(person);
                             setResultsTab('stored');
                           }}
@@ -412,7 +477,7 @@ const App: React.FC = () => {
                     onToggleCollapse={toggleFormCollapsed}
                     onExport={handleExport}
                     onImport={handleImport}
-                    userRole={user.role}
+                    userRole={user!.role}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     setAdminView={setAdminView}
@@ -534,7 +599,7 @@ const App: React.FC = () => {
 
               isChangePasswordModalOpen={isChangePasswordModalOpen}
               isEditProfileModalOpen={isEditProfileModalOpen}
-              user={{ _id: user._id, name: user.name }}
+              user={{ _id: user!._id, name: user!.name }}
               onPasswordUpdated={() => {
                 setIsChangePasswordModalOpen(false);
                 alert(t('passwordUpdated'));
