@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { useI18n } from '../../i18n';
 import { TurnstileWidget } from './TurnstileWidget';
 
 interface LoginScreenProps {
@@ -10,6 +10,7 @@ interface LoginScreenProps {
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, onLogin, onDevLogin }) => {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
@@ -28,13 +29,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="hidden md:block text-4xl font-bold text-cyan-400 mb-4">DoubleCheck AI</h1>
-      <p className="text-gray-400 mb-8">Please sign in to continue</p>
+      <h1 className="hidden md:block text-4xl font-bold text-cyan-400 mb-4">{t('appTitle')}</h1>
+      <p className="text-gray-400 mb-8">{t('signInToContinue')}</p>
 
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md mb-8">
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-300 text-sm font-bold mb-2">Email</label>
+            <label className="block text-gray-300 text-sm font-bold mb-2">{t('emailLabel')}</label>
             <input
               type="email"
               value={email}
@@ -44,7 +45,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
             />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-bold mb-2">Password</label>
+            <label className="block text-gray-300 text-sm font-bold mb-2">{t('passwordLabel')}</label>
             <input
               type="password"
               value={password}
@@ -64,14 +65,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
             disabled={isSubmitting}
             className="w-full bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 transition-colors"
           >
-            {isSubmitting ? 'Signing in...' : 'Sign In'}
+            {isSubmitting ? t('signingIn') : t('signIn')}
           </button>
         </form>
       </div>
 
       <div className="flex items-center w-full max-w-md mb-8">
         <div className="flex-grow border-t border-gray-600"></div>
-        <span className="flex-shrink-0 mx-4 text-gray-400">OR</span>
+        <span className="flex-shrink-0 mx-4 text-gray-400">{t('or')}</span>
         <div className="flex-grow border-t border-gray-600"></div>
       </div>
 
@@ -83,12 +84,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
             onClick={onDevLogin}
             className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded border border-gray-500 transition-colors flex items-center justify-center gap-2"
           >
-            <span>👨‍💻</span> Developer Login
+            <span>👨‍💻</span> {t('developerLogin')}
           </button>
         </div>
       )}
 
-      {loginError && <p className="mt-4 text-red-500">{loginError}</p>}
+      {loginError && <p className="mt-4 text-red-500">{t(loginError)}</p>}
     </div>
   );
 };

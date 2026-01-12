@@ -639,7 +639,7 @@ const lt = {
   public_verifying: 'Tikrinama prieiga...',
   public_verification_failed: 'Patvirtinimas nepavyko. Bandykite dar kartą.',
   public_turnstile_error: 'Turnstile klaida.',
-  public_protected_by: 'Saugoma Turnstile ir Discourse Analysis AI',
+  public_protected_by: 'Saugoma Turnstile ir Pasitikrink',
   admin_login: 'Pprisijungimas',
   public_quotes_title: 'Citatos',
   public_back_to_landing: 'Atgal',
@@ -663,6 +663,16 @@ const lt = {
   public_evidence: 'Įrodymai:',
   disabled: '(Išjungta)',
   unknown_person: 'Nežinomas asmuo',
+  signInToContinue: 'Prašome prisijungti, kad tęstumėte',
+  signIn: 'Prisijungti',
+  signingIn: 'Prisijungiama...',
+  or: 'ARBA',
+  developerLogin: 'Programuotojo prisijungimas',
+  'Invalid email or password': 'Neteisingas el. paštas arba slaptažodis',
+  'CAPTCHA verification failed. Please try again.': 'CAPTCHA patvirtinimas nepavyko. Bandykite dar kartą.',
+  'User not allowed': 'Vartotojas neautorizuotas',
+  'Login failed.': 'Prisijungimas nepavyko.',
+  pleaseWaitSeconds: 'Prašome palaukti {seconds} sek.',
 };
 
 export default lt;

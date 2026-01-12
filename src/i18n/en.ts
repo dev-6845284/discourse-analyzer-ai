@@ -662,6 +662,16 @@ const en = {
   public_evidence: 'Evidence:',
   disabled: '(Disabled)',
   unknown_person: 'Unknown Person',
+  signInToContinue: 'Please sign in to continue',
+  signIn: 'Sign In',
+  signingIn: 'Signing in...',
+  or: 'OR',
+  developerLogin: 'Developer Login',
+  'Invalid email or password': 'Invalid email or password',
+  'CAPTCHA verification failed. Please try again.': 'CAPTCHA verification failed. Please try again.',
+  'User not allowed': 'User not allowed',
+  'Login failed.': 'Login failed.',
+  pleaseWaitSeconds: 'Please wait {seconds} seconds.',
 };
 
 export default en;

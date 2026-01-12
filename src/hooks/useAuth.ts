@@ -2,11 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserInfo } from '../types';
 import { GOOGLE_CLIENT_ID } from '../config/app.config';
 import api from '../utils/api';
+import { useI18n } from '../i18n';
 
 // Declare the 'google' global object provided by the Google Identity Services script
 declare const google: any;
 
 export function useAuth() {
+  const { t } = useI18n();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -48,11 +50,11 @@ export function useAuth() {
     } catch (error: any) {
       let message = error.response?.data?.message || 'Login failed.';
       if (error.response?.data?.retryAfter) {
-        message += ` Wait ${error.response.data.retryAfter} seconds.`;
+        message = t('pleaseWaitSeconds', { seconds: error.response.data.retryAfter });
       }
       setLoginError(message);
     }
-  }, []);
+  }, [t]);
 
   const loginAsDev = useCallback(async () => {
     try {

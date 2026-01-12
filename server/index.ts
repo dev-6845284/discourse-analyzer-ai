@@ -515,7 +515,7 @@ if (isProduction()) {
   });
 } else {
   app.get('/', (req, res) => {
-    res.send('DoubleCheck AI Server is running in development mode!');
+    res.send('DoubleCheck Server is running in development mode!');
   });
 }
 

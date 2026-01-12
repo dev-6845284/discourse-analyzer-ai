@@ -43,7 +43,7 @@ Once proxied, configure the Web Application Firewall (WAF) to block threats.
 ### 2.1. Cloudflare Setup
 1.  Go to **Turnstile** in the Cloudflare Dashboard.
 2.  **Add Site:**
-    *   **Site Name:** DoubleCheck AI
+    *   **Site Name:** DoubleCheck
     *   **Domain:** Your domain (plus `localhost` for development).
     *   **Widget Mode:** `Managed` (Recommended - invisible for most users, shows challenge if suspicious).
 3.  **Get Keys:** Copy the **Site Key** (Public) and **Secret Key** (Private).
