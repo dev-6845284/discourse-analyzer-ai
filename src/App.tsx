@@ -214,7 +214,6 @@ const App: React.FC = () => {
             logsVisible={logsVisible}
             setLogsVisible={setLogsVisible}
             setIsApiKeyModalOpen={setIsApiKeyModalOpen}
-            googleButtonRef={googleButtonRef}
             handleLogout={() => {
               handleLogout();
               navigateTo('/');

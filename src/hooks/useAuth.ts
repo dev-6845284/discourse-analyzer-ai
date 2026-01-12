@@ -90,7 +90,12 @@ export function useAuth() {
 
     // Helper to initialize Google button
     const initializeGoogle = () => {
-      if (typeof google === 'undefined' || !googleButtonRef.current) return;
+      if (typeof google === 'undefined' || !googleButtonRef.current || user) return;
+
+      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'missing-client-id') {
+        process.env.NODE_ENV !== 'production' && console.warn('Google Client ID is missing or invalid. Google Sign-In will not be available.');
+        return;
+      }
 
       try {
         google.accounts.id.initialize({
