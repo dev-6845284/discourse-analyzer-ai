@@ -275,15 +275,15 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           queryParams,
           credentials: 'include'
         };
-        console.log('[FETCH_QUOTES]', JSON.stringify(debugInfo, null, 2));
+        // console.log('[FETCH_QUOTES]', JSON.stringify(debugInfo, null, 2));
 
         const response = await getStoredQuotes(queryParams);
 
-        console.log('[FETCH_QUOTES_SUCCESS]', {
-          timestamp: new Date().toISOString(),
-          quotesCount: response.data?.length || 0,
-          status: response.status
-        });
+        // console.log('[FETCH_QUOTES_SUCCESS]', {
+        //   timestamp: new Date().toISOString(),
+        //   quotesCount: response.data?.length || 0,
+        //   status: response.status
+        // });
 
         // Map backend quotes to frontend Quote interface
         const mappedQuotes: Quote[] = response.data.map((q: any) => ({

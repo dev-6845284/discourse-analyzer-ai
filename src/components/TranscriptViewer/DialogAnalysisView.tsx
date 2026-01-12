@@ -74,12 +74,12 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
 
   // Debug log
   React.useEffect(() => {
-    console.log('[DialogAnalysisView] State:', {
-      isSelectionMode,
-      selectedStatementsSize: selectedStatements?.size,
-      selectedStatements: Array.from(selectedStatements?.entries() || []),
-      lockedGroupId,
-    });
+    // console.log('[DialogAnalysisView] State:', {
+    //   isSelectionMode,
+    //   selectedStatementsSize: selectedStatements?.size,
+    //   selectedStatements: Array.from(selectedStatements?.entries() || []),
+    //   lockedGroupId,
+    // });
   }, [isSelectionMode, selectedStatements, lockedGroupId]);
 
   if (isDialogAnalyzing) {
@@ -112,7 +112,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
       <div className="flex-1 flex items-center justify-center bg-gray-800/30">
         <div className="text-center text-gray-400">
           <p className="mb-4">No dialog analysis data available.</p>
-          
+
           <div className="mb-4 flex items-center justify-center gap-2">
             <label htmlFor="analysis-language-select" className="text-sm text-gray-400">Analysis Language:</label>
             <select
@@ -178,14 +178,14 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
               </select>
             </div>
             <div className="flex gap-2">
-              <button 
-                onClick={onCancelSelection} 
+              <button
+                onClick={onCancelSelection}
                 className="px-3 py-1.5 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={onPromote} 
+              <button
+                onClick={onPromote}
                 disabled={!selectedStatements || selectedStatements.size === 0}
                 className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-900/20"
               >
@@ -255,59 +255,58 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                     const groupId = selectedStatements?.get(statementId) || 1;
 
                     return (
-                    <li
-                      key={idx}
-                      onClick={() => onSummaryItemClick(group.id, item.timestamp, group.dialogLines)}
-                      className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors flex items-start"
-                    >
-                      {isSelectionMode && (
-                        <div className="mr-2 flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <input 
-                            type="checkbox" 
-                            checked={isSelected} 
-                            onChange={() => onToggleSelection?.(statementId, groupId)}
-                            className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
-                          />
-                          {isSelected && !lockedGroupId && (
-                            <div className="flex items-center bg-gray-700 rounded px-1 border border-gray-600">
-                              <button 
-                                onClick={() => onGroupChange?.(statementId, Math.max(1, groupId - 1))}
-                                className="px-1 hover:text-white text-gray-400 text-xs"
-                              >&lt;</button>
-                              <span className="text-xs font-mono w-5 text-center text-cyan-300 font-bold">{groupId}</span>
-                              <button 
-                                onClick={() => onGroupChange?.(statementId, groupId + 1)}
-                                className="px-1 hover:text-white text-gray-400 text-xs"
-                              >&gt;</button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <span className="text-gray-400 font-mono text-xs mr-2 mt-0.5 group-hover:text-cyan-400 transition-colors shrink-0">[{item.timestamp}]</span>
-                      {item.importance !== undefined && (
-                        <div className="flex flex-col w-16 mr-3 mt-1 shrink-0" title={`Importance: ${item.importance}`}>
-                          <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${
-                                item.importance >= 0.8 ? 'bg-red-500' :
-                                item.importance >= 0.5 ? 'bg-yellow-500' :
-                                'bg-green-500'
-                              }`}
-                              style={{ width: `${item.importance * 100}%` }}
+                      <li
+                        key={idx}
+                        onClick={() => onSummaryItemClick(group.id, item.timestamp, group.dialogLines)}
+                        className="text-sm text-gray-300 cursor-pointer group hover:text-white hover:bg-gray-700/50 -mx-2 px-2 py-1 rounded transition-colors flex items-start"
+                      >
+                        {isSelectionMode && (
+                          <div className="mr-2 flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => onToggleSelection?.(statementId, groupId)}
+                              className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
                             />
+                            {isSelected && !lockedGroupId && (
+                              <div className="flex items-center bg-gray-700 rounded px-1 border border-gray-600">
+                                <button
+                                  onClick={() => onGroupChange?.(statementId, Math.max(1, groupId - 1))}
+                                  className="px-1 hover:text-white text-gray-400 text-xs"
+                                >&lt;</button>
+                                <span className="text-xs font-mono w-5 text-center text-cyan-300 font-bold">{groupId}</span>
+                                <button
+                                  onClick={() => onGroupChange?.(statementId, groupId + 1)}
+                                  className="px-1 hover:text-white text-gray-400 text-xs"
+                                >&gt;</button>
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[10px] text-gray-500 text-right leading-none mt-0.5">{item.importance.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <span className="group-hover:underline">{item.text}</span>
-                    </li>
-                  );
+                        )}
+                        <span className="text-gray-400 font-mono text-xs mr-2 mt-0.5 group-hover:text-cyan-400 transition-colors shrink-0">[{item.timestamp}]</span>
+                        {item.importance !== undefined && (
+                          <div className="flex flex-col w-16 mr-3 mt-1 shrink-0" title={`Importance: ${item.importance}`}>
+                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${item.importance >= 0.8 ? 'bg-red-500' :
+                                    item.importance >= 0.5 ? 'bg-yellow-500' :
+                                      'bg-green-500'
+                                  }`}
+                                style={{ width: `${item.importance * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-gray-500 text-right leading-none mt-0.5">{item.importance.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <span className="group-hover:underline">{item.text}</span>
+                      </li>
+                    );
                   })}
                 </ul>
               </div>
             )}
           </div>
-          
+
           <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
             {group.dialogLines.map((line, idx) => {
               const lineId = `${group.id}-${idx}-${line.timestamp}`;
@@ -320,21 +319,18 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                       dialogLineRefs.current.set(lineId, el);
                     }
                   }}
-                  className={`flex gap-4 text-sm p-2 rounded transition-all ${
-                    isHighlighted
+                  className={`flex gap-4 text-sm p-2 rounded transition-all ${isHighlighted
                       ? 'bg-cyan-900/50 border border-cyan-500/50 shadow-lg shadow-cyan-500/20'
                       : 'hover:bg-gray-700/30'
-                  }`}
+                    }`}
                 >
                   <div className="w-24 flex-shrink-0 text-right">
-                    <span className={`font-mono text-xs block ${
-                      isHighlighted ? 'text-cyan-400 font-bold' : 'text-gray-500'
-                    }`}>
+                    <span className={`font-mono text-xs block ${isHighlighted ? 'text-cyan-400 font-bold' : 'text-gray-500'
+                      }`}>
                       {formatTimestamp(line.timestamp)}
                     </span>
-                    <span className={`font-bold block truncate ${
-                      isHighlighted ? 'text-cyan-300' : 'text-purple-400'
-                    }`} title={line.speaker}>
+                    <span className={`font-bold block truncate ${isHighlighted ? 'text-cyan-300' : 'text-purple-400'
+                      }`} title={line.speaker}>
                       {line.speaker}
                     </span>
                   </div>

@@ -401,11 +401,11 @@ export function useAppController() {
           }
         });
 
-        console.log('[handleEditSource] Statement matching:', {
-          originalOriginIds: quote.originIds,
-          matchedStatements,
-          initialSelectedStatementsSize: initialSelectedStatements.size
-        });
+        // console.log('[handleEditSource] Statement matching:', {
+        //   originalOriginIds: quote.originIds,
+        //   matchedStatements,
+        //   initialSelectedStatementsSize: initialSelectedStatements.size
+        // });
       }
 
       uiState.openTranscriptViewer({
