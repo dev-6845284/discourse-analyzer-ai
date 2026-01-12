@@ -30,12 +30,43 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "frame-src": ["'self'", "https://*.facebook.com", "https://*.youtube.com", "https://youtube.com"],
-      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.gstatic.com", "https://*.facebook.net"],
-      "img-src": ["'self'", "data:", "https:", "http:"],
+      "frame-src": [
+        "'self'",
+        "https://*.facebook.com",
+        "https://*.youtube.com",
+        "https://youtube.com",
+        "https://challenges.cloudflare.com",
+        "https://accounts.google.com"
+      ],
+      "script-src": [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://*.google.com",
+        "https://*.gstatic.com",
+        "https://*.facebook.net",
+        "https://challenges.cloudflare.com",
+        "https://accounts.google.com/gsi/client",
+        "https://cdn.tailwindcss.com",
+        "https://unpkg.com",
+        "blob:"
+      ],
+      "img-src": ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com"],
+      "connect-src": [
+        "'self'",
+        "https://*.google.com",
+        "https://accounts.google.com",
+        "https://challenges.cloudflare.com",
+        "https://cdn.tailwindcss.com",
+        "https://unpkg.com"
+      ],
       "frame-ancestors": ["'self'"],
     },
   },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  originAgentCluster: false,
   xXssProtection: true,
   frameguard: {
     action: 'sameorigin',
