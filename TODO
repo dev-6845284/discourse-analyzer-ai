@@ -12,7 +12,7 @@
 - [ ] Re-evaluating quote does not use latest updated context content.
 - [ ] Analysis cleanup may not be working correctly; refresh session data everywhere after cleanup or update.
 - [ ] Error tooltip close button not working.
-- [ ] Quote Tile does not show quote author.
+- [x] Quote Tile does not show quote author.
 
 ## 🛡️ Security & DDoS Protection
 - [x] **Edge Protection:** Configure Web Application Firewall (WAF) rules (e.g., Cloudflare/Vercel) to block known botnets. (See `docs/WAF_CONFIGURATION.md`)
@@ -32,6 +32,7 @@
 - [ ] Promoted stage
 
 ### Improvements:
+- [ ] Person data improvements: link to facebook profile, link to youtube channel, link to tiktok profile, link to twitter profile, link to instagram profile, link to linkedin profile, link to website.
 - [x] Support translations for dynamic analysis categories.
 - [x] Improve audit verdict prompt (currently ambiguous) or remove it.
 - [ ] Allow saving session state multiple times.
@@ -47,15 +48,16 @@
 
 ## 📜 Public Quotes
 - [ ] **Create and Manage Public Quotes**
-    - [ ] **Prerequisite:** Mechanism to mark quotes as public/private with audit history (logging who changed status).
-    - [ ] **Permissions:** Changing quote status is restricted to roles: `admin`, `editor`, `moderator`.
-    - [ ] **Management API:** Specific API for changing status with proper role authorization.
+    - [x] **Prerequisite:** Mechanism to mark quotes as public/private with audit history (logging who changed status).
+    - [x] **Permissions:** Changing quote status is restricted to roles: `admin`, `editor`, `moderator`.
+    - [x] **Management API:** Specific API for changing status with proper role authorization.
     - [ ] **Fetch API:** Special API for fetching public quotes.
-        - [ ] Strict filtering only; no free-text search (security risk).
-        - [ ] Filter by Person: Send person ID only, not the full object.
-    - [ ] **Public View:** Separate view for public quotes.
+        - [x] Strict filtering only; no free-text search (security risk).
+        - [x] Filter by Person: Send person ID only, not the full object.
+    - [/] **Public View:** Separate view for public quotes.
         - [ ] Design with support for different viewing layouts.
         - [ ] Architecture to allow easy future expansion and adoption of different layouts.
+    - [x] **Public Quotes Caching:** Implemented with Redis and fixed size limit.
 
 ## 📺 Media & Display
 - [ ] **TikTok:** Support loading videos from URL.

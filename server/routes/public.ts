@@ -87,6 +87,44 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
 
         const sortConfig: any = { [sortField as string]: sortOrder === 'oldest' ? 1 : -1 };
 
+        // --- CACHE LOGIC START ---
+        // Create a unique cache key based on the query parameters
+        // We hash the query object to ensure consistency
+        const cacheKeyParams = {
+            personId,
+            text,
+            dateFrom,
+            dateTo,
+            sortField,
+            sortOrder,
+            query: JSON.stringify(query) // Include constructed query for safety
+        };
+        const crypto = require('crypto');
+        const hash = crypto.createHash('sha256').update(JSON.stringify(cacheKeyParams)).digest('hex');
+        const cacheKey = `query:${hash}`;
+
+        // Initialize cache service lazily or globally
+        // For now, we import here to avoid circular deps if any, or just use the class
+        const { CacheService } = require('../services/cacheService');
+        const { getPublicQuotesCacheSizeMB } = require('../constants/env');
+
+        // Singleton-like behavior for the specific cache namespace
+        // We attach it to the request or a global provider if needed, but instantiating here is cheap
+        // if we want to hold state (like LRU index), we need a persistent instance.
+        // Let's use a module-level instance.
+        const cacheService = (global as any).publicQuotesCache || new CacheService('public_quotes', getPublicQuotesCacheSizeMB());
+        (global as any).publicQuotesCache = cacheService;
+
+        // Try to get from cache
+        const cachedResults = await cacheService.get(cacheKey);
+        if (cachedResults) {
+            console.log('[PUBLIC_QUOTES] Cache HIT', { cacheKey });
+            return res.json(cachedResults);
+        }
+
+        console.log('[PUBLIC_QUOTES] Cache MISS', { cacheKey });
+        // --- CACHE LOGIC END ---
+
         const quotes = await Quote.find(query)
             .populate('person', 'name description') // Only fetch name and description
             .sort(sortConfig)
@@ -147,6 +185,9 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                 analysis: analysisSummary
             };
         });
+
+        // Save to cache (TTL: 5 minutes)
+        await cacheService.set(cacheKey, sanitizedQuotes, { ttl: 300 });
 
         res.json(sanitizedQuotes);
     } catch (error: any) {

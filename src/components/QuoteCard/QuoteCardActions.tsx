@@ -18,7 +18,6 @@ interface QuoteCardActionsProps {
   onDiscard: () => void;
   onDelete: () => void;
   onRemove: () => void;
-  onRemove: () => void;
   onEditSource?: () => void;
   userRole?: string;
   onVisibilityChange?: (quoteId: string, visibility: 'public' | 'private') => void;
