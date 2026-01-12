@@ -3,7 +3,7 @@
 - You may suggest improvements to existing sentences
 - Do not suggest done items
 
-# Discourse Analyzer AI - Project Roadmap
+# DoubleCheck AI - Project Roadmap
 
 ## 🔴 Critical Issues & Bugs
 - [ ] Youtube transcription fetch don't work from server, due to YouTube protection against API calls. Use Gemini?

@@ -1,4 +1,4 @@
-# Discourse Analyzer AI - Modular Architecture
+# DoubleCheck AI - Modular Architecture
 
 ## 📁 Project Structure
 

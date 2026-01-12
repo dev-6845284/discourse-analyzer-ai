@@ -99,7 +99,7 @@ const BOOKMARKLET_SOURCE = `
                 
                 const json = JSON.stringify(result, null, 2);
                 navigator.clipboard.writeText(json).then(() => {
-                  alert('✅ Transcript copied to clipboard!\\n\\nSegments: ' + segments.length + '\\nLanguage: ' + result.languageCode + '\\n\\nPaste it in the Discourse Analyzer import box.');
+                  alert('✅ Transcript copied to clipboard!\\n\\nSegments: ' + segments.length + '\\nLanguage: ' + result.languageCode + '\\n\\nPaste it in the DoubleCheck AI import box.');
                 }).catch(err => {
                   // Fallback: show in prompt for manual copy
                   prompt('Could not copy automatically. Copy this JSON manually:', json);
@@ -161,7 +161,7 @@ const BOOKMARKLET_SOURCE = `
       
       const json = JSON.stringify(result, null, 2);
       navigator.clipboard.writeText(json).then(() => {
-        alert('✅ Transcript copied from open panel!\\n\\nSegments: ' + segments.length + '\\n\\nPaste it in the Discourse Analyzer import box.');
+        alert('✅ Transcript copied from open panel!\\n\\nSegments: ' + segments.length + '\\n\\nPaste it in the DoubleCheck AI import box.');
       }).catch(err => {
         prompt('Could not copy automatically. Copy this JSON manually:', json);
       });
@@ -185,7 +185,7 @@ export function generateBookmarkletUrl(): string {
     .replace(/\s+/g, ' ') // Collapse whitespace
     .replace(/\s*([{};,:])\s*/g, '$1') // Remove space around punctuation
     .trim();
-  
+
   return 'javascript:' + encodeURIComponent(minified);
 }
 

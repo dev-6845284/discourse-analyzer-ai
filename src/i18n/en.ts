@@ -71,7 +71,7 @@ const en = {
   getYouTubeTranscript: 'Get YouTube Transcript',
   chooseFromMethods: 'Choose from: Auto-fetch, Copy-paste, Bookmarklet, or SRT import',
   // Sidebar
-  appTitle: 'Discourse Analyzer',
+  appTitle: 'DoubleCheck',
   export: 'Export',
   exportTitle: 'Export current quotes to a JSON file',
   import: 'Import',
@@ -637,7 +637,7 @@ const en = {
   public_verifying: 'Verifying access...',
   public_verification_failed: 'Verification failed. Please try again.',
   public_turnstile_error: 'Turnstile error.',
-  public_protected_by: 'Protected by Turnstile and Discourse Analysis AI',
+  public_protected_by: 'Protected by Turnstile and DoubleCheck',
   admin_login: 'Login',
   public_quotes_title: 'Quotes',
   public_back_to_landing: 'Back to Landing',
