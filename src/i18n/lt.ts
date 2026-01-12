@@ -633,14 +633,14 @@ const lt = {
   authorLabel: 'Autorius',
 
   // Viešas vaizdas
-  public_landing_title: 'Viešas citatų archyvas',
+  public_landing_title: 'Citatų archyvas',
   public_landing_subtitle: 'Patvirtinkite, kad nesate robotas, kad pasiektumėte analizės duomenis.',
   public_verifying: 'Tikrinama prieiga...',
   public_verification_failed: 'Patvirtinimas nepavyko. Bandykite dar kartą.',
   public_turnstile_error: 'Turnstile klaida.',
   public_protected_by: 'Saugoma Turnstile ir Discourse Analysis AI',
   admin_login: 'Administratoriaus prisijungimas',
-  public_quotes_title: 'Viešos citatos',
+  public_quotes_title: 'Citatos',
   public_back_to_landing: 'Atgal',
   public_all_people: 'Visi asmenys',
   public_any_time: 'Bet koks laikas',

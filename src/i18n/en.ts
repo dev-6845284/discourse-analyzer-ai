@@ -632,14 +632,14 @@ const en = {
   authorLabel: 'Author',
 
   // Public View
-  public_landing_title: 'Public Quotes Archive',
+  public_landing_title: 'Quotes Archive',
   public_landing_subtitle: 'Verify you are human to access the analysis database.',
   public_verifying: 'Verifying access...',
   public_verification_failed: 'Verification failed. Please try again.',
   public_turnstile_error: 'Turnstile error.',
   public_protected_by: 'Protected by Turnstile and Discourse Analysis AI',
   admin_login: 'Admin Login',
-  public_quotes_title: 'Public Quotes',
+  public_quotes_title: 'Quotes',
   public_back_to_landing: 'Back to Landing',
   public_all_people: 'All People',
   public_any_time: 'Any Time',
