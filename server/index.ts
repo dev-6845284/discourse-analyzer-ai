@@ -36,7 +36,8 @@ app.use(helmet({
         "https://*.youtube.com",
         "https://youtube.com",
         "https://challenges.cloudflare.com",
-        "https://accounts.google.com"
+        "https://accounts.google.com",
+        "https://vercel.live"
       ],
       'script-src': [
         "'self'",
@@ -49,18 +50,20 @@ app.use(helmet({
         "https://accounts.google.com/gsi/client",
         "https://cdn.tailwindcss.com",
         "https://unpkg.com",
+        "https://vercel.live",
         "blob:"
       ],
-      'img-src': ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com"],
+      'img-src': ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com", "https://vercel.live"],
       'connect-src': [
         "'self'",
         "https://*.google.com",
         "https://accounts.google.com",
         "https://challenges.cloudflare.com",
         "https://cdn.tailwindcss.com",
-        "https://unpkg.com"
+        "https://unpkg.com",
+        "https://vercel.live"
       ],
-      'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://vercel.live"],
       'worker-src': ["'self'", "blob:", "https://challenges.cloudflare.com"],
       'child-src': ["'self'", "blob:", "https://challenges.cloudflare.com"],
       'frame-ancestors': ["'self'"],
