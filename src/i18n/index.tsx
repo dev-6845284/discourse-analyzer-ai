@@ -27,9 +27,9 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<string>(() => {
     try {
-      return (localStorage.getItem(LANG_KEY) as string) || 'en';
+      return (localStorage.getItem(LANG_KEY) as string) || 'lt';
     } catch (e) {
-      return 'en';
+      return 'lt';
     }
   });
 
