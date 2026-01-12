@@ -660,6 +660,7 @@ const en = {
   public_level: 'Level',
   public_details_evidence: 'Details & Evidence',
   public_evidence: 'Evidence:',
+  disabled: '(Disabled)',
   unknown_person: 'Unknown Person',
 };
 

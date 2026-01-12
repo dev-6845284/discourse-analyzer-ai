@@ -8,6 +8,7 @@ import { analyzeDialogTopics as analyzeDialogTopicsService } from '../services/d
 import { groupTranscriptByTime } from '../services/dialogAnalysis/transcriptGrouper';
 import { addLogEntry, updateLogEntry } from '../services/logService';
 import authorizeMiddleware from '../middleware/authorize';
+import { checkFeature } from '../middleware/featureToggle';
 
 const router = express.Router();
 
@@ -15,7 +16,19 @@ router.use(isAuthenticated);
 router.use(authorizeMiddleware);
 
 // Create a new analysis session
-router.post('/sessions', async (req, res) => {
+router.post('/sessions', async (req, res, next) => {
+  const { sourceType } = req.body;
+  if (sourceType === 'youtube') {
+    return checkFeature('youtube_transcript')(req, res, () => next());
+  }
+  // For 'text' or 'article', we might map to 'import_transcript' if that's what it means, 
+  // or 'text_extract'. The UI "Import Transcript Data" usually creates a session?
+  // Actually "Import Transcript Data" usually uploads a file or JSON.
+  // "Create Session" from sourceUrl might be "Extract" or "YouTube".
+  // If sourceType is 'article' or 'text', let's assume it falls under 'text_extract' or 'import_transcript'.
+  // But strictly, 'youtube_transcript' is the clear one.
+  next();
+}, async (req, res) => {
   try {
     const { sourceUrl, sourceType } = req.body;
     const userId = req.session.user!._id as string;

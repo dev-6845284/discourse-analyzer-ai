@@ -245,6 +245,9 @@ const App: React.FC = () => {
                   onPublicView={() => navigateTo('/public/quotes')}
                   openSection={openSidebarSection}
                   setOpenSection={setOpenSidebarSection}
+                  // Settings props
+                  systemSettings={ctrl.systemSettings}
+                  onOpenSettings={() => ctrl.setIsSettingsModalOpen(true)}
                   searchContent={
                     <div className="space-y-4">
                       {/* Always visible person selector */}
@@ -299,8 +302,10 @@ const App: React.FC = () => {
                       </div>
 
                       {/* Search for Quotes (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('searchForQuotes')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.search && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.search ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('searchForQuotes')} {!ctrl.systemSettings.search && t('disabled')}
+                        </summary>
                         <SearchControls
                           searchParams={searchParams}
                           statusFilters={{
@@ -331,8 +336,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Extract from Text (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('extractFromText')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.text_extract && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.text_extract ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('extractFromText')} {!ctrl.systemSettings.text_extract && t('disabled')}
+                        </summary>
                         <ExtractionControls
                           textToExtract={searchParams.textToExtract}
                           setTextToExtract={searchParams.setTextToExtract}
@@ -350,8 +357,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* YouTube Transcript (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('youtubeTranscript')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.youtube_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.youtube_transcript ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('youtubeTranscript')} {!ctrl.systemSettings.youtube_transcript && t('disabled')}
+                        </summary>
                         <YoutubeTranscriptButton
                           onClick={() => setIsTranscriptMethodSelectorOpen(true)}
                           isLoading={searchParams.isExtracting}
@@ -359,8 +368,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import Transcript Data (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('importTranscriptDataTitle') || t('importTranscriptData')} {!ctrl.systemSettings.import_transcript && t('disabled')}
+                        </summary>
                         <TranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
@@ -368,8 +379,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import SRT Transcript (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importSrtTranscriptTitle')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('importSrtTranscriptTitle')} {!ctrl.systemSettings.import_transcript && t('disabled')}
+                        </summary>
                         <SrtTranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
@@ -377,8 +390,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import Analysis Data (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importAnalysisTitle')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_analysis && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_analysis ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('importAnalysisTitle')} {!ctrl.systemSettings.import_analysis && t('disabled')}
+                        </summary>
                         <AnalysisImporter
                           onImport={handleImportAnalysis}
                           isLoading={searchParams.isExtracting}
@@ -500,6 +515,9 @@ const App: React.FC = () => {
                     onPublicView={() => navigateTo('/public/quotes')}
                     openSection={openSidebarSection}
                     setOpenSection={setOpenSidebarSection}
+                    // Settings props
+                    systemSettings={ctrl.systemSettings}
+                    onOpenSettings={() => ctrl.setIsSettingsModalOpen(true)}
                     searchContent={
                       <div className="space-y-6">
                         <SearchControls
@@ -628,6 +646,12 @@ const App: React.FC = () => {
               onCloseUsageStats={() => setIsUsageStatsDashboardOpen(false)}
               isAdminCategoriesOpen={isAdminCategoriesOpen}
               onCloseAdminCategories={() => setIsAdminCategoriesOpen(false)}
+
+              // Settings props
+              isSettingsModalOpen={ctrl.isSettingsModalOpen}
+              onCloseSettingsModal={() => ctrl.setIsSettingsModalOpen(false)}
+              systemSettings={ctrl.systemSettings}
+              onUpdateSettings={ctrl.handleUpdateSettings}
             />
           </div>
         </div>
@@ -635,5 +659,6 @@ const App: React.FC = () => {
     </div>
   );
 };
+
 
 export default App;

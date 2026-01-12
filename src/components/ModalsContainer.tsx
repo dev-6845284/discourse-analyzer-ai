@@ -5,6 +5,7 @@ import { TranscriptMethodSelector } from './TranscriptMethodSelector';
 import { UserChangePasswordModal } from './users/UserChangePasswordModal';
 import { EditProfileModal } from './users/EditProfileModal';
 import { UsageStatsDashboard } from './admin/UsageStatsDashboard';
+import { AdminSettings } from './admin/AdminSettings';
 const AdminCategoriesLazy = React.lazy(() => import('./admin/AdminCategories'));
 import type { TranscriptData } from '../utils/transcriptStorage';
 
@@ -45,6 +46,12 @@ interface ModalsProps {
   // Admin categories
   isAdminCategoriesOpen?: boolean;
   onCloseAdminCategories?: () => void;
+
+  // Settings
+  isSettingsModalOpen?: boolean;
+  onCloseSettingsModal?: () => void;
+  systemSettings?: any;
+  onUpdateSettings?: (settings: any) => Promise<void>;
 }
 
 export const ModalsContainer: React.FC<ModalsProps> = ({
@@ -74,9 +81,26 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
   onCloseUsageStats,
   isAdminCategoriesOpen,
   onCloseAdminCategories,
+  isSettingsModalOpen,
+  onCloseSettingsModal,
+  systemSettings,
+  onUpdateSettings,
 }) => {
   return (
     <>
+      {isSettingsModalOpen && onCloseSettingsModal && systemSettings && onUpdateSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={onCloseSettingsModal} />
+          <div className="relative z-10 w-full max-w-2xl px-4">
+            <AdminSettings
+              settings={systemSettings}
+              onUpdate={onUpdateSettings}
+              onClose={onCloseSettingsModal}
+            />
+          </div>
+        </div>
+      )}
+
       {isUsageStatsDashboardOpen && (
         <UsageStatsDashboard onClose={onCloseUsageStats} />
       )}

@@ -26,6 +26,8 @@ interface SidebarProps {
   logsVisible?: boolean;
   setLogsVisible?: (v: boolean) => void;
   onPublicView?: () => void;
+  systemSettings?: any;
+  onOpenSettings?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -50,6 +52,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   logsVisible,
   setLogsVisible,
   onPublicView,
+  systemSettings,
+  onOpenSettings,
 }) => {
   const { t } = useI18n();
 
@@ -198,6 +202,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('keyset_management')}
+                  </button>
+
+                  <button
+                    onClick={() => onOpenSettings && onOpenSettings()}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    System Settings (Feature Toggles)
                   </button>
                 </div>
               </SidebarSection>

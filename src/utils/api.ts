@@ -346,3 +346,8 @@ export const unassignKeysetFromUser = (keysetId: string, userId: string) =>
   api.post(`/admin/api-key-sets/${keysetId}/unassign`, { userId });
 export const getUserAssignedKeyset = (userId: string) =>
   api.get(`/users/${userId}/assigned-keyset`);
+
+// System Settings
+export const fetchSystemSettings = () => api.get('/settings');
+export const updateSystemSettings = (features: any) => api.put('/settings', { features });
+

@@ -119,6 +119,11 @@ export function inferDefaultRole(method: string, path: string): string {
     return 'admin';
   }
 
+  // Settings
+  if (normalized === '/api/settings') {
+    return method === 'GET' ? 'viewer' : 'admin';
+  }
+
   // People endpoints: delete -> admin, get -> viewer, others -> editor
   if (/^\/api\/people(\/|$)/.test(normalized)) {
     if (method === 'DELETE') return 'admin';
@@ -150,9 +155,16 @@ export async function registerEndpoints(app: express.Express) {
     const now = new Date();
     for (const r of unique.values()) {
       const requiredRole = inferDefaultRole(r.method, r.path);
+
+      // Force update for settings route to ensure previous default doesn't stick
+      // Also force update for other system routes if needed, but start with settings
+      const updateOp = (r.path === '/api/settings')
+        ? { $set: { requiredRole, updatedAt: now }, $setOnInsert: { method: r.method, path: r.path, createdAt: now } }
+        : { $setOnInsert: { method: r.method, path: r.path, requiredRole, createdAt: now, updatedAt: now } };
+
       await ApiPermission.updateOne(
         { method: r.method, path: r.path },
-        { $setOnInsert: { method: r.method, path: r.path, requiredRole, createdAt: now, updatedAt: now } },
+        updateOp,
         { upsert: true }
       );
     }

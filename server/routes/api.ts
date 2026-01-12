@@ -5,6 +5,7 @@ import * as quoteService from '../services/quoteService';
 import { isAuthenticated } from '../middleware/auth';
 import { isAdminOrDev } from '../middleware/admin';
 import authorizeMiddleware from '../middleware/authorize';
+import { checkFeature } from '../middleware/featureToggle';
 
 const router = express.Router();
 
@@ -32,12 +33,12 @@ router.use(isAuthenticated);
 router.use(authorizeMiddleware);
 
 router.post('/quotes/search', (req, res) => apiService.fetchQuotes(req, res));
-router.post('/quotes/agentic-search', (req, res) => apiService.agenticSearch(req, res));
+router.post('/quotes/agentic-search', checkFeature('search'), (req, res) => apiService.agenticSearch(req, res));
 router.post('/quotes/analyze', (req, res) => apiService.analyzeQuote(req, res));
-router.post('/quotes/extract', (req, res) => apiService.extractQuotes(req, res));
-router.post('/quotes/extract-from-url', (req, res) => apiService.extractQuotesFromUrl(req, res));
-router.post('/quotes/fetch-article', (req, res) => apiService.fetchArticleContent(req, res));
-router.post('/quotes/fetch-transcript', (req, res) => apiService.fetchYoutubeTranscript(req, res));
+router.post('/quotes/extract', checkFeature('text_extract'), (req, res) => apiService.extractQuotes(req, res));
+router.post('/quotes/extract-from-url', checkFeature('text_extract'), (req, res) => apiService.extractQuotesFromUrl(req, res));
+router.post('/quotes/fetch-article', checkFeature('text_extract'), (req, res) => apiService.fetchArticleContent(req, res));
+router.post('/quotes/fetch-transcript', checkFeature('youtube_transcript'), (req, res) => apiService.fetchYoutubeTranscript(req, res));
 // Old endpoints removed - use session-based endpoints in /analysis/sessions/:id/analyze-* instead
 router.post('/quotes/improve', (req, res) => apiService.improveSingleQuote(req, res));
 

@@ -661,6 +661,7 @@ const lt = {
   public_level: 'Lygis',
   public_details_evidence: 'Detalės ir įrodymai',
   public_evidence: 'Įrodymai:',
+  disabled: '(Išjungta)',
   unknown_person: 'Nežinomas asmuo',
 };
 

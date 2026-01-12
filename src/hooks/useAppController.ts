@@ -47,6 +47,41 @@ export function useAppController() {
   // Admin view within Admin actions container (e.g., 'users', 'categories', null)
   const [adminView, setAdminView] = React.useState<'users' | 'categories' | 'logs' | 'management' | 'keysets' | null>(null);
 
+  // System Settings
+  const [systemSettings, setSystemSettings] = React.useState({
+    search: true,
+    text_extract: true,
+    youtube_transcript: true,
+    import_transcript: true,
+    import_analysis: true,
+  });
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    // Dynamically import to avoid circular dependencies if any, though explicit import is better.
+    // Switching to direct import or keeping api usage consistent.
+    // Since api is imported at top level in other files, let's use the imported 'fetchArticle' style if possible, 
+    // but here we need to import the new functions.
+    // Let's just use the functions from ../utils/api if they were exported.
+    // I will use dynamic import for now to be safe with the previous `require` change.
+    import('../utils/api').then(({ fetchSystemSettings }) => {
+      fetchSystemSettings().then((res: any) => {
+        setSystemSettings(res.data);
+      }).catch((err: any) => console.error('Failed to fetch settings:', err));
+    });
+  }, []);
+
+  const handleUpdateSettings = async (newSettings: any) => {
+    try {
+      const { updateSystemSettings } = await import('../utils/api');
+      const res = await updateSystemSettings(newSettings);
+      setSystemSettings(res.data);
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      throw error;
+    }
+  };
+
   React.useEffect(() => {
     if (logsVisible) {
       uiState.setIsFormCollapsed(true);
@@ -466,6 +501,12 @@ export function useAppController() {
     // Admin view
     adminView,
     setAdminView,
+
+    // Settings
+    systemSettings,
+    handleUpdateSettings,
+    isSettingsModalOpen,
+    setIsSettingsModalOpen,
 
     // Actions
     handleExport,

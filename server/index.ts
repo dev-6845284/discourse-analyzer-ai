@@ -470,6 +470,11 @@ app.use('/api/users', apiRateLimiter, (req, res, next) => {
   const userRoutes = require('./routes/users').default;
   return userRoutes(req, res, next);
 });
+app.use('/api/settings', apiRateLimiter, (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const settingsRoutes = require('./routes/settings').default;
+  return settingsRoutes(req, res, next);
+});
 app.use('/api/analysis', apiRateLimiter, (req, res, next) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const analysisRoutes = require('./routes/analysis').default;
