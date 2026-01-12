@@ -16,7 +16,7 @@ import type { Quote, Person, AnalysisSession, ExportData } from '../types';
 export type UseAppController = ReturnType<typeof useAppController>;
 
 export function useAppController() {
-  const { user, loginError, googleButtonRef, handleLogout, loginWithPassword, updateUser } = useAuth();
+  const { user, loginError, isAuthLoading, googleButtonRef, handleLogout, loginWithPassword, loginAsDev, updateUser } = useAuth();
 
   const searchParams = useSearchParams();
   const { t } = useI18n();
@@ -397,9 +397,11 @@ export function useAppController() {
     // Auth
     user,
     loginError,
+    isAuthLoading,
     googleButtonRef,
     handleLogout,
     loginWithPassword,
+    loginAsDev,
     updateUser,
 
     // Hooks

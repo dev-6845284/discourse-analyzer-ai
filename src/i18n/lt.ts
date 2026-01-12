@@ -446,6 +446,7 @@ const lt = {
   quoteDate: 'Citatos data',
   filterByPersonPlaceholder: 'Filtruoti pagal asmenį...',
   loading: 'Kraunama...',
+  initializing: 'Inicijuojama...',
 
   // Main content
   searchResultsTab: 'Paieškos rezultatai',

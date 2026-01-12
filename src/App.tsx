@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAppController } from './hooks/useAppController';
 import LoginScreen from './components/auth/LoginScreen';
-import LogViewer from './components/LogViewer';
 import TranscriptImporter from './components/TranscriptImporter';
 import { SrtTranscriptImporter } from './components/SrtTranscriptImporter';
 import { YoutubeTranscriptButton } from './components/YoutubeTranscriptButton';
@@ -133,6 +132,16 @@ const App: React.FC = () => {
     // If logged out (user became null) and we are on dashboard -> handled by conditional render below
   }, [user, currentPath]);
 
+  // Global Loading State (Session Check)
+  if (ctrl.isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-gray-100 font-sans">
+        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-xl font-medium text-gray-400">{t('initializing')}</p>
+      </div>
+    );
+  }
+
   // 1. Login Route
   if (currentPath === '/login') {
     return (
@@ -142,6 +151,7 @@ const App: React.FC = () => {
             googleButtonRef={googleButtonRef}
             loginError={loginError}
             onLogin={loginWithPassword}
+            onDevLogin={ctrl.loginAsDev}
           />
         </div>
       </div>

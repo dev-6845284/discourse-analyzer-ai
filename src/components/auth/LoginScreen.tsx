@@ -6,9 +6,10 @@ interface LoginScreenProps {
   googleButtonRef: React.RefObject<HTMLDivElement>;
   loginError: string | null;
   onLogin: (email: string, password: string, token?: string) => Promise<void>;
+  onDevLogin?: () => Promise<void>;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, onLogin }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, onLogin, onDevLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
@@ -75,6 +76,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
       </div>
 
       <div ref={googleButtonRef}></div>
+
+      {import.meta.env.DEV && onDevLogin && (
+        <div className="mt-4 w-full">
+          <button
+            onClick={onDevLogin}
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded border border-gray-500 transition-colors flex items-center justify-center gap-2"
+          >
+            <span>👨‍💻</span> Developer Login
+          </button>
+        </div>
+      )}
+
       {loginError && <p className="mt-4 text-red-500">{loginError}</p>}
     </div>
   );

@@ -443,6 +443,7 @@ const en = {
   quoteDate: 'Quote Date',
   filterByPersonPlaceholder: 'Filter by person...',
   loading: 'Loading...',
+  initializing: 'Initializing...',
 
   // Main content
   searchResultsTab: 'Search Results',

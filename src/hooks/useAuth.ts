@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserInfo } from '../types';
-import { shouldBypassAuth, getDefaultLocalUser } from '../utils/auth';
 import { GOOGLE_CLIENT_ID } from '../config/app.config';
 import api from '../utils/api';
 
@@ -17,6 +16,7 @@ export function useAuth() {
     try {
       const res = await api.post('/login', { token: response.credential });
       if (res.data.user) {
+        localStorage.removeItem('dev_logged_out');
         setUser(res.data.user);
         setLoginError(null);
       }
@@ -29,6 +29,7 @@ export function useAuth() {
   const handleLogout = useCallback(async () => {
     try {
       await api.post('/logout');
+      localStorage.setItem('dev_logged_out', 'true');
       setUser(null);
       setLoginError(null);
     } catch (error) {
@@ -40,6 +41,7 @@ export function useAuth() {
     try {
       const res = await api.post('/login/password', { email, password, turnstileToken });
       if (res.data.user) {
+        localStorage.removeItem('dev_logged_out');
         setUser(res.data.user);
         setLoginError(null);
       }
@@ -52,18 +54,20 @@ export function useAuth() {
     }
   }, []);
 
-  const checkUserSession = useCallback(async () => {
-    if (shouldBypassAuth()) {
-      // Even if bypassing auth, we should try to hit the backend to establish a session cookie
-      try {
-        await api.get('/user');
-      } catch (e) {
-        console.warn('Failed to establish session with backend in bypass mode', e);
+  const loginAsDev = useCallback(async () => {
+    try {
+      const res = await api.post('/dev/login');
+      if (res.data.user) {
+        setUser(res.data.user);
+        setLoginError(null);
       }
-      setUser(getDefaultLocalUser());
-      setIsAuthLoading(false);
-      return;
+    } catch (error: any) {
+      console.error('Dev login failed:', error);
+      setLoginError('Dev login failed');
     }
+  }, []);
+
+  const checkUserSession = useCallback(async () => {
     try {
       const res = await api.get('/user');
       if (res.data.user) {
@@ -81,16 +85,42 @@ export function useAuth() {
   }, [checkUserSession]);
 
   useEffect(() => {
-    if (!isAuthLoading && !user && googleButtonRef.current) {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse,
-      });
-      google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-      });
-      google.accounts.id.prompt();
+    // Wait for auth check to complete
+    if (isAuthLoading || !googleButtonRef.current) return;
+
+    // Helper to initialize Google button
+    const initializeGoogle = () => {
+      if (typeof google === 'undefined' || !googleButtonRef.current) return;
+
+      try {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+        });
+        google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: 'outline',
+          size: 'large',
+        });
+        google.accounts.id.prompt();
+      } catch (error) {
+        console.error('Google Sign-In initialization failed:', error);
+      }
+    };
+
+    // If google script is already loaded
+    if (typeof google !== 'undefined') {
+      initializeGoogle();
+    } else {
+      // Poll for google script availability (in case of async load race condition)
+      const intervalId = setInterval(() => {
+        if (typeof google !== 'undefined') {
+          clearInterval(intervalId);
+          initializeGoogle();
+        }
+      }, 100);
+
+      // Cleanup interval on unmount or deps change
+      return () => clearInterval(intervalId);
     }
   }, [isAuthLoading, user, handleCredentialResponse]);
 
@@ -105,6 +135,7 @@ export function useAuth() {
     googleButtonRef,
     handleLogout,
     loginWithPassword,
+    loginAsDev,
     updateUser,
   };
 }
