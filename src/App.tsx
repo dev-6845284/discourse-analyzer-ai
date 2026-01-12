@@ -199,14 +199,13 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
         {/* Admin Security Alert Banner - shown in dev mode or for admins */}
         <AdminAlertBanner
-          isAdmin={import.meta.env.DEV || user?.role === 'admin'}
+          isAdmin={user?.role === 'admin'}
           onViewDashboard={() => setIsUsageStatsDashboardOpen(true)}
           isCollapsed={isAdminBannerCollapsed}
           onCollapsedChange={setIsAdminBannerCollapsed}
         />
 
-        <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${(import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
-          }`}>
+        <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${user?.role === 'admin' ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''}`}>
           <Header
             user={user!}
             isFormCollapsed={isFormCollapsed}
@@ -655,7 +654,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

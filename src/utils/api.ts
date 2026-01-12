@@ -60,6 +60,11 @@ api.interceptors.response.use((response) => {
   });
   return response;
 }, (error) => {
+  // Don't log 401 for the session check endpoint - it's expected for unauthenticated users
+  if (error.response?.status === 401 && error.config?.url?.endsWith('/user')) {
+    return Promise.reject(error);
+  }
+
   console.error('[API_RESPONSE_ERROR]', {
     timestamp: new Date().toISOString(),
     url: error.config?.url,

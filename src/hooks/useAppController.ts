@@ -58,6 +58,8 @@ export function useAppController() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState(false);
 
   React.useEffect(() => {
+    if (isAuthLoading || !user || user.role === 'public_guest') return;
+
     // Dynamically import to avoid circular dependencies if any, though explicit import is better.
     // Switching to direct import or keeping api usage consistent.
     // Since api is imported at top level in other files, let's use the imported 'fetchArticle' style if possible, 
@@ -69,7 +71,7 @@ export function useAppController() {
         setSystemSettings(res.data);
       }).catch((err: any) => console.error('Failed to fetch settings:', err));
     });
-  }, []);
+  }, [user, isAuthLoading]);
 
   const handleUpdateSettings = async (newSettings: any) => {
     try {

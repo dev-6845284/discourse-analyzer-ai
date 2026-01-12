@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';
 import { Filter, Calendar, User, ChevronDown, LogIn } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
@@ -20,7 +20,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
     const fetchQuotes = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/public/quotes');
+            const response = await api.get('/public/quotes');
             setQuotes(response.data);
             setError(null);
         } catch (err: any) {

@@ -30,7 +30,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "frame-src": [
+      frameSrc: [
         "'self'",
         "https://*.facebook.com",
         "https://*.youtube.com",
@@ -38,7 +38,7 @@ app.use(helmet({
         "https://challenges.cloudflare.com",
         "https://accounts.google.com"
       ],
-      "script-src": [
+      scriptSrc: [
         "'self'",
         "'unsafe-inline'",
         "'unsafe-eval'",
@@ -51,8 +51,8 @@ app.use(helmet({
         "https://unpkg.com",
         "blob:"
       ],
-      "img-src": ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com"],
-      "connect-src": [
+      imgSrc: ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com"],
+      connectSrc: [
         "'self'",
         "https://*.google.com",
         "https://accounts.google.com",
@@ -60,7 +60,10 @@ app.use(helmet({
         "https://cdn.tailwindcss.com",
         "https://unpkg.com"
       ],
-      "frame-ancestors": ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      workerSrc: ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      childSrc: ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      frameAncestors: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -398,8 +401,8 @@ app.post('/api/login/password', loginRateLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/user', isAuthenticated, (req, res) => {
-  res.json({ user: req.session.user });
+app.get('/api/user', (req, res) => {
+  res.json({ user: req.session?.user || null });
 });
 
 app.get('/api/session/debug', isAuthenticated, async (req, res) => {

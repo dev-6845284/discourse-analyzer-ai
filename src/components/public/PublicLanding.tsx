@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 // @ts-ignore
 import Turnstile from 'react-turnstile';
-import axios from 'axios';
+import api from '../../utils/api';
 import { ShieldCheck, MessageSquareQuote } from 'lucide-react';
 import { useI18n } from '../../i18n';
 
@@ -19,7 +19,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, on
         setIsValidating(true);
         setError(null);
         try {
-            const response = await axios.post('/api/public/login', { token });
+            const response = await api.post('/public/login', { token });
             if (response.data.user) {
                 onLoginSuccess(response.data.user);
             }
