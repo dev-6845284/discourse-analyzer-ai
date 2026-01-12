@@ -2,6 +2,7 @@ import SidebarSection from './SidebarSection';
 import React from 'react';
 import { useI18n } from '../../i18n';
 import DevRoleSelector from '../DevRoleSelector';
+import { Globe, ExternalLink } from 'lucide-react';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -24,6 +25,7 @@ interface SidebarProps {
   openAdminCategories?: () => void;
   logsVisible?: boolean;
   setLogsVisible?: (v: boolean) => void;
+  onPublicView?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -47,6 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   openAdminCategories,
   logsVisible,
   setLogsVisible,
+  onPublicView,
 }) => {
   const { t } = useI18n();
 
@@ -121,6 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={`${isCollapsed ? 'hidden' : 'block'} md:block`}
       >
         <div className="space-y-2">
+
           {activeTab !== 'admin' && (
             <>
               <SidebarSection

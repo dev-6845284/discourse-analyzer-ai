@@ -639,7 +639,7 @@ const lt = {
   public_verification_failed: 'Patvirtinimas nepavyko. Bandykite dar kartą.',
   public_turnstile_error: 'Turnstile klaida.',
   public_protected_by: 'Saugoma Turnstile ir Discourse Analysis AI',
-  admin_login: 'Administratoriaus prisijungimas',
+  admin_login: 'Pprisijungimas',
   public_quotes_title: 'Citatos',
   public_back_to_landing: 'Atgal',
   public_all_people: 'Visi asmenys',

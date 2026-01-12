@@ -8,6 +8,7 @@ import LogViewer from './LogViewer';
 import AccessControlManagement from './admin/AccessControlManagement';
 import AdminCategories from './admin/AdminCategories';
 import KeysetManagement from './admin/KeysetManagement';
+import { Globe } from 'lucide-react';
 
 interface MainContentProps {
   activeTab: 'search' | 'people' | 'users' | 'sessions' | 'admin';
@@ -54,6 +55,7 @@ interface MainContentProps {
   openAdminCategories?: () => void;
   logsVisible?: boolean;
   setLogsVisible?: (v: boolean) => void;
+  onPublicView?: () => void;
   selectedAI: string;
   userRole?: string;
 }
@@ -93,6 +95,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   logsVisible,
   setLogsVisible,
   userRole,
+  onPublicView,
 }) => {
   const { t } = useI18n();
 
@@ -106,8 +109,8 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <button
                   onClick={() => setResultsTab('new')}
                   className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'new'
-                      ? 'bg-cyan-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    ? 'bg-cyan-600 text-white shadow'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
                     }`}
                 >
                   {t('searchResultsTab')}
@@ -115,8 +118,8 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <button
                   onClick={() => setResultsTab('stored')}
                   className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'stored'
-                      ? 'bg-cyan-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    ? 'bg-cyan-600 text-white shadow'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
                     }`}
                 >
                   {t('storedQuotesTab')}
@@ -125,8 +128,8 @@ export const MainContent: React.FC<MainContentProps> = ({
                   <button
                     onClick={() => setResultsTab('transcript')}
                     className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'transcript'
-                        ? 'bg-cyan-600 text-white shadow'
-                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      ? 'bg-cyan-600 text-white shadow'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
                       }`}
                   >
                     {t('transcriptTab')}
@@ -145,7 +148,16 @@ export const MainContent: React.FC<MainContentProps> = ({
             )}
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center gap-2">
+            {onPublicView && (
+              <button
+                onClick={onPublicView}
+                className="p-2 bg-gray-700 text-gray-400 hover:text-cyan-400 rounded-md transition-colors"
+                title={t('public_landing_title')}
+              >
+                <Globe className="w-5 h-5" />
+              </button>
+            )}
             <button
               onClick={() => setActiveTab(activeTab === 'admin' ? 'search' : 'admin')}
               className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'admin' ? 'bg-cyan-600 text-white shadow' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'

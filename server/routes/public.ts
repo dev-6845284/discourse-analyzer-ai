@@ -4,6 +4,7 @@ import Quote from '../models/Quote';
 import '../models/Person'; // Ensure Person model is registered for populate
 import { generalRateLimiter } from '../middleware/rateLimiter';
 import mongoose from 'mongoose';
+import { isProduction, isLocal } from '../constants/env';
 
 const router = express.Router();
 
@@ -54,6 +55,12 @@ const ensurePublicOrAuth = (req: express.Request, res: express.Response, next: e
 
 // Public Quotes API
 router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
+    // Safeguard: only logged users (not public guests) can see quotes on non-production (excluding local)
+    if (!isProduction() && !isLocal() && req.session?.user?.role === 'public_guest') {
+        console.log('[PUBLIC_QUOTES] Safeguard: Returning empty list on non-production for public guest');
+        return res.json([]);
+    }
+
     // ToDo remove text filter
     try {
         const {

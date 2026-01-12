@@ -638,7 +638,7 @@ const en = {
   public_verification_failed: 'Verification failed. Please try again.',
   public_turnstile_error: 'Turnstile error.',
   public_protected_by: 'Protected by Turnstile and Discourse Analysis AI',
-  admin_login: 'Admin Login',
+  admin_login: 'Login',
   public_quotes_title: 'Quotes',
   public_back_to_landing: 'Back to Landing',
   public_all_people: 'All People',

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PublicQuoteCard } from './PublicQuoteCard';
-import { Filter, Calendar, User, ChevronDown } from 'lucide-react';
+import { Filter, Calendar, User, ChevronDown, LogIn } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
 
 interface PublicQuotesProps {
     onLogout?: () => void;
+    onOpenLogin?: () => void;
 }
 
-export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout }) => {
+export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogin }) => {
     const [quotes, setQuotes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -89,9 +90,20 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout }) => {
                             <button
                                 onClick={onLogout}
                                 className="text-sm text-gray-400 hover:text-white font-semibold transition-colors flex items-center gap-2"
+                                title={t('public_back_to_landing')}
                             >
                                 <span className="hidden sm:inline">{t('public_back_to_landing')}</span>
                                 <span className="sm:hidden">←</span>
+                            </button>
+                        )}
+
+                        {onOpenLogin && (
+                            <button
+                                onClick={onOpenLogin}
+                                className="px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-gray-600/50 hover:border-gray-500 shadow-sm"
+                            >
+                                <LogIn className="w-3.5 h-3.5" />
+                                <span>{t('admin_login')}</span>
                             </button>
                         )}
                     </div>

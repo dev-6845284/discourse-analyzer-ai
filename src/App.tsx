@@ -161,7 +161,7 @@ const App: React.FC = () => {
   }
 
   if (currentPath === '/public/quotes') {
-    return <PublicQuotes onLogout={() => navigateTo('/')} />;
+    return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} />;
   }
 
   // 3. Dashboard Route (Protected)
@@ -232,6 +232,7 @@ const App: React.FC = () => {
                   openAdminCategories={() => setIsAdminCategoriesOpen(true)}
                   logsVisible={logsVisible}
                   setLogsVisible={setLogsVisible}
+                  onPublicView={() => navigateTo('/public/quotes')}
                   openSection={openSidebarSection}
                   setOpenSection={setOpenSidebarSection}
                   searchContent={
@@ -464,6 +465,7 @@ const App: React.FC = () => {
                 onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
                 onExport={handleExport}
                 onImport={handleImport}
+                onPublicView={() => navigateTo('/public/quotes')}
               />
             </main>
 
@@ -485,6 +487,7 @@ const App: React.FC = () => {
                     openAdminCategories={() => setIsAdminCategoriesOpen(true)}
                     logsVisible={logsVisible}
                     setLogsVisible={setLogsVisible}
+                    onPublicView={() => navigateTo('/public/quotes')}
                     openSection={openSidebarSection}
                     setOpenSection={setOpenSidebarSection}
                     searchContent={
