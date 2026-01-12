@@ -30,7 +30,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      frameSrc: [
+      'frame-src': [
         "'self'",
         "https://*.facebook.com",
         "https://*.youtube.com",
@@ -38,7 +38,7 @@ app.use(helmet({
         "https://challenges.cloudflare.com",
         "https://accounts.google.com"
       ],
-      scriptSrc: [
+      'script-src': [
         "'self'",
         "'unsafe-inline'",
         "'unsafe-eval'",
@@ -51,8 +51,8 @@ app.use(helmet({
         "https://unpkg.com",
         "blob:"
       ],
-      imgSrc: ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com"],
-      connectSrc: [
+      'img-src': ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com"],
+      'connect-src': [
         "'self'",
         "https://*.google.com",
         "https://accounts.google.com",
@@ -60,10 +60,10 @@ app.use(helmet({
         "https://cdn.tailwindcss.com",
         "https://unpkg.com"
       ],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      workerSrc: ["'self'", "blob:", "https://challenges.cloudflare.com"],
-      childSrc: ["'self'", "blob:", "https://challenges.cloudflare.com"],
-      frameAncestors: ["'self'"],
+      'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      'worker-src': ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      'child-src': ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      'frame-ancestors': ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,

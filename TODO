@@ -6,6 +6,7 @@
 # DoubleCheck AI - Project Roadmap
 
 ## 🔴 Critical Issues & Bugs
+- [ ] Auto refrech quotes search result list on quote storage into database.
 - [ ] Youtube transcription fetch don't work from server, due to YouTube protection against API calls. Use Gemini?
 - [ ] **CRITICAL:** Total data loss detected! (Started with 675 lines, ended with 235 lines. Lost 440 lines).
 - [x] Quote analysis does not use correct analysis categories according to selected analysis type.

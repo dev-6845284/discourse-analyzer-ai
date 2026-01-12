@@ -18,7 +18,7 @@ router.use((req, res, next) => {
 // Explicit login for development environment
 router.post('/login', (req, res) => {
   const user = {
-    _id: 'local_dev_id',
+    _id: '507f1f77bcf86cd799439011', // Valid 24-char hex string
     email: 'developer@example.com',
     name: 'Local Developer',
     picture: '',
