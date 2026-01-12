@@ -5,10 +5,11 @@ import { isLocal } from '../constants/env';
 const redisClient = require('../services/redis').default;
 
 // Helper to create rate limiter with memory or Redis store
-function createRateLimiter(options: Partial<Options>): RateLimitRequestHandler {
+function createRateLimiter(options: Partial<Options>, prefix: string): RateLimitRequestHandler {
   const store = redisClient
     ? new RedisStore({
       sendCommand: (...args: string[]) => redisClient.call(...args),
+      prefix: prefix, // Unique prefix to prevent collision between different limiters
     })
     : undefined; // Default to memory store
 
@@ -23,7 +24,7 @@ function createRateLimiter(options: Partial<Options>): RateLimitRequestHandler {
       return `${ip}:${userId}`;
     },
     handler: (req: Request, res: Response) => {
-      console.warn('[RATE_LIMIT] Rate limit exceeded:', {
+      console.warn(`[RATE_LIMIT] ${prefix} Rate limit exceeded:`, {
         ip: req.ip,
         path: req.path,
         userId: req.session?.user?._id || 'anonymous',
@@ -57,7 +58,7 @@ export const loginRateLimiter = createRateLimiter({
     // If you intended to add specific logic for dev-only endpoints, please provide a complete and correct implementation.
     return req.ip || req.socket.remoteAddress || 'unknown';
   },
-});
+}, 'rl:login:');
 
 /**
  * Moderate rate limiter for authenticated API endpoints
@@ -69,7 +70,7 @@ export const apiRateLimiter = createRateLimiter({
   max: 100, // 100 requests per minute
   message: 'Too many API requests, please slow down',
   skipSuccessfulRequests: false,
-});
+}, 'rl:api:');
 
 /**
  * Very strict rate limiter for expensive operations (AI calls)
@@ -80,7 +81,7 @@ export const aiOperationRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
   max: 20, // 20 AI operations per minute
   message: 'Too many AI operation requests, please wait before trying again',
-});
+}, 'rl:ai:');
 
 /**
  * Lenient rate limiter for general requests
@@ -94,4 +95,4 @@ export const generalRateLimiter = createRateLimiter({
   keyGenerator: (req: Request) => {
     return req.ip || req.socket.remoteAddress || 'unknown';
   },
-});
+}, 'rl:general:');
