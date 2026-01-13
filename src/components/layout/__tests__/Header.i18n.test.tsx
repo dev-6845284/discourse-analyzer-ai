@@ -28,40 +28,40 @@ describe('Header language selector', () => {
         <Header
           user={defaultUser}
           isFormCollapsed={false}
-          toggleFormCollapsed={() => {}}
+          toggleFormCollapsed={() => { }}
           logsVisible={false}
-          setLogsVisible={() => {}}
-          setIsApiKeyModalOpen={() => {}}
-          googleButtonRef={{ current: null }}
-          handleLogout={() => {}}
-          onChangePassword={() => {}}
-          onEditProfile={() => {}}
+          setLogsVisible={() => { }}
+          setIsApiKeyModalOpen={() => { }}
+
+          handleLogout={() => { }}
+          onChangePassword={() => { }}
+          onEditProfile={() => { }}
         />
         <ResultsConsumer count={2} />
       </I18nProvider>
     );
 
-    // Initially English
-    expect(screen.getByTestId('results').textContent).toMatch(/Results \(2\)/);
+    // Initially Lithuanian (default)
+    expect(screen.getByTestId('results').textContent).toMatch(/Rezultatai \(2\)/);
 
-    const select = screen.getByLabelText('Language') as HTMLSelectElement;
-    await userEvent.selectOptions(select, 'lt');
+    const select = screen.getByLabelText(/Language|Kalba/i) as HTMLSelectElement;
+    await userEvent.selectOptions(select, 'en');
 
     // localStorage should be updated
-    expect(localStorage.getItem('discourse_analyzer_lang')).toBe('lt');
+    expect(localStorage.getItem('discourse_analyzer_lang')).toBe('en');
     // select control should reflect the chosen language
-    expect(select.value).toBe('lt');
+    expect(select.value).toBe('en');
     // key must exist before simulating reload (explicit assertion)
     expect(localStorage.getItem('discourse_analyzer_lang')).not.toBeNull();
 
-    // The consumer should update to Lithuanian
-    expect(screen.getByTestId('results').textContent).toMatch(/Rezultatai \(2\)/);
+    // The consumer should update to English
+    expect(screen.getByTestId('results').textContent).toMatch(/Results \(2\)/);
 
     // Simulate a reload by unmounting and re-rendering the provider
     cleanup();
 
     // ensure localStorage still has the key after cleanup
-    expect(localStorage.getItem('discourse_analyzer_lang')).toBe('lt');
+    expect(localStorage.getItem('discourse_analyzer_lang')).toBe('en');
 
     render(
       <I18nProvider>
@@ -69,7 +69,7 @@ describe('Header language selector', () => {
       </I18nProvider>
     );
 
-    // It should pick up 'lt' from localStorage
-    expect(screen.getByTestId('results').textContent).toMatch(/Rezultatai \(2\)/);
+    // It should pick up 'en' from localStorage
+    expect(screen.getByTestId('results').textContent).toMatch(/Results \(2\)/);
   });
 });

@@ -71,7 +71,7 @@ const en = {
   getYouTubeTranscript: 'Get YouTube Transcript',
   chooseFromMethods: 'Choose from: Auto-fetch, Copy-paste, Bookmarklet, or SRT import',
   // Sidebar
-  appTitle: 'Discourse Analyzer',
+  appTitle: 'DoubleCheck',
   export: 'Export',
   exportTitle: 'Export current quotes to a JSON file',
   import: 'Import',
@@ -301,6 +301,8 @@ const en = {
 
   // People list
   searchPeople: 'Search people...',
+  addPerson: 'Add Person',
+  confirmDeletePerson: 'Are you sure you want to delete {name}?',
   languageLabel: 'Language',
   providerLabel: 'AI Provider',
   analysisStatus: 'Analysis Status',
@@ -310,6 +312,13 @@ const en = {
   analyzedDate: 'Analyzed Date',
   improvedDate: 'Improved Date',
   noPeopleFound: 'No people found',
+  fullNameRequired: 'Full Name (Required)',
+  firstName: 'First Name',
+  surname: 'Surname',
+  description: 'Description',
+  updatePerson: 'Update Person',
+  savePerson: 'Save Person',
+  autoFilledFromName: '(Auto-filled from name if empty)',
 
   // Category translations
   // Legacy AnalysisCategory
@@ -434,6 +443,7 @@ const en = {
   quoteDate: 'Quote Date',
   filterByPersonPlaceholder: 'Filter by person...',
   loading: 'Loading...',
+  initializing: 'Initializing...',
 
   // Main content
   searchResultsTab: 'Search Results',
@@ -620,7 +630,48 @@ const en = {
   actions: 'Actions',
   deleteUser: 'Delete User',
   loadEmbeddedContent: 'Load Embedded Content',
+  authorLabel: 'Author',
 
+  // Public View
+  public_landing_title: 'Quotes Archive',
+  public_landing_subtitle: 'Verify you are human to access the analysis database.',
+  public_verifying: 'Verifying access...',
+  public_verification_failed: 'Verification failed. Please try again.',
+  public_turnstile_error: 'Turnstile error.',
+  public_protected_by: 'Protected by Turnstile and DoubleCheck',
+  admin_login: 'Login',
+  public_quotes_title: 'Quotes',
+  public_back_to_landing: 'Back to Landing',
+  public_all_people: 'All People',
+  public_any_time: 'Any Time',
+  public_more_filters: 'More Filters',
+  public_no_quotes_found: 'No quotes found matching your criteria.',
+  public_load_error: 'Failed to load quotes. Please try again later.',
+  public_try_again: 'Try again',
+  coming_soon: 'Coming soon',
+  public_verdict: 'Verdict:',
+  public_context: 'Context',
+  public_analysis_overview: 'Analysis Overview',
+  public_rationale: 'Rationale',
+  public_references: 'References',
+  public_hide_details: 'Hide Detailed Analysis',
+  public_show_details: 'Show Detailed Analysis',
+  public_category: 'Category',
+  public_level: 'Level',
+  public_details_evidence: 'Details & Evidence',
+  public_evidence: 'Evidence:',
+  disabled: '(Disabled)',
+  unknown_person: 'Unknown Person',
+  signInToContinue: 'Please sign in to continue',
+  signIn: 'Sign In',
+  signingIn: 'Signing in...',
+  or: 'OR',
+  developerLogin: 'Developer Login',
+  'Invalid email or password': 'Invalid email or password',
+  'CAPTCHA verification failed. Please try again.': 'CAPTCHA verification failed. Please try again.',
+  'User not allowed': 'User not allowed',
+  'Login failed.': 'Login failed.',
+  pleaseWaitSeconds: 'Please wait {seconds} seconds.',
 };
 
 export default en;

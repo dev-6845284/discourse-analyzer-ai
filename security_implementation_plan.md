@@ -1,6 +1,6 @@
 # Security Implementation Roadmap: Edge Protection & Smart CAPTCHA
 
-This document outlines the steps to implement **Edge Protection (WAF)** and **Smart CAPTCHA (Cloudflare Turnstile)** for the Discourse Analyzer AI application.
+This document outlines the steps to implement **Edge Protection (WAF)** and **Smart CAPTCHA (Cloudflare Turnstile)** for the DoubleCheck AI application.
 
 ## 1. Edge Protection (Cloudflare WAF)
 
@@ -43,7 +43,7 @@ Once proxied, configure the Web Application Firewall (WAF) to block threats.
 ### 2.1. Cloudflare Setup
 1.  Go to **Turnstile** in the Cloudflare Dashboard.
 2.  **Add Site:**
-    *   **Site Name:** Discourse Analyzer AI
+    *   **Site Name:** DoubleCheck
     *   **Domain:** Your domain (plus `localhost` for development).
     *   **Widget Mode:** `Managed` (Recommended - invisible for most users, shows challenge if suspicious).
 3.  **Get Keys:** Copy the **Site Key** (Public) and **Secret Key** (Private).

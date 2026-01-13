@@ -8,7 +8,7 @@ import { useI18n } from '../../i18n';
 const isValidUrl = (text: string): boolean => {
   const trimmed = text.trim();
   if (!trimmed) return false;
-  
+
   try {
     const url = new URL(trimmed);
     return url.protocol === 'http:' || url.protocol === 'https:';
@@ -22,8 +22,8 @@ interface ExtractionControlsProps {
   setTextToExtract: (text: string) => void;
   isExtracting: boolean;
   personName: string;
-  onExtract: (analysisType?: 'audit'|'flaws') => void,
-  onAdd: (analyzeImmediately: boolean, analysisType?: 'audit'|'flaws') => void,
+  onExtract: () => void,
+  onAdd: () => void,
   onExtractFromUrl?: () => void;
   onAutoExtract?: (url: string) => void;
   extractionStatus?: string;
@@ -48,15 +48,13 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
 }) => {
   const { t } = useI18n();
   const isUrl = isValidUrl(textToExtract);
-  const [analyzeImmediately, setAnalyzeImmediately] = useState(true);
-  const [analysisType, setAnalysisType] = useState<'audit'|'flaws'>('audit');
-  const lastExtractionRef = React.useRef<{url: string, lang: string} | null>(null);
+  const lastExtractionRef = React.useRef<{ url: string, lang: string } | null>(null);
 
   useEffect(() => {
     if (isUrl && onAutoExtract && !isExtracting) {
       // Prevent re-extracting the same URL with the same language if it was just processed
-      if (lastExtractionRef.current?.url === textToExtract && 
-          lastExtractionRef.current?.lang === extractionLanguage) {
+      if (lastExtractionRef.current?.url === textToExtract &&
+        lastExtractionRef.current?.lang === extractionLanguage) {
         return;
       }
 
@@ -82,7 +80,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
           personName ? t('pasteArticleOrUrlBy', { person: personName }) : t('pasteArticleOrUrlGeneric')
         }
       ></textarea>
-      
+
       {/* Language Selector for URLs */}
       {isUrl && setExtractionLanguage && (
         <div className="mt-2 flex items-center gap-2">
@@ -112,7 +110,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
           {extractionError}
         </div>
       )}
-      
+
       <div className="mt-4 flex flex-col sm:flex-row gap-2">
         {isUrl && onExtractFromUrl ? (
           // Show "Extract from Link" button when URL is detected
@@ -141,35 +139,8 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
           // Show regular extraction buttons when not a URL
           <>
             <div className="flex flex-col gap-2 w-full">
-              <div className="flex items-center gap-3">
-                <label className="flex items-center" htmlFor="extraction-analysis-audit">
-                  <input
-                    id="extraction-analysis-audit"
-                    type="radio"
-                    name="extractionAnalysisType"
-                    value="audit"
-                    checked={analysisType === 'audit'}
-                    onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
-                    className="mr-1 accent-cyan-600 focus:ring-cyan-500"
-                  />
-                  <span className="text-xs text-gray-300">Audit</span>
-                </label>
-                <label className="flex items-center" htmlFor="extraction-analysis-flaws">
-                  <input
-                    id="extraction-analysis-flaws"
-                    type="radio"
-                    name="extractionAnalysisType"
-                    value="flaws"
-                    checked={analysisType === 'flaws'}
-                    onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
-                    className="mr-1 accent-cyan-600 focus:ring-cyan-500"
-                  />
-                  <span className="text-xs text-gray-300">Flaws</span>
-                </label>
-              </div>
-
               <button
-                onClick={() => onExtract(analysisType)}
+                onClick={() => onExtract()}
                 disabled={isExtracting || !textToExtract || !personName}
                 title={!personName ? t('pleaseEnterPersonName') : (!textToExtract ? t('pleaseEnterTextToExtract') : '')}
                 className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
@@ -180,22 +151,13 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
 
             <div className="flex flex-col sm:flex-row gap-2 mt-2">
               <button
-                onClick={() => onAdd(analyzeImmediately, analysisType)}
+                onClick={() => onAdd()}
                 disabled={isExtracting || !textToExtract || !personName}
                 title={!personName ? t('pleaseEnterPersonName') : (!textToExtract ? t('pleaseEnterTextToAdd') : '')}
                 className="w-full sm:flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 {t('addTextAsQuote')}
               </button>
-              <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none justify-center">
-                <input 
-                  type="checkbox" 
-                  checked={analyzeImmediately} 
-                  onChange={(e) => setAnalyzeImmediately(e.target.checked)}
-                  className="rounded bg-gray-700 border-gray-600 accent-cyan-600 focus:ring-cyan-500"
-                />
-                {t('analyzeImmediately')}
-              </label>
             </div>
           </>
         )}

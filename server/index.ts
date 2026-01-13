@@ -30,12 +30,49 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "frame-src": ["'self'", "https://*.facebook.com", "https://*.youtube.com", "https://youtube.com"],
-      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.google.com", "https://*.gstatic.com", "https://*.facebook.net"],
-      "img-src": ["'self'", "data:", "https:", "http:"],
-      "frame-ancestors": ["'self'"],
+      'frame-src': [
+        "'self'",
+        "https://*.facebook.com",
+        "https://*.youtube.com",
+        "https://youtube.com",
+        "https://challenges.cloudflare.com",
+        "https://accounts.google.com",
+        "https://vercel.live"
+      ],
+      'script-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://*.google.com",
+        "https://*.gstatic.com",
+        "https://*.facebook.net",
+        "https://challenges.cloudflare.com",
+        "https://accounts.google.com/gsi/client",
+        "https://cdn.tailwindcss.com",
+        "https://unpkg.com",
+        "https://vercel.live",
+        "blob:"
+      ],
+      'img-src': ["'self'", "data:", "https:", "http:", "https://*.googleusercontent.com", "https://vercel.live"],
+      'connect-src': [
+        "'self'",
+        "https://*.google.com",
+        "https://accounts.google.com",
+        "https://challenges.cloudflare.com",
+        "https://cdn.tailwindcss.com",
+        "https://unpkg.com",
+        "https://vercel.live"
+      ],
+      'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://vercel.live"],
+      'worker-src': ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      'child-src': ["'self'", "blob:", "https://challenges.cloudflare.com"],
+      'frame-ancestors': ["'self'"],
     },
   },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  originAgentCluster: false,
   xXssProtection: true,
   frameguard: {
     action: 'sameorigin',
@@ -367,34 +404,38 @@ app.post('/api/login/password', loginRateLimiter, async (req, res) => {
   }
 });
 
-app.get('/api/user', isAuthenticated, (req, res) => {
-  res.json({ user: req.session.user });
+app.get('/api/user', (req, res) => {
+  res.json({ user: req.session?.user || null });
 });
 
-app.get('/api/session/debug', (req, res) => {
-  const debugInfo = {
-    timestamp: new Date().toISOString(),
-    sessionID: req.sessionID,
-    hasSession: !!req.session,
-    session: req.session ? {
-      id: req.session.id,
-      hasUser: !!req.session.user,
-      user: req.session.user || null,
-      keys: Object.keys(req.session)
-    } : null,
-    cookies: {
-      hasCookie: !!req.headers.cookie,
-      cookieNames: req.headers.cookie?.split('; ').map(c => c.split('=')[0]) || []
-    },
-    environment: {
-      NODE_ENV: process.env.NODE_ENV,
-      BYPASS_AUTH: process.env.BYPASS_AUTH,
-      currentEnv: require('./constants/env').getCurrentEnv()
-    }
-  };
+app.get('/api/session/debug', isAuthenticated, async (req, res) => {
+  // Require admin role for session debug endpoint
+  const { requireAdmin } = await import('./middleware/admin');
+  requireAdmin(req, res, () => {
+    const debugInfo = {
+      timestamp: new Date().toISOString(),
+      sessionID: req.sessionID,
+      hasSession: !!req.session,
+      session: req.session ? {
+        id: req.session.id,
+        hasUser: !!req.session.user,
+        user: req.session.user || null,
+        keys: Object.keys(req.session)
+      } : null,
+      cookies: {
+        hasCookie: !!req.headers.cookie,
+        cookieNames: req.headers.cookie?.split('; ').map(c => c.split('=')[0]) || []
+      },
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        BYPASS_AUTH: process.env.BYPASS_AUTH,
+        currentEnv: require('./constants/env').getCurrentEnv()
+      }
+    };
 
-  console.log('[SESSION_DEBUG]', JSON.stringify(debugInfo, null, 2));
-  res.json(debugInfo);
+    console.log('[SESSION_DEBUG]', JSON.stringify(debugInfo, null, 2));
+    res.json(debugInfo);
+  });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -435,6 +476,11 @@ app.use('/api/users', apiRateLimiter, (req, res, next) => {
   const userRoutes = require('./routes/users').default;
   return userRoutes(req, res, next);
 });
+app.use('/api/settings', apiRateLimiter, (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const settingsRoutes = require('./routes/settings').default;
+  return settingsRoutes(req, res, next);
+});
 app.use('/api/analysis', apiRateLimiter, (req, res, next) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const analysisRoutes = require('./routes/analysis').default;
@@ -444,6 +490,13 @@ app.use('/api/analysis', apiRateLimiter, (req, res, next) => {
 if (!isLocal() && !isTest()) {
   app.use('/api/dev', (req, res) => res.status(404).json({ message: 'Not found' }));
 }
+
+// Public routes must come BEFORE generic /api to avoid auth middleware interception
+app.use('/api/public', (req, res, next) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const publicRoutes = require('./routes/public').default;
+  return publicRoutes(req, res, next);
+});
 
 app.use('/api', apiRateLimiter, (req, res, next) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -462,7 +515,7 @@ if (isProduction()) {
   });
 } else {
   app.get('/', (req, res) => {
-    res.send('Discourse Analyzer AI Server is running in development mode!');
+    res.send('DoubleCheck Server is running in development mode!');
   });
 }
 

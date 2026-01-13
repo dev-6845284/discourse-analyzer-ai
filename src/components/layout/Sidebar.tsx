@@ -24,17 +24,17 @@ interface SidebarProps {
   openAdminCategories?: () => void;
   logsVisible?: boolean;
   setLogsVisible?: (v: boolean) => void;
+  onPublicView?: () => void;
+  systemSettings?: any;
+  onOpenSettings?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse,
-  onExport,
-  onImport,
   searchContent,
   peopleContent,
   sessionsContent,
-  usersContent,
   managementContent,
   userRole,
   asDrawer,
@@ -44,9 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   setAdminView,
-  openAdminCategories,
-  logsVisible,
   setLogsVisible,
+  onOpenSettings,
 }) => {
   const { t } = useI18n();
 
@@ -121,6 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         className={`${isCollapsed ? 'hidden' : 'block'} md:block`}
       >
         <div className="space-y-2">
+
           {activeTab !== 'admin' && (
             <>
               <SidebarSection
@@ -194,6 +194,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('keyset_management')}
+                  </button>
+
+                  <button
+                    onClick={() => onOpenSettings && onOpenSettings()}
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    System Settings (Feature Toggles)
                   </button>
                 </div>
               </SidebarSection>

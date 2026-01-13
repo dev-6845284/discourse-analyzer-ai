@@ -10,7 +10,8 @@ interface QuoteCardActionsProps {
   isBusy: boolean;
   isSaved: boolean;
   hideSaveButton?: boolean;
-  onAnalyze: (analysisType?: 'audit'|'flaws') => void;
+  selectedAI: string;
+  onAnalyze: (model: string, analysisType: 'audit' | 'flaws') => void;
   onImprove: () => void;
   onSave: () => void;
   onAccept: () => void;
@@ -18,6 +19,8 @@ interface QuoteCardActionsProps {
   onDelete: () => void;
   onRemove: () => void;
   onEditSource?: () => void;
+  userRole?: string;
+  onVisibilityChange?: (quoteId: string, visibility: 'public' | 'private') => void;
 }
 
 const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
@@ -27,20 +30,57 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   isBusy,
   isSaved,
   hideSaveButton,
+  selectedAI,
   onAnalyze,
   onImprove,
   onSave,
   onAccept,
   onDiscard,
   onDelete,
-  onRemove,
+  onRemove, // Kept one
   onEditSource,
+  userRole,
+  onVisibilityChange,
 }) => {
   const { t } = useI18n();
-  const [analysisType, setAnalysisType] = React.useState<'audit'|'flaws'>('audit');
+  const [analysisType, setAnalysisType] = React.useState<'audit' | 'flaws'>('audit');
+  const [localSelectedAI, setLocalSelectedAI] = React.useState<string>(selectedAI);
+
+  React.useEffect(() => {
+    setLocalSelectedAI(selectedAI);
+  }, [selectedAI]);
 
   return (
-    <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end">
+    <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end items-center flex-wrap">
+      {/* Visibility controls for admins/mods/editors */}
+      {userRole && ['admin', 'moderator', 'editor'].includes(userRole) && onVisibilityChange && quote.isStored && (
+        <div className="flex items-center gap-2 border-r border-gray-700 pr-4 mr-2">
+          <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mr-1">Visibility</span>
+          <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+            <button
+              type="button"
+              onClick={() => onVisibilityChange && onVisibilityChange(quote.id || quote._id || '', 'public')}
+              className={`px-3 py-0.5 text-[10px] font-medium transition-colors rounded-l-[4px] ${quote.visibility === 'public'
+                ? 'bg-green-600 text-white shadow-sm'
+                : 'text-gray-400 hover:bg-gray-700'
+                }`}
+            >
+              Public
+            </button>
+            <button
+              type="button"
+              onClick={() => onVisibilityChange && onVisibilityChange(quote.id || quote._id || '', 'private')}
+              className={`px-3 py-0.5 text-[10px] font-medium transition-colors rounded-r-[4px] ${quote.visibility === 'private' || !quote.visibility
+                ? 'bg-slate-600 text-white shadow-sm'
+                : 'text-gray-400 hover:bg-gray-700'
+                }`}
+            >
+              Private
+            </button>
+          </div>
+        </div>
+      )}
+
       {hasDraft ? (
         <>
           <button
@@ -64,34 +104,46 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
         </>
       ) : (
         <>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name={`analysis-type-${quote.id}`}
-                  value="audit"
-                  checked={analysisType === 'audit'}
-                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
-                  className="mr-1 text-cyan-600 focus:ring-cyan-500"
-                />
-                <span className="text-xs text-gray-300">Audit</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name={`analysis-type-${quote.id}`}
-                  value="flaws"
-                  checked={analysisType === 'flaws'}
-                  onChange={(e) => setAnalysisType(e.target.value as 'audit'|'flaws')}
-                  className="mr-1 text-cyan-600 focus:ring-cyan-500"
-                />
-                <span className="text-xs text-gray-300">Flaws</span>
-              </label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 border-r border-gray-700 pr-4 mr-2">
+              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mr-1">Model</span>
+              <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+                {['gemini', 'grok', 'openai'].map((model, idx, arr) => (
+                  <button
+                    key={model}
+                    type="button"
+                    onClick={() => setLocalSelectedAI(model)}
+                    className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${localSelectedAI === model
+                      ? 'bg-cyan-600 text-white shadow-sm'
+                      : 'text-gray-400 hover:bg-gray-700'
+                      } ${idx === 0 ? 'rounded-l-[4px]' : ''} ${idx === arr.length - 1 ? 'rounded-r-[4px]' : ''}`}
+                  >
+                    {model === 'gemini' ? 'Gemini' : model === 'grok' ? 'Grok' : 'OpenAI'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+                {(['audit', 'flaws'] as const).map((type, idx, arr) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setAnalysisType(type)}
+                    className={`px-2 py-0.5 text-[10px] font-medium transition-colors capitalize ${analysisType === type
+                      ? 'bg-cyan-600 text-white shadow-sm'
+                      : 'text-gray-400 hover:bg-gray-700'
+                      } ${idx === 0 ? 'rounded-l-[4px]' : ''} ${idx === arr.length - 1 ? 'rounded-r-[4px]' : ''}`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button
-              onClick={() => onAnalyze(analysisType)}
+              onClick={() => onAnalyze(localSelectedAI, analysisType)}
               disabled={!isApiKeySet || isBusy}
               className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title={!isApiKeySet ? t('analyzePleaseSetApiKey') : (quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) ? t('analyzeAgain') : t('analyzeQuote')}
@@ -138,9 +190,8 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             <button
               onClick={onSave}
               disabled={!isApiKeySet || isBusy || quote.isStored}
-              className={`p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
+              className={`p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSaved || quote.isStored ? 'text-green-400 bg-green-900/30' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
               title={isSaved || quote.isStored ? t('saved') : t('saveToDatabase')}
             >
               {isSaved || quote.isStored ? (

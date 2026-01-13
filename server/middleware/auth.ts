@@ -31,28 +31,8 @@ export const isAuthenticated = (
 
   console.log('[AUTH_CHECK]', JSON.stringify(authDebug, null, 2));
 
-  if (process.env.BYPASS_AUTH === 'true') {
-    console.log('[AUTH_BYPASS] BYPASS_AUTH is enabled');
-    if (!req.session.user || !req.session.user._id) {
-      req.session.user = {
-        _id: '000000000000000000000000', // Default ID for local developer
-        email: 'developer@example.com',
-        name: 'Local Developer',
-        picture: '',
-        role: 'admin'
-      };
-      console.log('[AUTH_BYPASS] Created/Updated developer user');
-
-      // Save session to ensure cookie is set and session ID persists
-      return req.session.save((err) => {
-        if (err) {
-          console.error('[AUTH_BYPASS] Error saving session:', err);
-        }
-        next();
-      });
-    }
-    return next();
-  }
+  // Removed BYPASS_AUTH auto-login logic. 
+  // Authentication must be explicit via /api/login or /api/dev/login.
 
   if (req.session.user) {
     console.log('[AUTH_SUCCESS]', `User authenticated: ${req.session.user.email}`);

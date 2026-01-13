@@ -11,7 +11,6 @@ interface HeaderProps {
   logsVisible: boolean;
   setLogsVisible: (visible: boolean) => void;
   setIsApiKeyModalOpen: (isOpen: boolean) => void;
-  googleButtonRef: React.RefObject<HTMLDivElement>;
   handleLogout: () => void;
   onChangePassword: () => void;
   onEditProfile: () => void;
@@ -23,7 +22,6 @@ export const Header: React.FC<HeaderProps> = ({
   logsVisible,
   setLogsVisible,
   setIsApiKeyModalOpen,
-  googleButtonRef,
   handleLogout,
   onChangePassword,
   onEditProfile,
@@ -123,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </details>
             {/* Desktop user actions */}
-              <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {user._id && (
                 <>
                   <button
@@ -134,7 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                   <button
                     onClick={onChangePassword}
-                      className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs md:text-sm"
+                    className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs md:text-sm"
                   >
                     {t('changePassword')}
                   </button>
@@ -148,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           </div>
-          <div ref={googleButtonRef}></div>
+
         </div>
       </div>
     </header>

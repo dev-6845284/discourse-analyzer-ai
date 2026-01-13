@@ -659,10 +659,10 @@ export function useTranscriptAnalysis(initialData?: {
     try {
       const response = await mergeSpeakersApi(sessionId, speakerIdsToMerge, targetSpeakerId);
       const updatedResults: SpeakerAnalysisResult[] = response.data;
-      console.log('[mergeSpeakers] API response:', updatedResults);
-      console.log('[mergeSpeakers] Number of blocks:', updatedResults?.length);
+      // console.log('[mergeSpeakers] API response:', updatedResults);
+      // console.log('[mergeSpeakers] Number of blocks:', updatedResults?.length);
       setState(prev => {
-        console.log('[mergeSpeakers] Previous speakerResults:', prev.speakerResults?.length);
+        // console.log('[mergeSpeakers] Previous speakerResults:', prev.speakerResults?.length);
         return {
           ...prev,
           speakerResults: updatedResults,

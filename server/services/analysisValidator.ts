@@ -41,11 +41,31 @@ export function validateAuditResult(parsed: any, rawResponse: string) {
       if (!detail || typeof detail !== 'object') {
         throw new Error(`Category '${title}' must be an object with 'severity' and 'evidence'.`);
       }
-      const sev = (detail as any).severity;
+      let sev = (detail as any).severity;
       const ev = (detail as any).evidence;
+
+      // Normalize severity
+      if (typeof sev === 'string') {
+        sev = sev.toUpperCase().trim();
+        // Handle ranges like "LOW to MEDIUM" -> take the higher one (usually second)
+        if (sev.includes(' TO ')) {
+          const parts = sev.split(' TO ');
+          sev = parts[parts.length - 1].trim();
+        }
+        // Handle slash "LOW/MEDIUM"
+        if (sev.includes('/')) {
+          const parts = sev.split('/');
+          sev = parts[parts.length - 1].trim();
+        }
+      }
+
       if (!sev || typeof sev !== 'string' || !VALID_SEVERITIES.includes(sev)) {
         throw new Error(`Category '${title}' has invalid severity: ${sev}.`);
       }
+
+      // Update the parsed object with normalized value
+      (detail as any).severity = sev;
+
       if (typeof ev !== 'string') {
         throw new Error(`Category '${title}' evidence must be a string.`);
       }
@@ -83,11 +103,31 @@ export function validateFlawsResult(parsed: any, rawResponse: string) {
       if (!detail || typeof detail !== 'object') {
         throw new Error(`Category '${title}' must be an object with 'severity' and 'evidence'.`);
       }
-      const sev = (detail as any).severity;
+      let sev = (detail as any).severity;
       const ev = (detail as any).evidence;
+
+      // Normalize severity
+      if (typeof sev === 'string') {
+        sev = sev.toUpperCase().trim();
+        // Handle ranges like "LOW to MEDIUM" -> take the higher one (usually second)
+        if (sev.includes(' TO ')) {
+          const parts = sev.split(' TO ');
+          sev = parts[parts.length - 1].trim();
+        }
+        // Handle slash "LOW/MEDIUM"
+        if (sev.includes('/')) {
+          const parts = sev.split('/');
+          sev = parts[parts.length - 1].trim();
+        }
+      }
+
       if (!sev || typeof sev !== 'string' || !VALID_SEVERITIES.includes(sev)) {
         throw new Error(`Category '${title}' has invalid severity: ${sev}.`);
       }
+
+      // Update the parsed object with normalized value
+      (detail as any).severity = sev;
+
       if (typeof ev !== 'string') {
         throw new Error(`Category '${title}' evidence must be a string.`);
       }

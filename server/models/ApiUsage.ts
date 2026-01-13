@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IApiUsage extends Document {
-  userId?: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId | string;
   sessionId?: string;
   endpoint: string;
   method: string;
@@ -19,7 +19,7 @@ export interface IApiUsage extends Document {
 
 const ApiUsageSchema: Schema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    userId: { type: Schema.Types.Mixed, index: true },
     sessionId: { type: String, index: true },
     endpoint: { type: String, required: true, index: true },
     method: { type: String, required: true },
@@ -48,5 +48,5 @@ ApiUsageSchema.index({ statusCode: 1, timestamp: -1 });
 
 const collectionName = `apiUsage${process.env.DB_COLLECTION_SUFFIX || ''}`;
 
-export default (mongoose.models.ApiUsage as mongoose.Model<IApiUsage>) || 
+export default (mongoose.models.ApiUsage as mongoose.Model<IApiUsage>) ||
   mongoose.model<IApiUsage>('ApiUsage', ApiUsageSchema, collectionName);

@@ -40,14 +40,14 @@ export const KeysetAssignmentModal: React.FC<KeysetAssignmentModalProps> = ({
     try {
       setLoading(true);
       const res = await getAdminKeysets();
-      console.log('[KeysetAssignmentModal] API response:', res.data);
-      
+      // console.log('[KeysetAssignmentModal] API response:', res.data);
+
       // Filter out USERS_KEYSET (the private per-user keyset)
       const USERS_KEYSET_ALIAS = 'USERS_KEYSET';
       const allKeysets = res.data || [];
       const filtered = allKeysets.filter((k: Keyset) => k.alias !== USERS_KEYSET_ALIAS);
-      
-      console.log('[KeysetAssignmentModal] Filtered keysets:', filtered);
+
+      // console.log('[KeysetAssignmentModal] Filtered keysets:', filtered);
       setKeysets(filtered);
       setError(null);
     } catch (err: any) {

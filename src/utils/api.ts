@@ -33,17 +33,17 @@ const api = axios.create({
 
 // Add request logging interceptor
 api.interceptors.request.use((config) => {
-  console.log('[API_REQUEST]', {
-    timestamp: new Date().toISOString(),
-    url: config.url,
-    method: config.method,
-    baseURL: config.baseURL,
-    withCredentials: config.withCredentials,
-    headers: {
-      hasContentType: !!config.headers?.['Content-Type'],
-      custom: Object.keys(config.headers || {}).filter(k => !['content-type', 'common', 'delete', 'get', 'head', 'post', 'put', 'patch'].includes(k.toLowerCase()))
-    }
-  });
+  // console.log('[API_REQUEST]', {
+  //   timestamp: new Date().toISOString(),
+  //   url: config.url,
+  //   method: config.method,
+  //   baseURL: config.baseURL,
+  //   withCredentials: config.withCredentials,
+  //   headers: {
+  //     hasContentType: !!config.headers?.['Content-Type'],
+  //     custom: Object.keys(config.headers || {}).filter(k => !['content-type', 'common', 'delete', 'get', 'head', 'post', 'put', 'patch'].includes(k.toLowerCase()))
+  //   }
+  // });
   return config;
 }, (error) => {
   console.error('[API_REQUEST_ERROR]', error);
@@ -52,14 +52,19 @@ api.interceptors.request.use((config) => {
 
 // Add response logging interceptor
 api.interceptors.response.use((response) => {
-  console.log('[API_RESPONSE]', {
-    timestamp: new Date().toISOString(),
-    url: response.config.url,
-    status: response.status,
-    statusText: response.statusText
-  });
+  // console.log('[API_RESPONSE]', {
+  //   timestamp: new Date().toISOString(),
+  //   url: response.config.url,
+  //   status: response.status,
+  //   statusText: response.statusText
+  // });
   return response;
 }, (error) => {
+  // Don't log 401 for the session check endpoint - it's expected for unauthenticated users
+  if (error.response?.status === 401 && error.config?.url?.endsWith('/user')) {
+    return Promise.reject(error);
+  }
+
   console.error('[API_RESPONSE_ERROR]', {
     timestamp: new Date().toISOString(),
     url: error.config?.url,
@@ -346,3 +351,9 @@ export const unassignKeysetFromUser = (keysetId: string, userId: string) =>
   api.post(`/admin/api-key-sets/${keysetId}/unassign`, { userId });
 export const getUserAssignedKeyset = (userId: string) =>
   api.get(`/users/${userId}/assigned-keyset`);
+
+// System Settings
+export const fetchSystemSettings = () => api.get('/settings');
+ // ToDo The any type is used for parameters and return values, reducing type safety. Consider defining proper TypeScript interfaces for features, settings, and the return types to ensure type safety throughout the application.
+export const updateSystemSettings = (features: any) => api.put('/settings', { features });
+

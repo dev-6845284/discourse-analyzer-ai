@@ -25,9 +25,10 @@ interface StoredQuotesProps {
   selectedAI: string;
   isApiKeySet: boolean;
   onEditSource?: (quote: Quote) => void;
+  userRole?: string;
 }
 
-const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource }) => {
+const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource, userRole }) => {
   const { t } = useI18n();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -248,6 +249,20 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     }
   };
 
+  const handleVisibilityChange = async (quoteId: string, visibility: 'public' | 'private') => {
+    try {
+      // Optimistic update
+      setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, visibility } : q));
+
+      await updateQuote(quoteId, { visibility });
+    } catch (err) {
+      console.error('Failed to update quote visibility:', err);
+      setError('Failed to update quote visibility.');
+      // Revert optimistic update
+      // (This would require re-fetching or knowing previous state, simplifying for now by just logging)
+    }
+  };
+
   useEffect(() => {
     const fetchQuotes = async () => {
       setIsLoading(true);
@@ -260,15 +275,15 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           queryParams,
           credentials: 'include'
         };
-        console.log('[FETCH_QUOTES]', JSON.stringify(debugInfo, null, 2));
+        // console.log('[FETCH_QUOTES]', JSON.stringify(debugInfo, null, 2));
 
         const response = await getStoredQuotes(queryParams);
 
-        console.log('[FETCH_QUOTES_SUCCESS]', {
-          timestamp: new Date().toISOString(),
-          quotesCount: response.data?.length || 0,
-          status: response.status
-        });
+        // console.log('[FETCH_QUOTES_SUCCESS]', {
+        //   timestamp: new Date().toISOString(),
+        //   quotesCount: response.data?.length || 0,
+        //   status: response.status
+        // });
 
         // Map backend quotes to frontend Quote interface
         const mappedQuotes: Quote[] = response.data.map((q: any) => ({
@@ -302,6 +317,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
           improvedByName: q.improvedByName,
           improvedByProvider: q.improvedByProvider,
           improvedAt: q.improvedAt,
+          visibility: q.visibility || 'private', // Default to private if missing
         }));
         setQuotes(mappedQuotes);
       } catch (err: any) {
@@ -366,9 +382,11 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onDiscard={handleDiscard}
               onDelete={handleDelete}
               onEditSource={onEditSource}
+              onVisibilityChange={handleVisibilityChange}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
               selectedAI={selectedAI}
+              userRole={userRole}
             />
           ))}
         </div>

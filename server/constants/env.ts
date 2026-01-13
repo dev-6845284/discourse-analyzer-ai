@@ -39,8 +39,15 @@ export const isTest = () => getCurrentEnv() === Environment.TEST;
  */
 export const isStrictSecurity = () => isProduction() || isPreview() || isDevelopment();
 
+
 /**
  * Environments where security checks can be relaxed for developer convenience.
  */
 export const isRelaxedSecurity = () => isLocal();
+
+export const getPublicQuotesCacheSizeMB = () => {
+    const size = process.env.PUBLIC_QUOTES_CACHE_SIZE_MB;
+    const parsed = parseInt(size || '50', 10);
+    return isNaN(parsed) ? 50 : parsed;
+};
 

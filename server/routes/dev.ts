@@ -15,6 +15,25 @@ router.use((req, res, next) => {
   next();
 });
 
+// Explicit login for development environment
+router.post('/login', (req, res) => {
+  const user = {
+    _id: '507f1f77bcf86cd799439011', // Valid 24-char hex string
+    email: 'developer@example.com',
+    name: 'Local Developer',
+    picture: '',
+    role: 'admin'
+  };
+
+  req.session.user = user;
+  req.session.save((err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Failed to create dev session' });
+    }
+    res.json({ user });
+  });
+});
+
 // List available roles and current session role
 router.get('/roles', (req, res) => {
   const roles = Array.from(USER_ROLES as readonly string[]);

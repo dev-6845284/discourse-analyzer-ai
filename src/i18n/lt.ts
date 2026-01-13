@@ -315,6 +315,8 @@ const lt = {
 
   // People list
   searchPeople: 'Ieškoti žmonių...',
+  addPerson: 'Pridėti asmenį',
+  confirmDeletePerson: 'Ar tikrai norite ištrinti {name}?',
   languageLabel: 'Kalba',
   providerLabel: 'AI tiekėjas',
   analysisStatus: 'Analizės būsena',
@@ -324,6 +326,13 @@ const lt = {
   analyzedDate: 'Analizuota',
   improvedDate: 'Patobulinta',
   noPeopleFound: 'Žmonių nerasta',
+  fullNameRequired: 'Vardas ir pavardė (Privaloma)',
+  firstName: 'Vardas',
+  surname: 'Pavardė',
+  description: 'Aprašymas',
+  updatePerson: 'Atnaujinti asmenį',
+  savePerson: 'Išsaugoti asmenį',
+  autoFilledFromName: '(Bus užpildyta automatiškai iš vardo, jei tuščia)',
 
   // Kategorijų vertimai
   // Legacy AnalysisCategory
@@ -437,6 +446,7 @@ const lt = {
   quoteDate: 'Citatos data',
   filterByPersonPlaceholder: 'Filtruoti pagal asmenį...',
   loading: 'Kraunama...',
+  initializing: 'Inicijuojama...',
 
   // Main content
   searchResultsTab: 'Paieškos rezultatai',
@@ -621,7 +631,48 @@ const lt = {
   actions: 'Veiksmai',
   deleteUser: 'Ištrinti vartotoją',
   loadEmbeddedContent: 'Užkrauti įterptą turinį',
+  authorLabel: 'Autorius',
 
+  // Viešas vaizdas
+  public_landing_title: 'Citatų archyvas',
+  public_landing_subtitle: 'Patvirtinkite, kad nesate robotas, kad pasiektumėte analizės duomenis.',
+  public_verifying: 'Tikrinama prieiga...',
+  public_verification_failed: 'Patvirtinimas nepavyko. Bandykite dar kartą.',
+  public_turnstile_error: 'Turnstile klaida.',
+  public_protected_by: 'Saugoma Turnstile ir Pasitikrink',
+  admin_login: 'Prisijungimas',
+  public_quotes_title: 'Citatos',
+  public_back_to_landing: 'Atgal',
+  public_all_people: 'Visi asmenys',
+  public_any_time: 'Bet koks laikas',
+  public_more_filters: 'Daugiau filtrų',
+  public_no_quotes_found: 'Nerasta citatų pagal pasirinktus kriterijus.',
+  public_load_error: 'Nepavyko užkrauti citatų. Bandykite vėliau.',
+  public_try_again: 'Bandyti dar kartą',
+  coming_soon: 'Netrukus',
+  public_verdict: 'Verdict:',
+  public_context: 'Kontekstas',
+  public_analysis_overview: 'Analizės apžvalga',
+  public_rationale: 'Racionalas',
+  public_references: 'Nuorodos',
+  public_hide_details: 'Slėpti detalią analizę',
+  public_show_details: 'Rodyti detalią analizę',
+  public_category: 'Kategorija',
+  public_level: 'Lygis',
+  public_details_evidence: 'Detalės ir įrodymai',
+  public_evidence: 'Įrodymai:',
+  disabled: '(Išjungta)',
+  unknown_person: 'Nežinomas asmuo',
+  signInToContinue: 'Prašome prisijungti, kad tęstumėte',
+  signIn: 'Prisijungti',
+  signingIn: 'Prisijungiama...',
+  or: 'ARBA',
+  developerLogin: 'Programuotojo prisijungimas',
+  'Invalid email or password': 'Neteisingas el. paštas arba slaptažodis',
+  'CAPTCHA verification failed. Please try again.': 'CAPTCHA patvirtinimas nepavyko. Bandykite dar kartą.',
+  'User not allowed': 'Vartotojas neautorizuotas',
+  'Login failed.': 'Prisijungimas nepavyko.',
+  pleaseWaitSeconds: 'Prašome palaukti {seconds} sek.',
 };
 
 export default lt;

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAppController } from './hooks/useAppController';
 import LoginScreen from './components/auth/LoginScreen';
-import LogViewer from './components/LogViewer';
 import TranscriptImporter from './components/TranscriptImporter';
 import { SrtTranscriptImporter } from './components/SrtTranscriptImporter';
 import { YoutubeTranscriptButton } from './components/YoutubeTranscriptButton';
@@ -22,6 +21,8 @@ import ModalsContainer from './components/ModalsContainer';
 import MainContent from './components/MainContent';
 import { useI18n } from './i18n';
 import type { Person } from './types';
+import { PublicLanding } from './components/public/PublicLanding';
+import { PublicQuotes } from './components/public/PublicQuotes';
 
 const App: React.FC = () => {
   const ctrl = useAppController();
@@ -75,6 +76,7 @@ const App: React.FC = () => {
     extractionError,
     setAutoFetchError,
     extractedSourceUrl,
+    shouldAnalyzeImmediately,
     isUsageStatsDashboardOpen,
     setIsUsageStatsDashboardOpen,
     isAdminBannerCollapsed,
@@ -104,7 +106,44 @@ const App: React.FC = () => {
     quotesState: { quotes, articles, isLoading, error, rawApiResponseError, markQuoteAsStored },
     quoteFilters: { sortOrder, setSortOrder, filteredAndSortedQuotes }
   } = ctrl;
-  if (!user) {
+
+  // Routing Logic
+  const [currentPath, setCurrentPath] = React.useState(window.location.pathname);
+
+  React.useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
+  // 1. Auth Redirect Effect - Handles post-login / post-logout routing
+  React.useEffect(() => {
+    if (user && user.role !== 'public_guest') {
+      // If real user is at public/login root, send to dashboard
+      if (currentPath === '/login' || currentPath === '/') {
+        navigateTo('/dashboard');
+      }
+    }
+    // If logged out (user became null) and we are on dashboard -> handled by conditional render below
+  }, [user, currentPath]);
+
+  // Global Loading State (Session Check)
+  if (ctrl.isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-gray-100 font-sans">
+        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-xl font-medium text-gray-400">{t('initializing')}</p>
+      </div>
+    );
+  }
+
+  // 1. Login Route
+  if (currentPath === '/login') {
     return (
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
         <div className="w-full px-4 md:container md:mx-auto md:px-6 lg:px-8">
@@ -112,44 +151,79 @@ const App: React.FC = () => {
             googleButtonRef={googleButtonRef}
             loginError={loginError}
             onLogin={loginWithPassword}
+            onDevLogin={ctrl.loginAsDev}
           />
         </div>
       </div>
     );
   }
 
+  // 2. Public Routes
+  if (currentPath === '/' || currentPath === '/public') {
+    return <PublicLanding
+      onLoginSuccess={(u) => {
+        // Public Guest Login Success
+        updateUser(u); // Update context
+        navigateTo('/public/quotes');
+      }}
+      onOpenLogin={() => navigateTo('/login')}
+    />;
+  }
+
+  if (currentPath === '/public/quotes') {
+    return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} />;
+  }
+
+  // 3. Dashboard Route (Protected)
+  // If user is not authenticated or is a public guest, verify access
+  const isPublicGuest = user?.role === 'public_guest';
+  const isAuthenticatedRealUser = user && !isPublicGuest;
+
+  if (currentPath.startsWith('/dashboard') || (!currentPath.startsWith('/public') && !currentPath.startsWith('/login'))) {
+    if (!isAuthenticatedRealUser) {
+      // Not authorized, redirect to Landing
+      if (currentPath !== '/') {
+        // Force redirect
+        window.history.replaceState({}, '', '/');
+        setCurrentPath('/');
+        return null;
+      }
+    }
+  }
+
+  // If we are here, we are likely at /dashboard or valid internal route AND authenticated
+  // Render Main App
   return (
     <div>
       {/* Provided translations via root I18nProvider */}
       <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
         {/* Admin Security Alert Banner - shown in dev mode or for admins */}
         <AdminAlertBanner
-          isAdmin={import.meta.env.DEV || user?.role === 'admin'}
+          isAdmin={user?.role === 'admin'}
           onViewDashboard={() => setIsUsageStatsDashboardOpen(true)}
           isCollapsed={isAdminBannerCollapsed}
           onCollapsedChange={setIsAdminBannerCollapsed}
         />
 
-
-
-        <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${(import.meta.env.DEV || user?.role === 'admin') ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''
-          }`}>
+        <div className={`w-full px-4 md:container md:mx-auto md:px-6 lg:px-8 transition-all duration-300 ${user?.role === 'admin' ? (isAdminBannerCollapsed ? 'pt-6' : 'pt-14') : ''}`}>
           <Header
-            user={user}
+            user={user!}
             isFormCollapsed={isFormCollapsed}
             toggleFormCollapsed={toggleFormCollapsed}
             logsVisible={logsVisible}
             setLogsVisible={setLogsVisible}
             setIsApiKeyModalOpen={setIsApiKeyModalOpen}
-            googleButtonRef={googleButtonRef}
-            handleLogout={handleLogout}
+            handleLogout={() => {
+              handleLogout();
+              navigateTo('/');
+            }}
             onChangePassword={openChangePasswordModal}
             onEditProfile={openEditProfileModal}
             openSidebarMobile={() => setIsSidebarOpenMobile(true)}
           />
 
           <div
-            className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
+            className={`p-6 bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
           >
             <main className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1 min-w-0 overflow-auto">
 
@@ -159,15 +233,19 @@ const App: React.FC = () => {
                   onToggleCollapse={toggleFormCollapsed}
                   onExport={handleExport}
                   onImport={handleImport}
-                  userRole={user.role}
+                  userRole={user!.role}
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
                   setAdminView={setAdminView}
                   openAdminCategories={() => setIsAdminCategoriesOpen(true)}
                   logsVisible={logsVisible}
                   setLogsVisible={setLogsVisible}
+                  onPublicView={() => navigateTo('/public/quotes')}
                   openSection={openSidebarSection}
                   setOpenSection={setOpenSidebarSection}
+                  // Settings props
+                  systemSettings={ctrl.systemSettings}
+                  onOpenSettings={() => ctrl.setIsSettingsModalOpen(true)}
                   searchContent={
                     <div className="space-y-4">
                       {/* Always visible person selector */}
@@ -194,8 +272,8 @@ const App: React.FC = () => {
                           <button
                             onClick={() => searchParams.handleAISelectionChange('gemini')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${searchParams.selectedAI === 'gemini'
-                                ? 'bg-cyan-700 text-white'
-                                : 'text-gray-300 hover:bg-gray-600'
+                              ? 'bg-cyan-700 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
                               }`}
                           >
                             Gemini
@@ -203,8 +281,8 @@ const App: React.FC = () => {
                           <button
                             onClick={() => searchParams.handleAISelectionChange('grok')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${searchParams.selectedAI === 'grok'
-                                ? 'bg-cyan-700 text-white'
-                                : 'text-gray-300 hover:bg-gray-600'
+                              ? 'bg-cyan-700 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
                               }`}
                           >
                             Grok
@@ -212,8 +290,8 @@ const App: React.FC = () => {
                           <button
                             onClick={() => searchParams.handleAISelectionChange('openai')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${searchParams.selectedAI === 'openai'
-                                ? 'bg-cyan-700 text-white'
-                                : 'text-gray-300 hover:bg-gray-600'
+                              ? 'bg-cyan-700 text-white'
+                              : 'text-gray-300 hover:bg-gray-600'
                               }`}
                           >
                             OpenAI
@@ -222,8 +300,10 @@ const App: React.FC = () => {
                       </div>
 
                       {/* Search for Quotes (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('searchForQuotes')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.search && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.search ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('searchForQuotes')} {!ctrl.systemSettings.search && t('disabled')}
+                        </summary>
                         <SearchControls
                           searchParams={searchParams}
                           statusFilters={{
@@ -254,8 +334,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Extract from Text (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('extractFromText')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.text_extract && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.text_extract ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('extractFromText')} {!ctrl.systemSettings.text_extract && t('disabled')}
+                        </summary>
                         <ExtractionControls
                           textToExtract={searchParams.textToExtract}
                           setTextToExtract={searchParams.setTextToExtract}
@@ -273,8 +355,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* YouTube Transcript (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('youtubeTranscript')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.youtube_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.youtube_transcript ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('youtubeTranscript')} {!ctrl.systemSettings.youtube_transcript && t('disabled')}
+                        </summary>
                         <YoutubeTranscriptButton
                           onClick={() => setIsTranscriptMethodSelectorOpen(true)}
                           isLoading={searchParams.isExtracting}
@@ -282,8 +366,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import Transcript Data (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importTranscriptDataTitle') || t('importTranscriptData')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('importTranscriptDataTitle') || t('importTranscriptData')} {!ctrl.systemSettings.import_transcript && t('disabled')}
+                        </summary>
                         <TranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
@@ -291,8 +377,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import SRT Transcript (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importSrtTranscriptTitle')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('importSrtTranscriptTitle')} {!ctrl.systemSettings.import_transcript && t('disabled')}
+                        </summary>
                         <SrtTranscriptImporter
                           onImport={handleImportTranscript}
                           isLoading={searchParams.isExtracting}
@@ -300,8 +388,10 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import Analysis Data (collapsible) */}
-                      <details className="border rounded-lg bg-gray-800">
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">{t('importAnalysisTitle')}</summary>
+                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_analysis && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_analysis ? 'border-gray-600 opacity-90' : ''}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                          {t('importAnalysisTitle')} {!ctrl.systemSettings.import_analysis && t('disabled')}
+                        </summary>
                         <AnalysisImporter
                           onImport={handleImportAnalysis}
                           isLoading={searchParams.isExtracting}
@@ -313,7 +403,7 @@ const App: React.FC = () => {
                     <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
                       <div className="flex-1 overflow-auto">
                         <PersonManager
-                          onSelectPerson={(person) => {
+                          onSelectPerson={(person: Person) => {
                             setSelectedPerson(person);
                             setResultsTab('stored');
                           }}
@@ -346,6 +436,7 @@ const App: React.FC = () => {
                 transcriptData={transcriptData}
                 selectedPerson={selectedPerson}
                 setSelectedPerson={setSelectedPerson}
+                userRole={user?.role}
 
                 quotes={quotes}
                 articles={articles}
@@ -397,6 +488,7 @@ const App: React.FC = () => {
                 onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
                 onExport={handleExport}
                 onImport={handleImport}
+                onPublicView={() => navigateTo('/public/quotes')}
               />
             </main>
 
@@ -411,15 +503,19 @@ const App: React.FC = () => {
                     onToggleCollapse={toggleFormCollapsed}
                     onExport={handleExport}
                     onImport={handleImport}
-                    userRole={user.role}
+                    userRole={user!.role}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     setAdminView={setAdminView}
                     openAdminCategories={() => setIsAdminCategoriesOpen(true)}
                     logsVisible={logsVisible}
                     setLogsVisible={setLogsVisible}
+                    onPublicView={() => navigateTo('/public/quotes')}
                     openSection={openSidebarSection}
                     setOpenSection={setOpenSidebarSection}
+                    // Settings props
+                    systemSettings={ctrl.systemSettings}
+                    onOpenSettings={() => ctrl.setIsSettingsModalOpen(true)}
                     searchContent={
                       <div className="space-y-6">
                         <SearchControls
@@ -516,6 +612,8 @@ const App: React.FC = () => {
               mode={modalMode}
               initialSource={extractedSourceUrl}
               initialAnalysisType={modalAnalysisType}
+              initialSelectedAI={searchParams.selectedAI}
+              initialAnalyzeImmediately={shouldAnalyzeImmediately}
               onImportTranscript={(t) => {
                 handleImportTranscript(t);
                 setIsTranscriptMethodSelectorOpen(false);
@@ -531,7 +629,7 @@ const App: React.FC = () => {
 
               isChangePasswordModalOpen={isChangePasswordModalOpen}
               isEditProfileModalOpen={isEditProfileModalOpen}
-              user={{ _id: user._id, name: user.name }}
+              user={{ _id: user!._id, name: user!.name }}
               onPasswordUpdated={() => {
                 setIsChangePasswordModalOpen(false);
                 alert(t('passwordUpdated'));
@@ -546,12 +644,19 @@ const App: React.FC = () => {
               onCloseUsageStats={() => setIsUsageStatsDashboardOpen(false)}
               isAdminCategoriesOpen={isAdminCategoriesOpen}
               onCloseAdminCategories={() => setIsAdminCategoriesOpen(false)}
+
+              // Settings props
+              isSettingsModalOpen={ctrl.isSettingsModalOpen}
+              onCloseSettingsModal={() => ctrl.setIsSettingsModalOpen(false)}
+              systemSettings={ctrl.systemSettings}
+              onUpdateSettings={ctrl.handleUpdateSettings}
             />
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
+
 
 export default App;

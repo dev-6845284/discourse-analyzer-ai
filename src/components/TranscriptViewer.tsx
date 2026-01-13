@@ -97,20 +97,20 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
   const { t } = useI18n();
 
   const handlePromote = async () => {
-    console.log('[handlePromote] Called with:', {
-      editQuoteId,
-      contentAnalysisId,
-      currentSessionId,
-      selectedStatementsSize: selectedStatements.size,
-      selectedStatements: Array.from(selectedStatements.entries())
-    });
+    // console.log('[handlePromote] Called with:', {
+    //   editQuoteId,
+    //   contentAnalysisId,
+    //   currentSessionId,
+    //   selectedStatementsSize: selectedStatements.size,
+    //   selectedStatements: Array.from(selectedStatements.entries())
+    // });
 
     if (!currentSessionId && !contentAnalysisId) {
       console.error('[handlePromote] Neither sessionId nor contentAnalysisId found');
       alert(t('noSessionOrContentAnalysis'));
       return;
     }
-    
+
     const groups = new Map<number, string[]>();
     selectedStatements.forEach((groupId, statementId) => {
       if (!groups.has(groupId)) {
@@ -118,12 +118,12 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
       }
       groups.get(groupId)!.push(statementId);
     });
-    
+
     // Helper to find dominant speaker's personId for a group of statements
     const findDominantSpeakerPersonId = (statementIds: string[]): string | undefined => {
       // Extract topic group IDs from statement IDs
       const topicGroupIds = [...new Set(statementIds.map(id => id.split(':')[0]))];
-      
+
       // Count speakers across matching dialog groups
       const speakerCounts = new Map<string, number>();
       topicAnalysis.dialogResults.forEach((group: any) => {
@@ -134,7 +134,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
           });
         }
       });
-      
+
       // Find speaker with most lines
       let dominantSpeaker = '';
       let maxCount = 0;
@@ -144,9 +144,9 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
           dominantSpeaker = speaker;
         }
       });
-      
+
       if (!dominantSpeaker) return undefined;
-      
+
       // Find if this speaker has a linked personId in speakerResults
       for (const block of topicAnalysis.speakerResults) {
         const speaker = block.speakers?.find((s: any) => s.name === dominantSpeaker);
@@ -154,21 +154,21 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
           return speaker.personId;
         }
       }
-      
+
       return undefined;
     };
-    
+
     const quoteGroups = Array.from(groups.entries()).map(([groupId, statementIds]) => ({
       groupId,
       statementIds,
       personId: findDominantSpeakerPersonId(statementIds), // Pass linked personId if available
     }));
-    
-    console.log('[handlePromote] Quote groups:', quoteGroups);
+
+    // console.log('[handlePromote] Quote groups:', quoteGroups);
 
     try {
       if (editQuoteId && contentAnalysisId) {
-        console.log('[handlePromote] Edit mode - updating quote source');
+        // console.log('[handlePromote] Edit mode - updating quote source');
         if (quoteGroups.length !== 1) {
           alert(t('selectOneGroupWhenEditing'));
           return;
@@ -176,7 +176,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
         await updateQuoteSource(editQuoteId, contentAnalysisId, quoteGroups[0].statementIds);
         alert(t('updatedQuoteSourceSuccess'));
       } else {
-        console.log('[handlePromote] Promote mode - creating new quotes');
+        // console.log('[handlePromote] Promote mode - creating new quotes');
         if (!currentSessionId) return;
         await promoteSession(currentSessionId, quoteGroups, selectedLanguage);
         alert(t('promotedToQuotesSuccess'));
@@ -252,8 +252,8 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
               onExportAnalysis={handleExportAnalysis}
               onImportAnalysis={handleImportAnalysisClick}
               hasAnalysisData={
-                topicAnalysis.results.length > 0 || 
-                topicAnalysis.speakerResults.length > 0 || 
+                topicAnalysis.results.length > 0 ||
+                topicAnalysis.speakerResults.length > 0 ||
                 topicAnalysis.dialogResults.length > 0
               }
             />

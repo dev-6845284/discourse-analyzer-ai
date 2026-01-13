@@ -16,7 +16,7 @@ import type { Quote, Person, AnalysisSession, ExportData } from '../types';
 export type UseAppController = ReturnType<typeof useAppController>;
 
 export function useAppController() {
-  const { user, loginError, googleButtonRef, handleLogout, loginWithPassword, updateUser } = useAuth();
+  const { user, loginError, isAuthLoading, googleButtonRef, handleLogout, loginWithPassword, loginAsDev, updateUser } = useAuth();
 
   const searchParams = useSearchParams();
   const { t } = useI18n();
@@ -46,6 +46,43 @@ export function useAppController() {
   const [autoFetchError, setAutoFetchError] = React.useState<string | null>(null);
   // Admin view within Admin actions container (e.g., 'users', 'categories', null)
   const [adminView, setAdminView] = React.useState<'users' | 'categories' | 'logs' | 'management' | 'keysets' | null>(null);
+
+  // System Settings
+  const [systemSettings, setSystemSettings] = React.useState({
+    search: true,
+    text_extract: true,
+    youtube_transcript: true,
+    import_transcript: true,
+    import_analysis: true,
+  });
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isAuthLoading || !user || user.role === 'public_guest') return;
+
+    // Dynamically import to avoid circular dependencies if any, though explicit import is better.
+    // Switching to direct import or keeping api usage consistent.
+    // Since api is imported at top level in other files, let's use the imported 'fetchArticle' style if possible, 
+    // but here we need to import the new functions.
+    // Let's just use the functions from ../utils/api if they were exported.
+    // I will use dynamic import for now to be safe with the previous `require` change.
+    import('../utils/api').then(({ fetchSystemSettings }) => {
+      fetchSystemSettings().then((res: any) => {
+        setSystemSettings(res.data);
+      }).catch((err: any) => console.error('Failed to fetch settings:', err));
+    });
+  }, [user, isAuthLoading]);
+
+  const handleUpdateSettings = async (newSettings: any) => {
+    try {
+      const { updateSystemSettings } = await import('../utils/api');
+      const res = await updateSystemSettings(newSettings);
+      setSystemSettings(res.data);
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      throw error;
+    }
+  };
 
   React.useEffect(() => {
     if (logsVisible) {
@@ -131,14 +168,14 @@ export function useAppController() {
     quotesState.handleImproveQuote(quote, searchParams.selectedAI, searchParams.personName);
   }, [quotesState, searchParams.selectedAI, searchParams.personName]);
 
-  const performExtraction = React.useCallback(async (details: any, analysisType?: 'audit'|'flaws') => {
+  const performExtraction = React.useCallback(async (details: any, model: string, analysisType?: 'audit' | 'flaws', analyzeImmediately: boolean = true) => {
     // Snapshot existing quote ids so we can detect newly added quotes after extraction
     const existingIds = new Set(quotesState.quotes.map((q: any) => q.id));
     searchParams.setIsExtracting(true);
 
     try {
       await quotesState.handleExtractQuotes(
-        searchParams.selectedAI,
+        model, // Use the passed model
         searchParams.personName,
         searchParams.textToExtract,
         details,
@@ -150,11 +187,11 @@ export function useAppController() {
       );
 
       // If an analysis type was specified, analyze each newly extracted quote
-      if (analysisType) {
+      if (analysisType && analyzeImmediately) {
         const newQuotes = (quotesState.quotes || []).filter((q: any) => !existingIds.has(q.id));
         for (const q of newQuotes) {
           try {
-            await quotesState.handleAnalyzeQuote(q, searchParams.selectedAI, analysisType);
+            await quotesState.handleAnalyzeQuote(q, model, analysisType);
           } catch (e) {
             // Don't fail the whole extraction flow if a single analysis fails
             console.error('Failed to analyze extracted quote:', e);
@@ -207,33 +244,38 @@ export function useAppController() {
     }
   }, [quotesState, searchParams, extractionLanguage, selectedPerson]);
 
-  const handleModalSave = React.useCallback((details: any, analysisType?: 'audit'|'flaws') => {
+  const handleModalSave = React.useCallback((details: any, model: string, analysisType: 'audit' | 'flaws', analyzeImmediately: boolean) => {
     if (modalMode === 'extract') {
-      performExtraction(details, analysisType);
+      // Need to update performExtraction to accept model if it doesn't already, or just use the passed model
+      // Looking at performExtraction, it uses searchParams.selectedAI. We should probably use the one from modal if available.
+      // But verify performExtraction signature first. It uses searchParams.selectedAI inside.
+      // Let's modify performExtraction too to be safe, or just update the signature here and trust it uses global or we override it.
+      // Actually, performExtraction uses searchParams.selectedAI. I should update it to accept model override.
+      performExtraction(details, model, analysisType, analyzeImmediately);
     } else {
       quotesState.handleAddQuoteManually(searchParams.personName, searchParams.textToExtract, details, (quote, chosenType) => {
         const effectiveType = chosenType || analysisType;
-        if (shouldAnalyzeImmediately) {
-          quotesState.handleAnalyzeQuote(quote, searchParams.selectedAI, effectiveType);
+        if (analyzeImmediately) {
+          quotesState.handleAnalyzeQuote(quote, model, effectiveType);
         }
       }, selectedPerson || undefined);
       searchParams.clearTextToExtract();
       setExtractedSourceUrl('');
     }
     uiState.closeAddModal();
-  }, [modalMode, performExtraction, quotesState, searchParams, shouldAnalyzeImmediately, uiState, selectedPerson]);
+  }, [modalMode, performExtraction, quotesState, searchParams, uiState, selectedPerson]);
 
-  const [modalAnalysisType, setModalAnalysisType] = React.useState<'audit'|'flaws'>('audit');
+  const [modalAnalysisType, setModalAnalysisType] = React.useState<'audit' | 'flaws'>('audit');
 
-  const openExtractModal = React.useCallback((analysisType: 'audit'|'flaws' = 'audit') => {
+  const openExtractModal = React.useCallback(() => {
     setModalMode('extract');
-    setModalAnalysisType(analysisType);
+    setModalAnalysisType('audit');
     uiState.openAddModal();
   }, [uiState]);
 
-  const openAddQuoteModal = React.useCallback((analyzeImmediately: boolean) => {
+  const openAddQuoteModal = React.useCallback(() => {
     setModalMode('add');
-    setShouldAnalyzeImmediately(analyzeImmediately);
+    setModalAnalysisType('audit');
     uiState.openAddModal();
   }, [uiState]);
 
@@ -275,7 +317,7 @@ export function useAppController() {
   }, [uiState]);
 
   const handleImportAnalysis = React.useCallback((analysis: FullAnalysisData) => {
-    
+
 
     uiState.openTranscriptViewer({
       videoId: analysis.videoId,
@@ -359,11 +401,11 @@ export function useAppController() {
           }
         });
 
-        console.log('[handleEditSource] Statement matching:', {
-          originalOriginIds: quote.originIds,
-          matchedStatements,
-          initialSelectedStatementsSize: initialSelectedStatements.size
-        });
+        // console.log('[handleEditSource] Statement matching:', {
+        //   originalOriginIds: quote.originIds,
+        //   matchedStatements,
+        //   initialSelectedStatementsSize: initialSelectedStatements.size
+        // });
       }
 
       uiState.openTranscriptViewer({
@@ -392,9 +434,11 @@ export function useAppController() {
     // Auth
     user,
     loginError,
+    isAuthLoading,
     googleButtonRef,
     handleLogout,
     loginWithPassword,
+    loginAsDev,
     updateUser,
 
     // Hooks
@@ -459,6 +503,12 @@ export function useAppController() {
     // Admin view
     adminView,
     setAdminView,
+
+    // Settings
+    systemSettings,
+    handleUpdateSettings,
+    isSettingsModalOpen,
+    setIsSettingsModalOpen,
 
     // Actions
     handleExport,

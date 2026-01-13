@@ -22,14 +22,14 @@ test('i18n t() returns English and Lithuanian translations and setLanguage works
     </I18nProvider>
   );
 
-  expect(screen.getByTestId('lang').textContent).toBe('en');
-  expect(screen.getByTestId('results').textContent).toBe('Results (3)');
-
-  await userEvent.click(screen.getByText('lt'));
   expect(screen.getByTestId('lang').textContent).toBe('lt');
   expect(screen.getByTestId('results').textContent).toBe('Rezultatai (3)');
 
   await userEvent.click(screen.getByText('en'));
   expect(screen.getByTestId('lang').textContent).toBe('en');
   expect(screen.getByTestId('results').textContent).toBe('Results (3)');
+
+  await userEvent.click(screen.getByText('lt'));
+  expect(screen.getByTestId('lang').textContent).toBe('lt');
+  expect(screen.getByTestId('results').textContent).toBe('Rezultatai (3)');
 });
