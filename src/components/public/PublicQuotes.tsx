@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';
-import { Filter, Calendar, User, ChevronDown, LogIn } from 'lucide-react';
+import { Filter, Calendar, User, LogIn } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
 
 interface PublicQuotesProps {

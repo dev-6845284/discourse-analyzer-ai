@@ -30,7 +30,7 @@ interface PublicQuoteProps {
 }
 
 export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
-    const { t, language } = useI18n();
+    const { t } = useI18n();
     const [showIframe, setShowIframe] = useState(false);
     const [iframeHeight, setIframeHeight] = useState(220);
     const [isIframeExpanded, setIsIframeExpanded] = useState(false);

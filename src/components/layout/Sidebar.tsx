@@ -2,7 +2,6 @@ import SidebarSection from './SidebarSection';
 import React from 'react';
 import { useI18n } from '../../i18n';
 import DevRoleSelector from '../DevRoleSelector';
-import { Globe, ExternalLink } from 'lucide-react';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -33,12 +32,9 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse,
-  onExport,
-  onImport,
   searchContent,
   peopleContent,
   sessionsContent,
-  usersContent,
   managementContent,
   userRole,
   asDrawer,
@@ -48,11 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   setAdminView,
-  openAdminCategories,
-  logsVisible,
   setLogsVisible,
-  onPublicView,
-  systemSettings,
   onOpenSettings,
 }) => {
   const { t } = useI18n();

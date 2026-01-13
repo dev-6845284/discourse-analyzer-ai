@@ -354,5 +354,6 @@ export const getUserAssignedKeyset = (userId: string) =>
 
 // System Settings
 export const fetchSystemSettings = () => api.get('/settings');
+ // ToDo The any type is used for parameters and return values, reducing type safety. Consider defining proper TypeScript interfaces for features, settings, and the return types to ensure type safety throughout the application.
 export const updateSystemSettings = (features: any) => api.put('/settings', { features });
 

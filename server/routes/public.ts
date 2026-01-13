@@ -112,8 +112,8 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
 
         // Initialize cache service lazily or globally
         // For now, we import here to avoid circular deps if any, or just use the class
-        const { CacheService } = require('../services/cacheService');
-        const { getPublicQuotesCacheSizeMB } = require('../constants/env');
+        const { CacheService } = await import('../services/cacheService');
+        const { getPublicQuotesCacheSizeMB } = await import('../constants/env');    
 
         // Singleton-like behavior for the specific cache namespace
         // We attach it to the request or a global provider if needed, but instantiating here is cheap
@@ -139,9 +139,6 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
 
         // Sanitize and Map Response
         const sanitizedQuotes = quotes.map((q: any) => {
-            // Extract analysis results safely
-            const analysisRaw = q.metadata?.audit || q.metadata?.analysis || {};
-
             // Determine structure based on version (audit vs analysis)
             let analysisSummary = {
                 verdict: 'Unknown',
