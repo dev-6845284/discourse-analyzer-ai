@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useAuth } from '../useAuth';
 import api from '../../utils/api';
+import { I18nProvider } from '../../i18n';
 
 // Mock api
 jest.mock('../../utils/api', () => ({
@@ -34,6 +35,7 @@ const TestComponent: React.FC = () => {
 describe('useAuth', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        localStorage.setItem('discourse_analyzer_lang', 'en');
     });
 
     it('displays error message with retryAfter details when login fails with 429', async () => {
@@ -49,14 +51,17 @@ describe('useAuth', () => {
         };
         (api.post as jest.Mock).mockRejectedValue(mockError);
 
-        render(<TestComponent />);
+        render(
+            <I18nProvider>
+                <TestComponent />
+            </I18nProvider>
+        );
 
         fireEvent.click(screen.getByText('Login'));
 
         await waitFor(() => {
             const errorElement = screen.getByTestId('error-message');
-            expect(errorElement.textContent).toContain('Please try again later');
-            expect(errorElement.textContent).toContain('Wait 30 seconds');
+            expect(errorElement.textContent).toMatch(/(Please wait|Prašome palaukti) 30/);
         });
     });
 
@@ -71,7 +76,11 @@ describe('useAuth', () => {
         };
         (api.post as jest.Mock).mockRejectedValue(mockError);
 
-        render(<TestComponent />);
+        render(
+            <I18nProvider>
+                <TestComponent />
+            </I18nProvider>
+        );
 
         fireEvent.click(screen.getByText('Login'));
 

@@ -1,23 +1,24 @@
 import { CacheService } from '../cacheService';
 
-// Mock IORedis client
-const mockRedis = {
-    get: jest.fn(),
-    set: jest.fn(),
-    setex: jest.fn(),
-    zadd: jest.fn(),
-    zrange: jest.fn(),
-    zrem: jest.fn(),
-    incrby: jest.fn(),
-    decrby: jest.fn(),
-    del: jest.fn(),
-    multi: jest.fn(),
-};
+import redisClient from '../redis';
 
 jest.mock('../redis', () => ({
     __esModule: true,
-    default: mockRedis,
+    default: {
+        get: jest.fn().mockResolvedValue(null),
+        set: jest.fn().mockResolvedValue('OK'),
+        setex: jest.fn().mockResolvedValue('OK'),
+        zadd: jest.fn().mockResolvedValue(1),
+        zrange: jest.fn().mockResolvedValue([]),
+        zrem: jest.fn().mockResolvedValue(1),
+        incrby: jest.fn().mockResolvedValue(1),
+        decrby: jest.fn().mockResolvedValue(1),
+        del: jest.fn().mockResolvedValue(1),
+        multi: jest.fn(),
+    },
 }));
+
+const mockRedis = redisClient as any;
 
 describe('CacheService', () => {
     let cacheService: CacheService;
@@ -82,7 +83,7 @@ describe('CacheService', () => {
         it('should evict oldest items if space is needed', async () => {
             // 1MB = 1048576 bytes
             // Current usage: 1048500 (almost full)
-            mockRedis.get.mockImplementation((key) => {
+            mockRedis.get.mockImplementation((key: string) => {
                 if (key === 'cache:test:usage') return Promise.resolve('1048500');
                 if (key === 'oldest_key') return Promise.resolve('x'.repeat(1000)); // 1000 bytes
                 return Promise.resolve(null);
