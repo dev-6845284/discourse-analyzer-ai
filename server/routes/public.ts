@@ -5,6 +5,7 @@ import '../models/Person'; // Ensure Person model is registered for populate
 import { generalRateLimiter } from '../middleware/rateLimiter';
 import mongoose from 'mongoose';
 import { isProduction, isLocal } from '../constants/env';
+import { publicQuotesCache } from '../services/publicQuotesCache';
 
 const router = express.Router();
 
@@ -110,20 +111,8 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
         const hash = crypto.createHash('sha256').update(JSON.stringify(cacheKeyParams)).digest('hex');
         const cacheKey = `query:${hash}`;
 
-        // Initialize cache service lazily or globally
-        // For now, we import here to avoid circular deps if any, or just use the class
-        const { CacheService } = await import('../services/cacheService');
-        const { getPublicQuotesCacheSizeMB } = await import('../constants/env');    
-
-        // Singleton-like behavior for the specific cache namespace
-        // We attach it to the request or a global provider if needed, but instantiating here is cheap
-        // if we want to hold state (like LRU index), we need a persistent instance.
-        // Let's use a module-level instance.
-        const cacheService = (global as any).publicQuotesCache || new CacheService('public_quotes', getPublicQuotesCacheSizeMB());
-        (global as any).publicQuotesCache = cacheService;
-
         // Try to get from cache
-        const cachedResults = await cacheService.get(cacheKey);
+        const cachedResults = await publicQuotesCache.get(cacheKey);
         if (cachedResults) {
             console.log('[PUBLIC_QUOTES] Cache HIT', { cacheKey });
             return res.json(cachedResults);
@@ -191,7 +180,7 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
         });
 
         // Save to cache (TTL: 5 minutes)
-        await cacheService.set(cacheKey, sanitizedQuotes, { ttl: 300 });
+        await publicQuotesCache.set(cacheKey, sanitizedQuotes, { ttl: 300 });
 
         res.json(sanitizedQuotes);
     } catch (error: any) {
