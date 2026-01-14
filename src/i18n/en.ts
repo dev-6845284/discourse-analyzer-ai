@@ -47,6 +47,7 @@ const en = {
   enterChatGptApiKey: 'Enter OpenAI API Key',
   grokApiKeyLabel: 'Grok API Key',
   enterGrokApiKey: 'Enter Grok API Key',
+  overwriteKey: 'Overwrite',
   saveKeys: 'Save Keys',
   editProfile: 'Edit Profile',
   changePassword: 'Change Password',

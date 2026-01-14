@@ -49,6 +49,7 @@ const lt = {
   enterChatGptApiKey: 'Įveskite OpenAI API raktą',
   grokApiKeyLabel: 'Grok API raktas',
   enterGrokApiKey: 'Įveskite Grok API raktą',
+  overwriteKey: 'Perrašyti',
   saveKeys: 'Išsaugoti raktus',
   editProfile: 'Redaguoti profilį',
   changePassword: 'Keisti slaptažodį',

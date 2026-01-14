@@ -305,6 +305,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               statusFilters={statusFilters}
               onExport={onExport}
               onImport={onImport}
+              userRole={userRole}
             />
           )
         )}

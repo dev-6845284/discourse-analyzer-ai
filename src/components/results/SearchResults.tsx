@@ -22,7 +22,7 @@ interface SearchResultsProps {
   sortOrder: 'newest' | 'oldest';
   setSortOrder: (order: 'newest' | 'oldest') => void;
   onClear: () => void;
-  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit'|'flaws') => void;
+  onAnalyze: (quote: Quote, model: string, analysisType?: 'audit' | 'flaws') => void;
   onImprove: (quote: Quote) => void;
   onSave: (quote: Quote) => void;
   onLanguageChange: (id: string, lang: string) => void;
@@ -40,6 +40,7 @@ interface SearchResultsProps {
   };
   onExport?: () => void;
   onImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  userRole?: string;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -63,9 +64,10 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   statusFilters,
   onExport,
   onImport,
+  userRole,
 }) => {
   const { t } = useI18n();
-  const sf = statusFilters || { isAnalyzed: 'all' as const, setIsAnalyzed: (_: any) => {}, isImproved: 'all' as const, setIsImproved: (_: any) => {} };
+  const sf = statusFilters || { isAnalyzed: 'all' as const, setIsAnalyzed: (_: any) => { }, isImproved: 'all' as const, setIsImproved: (_: any) => { } };
   return (
     <>
       <ErrorDisplay
@@ -92,21 +94,19 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             <div className="flex rounded-md bg-gray-700">
               <button
                 onClick={() => setSortOrder('newest')}
-                className={`px-3 py-1 text-sm font-medium transition-colors rounded-l-md ${
-                  sortOrder === 'newest'
+                className={`px-3 py-1 text-sm font-medium transition-colors rounded-l-md ${sortOrder === 'newest'
                     ? 'bg-cyan-600 text-white'
                     : 'text-gray-300 hover:bg-gray-600'
-                }`}
+                  }`}
               >
                 {t('newest')}
               </button>
               <button
                 onClick={() => setSortOrder('oldest')}
-                className={`px-3 py-1 text-sm font-medium transition-colors rounded-r-md ${
-                  sortOrder === 'oldest'
+                className={`px-3 py-1 text-sm font-medium transition-colors rounded-r-md ${sortOrder === 'oldest'
                     ? 'bg-cyan-600 text-white'
                     : 'text-gray-300 hover:bg-gray-600'
-                }`}
+                  }`}
               >
                 {t('oldest')}
               </button>
@@ -183,6 +183,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
               onRemove={onRemove}
               isApiKeySet={true}
               selectedAI={selectedAI}
+              userRole={userRole}
             />
           ))}
         </div>
