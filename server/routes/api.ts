@@ -114,4 +114,9 @@ router.get('/categories', (req, res) => {
   res.json(getAllCategories());
 });
 
+router.get('/categories/simple', (req, res) => {
+  const { getSimpleCategories } = require('../services/categoryService');
+  res.json(getSimpleCategories());
+});
+
 export default router;

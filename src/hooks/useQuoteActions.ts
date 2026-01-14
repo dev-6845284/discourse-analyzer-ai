@@ -25,7 +25,7 @@ export function useQuoteActions(
         if (quote.person && typeof quote.person === 'string') {
           personId = quote.person;
         } else if (quote.person && typeof quote.person === 'object') {
-          personId = quote.person._id || quote.person.id;
+          personId = quote.person._id;
           personName = quote.person.name || personName;
         }
 

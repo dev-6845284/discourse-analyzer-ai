@@ -58,6 +58,7 @@ interface MainContentProps {
   onPublicView?: () => void;
   selectedAI: string;
   userRole?: string;
+  storedQuotesRefreshTrigger?: number;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
@@ -96,6 +97,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   setLogsVisible,
   userRole,
   onPublicView,
+  storedQuotesRefreshTrigger,
 }) => {
   const { t } = useI18n();
 
@@ -254,6 +256,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               isApiKeySet={true}
               onEditSource={onEditSource}
               userRole={userRole}
+              refreshTrigger={storedQuotesRefreshTrigger}
             />
           </div>
         ) : (
@@ -296,6 +299,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 isApiKeySet={true}
                 onEditSource={onEditSource}
                 userRole={userRole}
+                refreshTrigger={storedQuotesRefreshTrigger}
               />
             </div>
           ) : (

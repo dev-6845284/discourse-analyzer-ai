@@ -26,9 +26,10 @@ interface StoredQuotesProps {
   isApiKeySet: boolean;
   onEditSource?: (quote: Quote) => void;
   userRole?: string;
+  refreshTrigger?: number;
 }
 
-const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource, userRole }) => {
+const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource, userRole, refreshTrigger }) => {
   const { t } = useI18n();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -344,7 +345,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     };
 
     fetchQuotes();
-  }, [queryParams]); // Re-fetch when filters change (uses debounced text)
+  }, [queryParams, refreshTrigger]); // Re-fetch when filters change or refreshTrigger updates
 
   return (
     <div className="h-full overflow-y-auto p-4">

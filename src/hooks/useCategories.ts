@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CategoryDefinition } from '../types';
 
-let cachedCategories: CategoryDefinition[] | null = null;
-let globalFetchPromise: Promise<CategoryDefinition[]> | null = null;
-const CACHE_KEY = 'cached_categories';
+let cachedCategories: Partial<CategoryDefinition>[] | null = null;
+let globalFetchPromise: Promise<Partial<CategoryDefinition>[]> | null = null;
+const CACHE_KEY = 'cached_categories_simple';
 
 /**
  * Hook to fetch and use analysis categories.
  * Uses a simple stale-while-revalidate strategy with local storage caching for speed.
  */
 export const useCategories = () => {
-    const [categories, setCategories] = useState<CategoryDefinition[]>([]);
+    const [categories, setCategories] = useState<Partial<CategoryDefinition>[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +52,7 @@ export const useCategories = () => {
 
         try {
             // Start background fetch
-            globalFetchPromise = axios.get<CategoryDefinition[]>('/api/categories', {
+            globalFetchPromise = axios.get<Partial<CategoryDefinition>[]>('/api/categories/simple', {
                 withCredentials: true // Ensure we send auth cookies
             }).then(res => res.data);
 
@@ -100,7 +100,8 @@ export const useCategories = () => {
 
         return cat.translations?.[language]?.title ||
             cat.translations?.['en']?.title ||
-            cat.title;
+            cat.title ||
+            key;
     };
 
     return {

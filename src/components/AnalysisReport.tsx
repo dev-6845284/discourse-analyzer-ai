@@ -81,8 +81,8 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
         )}
         {/* Categories */}
         {(Object.entries(audit.categories) as [AuditCategory, AuditDetail][]).map(([category, detail]) => {
-          const cat = getCategory ? getCategory(category) : undefined;
-          let displayTitle = category;
+          const cat = getCategory(category);
+          let displayTitle: string = category;
 
           // 1. Try Dynamic Translation (DB)
           const dynamicTitle = cat?.translations?.[language]?.title;

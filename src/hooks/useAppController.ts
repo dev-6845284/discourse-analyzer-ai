@@ -8,7 +8,7 @@ import { useUIState } from './useUIState';
 import { fetchArticle, getSession, getContentAnalysis, fetchYoutubeTranscript } from '../utils/api';
 import { useI18n } from '../i18n';
 import { exportQuotesToFile, importQuotesFromFile } from '../utils/file';
-import { saveQuote } from '../utils/api';
+import { saveQuote, analyzeQuote, updateQuote } from '../utils/api';
 import { TranscriptData } from '../utils/transcriptStorage';
 import { FullAnalysisData } from '../utils/analysisStorage';
 import type { Quote, Person, AnalysisSession, ExportData } from '../types';
@@ -35,6 +35,7 @@ export function useAppController() {
   const [resultsTab, setResultsTab] = React.useState<'new' | 'stored' | 'transcript'>('new');
   const [selectedPerson, setSelectedPerson] = React.useState<Person | null>(null);
   const [sessionsRefreshTrigger, setSessionsRefreshTrigger] = React.useState(0);
+  const [storedQuotesRefreshTrigger, setStoredQuotesRefreshTrigger] = React.useState(0);
   const [extractionStatus, setExtractionStatus] = React.useState<string>('');
   const [extractionLanguage, setExtractionLanguage] = React.useState<string>('lt');
   const [extractionError, setExtractionError] = React.useState<string | null>(null);
@@ -186,25 +187,49 @@ export function useAppController() {
         searchParams.personName,
         searchParams.textToExtract,
         details,
-        () => {
+        async (savedQuotes) => {
           searchParams.clearTextToExtract();
           searchParams.setIsExtracting(false);
+
+          // If an analysis type was specified, analyze each newly extracted quote
+          if (analysisType && analyzeImmediately && savedQuotes.length > 0) {
+            await Promise.all(savedQuotes.map(async (q) => {
+              try {
+                // Call API directly
+                const res = await analyzeQuote(
+                  model,
+                  q.text,
+                  q.languageCode,
+                  q.languageName,
+                  q.analysisContext,
+                  q.links,
+                  (typeof q.person === 'object' ? (q.person as any)?._id : q.person),
+                  q.personName,
+                  analysisType
+                );
+
+                // Save analysis result to DB (Auto-accept)
+                const audit = res.data;
+                const updatePayload = {
+                  metadata: {
+                    ...q.metadata,
+                    audit: audit,
+                    analyzedByProvider: model,
+                    analyzedAt: new Date().toISOString()
+                  }
+                };
+                await updateQuote(q.id, updatePayload);
+              } catch (e) {
+                console.error('Failed to analyze and save extracted quote:', e);
+              }
+            }));
+          }
+
+          setStoredQuotesRefreshTrigger(prev => prev + 1);
+          setResultsTab('stored');
         },
         selectedPerson || undefined
       );
-
-      // If an analysis type was specified, analyze each newly extracted quote
-      if (analysisType && analyzeImmediately) {
-        const newQuotes = (quotesState.quotes || []).filter((q: any) => !existingIds.has(q.id));
-        for (const q of newQuotes) {
-          try {
-            await quotesState.handleAnalyzeQuote(q, model, analysisType);
-          } catch (e) {
-            // Don't fail the whole extraction flow if a single analysis fails
-            console.error('Failed to analyze extracted quote:', e);
-          }
-        }
-      }
     } finally {
       searchParams.setIsExtracting(false);
     }
@@ -213,7 +238,7 @@ export function useAppController() {
   const handleExtractFromUrl = React.useCallback(async () => {
     searchParams.setIsExtracting(true);
     setExtractionStatus('Fetching article...');
-    setResultsTab('new');
+    // setResultsTab('new'); // Don't switch to new, we will switch to stored on success
 
     try {
       const response = await fetchArticle(searchParams.textToExtract.trim(), extractionLanguage);
@@ -225,8 +250,10 @@ export function useAppController() {
         searchParams.textToExtract.trim(),
         searchParams.temperature,
         (status: string) => setExtractionStatus(status),
-        () => {
+        async (savedQuotes) => {
           searchParams.clearTextToExtract();
+          setStoredQuotesRefreshTrigger(prev => prev + 1);
+          setResultsTab('stored');
         },
         selectedPerson || undefined
       );
@@ -260,11 +287,37 @@ export function useAppController() {
       // Actually, performExtraction uses searchParams.selectedAI. I should update it to accept model override.
       performExtraction(details, model, analysisType, analyzeImmediately);
     } else {
-      quotesState.handleAddQuoteManually(searchParams.personName, searchParams.textToExtract, details, (quote, chosenType) => {
+      quotesState.handleAddQuoteManually(searchParams.personName, searchParams.textToExtract, details, async (quote, chosenType) => {
         const effectiveType = chosenType || analysisType;
         if (analyzeImmediately) {
-          quotesState.handleAnalyzeQuote(quote, model, effectiveType);
+          try {
+            const res = await analyzeQuote(
+              model,
+              quote.text,
+              quote.languageCode,
+              quote.languageName,
+              quote.analysisContext,
+              quote.links,
+              (typeof quote.person === 'object' ? (quote.person as any)?._id : quote.person),
+              quote.personName,
+              effectiveType
+            );
+            const audit = res.data;
+            const updatePayload = {
+              metadata: {
+                ...quote.metadata,
+                audit: audit,
+                analyzedByProvider: model,
+                analyzedAt: new Date().toISOString()
+              }
+            };
+            await updateQuote(quote.id, updatePayload);
+          } catch (e) {
+            console.error('Failed to analyze manually added quote:', e);
+          }
         }
+        setStoredQuotesRefreshTrigger(prev => prev + 1);
+        setResultsTab('stored');
       }, selectedPerson || undefined);
       searchParams.clearTextToExtract();
       setExtractedSourceUrl('');
@@ -489,6 +542,8 @@ export function useAppController() {
     setSelectedPerson,
     sessionsRefreshTrigger,
     setSessionsRefreshTrigger,
+    storedQuotesRefreshTrigger,
+    setStoredQuotesRefreshTrigger,
     extractionStatus,
     extractionLanguage,
     setExtractionLanguage,

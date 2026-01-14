@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Quote, ExportData, Person } from '../types';
 import { SUPPORTED_LANGUAGES } from '../constants';
-import api, { extractFromUrl } from '../utils/api';
+import api, { extractFromUrl, saveQuote } from '../utils/api';
 
 
 export function useQuoteExtraction(
@@ -17,7 +17,7 @@ export function useQuoteExtraction(
       personName: string,
       textToExtract: string,
       details: { source: string; title: string; date: string; languageCode: string; languageName: string; },
-      onSuccess: () => void,
+      onSuccess: (savedQuotes: Quote[]) => void,
       person?: Person
     ) => {
       if (!personName) {
@@ -46,8 +46,17 @@ export function useQuoteExtraction(
           person: (q as any).person || personPayload,
         }));
 
-        setQuotes((prevQuotes) => [...prevQuotes, ...extractedQuotes]);
-        onSuccess();
+        // Save extracted quotes to DB immediately
+        const savedQuotes = await Promise.all(
+          extractedQuotes.map(async (q) => {
+            const res = await saveQuote(q);
+            return { ...q, ...res.data, isStored: true } as Quote;
+          })
+        );
+
+        // Instead of adding to local state, we pass saved quotes to callback
+        // so the app can refresh StoredQuotes view
+        onSuccess(savedQuotes);
       } catch (e: any) {
         setError(`Extraction failed: ${e.response?.data?.message || e.message}`);
         if (e.response?.data?.rawResponse) {
@@ -65,7 +74,7 @@ export function useQuoteExtraction(
       url: string,
       temperature: number,
       onStatusChange: (status: string) => void,
-      onSuccess: () => void,
+      onSuccess: (savedQuotes: Quote[]) => void,
       person?: Person
     ) => {
       if (!personName) {
@@ -88,6 +97,7 @@ export function useQuoteExtraction(
 
         const { quotes: extractedQuotes } = response.data;
 
+        let savedQuotes: Quote[] = [];
         if (extractedQuotes && extractedQuotes.length > 0) {
           const personPayload = person || { name: personName };
           const enrichedQuotes = (extractedQuotes as Quote[]).map((q) => ({
@@ -95,10 +105,17 @@ export function useQuoteExtraction(
             personName: q.personName || personPayload.name,
             person: (q as any).person || personPayload,
           }));
-          setQuotes((prevQuotes) => [...prevQuotes, ...enrichedQuotes]);
+
+          // Save to DB immediately
+          savedQuotes = await Promise.all(
+            enrichedQuotes.map(async (q) => {
+              const res = await saveQuote(q);
+              return { ...q, ...res.data, isStored: true } as Quote;
+            })
+          );
         }
 
-        onSuccess();
+        onSuccess(savedQuotes);
       } catch (e: any) {
         setError(`URL extraction failed: ${e.response?.data?.message || e.message}`);
         if (e.response?.data?.rawResponse) {
@@ -110,7 +127,7 @@ export function useQuoteExtraction(
   );
 
   const handleAddQuoteManually = useCallback(
-    (
+    async (
       personName: string,
       textToExtract: string,
       details: {
@@ -147,13 +164,23 @@ export function useQuoteExtraction(
         person: person || { name: personName },
       };
 
-      setQuotes((prevQuotes) => [newQuote, ...prevQuotes]);
-      setError(null);
-      setRawApiResponseError(null);
+      try {
+        const payload = {
+          ...newQuote,
+          // DB expects certain fields, newQuote has them.
+        };
+        const res = await saveQuote(payload);
+        const savedQuote = { ...newQuote, ...res.data, isStored: true };
 
-      onAnalyze(newQuote);
+        setError(null);
+        setRawApiResponseError(null);
+
+        onAnalyze(savedQuote);
+      } catch (e: any) {
+        setError(`Failed to save quote: ${e.response?.data?.message || e.message}`);
+      }
     },
-    [quotes, setQuotes, setError, setRawApiResponseError]
+    [quotes, setError, setRawApiResponseError]
   );
 
   const handleUpdateQuoteLanguage = useCallback((quoteId: string, newLanguageCode: string) => {

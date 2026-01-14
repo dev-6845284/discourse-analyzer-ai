@@ -22,9 +22,9 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
 
   useEffect(() => {
     if (user) {
-      setAlias(user.alias);
+      setAlias(user.alias || user.name);
       setEmail(user.email);
-      setRole(user.role);
+      setRole((user.role as any) || 'viewer');
     } else {
       setAlias('');
       setEmail('');
