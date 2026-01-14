@@ -6,8 +6,11 @@ import { isAuthenticated } from '../middleware/auth';
 import { isAdminOrDev } from '../middleware/admin';
 import authorizeMiddleware from '../middleware/authorize';
 import { checkFeature } from '../middleware/featureToggle';
+import { CacheService } from '../services/cacheService';
 
 const router = express.Router();
+
+const categoriesCache = new CacheService('categories', 5); // 5MB limit
 
 // Logging middleware for all API requests
 router.use((req, res, next) => {
@@ -114,9 +117,28 @@ router.get('/categories', (req, res) => {
   res.json(getAllCategories());
 });
 
-router.get('/categories/simple', (req, res) => {
-  const { getSimpleCategories } = require('../services/categoryService');
-  res.json(getSimpleCategories());
+router.get('/categories/simple', async (req, res) => {
+  try {
+    const cacheKey = 'simple_list';
+    const cached = await categoriesCache.get(cacheKey);
+
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const { getSimpleCategories } = require('../services/categoryService');
+    const data = getSimpleCategories();
+
+    // Cache for 5 minutes (300 seconds)
+    await categoriesCache.set(cacheKey, data, { ttl: 300 });
+
+    res.json(data);
+  } catch (error) {
+    console.warn('[CACHE] Error in categories cache:', error);
+    // Fallback to non-cached fetch
+    const { getSimpleCategories } = require('../services/categoryService');
+    res.json(getSimpleCategories());
+  }
 });
 
 export default router;
