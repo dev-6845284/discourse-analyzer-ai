@@ -90,6 +90,13 @@ export function useAppController() {
     }
   }, [logsVisible, uiState.setIsFormCollapsed]);
 
+  // Ensure viewer role defaults to stored quotes view
+  React.useEffect(() => {
+    if (user?.role === 'viewer' && resultsTab === 'new') {
+      setResultsTab('stored');
+    }
+  }, [user, resultsTab]);
+
   const handleExport = React.useCallback(() => {
     exportQuotesToFile(searchParams.personName, quotesState.quotes);
   }, [searchParams.personName, quotesState.quotes]);

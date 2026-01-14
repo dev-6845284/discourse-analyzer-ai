@@ -106,15 +106,17 @@ export const MainContent: React.FC<MainContentProps> = ({
           <div className="flex space-x-1 flex-1">
             {activeTab !== 'admin' ? (
               <>
-                <button
-                  onClick={() => setResultsTab('new')}
-                  className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'new'
-                    ? 'bg-cyan-600 text-white shadow'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                    }`}
-                >
-                  {t('searchResultsTab')}
-                </button>
+                {userRole !== 'viewer' && (
+                  <button
+                    onClick={() => setResultsTab('new')}
+                    className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'new'
+                      ? 'bg-cyan-600 text-white shadow'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
+                  >
+                    {t('searchResultsTab')}
+                  </button>
+                )}
                 <button
                   onClick={() => setResultsTab('stored')}
                   className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'stored'
@@ -158,13 +160,15 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <Globe className="w-5 h-5" />
               </button>
             )}
-            <button
-              onClick={() => setActiveTab(activeTab === 'admin' ? 'search' : 'admin')}
-              className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'admin' ? 'bg-cyan-600 text-white shadow' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                }`}
-            >
-              {t('adminActions') || 'Admin Actions'}
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setActiveTab(activeTab === 'admin' ? 'search' : 'admin')}
+                className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'admin' ? 'bg-cyan-600 text-white shadow' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  }`}
+              >
+                {t('adminActions') || 'Admin Actions'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -283,6 +287,16 @@ export const MainContent: React.FC<MainContentProps> = ({
                   </div>
                 </div>
               ))}
+            </div>
+          ) : userRole === 'viewer' ? (
+            <div className="space-y-4">
+              <StoredQuotes
+                selectedPerson={selectedPerson}
+                selectedAI={selectedAI}
+                isApiKeySet={true}
+                onEditSource={onEditSource}
+                userRole={userRole}
+              />
             </div>
           ) : (
             <SearchResults
