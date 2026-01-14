@@ -3,6 +3,7 @@ import axios from 'axios';
 import { CategoryDefinition } from '../types';
 
 let cachedCategories: CategoryDefinition[] | null = null;
+let globalFetchPromise: Promise<CategoryDefinition[]> | null = null;
 const CACHE_KEY = 'cached_categories';
 
 /**
@@ -19,6 +20,7 @@ export const useCategories = () => {
         if (!force && cachedCategories) {
             setCategories(cachedCategories);
             setLoading(false);
+            return;
         }
 
         // Try local storage cache for immediate render
@@ -30,17 +32,31 @@ export const useCategories = () => {
                     setCategories(parsed);
                     cachedCategories = parsed;
                     setLoading(false);
+                    // Data found in local storage, skip network request (Cache-First)
+                    return;
                 } catch (e) { /* ignore parse error */ }
             }
         }
 
-        try {
-            // Background fetch
-            const res = await axios.get<CategoryDefinition[]>('/api/categories', {
-                withCredentials: true // Ensure we send auth cookies
-            });
+        // Deduplicate requests
+        if (globalFetchPromise && !force) {
+            try {
+                const newCats = await globalFetchPromise;
+                setCategories(newCats);
+                setLoading(false);
+                return;
+            } catch (e) {
+                // If shared promise failed, fall through to try new fetch
+            }
+        }
 
-            const newCats = res.data;
+        try {
+            // Start background fetch
+            globalFetchPromise = axios.get<CategoryDefinition[]>('/api/categories', {
+                withCredentials: true // Ensure we send auth cookies
+            }).then(res => res.data);
+
+            const newCats = await globalFetchPromise;
 
             // Update cache
             cachedCategories = newCats;
@@ -55,6 +71,7 @@ export const useCategories = () => {
                 setError(e.message);
             }
         } finally {
+            globalFetchPromise = null;
             setLoading(false);
         }
     };
