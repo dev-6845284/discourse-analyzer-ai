@@ -27,11 +27,9 @@ export function useQuotes(handleLogout: () => void) {
     handleLogout
   );
   const extraction = useQuoteExtraction(
-    search.quotes,
     search.setQuotes,
     setError,
-    setRawApiResponseError,
-    handleLogout
+    setRawApiResponseError
   );
 
   return {

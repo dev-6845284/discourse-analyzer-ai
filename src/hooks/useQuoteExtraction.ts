@@ -5,11 +5,9 @@ import api, { extractFromUrl, saveQuote } from '../utils/api';
 
 
 export function useQuoteExtraction(
-  quotes: Quote[],
   setQuotes: (quotes: Quote[] | ((prev: Quote[]) => Quote[])) => void,
   setError: (error: string | null) => void,
-  setRawApiResponseError: (error: string | null) => void,
-  handleLogout: () => void
+  setRawApiResponseError: (error: string | null) => void
 ) {
   const handleExtractQuotes = useCallback(
     async (
@@ -64,7 +62,7 @@ export function useQuoteExtraction(
         }
       }
     },
-    [quotes, setQuotes, setError, setRawApiResponseError, handleLogout]
+    [setError, setRawApiResponseError]
   );
 
   const handleExtractFromUrl = useCallback(
@@ -123,7 +121,7 @@ export function useQuoteExtraction(
         }
       }
     },
-    [quotes, setQuotes, setError, setRawApiResponseError, handleLogout]
+    [setError, setRawApiResponseError]
   );
 
   const handleAddQuoteManually = useCallback(
@@ -146,11 +144,6 @@ export function useQuoteExtraction(
       }
 
       const trimmedText = textToExtract.trim();
-
-      if (quotes.some((q) => q.text === trimmedText)) {
-        setError('This exact quote already exists in the list.');
-        return;
-      }
 
       const newQuote: Quote = {
         id: `quote-manual-${Date.now()}`,
@@ -180,7 +173,7 @@ export function useQuoteExtraction(
         setError(`Failed to save quote: ${e.response?.data?.message || e.message}`);
       }
     },
-    [quotes, setError, setRawApiResponseError]
+    [setError, setRawApiResponseError]
   );
 
   const handleUpdateQuoteLanguage = useCallback((quoteId: string, newLanguageCode: string) => {
