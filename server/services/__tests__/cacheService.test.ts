@@ -46,7 +46,7 @@ describe('CacheService', () => {
             mockRedis.get.mockResolvedValue(null);
             const result = await cacheService.get('missing');
             expect(result).toBeNull();
-            expect(mockRedis.get).toHaveBeenCalledWith('cache:test:missing');
+            expect(mockRedis.get).toHaveBeenCalledWith('cache:test:test:missing');
         });
 
         it('should return parsed data and update LRU index', async () => {
@@ -57,9 +57,9 @@ describe('CacheService', () => {
 
             expect(result).toEqual(data);
             expect(mockRedis.zadd).toHaveBeenCalledWith(
-                'cache:test:index',
+                'cache:test:test:index',
                 expect.any(Number),
-                'cache:test:existing'
+                'cache:test:test:existing'
             );
         });
     });
@@ -72,7 +72,7 @@ describe('CacheService', () => {
             await cacheService.set('key1', data);
 
             expect(mockMulti.setex).toHaveBeenCalledWith(
-                'cache:test:key1',
+                'cache:test:test:key1',
                 300,
                 JSON.stringify(data)
             );
@@ -84,7 +84,7 @@ describe('CacheService', () => {
             // 1MB = 1048576 bytes
             // Current usage: 1048500 (almost full)
             mockRedis.get.mockImplementation((key: string) => {
-                if (key === 'cache:test:usage') return Promise.resolve('1048500');
+                if (key === 'cache:test:test:usage') return Promise.resolve('1048500');
                 if (key === 'oldest_key') return Promise.resolve('x'.repeat(1000)); // 1000 bytes
                 return Promise.resolve(null);
             });
@@ -97,13 +97,13 @@ describe('CacheService', () => {
             await cacheService.set('new_key', data);
 
             // Should have called eviction
-            expect(mockRedis.zrange).toHaveBeenCalledWith('cache:test:index', 0, 0);
+            expect(mockRedis.zrange).toHaveBeenCalledWith('cache:test:test:index', 0, 0);
             expect(mockMulti.del).toHaveBeenCalledWith('oldest_key');
             expect(mockMulti.decrby).toHaveBeenCalled();
 
             // And then set the new key
             expect(mockMulti.setex).toHaveBeenCalledWith(
-                'cache:test:new_key',
+                'cache:test:test:new_key',
                 expect.any(Number),
                 expect.any(String)
             );

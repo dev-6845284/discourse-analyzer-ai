@@ -4,6 +4,8 @@ interface CacheOptions {
     ttl?: number; // Time to live in seconds
 }
 
+import { getCurrentEnv } from '../constants/env';
+
 export class CacheService {
     private prefix: string;
     private maxBytes: number;
@@ -11,10 +13,11 @@ export class CacheService {
     private indexKey: string;
 
     constructor(namespace: string, maxBytesMB: number) {
-        this.prefix = `cache:${namespace}:`;
+        const env = getCurrentEnv();
+        this.prefix = `cache:${env}:${namespace}:`;
         this.maxBytes = maxBytesMB * 1024 * 1024;
-        this.usageKey = `cache:${namespace}:usage`;
-        this.indexKey = `cache:${namespace}:index`;
+        this.usageKey = `cache:${env}:${namespace}:usage`;
+        this.indexKey = `cache:${env}:${namespace}:index`;
     }
 
     /**
