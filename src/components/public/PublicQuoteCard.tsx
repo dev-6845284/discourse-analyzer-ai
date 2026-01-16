@@ -39,13 +39,53 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
     const verdictKey = quote.analysis.verdict;
     const verdictColor = VERDICT_COLORS[verdictKey as keyof typeof VERDICT_COLORS] || 'bg-gray-600/20 text-gray-400 ring-gray-500/30';
 
-    // Iframe logic
-    const hasFacebookIframe = typeof quote.source === 'string' && quote.source.includes('<iframe') && quote.source.includes('facebook.com/plugins/post.php');
-    let facebookIframeSrc: string | null = null;
-    if (hasFacebookIframe) {
-        const match = quote.source?.match(/<iframe[^>]*src="([^"]*facebook\.com\/plugins\/post\.php[^"]*)"[^>]*><\/iframe>/i);
-        facebookIframeSrc = match ? match[1] : null;
-    }
+    // Helper to get embeddable URL from either an iframe string or a regular URL
+    const getEmbedUrl = (str?: string) => {
+        if (!str || typeof str !== 'string') return null;
+
+        let src: string | null = null;
+
+        // 1. If it's an iframe code, extract the src
+        if (str.includes('<iframe')) {
+            const match = str.match(/src="([^"]+)"/i);
+            src = match ? match[1] : null;
+        }
+        // 2. If it's a plain URL that is a known embeddable platform, use it
+        else if (str.trim().startsWith('http')) {
+            src = str.trim();
+        }
+
+        if (!src) return null;
+
+        // --- Transformation Logic ---
+
+        // Decode HTML entities if any (e.g. &amp;)
+        src = src.replace(/&amp;/g, '&');
+
+        // Facebook - must use the plugins/post.php endpoint for iframes
+        if (src.includes('facebook.com') && !src.includes('plugins/post.php')) {
+            // Clean up mobile links and shares
+            const cleanUrl = src.replace('m.facebook.com', 'www.facebook.com').split('?')[0];
+            return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(cleanUrl)}&show_text=true&width=auto`;
+        }
+
+        // YouTube - must use /embed/
+        if (src.includes('youtube.com/watch?v=')) {
+            return src.replace('watch?v=', 'embed/');
+        }
+        if (src.includes('youtu.be/')) {
+            const id = src.split('/').pop();
+            return `https://www.youtube.com/embed/${id}`;
+        }
+
+        return src;
+    };
+
+    // Iframe logic - check both source and sourceUrl
+    const embeddedIframeSrc = getEmbedUrl(quote.source) || getEmbedUrl(quote.sourceUrl);
+
+    // Check if sourceUrl is a valid non-iframe URL
+    const isValidSourceUrl = quote.sourceUrl && !quote.sourceUrl.includes('<iframe');
 
     const toggleIframeExpanded = () => {
         setIsIframeExpanded((v) => {
@@ -63,32 +103,32 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
     return (
         <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-cyan-500/10 hover:bg-gray-800/80">
-            {/* Header / Person Info */}
-            <div className="p-6 pb-0">
-                <div className="flex justify-between items-start mb-4">
+            {/* Header / Person Info - Sticky on Mobile */}
+            <div className="sticky top-14 md:top-16 z-30 bg-gray-800/95 backdrop-blur-md border-b border-gray-700/50 p-4 md:p-6 pb-3 md:pb-4 shadow-sm transition-all">
+                <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white fn-bold shadow-lg text-sm md:text-base shrink-0">
                             {quote.person?.name?.charAt(0) || '?'}
                         </div>
-                        <div>
-                            <h3 className="text-gray-100 font-bold text-lg leading-tight line-clamp-1">
+                        <div className="min-w-0">
+                            <h3 className="text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
                                 {quote.person?.name || t('unknown_person')}
                             </h3>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-0.5 md:mt-1">
                                 {quote.date && (
-                                    <span className="text-[10px] text-gray-500 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
+                                    <span className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1 shrink-0">
+                                        <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
                                         {new Date(quote.date).toLocaleDateString()}
                                     </span>
                                 )}
-                                {quote.sourceUrl && (
+                                {isValidSourceUrl && (
                                     <a
                                         href={quote.sourceUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-[10px] text-cyan-500 hover:underline flex items-center gap-0.5"
+                                        className="text-[10px] md:text-xs text-cyan-500 hover:underline flex items-center gap-0.5 shrink-0"
                                     >
-                                        <ExternalLink className="w-3 h-3" />
+                                        <ExternalLink className="w-2.5 h-2.5 md:w-3 md:h-3" />
                                         {t('sourceUrlLabel') || 'Source'}
                                     </a>
                                 )}
@@ -96,20 +136,22 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                         </div>
                     </div>
 
-                    <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${verdictColor}`}>
+                    <span className={`px-2 py-0.5 md:px-3 md:py-1 text-xs md:text-sm font-bold rounded-full ring-1 ring-inset whitespace-nowrap ml-2 ${verdictColor}`}>
                         {t(`verdict_${verdictKey}`) || verdictKey}
                     </span>
                 </div>
+            </div>
 
+            <div className="p-4 md:p-6 pt-2 md:pt-2">
                 {/* Quote Text */}
-                <blockquote className="border-l-4 border-cyan-500 pl-4 mb-4">
-                    <p className="text-gray-200 text-lg italic leading-relaxed font-serif">
+                <blockquote className="border-l-2 md:border-l-4 border-cyan-500 pl-3 md:pl-4 mb-4 md:mb-6 mt-2 md:mt-4">
+                    <p className="text-gray-200 text-base md:text-lg italic leading-relaxed font-serif">
                         "{quote.text}"
                     </p>
                 </blockquote>
 
                 {/* Embedded Content */}
-                {facebookIframeSrc && (
+                {embeddedIframeSrc && (
                     <div className="mb-4">
                         {!showIframe ? (
                             <button
@@ -132,7 +174,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                 </div>
                                 <div className="rounded-lg overflow-hidden bg-white border border-gray-700 shadow-inner">
                                     <iframe
-                                        src={facebookIframeSrc}
+                                        src={embeddedIframeSrc}
                                         title="FB Embed"
                                         className="w-full border-0"
                                         style={{ height: iframeHeight }}
@@ -147,7 +189,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Original Context */}
                 {quote.context && (
-                    <div className="mb-4 text-[13px] text-gray-400 bg-gray-900/30 p-3 rounded-lg border border-gray-700/30">
+                    <div className="mb-4 text-xs md:text-[13px] text-gray-400 bg-gray-900/30 p-3 rounded-lg border border-gray-700/30">
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">{t('contextLabel')}</span>
                         {quote.context}
                     </div>
@@ -155,60 +197,62 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
             </div>
 
             {/* Analysis Section */}
-            <div className="p-6 pt-4 border-t border-gray-700/50 space-y-4">
+            <div className="p-4 md:p-6 pt-4 border-t border-gray-700/50 space-y-3 md:space-y-4 bg-gray-900/10">
                 {/* Analysis Header */}
                 <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" />
+                    <h3 className="text-xs md:text-sm font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                        <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         {t('auditReport')}
                     </h3>
                 </div>
 
                 {/* Rationale / Overview */}
-                <div className="p-4 bg-gray-900/40 rounded-xl border-l-4 border-cyan-500/50 shadow-inner">
-                    <p className="text-gray-200 text-sm italic leading-relaxed">
+                <div className="p-3 md:p-4 bg-gray-900/40 rounded-xl border-l-2 md:border-l-4 border-cyan-500/50 shadow-inner">
+                    <p className="text-gray-200 text-xs md:text-sm italic leading-relaxed">
                         {quote.analysis.rationale || quote.analysis.overview}
                     </p>
                 </div>
 
                 {/* Analysis Context (AI provided) */}
                 {quote.analysisContext && (
-                    <div className="text-xs text-gray-400 bg-gray-900/20 p-2 rounded-lg">
+                    <div className="text-[11px] md:text-xs text-gray-400 bg-gray-900/20 p-2 rounded-lg">
                         <span className="font-semibold uppercase tracking-tighter text-[10px] block text-gray-500 mb-0.5">{t('contextLabelShort')}</span>
                         {quote.analysisContext}
                     </div>
                 )}
 
                 {/* Categories */}
-                <div className="space-y-3 pt-2">
+                <div className="space-y-2 md:space-y-3 pt-1 md:pt-2">
                     {quote.analysis.categories.map((cat, idx) => {
                         const i18nKey = `category_${cat.name.replace(/ |&|\//g, '')}`;
                         const displayTitle = t(i18nKey) !== i18nKey ? t(i18nKey) : cat.name;
                         const catColor = AUDIT_CATEGORY_COLORS[cat.name as keyof typeof AUDIT_CATEGORY_COLORS] || 'bg-gray-600/20 text-gray-400 ring-gray-500/30';
 
                         return (
-                            <div key={idx} className="bg-gray-900/30 p-4 rounded-xl border border-gray-700/30 space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ring-1 ring-inset ${catColor}`}>
+                            <div key={idx} className="bg-gray-900/30 p-3 md:p-4 rounded-xl border border-gray-700/30 space-y-2 md:space-y-3">
+                                <div className="flex justify-between items-center gap-2">
+                                    <span className={`px-2 py-0.5 text-[10px] md:text-[11px] font-semibold rounded-full ring-1 ring-inset truncate max-w-[70%] ${catColor}`}>
                                         {displayTitle}
                                     </span>
-                                    <StrengthBar
-                                        level={SEVERITY_ORDER[cat.severity.toUpperCase() as keyof typeof SEVERITY_ORDER] || 0}
-                                        max={5}
-                                        color={SEVERITY_HEX[cat.severity.toUpperCase() as keyof typeof SEVERITY_HEX]}
-                                        tooltip={t(`severity_${cat.severity.toUpperCase()}`)}
-                                        height={10}
-                                        width={60}
-                                    />
+                                    <div className="shrink-0">
+                                        <StrengthBar
+                                            level={SEVERITY_ORDER[cat.severity.toUpperCase() as keyof typeof SEVERITY_ORDER] || 0}
+                                            max={5}
+                                            color={SEVERITY_HEX[cat.severity.toUpperCase() as keyof typeof SEVERITY_HEX]}
+                                            tooltip={t(`severity_${cat.severity.toUpperCase()}`)}
+                                            height={8}
+                                            width={50}
+                                        />
+                                    </div>
                                 </div>
 
-                                <p className="text-gray-300 text-sm leading-relaxed">
+                                <p className="text-gray-300 text-xs md:text-sm leading-relaxed">
                                     {cat.reasoning}
                                 </p>
 
                                 {cat.evidence && (
-                                    <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/50 text-[13px] text-gray-400 italic">
-                                        <span className="text-[10px] text-gray-500 font-bold uppercase block mb-1 not-italic">{t('public_evidence')}</span>
+                                    <div className="bg-gray-800/50 p-2 md:p-3 rounded-lg border border-gray-700/50 text-xs md:text-[13px] text-gray-400 italic">
+                                        <span className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase block mb-1 not-italic">{t('public_evidence')}</span>
                                         "{cat.evidence}"
                                     </div>
                                 )}
@@ -224,20 +268,25 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                             {t('public_references')}
                         </h4>
                         <div className="space-y-1">
-                            {quote.links.map((link, i) => (
-                                <a
-                                    key={i}
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 p-2 rounded hover:bg-gray-700/30 transition-colors group"
-                                >
-                                    <ExternalLink className="w-3 h-3 text-cyan-500 group-hover:scale-110 transition-transform" />
-                                    <span className="text-xs text-cyan-400/80 group-hover:text-cyan-400 truncate">
-                                        {link.title || link.url}
-                                    </span>
-                                </a>
-                            ))}
+                            {quote.links.map((link, i) => {
+                                const iframeSrc = getEmbedUrl(link.url);
+                                const finalUrl = iframeSrc || link.url;
+
+                                return (
+                                    <a
+                                        key={i}
+                                        href={finalUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 p-2 rounded hover:bg-gray-700/30 transition-colors group"
+                                    >
+                                        <ExternalLink className="w-3 h-3 text-cyan-500 group-hover:scale-110 transition-transform" />
+                                        <span className="text-xs text-cyan-400/80 group-hover:text-cyan-400 truncate">
+                                            {link.title || finalUrl}
+                                        </span>
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

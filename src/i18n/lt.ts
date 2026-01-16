@@ -661,7 +661,7 @@ const lt = {
   public_category: 'Kategorija',
   public_level: 'Lygis',
   public_details_evidence: 'Detalės ir įrodymai',
-  public_evidence: 'Įrodymai:',
+  public_evidence: 'Komentaras:',
   disabled: '(Išjungta)',
   unknown_person: 'Nežinomas asmuo',
   signInToContinue: 'Prašome prisijungti, kad tęstumėte',
