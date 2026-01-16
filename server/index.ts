@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { validateEnvironment, isProduction, isTest, isLocal, isStrictSecurity } from './constants/env';
+import { validateEnvironment, isProduction, isTest, isLocal, isStrictSecurity, getCurrentEnv } from './constants/env';
 validateEnvironment();
 
 import express from 'express';
@@ -174,7 +174,7 @@ if (redisClient) {
   console.log('[SESSION_STORE] Configuring Redis session store');
   sessionConfig.store = new RedisStore({
     client: redisClient,
-    prefix: 'sess:',
+    prefix: `sess:${getCurrentEnv()}:`,
     ttl: 24 * 60 * 60, // 24 hours default
   });
 } else if (mongoUri) {

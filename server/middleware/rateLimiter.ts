@@ -2,14 +2,17 @@ import rateLimit, { RateLimitRequestHandler, Options } from 'express-rate-limit'
 import { Request, Response } from 'express';
 import { RedisStore } from 'rate-limit-redis';
 import { isLocal } from '../constants/env';
+import { getCurrentEnv } from '../constants/env';
 const redisClient = require('../services/redis').default;
 
 // Helper to create rate limiter with memory or Redis store
 function createRateLimiter(options: Partial<Options>, prefix: string): RateLimitRequestHandler {
+  const env = getCurrentEnv();
+  const envPrefix = `${env}:${prefix}`;
   const store = redisClient
     ? new RedisStore({
       sendCommand: (...args: string[]) => redisClient.call(...args),
-      prefix: prefix, // Unique prefix to prevent collision between different limiters
+      prefix: envPrefix, // Unique prefix per environment + limiter to prevent collisions
     })
     : undefined; // Default to memory store
 
