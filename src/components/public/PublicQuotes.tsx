@@ -51,12 +51,21 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
             <header className="bg-gray-800/90 backdrop-blur-md shadow-xl border-b border-gray-700/50 sticky top-0 z-50">
                 <div className="md:container mx-auto px-4 md:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3 md:gap-6">
-                        <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight truncate max-w-[150px] md:max-w-none">
+                        <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
                             {t('public_quotes_title')}
                         </span>
 
+                        {/* Filter Toggle (Desktop) */}
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'}`}
+                        >
+                            <Filter className="w-4 h-4" />
+                            <span className="text-xs font-bold">{t('public_more_filters') || 'Filters'}</span>
+                        </button>
+
                         {/* Language Selector (Header Desktop) */}
-                        <div className="hidden md:flex items-center gap-4">
+                        <div className="hidden md:flex items-center gap-4 ml-2">
                             {AVAILABLE_LANGUAGES.map((l) => (
                                 <label key={l.code} className="flex items-center gap-2 text-xs font-medium text-gray-400 cursor-pointer hover:text-white transition-all duration-200">
                                     <input
@@ -74,6 +83,14 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                     </div>
 
                     <div className="flex items-center gap-2 md:gap-4">
+                        {/* Filter Toggle (Mobile) */}
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`md:hidden p-2 rounded-lg border transition-all ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'border-gray-700 text-gray-400'}`}
+                        >
+                            <Filter className="w-4 h-4" />
+                        </button>
+
                         {/* Mobile Language Selector */}
                         <div className="md:hidden">
                             <select
@@ -111,25 +128,12 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                 </div>
             </header>
 
-            <main className="md:container mx-auto px-2 md:px-6 lg:px-8 py-4 md:py-8 space-y-4 md:space-y-8">
+            <main className="md:container mx-auto px-2 md:px-6 lg:px-8 pt-2 pb-4 md:pt-4 md:pb-8 space-y-4 md:space-y-8">
 
-                {/* Collapsible Filters */}
-                <div className="bg-gray-800/40 rounded-2xl shadow-lg border border-gray-700/30 backdrop-blur-sm overflow-hidden transition-all duration-300">
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className="w-full flex items-center justify-between p-4 md:p-6 text-left hover:bg-gray-800/30 transition-colors"
-                    >
-                        <div className="flex items-center text-gray-400">
-                            <Filter className="w-4 h-4 mr-2.5 text-cyan-500" />
-                            <span className="text-sm font-medium">{t('public_more_filters') || 'Filters'}</span>
-                        </div>
-                        <span className={`text-xs text-gray-500 transform transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`}>
-                            ▼
-                        </span>
-                    </button>
-
-                    <div className={`transition-all duration-300 ease-in-out ${showFilters ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <div className="p-4 md:p-6 pt-0 flex flex-col md:flex-row gap-4">
+                {/* Collapsible Filters - Completely hidden when not active */}
+                {showFilters && (
+                    <div className="bg-gray-800/40 rounded-2xl shadow-lg border border-cyan-500/20 backdrop-blur-sm overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+                        <div className="p-4 md:p-6 flex flex-col md:flex-row gap-4">
                             <button className="flex items-center px-4 py-2 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
                                 <User className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
                                 <span className="text-sm font-medium">{t('public_all_people')}</span>
@@ -140,7 +144,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                             </button>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Content */}
                 {loading ? (
