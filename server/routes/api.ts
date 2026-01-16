@@ -8,6 +8,8 @@ import authorizeMiddleware from '../middleware/authorize';
 import { checkFeature } from '../middleware/featureToggle';
 import { CacheService } from '../services/cacheService';
 
+import { getAllCategories, getSimpleCategories } from '../services/categoryService';
+
 const router = express.Router();
 
 const categoriesCache = new CacheService('categories', 5); // 5MB limit
@@ -113,7 +115,6 @@ router.get('/people/find-similar', async (req, res) => {
 
 // Categories route (authenticated users need read access to all categories)
 router.get('/categories', (req, res) => {
-  const { getAllCategories } = require('../services/categoryService');
   res.json(getAllCategories());
 });
 
@@ -126,7 +127,6 @@ router.get('/categories/simple', async (req, res) => {
       return res.json(cached);
     }
 
-    const { getSimpleCategories } = require('../services/categoryService');
     const data = getSimpleCategories();
 
     // Cache for 5 minutes (300 seconds)
@@ -136,7 +136,6 @@ router.get('/categories/simple', async (req, res) => {
   } catch (error) {
     console.warn('[CACHE] Error in categories cache:', error);
     // Fallback to non-cached fetch
-    const { getSimpleCategories } = require('../services/categoryService');
     res.json(getSimpleCategories());
   }
 });
