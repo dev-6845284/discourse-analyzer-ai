@@ -674,6 +674,8 @@ const lt = {
   'User not allowed': 'Vartotojas neautorizuotas',
   'Login failed.': 'Prisijungimas nepavyko.',
   pleaseWaitSeconds: 'Prašome palaukti {seconds} sek.',
+  fb_embed_hint: 'Jei turinys neatsivaizduoja, jis galėjo būti ištrintas arba nustatytas kaip privatus.',
+  open_directly: 'Atidaryti tiesiogiai',
 };
 
 export default lt;

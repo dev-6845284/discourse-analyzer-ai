@@ -81,11 +81,37 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
         return src;
     };
 
+    // Helper to get a clean, clickable URL even if the input is an iframe snippet
+    const getDirectUrl = (str?: string) => {
+        if (!str || typeof str !== 'string') return null;
+        let url = str.trim();
+
+        // 1. If it's an iframe code, extract the src
+        if (url.includes('<iframe')) {
+            const match = url.match(/src="([^"]+)"/i);
+            url = match ? match[1] : url;
+        }
+
+        // 2. Decode HTML entities
+        url = url.replace(/&amp;/g, '&');
+
+        // 3. If it's a Facebook plugin URL, extract the original post URL
+        if (url.includes('facebook.com/plugins/post.php')) {
+            const match = url.match(/[?&]href=([^&]+)/);
+            if (match) return decodeURIComponent(match[1]);
+        }
+
+        return url;
+    };
+
     // Iframe logic - check both source and sourceUrl
     const embeddedIframeSrc = getEmbedUrl(quote.source) || getEmbedUrl(quote.sourceUrl);
 
-    // Check if sourceUrl is a valid non-iframe URL
-    const isValidSourceUrl = quote.sourceUrl && !quote.sourceUrl.includes('<iframe');
+    // Direct link logic - ensure we have a valid URL for buttons/links
+    const directSourceUrl = getDirectUrl(quote.sourceUrl) || getDirectUrl(quote.source);
+
+    // Check if we have a valid source URL to show the link button
+    const isValidSourceUrl = !!directSourceUrl;
 
     const toggleIframeExpanded = () => {
         setIsIframeExpanded((v) => {
@@ -124,7 +150,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                 {isValidSourceUrl && (
                                     <a
                                         id={`quote-source-link-${quote.id}`}
-                                        href={quote.sourceUrl}
+                                        href={directSourceUrl || '#'}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-[10px] md:text-xs text-cyan-500 hover:underline flex items-center gap-0.5 shrink-0"
@@ -173,7 +199,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                     </button>
                                     <span className="text-[10px] text-gray-500">{iframeHeight}px</span>
                                 </div>
-                                <div className="rounded-lg overflow-hidden bg-white border border-gray-700 shadow-inner">
+                                <div className="rounded-lg overflow-hidden bg-white border border-gray-700 shadow-inner relative">
                                     <iframe
                                         src={embeddedIframeSrc}
                                         title="FB Embed"
@@ -182,6 +208,20 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                         loading="lazy"
                                         sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                                     />
+                                    {/* Prominent fallback link and hint */}
+                                    <div className="bg-gray-100 p-2 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-2">
+                                        <span className="text-[10px] text-gray-500 italic text-center sm:text-left">
+                                            {t('fb_embed_hint')}
+                                        </span>
+                                        <a
+                                            href={directSourceUrl || '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[10px] text-blue-600 font-bold hover:underline shrink-0 flex items-center gap-1"
+                                        >
+                                            {t('open_directly')} <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         )}

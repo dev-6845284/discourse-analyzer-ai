@@ -673,6 +673,8 @@ const en = {
   'User not allowed': 'User not allowed',
   'Login failed.': 'Login failed.',
   pleaseWaitSeconds: 'Please wait {seconds} seconds.',
+  fb_embed_hint: "If content doesn't appear, it may have been deleted or set to private.",
+  open_directly: 'Open directly',
 };
 
 export default en;
