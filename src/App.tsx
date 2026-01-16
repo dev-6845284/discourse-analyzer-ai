@@ -70,6 +70,7 @@ const App: React.FC = () => {
     setSelectedPerson,
     sessionsRefreshTrigger,
     setSessionsRefreshTrigger,
+    storedQuotesRefreshTrigger,
     extractionStatus,
     extractionLanguage,
     setExtractionLanguage,
@@ -486,6 +487,7 @@ const App: React.FC = () => {
                 onEditSource={handleEditSource}
                 onResumeSession={handleResumeSession}
                 onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
+                storedQuotesRefreshTrigger={storedQuotesRefreshTrigger}
                 onExport={handleExport}
                 onImport={handleImport}
                 onPublicView={() => navigateTo('/public/quotes')}

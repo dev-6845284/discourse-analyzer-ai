@@ -47,6 +47,7 @@ const en = {
   enterChatGptApiKey: 'Enter OpenAI API Key',
   grokApiKeyLabel: 'Grok API Key',
   enterGrokApiKey: 'Enter Grok API Key',
+  overwriteKey: 'Overwrite',
   saveKeys: 'Save Keys',
   editProfile: 'Edit Profile',
   changePassword: 'Change Password',
@@ -640,7 +641,7 @@ const en = {
   public_turnstile_error: 'Turnstile error.',
   public_protected_by: 'Protected by Turnstile and DoubleCheck',
   admin_login: 'Login',
-  public_quotes_title: 'Quotes',
+  public_quotes_title: 'DoubleCheck',
   public_back_to_landing: 'Back to Landing',
   public_all_people: 'All People',
   public_any_time: 'Any Time',
@@ -672,6 +673,8 @@ const en = {
   'User not allowed': 'User not allowed',
   'Login failed.': 'Login failed.',
   pleaseWaitSeconds: 'Please wait {seconds} seconds.',
+  fb_embed_hint: "If content doesn't appear, it may have been deleted or set to private.",
+  open_directly: 'Open directly',
 };
 
 export default en;

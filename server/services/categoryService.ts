@@ -13,6 +13,26 @@ export function getAllCategories(): CategoryDefinition[] {
 }
 
 /**
+ * Returns a simplified version of categories for frontend translation and UI use.
+ * Excludes heavy text fields like description and promptGuidance.
+ */
+export function getSimpleCategories(): Partial<CategoryDefinition>[] {
+  return cachedCategories.map(c => ({
+    id: c.id,
+    title: c.title,
+    modes: c.modes,
+    uiOrder: c.uiOrder,
+    translations: c.translations ? Object.fromEntries(
+      Object.entries(c.translations).map(([lang, tr]) => [
+        lang,
+        { title: tr.title }
+      ])
+    ) : undefined,
+    legacyNames: c.legacyNames,
+  }));
+}
+
+/**
  * Load categories from MongoDB `auditCategories` collection. If the collection
  * is empty or any error occurs, fall back to the in-code AUDIT_CATEGORIES.
  * This function is idempotent and safe to call multiple times.

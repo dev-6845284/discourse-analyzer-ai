@@ -89,23 +89,24 @@ describe('ModalsContainer', () => {
         initialSource={'http://example.com'}
 
         isApiKeyModalOpen={false}
-        onCloseApiKeyModal={() => {}}
+        onCloseApiKeyModal={() => { }}
 
         isTranscriptMethodSelectorOpen={false}
-        onCloseTranscriptMethodSelector={() => {}}
-        onImportTranscript={() => {}}
-        onAutoFetchTranscript={async () => {}}
+        onCloseTranscriptMethodSelector={() => { }}
+        onImportTranscript={() => { }}
+        onAutoFetchTranscript={async () => { }}
         autoFetchError={null}
         isExtracting={false}
 
         isChangePasswordModalOpen={false}
         isEditProfileModalOpen={false}
         user={null}
-        onPasswordUpdated={() => {}}
-        onProfileUpdated={() => {}}
+        onPasswordUpdated={() => { }}
+        closeChangePasswordModal={() => { }}
+        onProfileUpdated={() => { }}
 
         isUsageStatsDashboardOpen={false}
-        onCloseUsageStats={() => {}}
+        onCloseUsageStats={() => { }}
       />
     );
 
@@ -128,13 +129,13 @@ describe('ModalsContainer', () => {
     render(
       <ModalsContainer
         isAddModalOpen={false}
-        closeAddModal={() => {}}
-        onSave={() => {}}
+        closeAddModal={() => { }}
+        onSave={() => { }}
         mode={'extract'}
         initialSource={''}
 
         isApiKeyModalOpen={false}
-        onCloseApiKeyModal={() => {}}
+        onCloseApiKeyModal={() => { }}
 
         isTranscriptMethodSelectorOpen={true}
         onCloseTranscriptMethodSelector={onCloseTS}
@@ -146,11 +147,12 @@ describe('ModalsContainer', () => {
         isChangePasswordModalOpen={false}
         isEditProfileModalOpen={false}
         user={null}
-        onPasswordUpdated={() => {}}
-        onProfileUpdated={() => {}}
+        onPasswordUpdated={() => { }}
+        closeChangePasswordModal={() => { }}
+        onProfileUpdated={() => { }}
 
         isUsageStatsDashboardOpen={false}
-        onCloseUsageStats={() => {}}
+        onCloseUsageStats={() => { }}
       />
     );
 
@@ -174,18 +176,18 @@ describe('ModalsContainer', () => {
     render(
       <ModalsContainer
         isAddModalOpen={false}
-        closeAddModal={() => {}}
-        onSave={() => {}}
+        closeAddModal={() => { }}
+        onSave={() => { }}
         mode={'add'}
         initialSource={''}
 
         isApiKeyModalOpen={false}
-        onCloseApiKeyModal={() => {}}
+        onCloseApiKeyModal={() => { }}
 
         isTranscriptMethodSelectorOpen={false}
-        onCloseTranscriptMethodSelector={() => {}}
-        onImportTranscript={() => {}}
-        onAutoFetchTranscript={async () => {}}
+        onCloseTranscriptMethodSelector={() => { }}
+        onImportTranscript={() => { }}
+        onAutoFetchTranscript={async () => { }}
         autoFetchError={null}
         isExtracting={false}
 
@@ -193,10 +195,11 @@ describe('ModalsContainer', () => {
         isEditProfileModalOpen={true}
         user={{ _id: 'u1', name: 'User' }}
         onPasswordUpdated={onPwUpdated}
+        closeChangePasswordModal={() => { }}
         onProfileUpdated={onProfileUpdated}
 
         isUsageStatsDashboardOpen={false}
-        onCloseUsageStats={() => {}}
+        onCloseUsageStats={() => { }}
       />
     );
 
@@ -215,26 +218,27 @@ describe('ModalsContainer', () => {
     render(
       <ModalsContainer
         isAddModalOpen={false}
-        closeAddModal={() => {}}
-        onSave={() => {}}
+        closeAddModal={() => { }}
+        onSave={() => { }}
         mode={'add'}
         initialSource={''}
 
         isApiKeyModalOpen={false}
-        onCloseApiKeyModal={() => {}}
+        onCloseApiKeyModal={() => { }}
 
         isTranscriptMethodSelectorOpen={false}
-        onCloseTranscriptMethodSelector={() => {}}
-        onImportTranscript={() => {}}
-        onAutoFetchTranscript={async () => {}}
+        onCloseTranscriptMethodSelector={() => { }}
+        onImportTranscript={() => { }}
+        onAutoFetchTranscript={async () => { }}
         autoFetchError={null}
         isExtracting={false}
 
         isChangePasswordModalOpen={false}
         isEditProfileModalOpen={false}
         user={null}
-        onPasswordUpdated={() => {}}
-        onProfileUpdated={() => {}}
+        onPasswordUpdated={() => { }}
+        closeChangePasswordModal={() => { }}
+        onProfileUpdated={() => { }}
 
         isUsageStatsDashboardOpen={true}
         onCloseUsageStats={onClose}

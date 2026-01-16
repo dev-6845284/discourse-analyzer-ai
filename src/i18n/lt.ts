@@ -49,6 +49,7 @@ const lt = {
   enterChatGptApiKey: 'Įveskite OpenAI API raktą',
   grokApiKeyLabel: 'Grok API raktas',
   enterGrokApiKey: 'Įveskite Grok API raktą',
+  overwriteKey: 'Perrašyti',
   saveKeys: 'Išsaugoti raktus',
   editProfile: 'Redaguoti profilį',
   changePassword: 'Keisti slaptažodį',
@@ -641,7 +642,7 @@ const lt = {
   public_turnstile_error: 'Turnstile klaida.',
   public_protected_by: 'Saugoma Turnstile ir Pasitikrink',
   admin_login: 'Prisijungimas',
-  public_quotes_title: 'Citatos',
+  public_quotes_title: 'Pasitikrink',
   public_back_to_landing: 'Atgal',
   public_all_people: 'Visi asmenys',
   public_any_time: 'Bet koks laikas',
@@ -660,7 +661,7 @@ const lt = {
   public_category: 'Kategorija',
   public_level: 'Lygis',
   public_details_evidence: 'Detalės ir įrodymai',
-  public_evidence: 'Įrodymai:',
+  public_evidence: 'Komentaras:',
   disabled: '(Išjungta)',
   unknown_person: 'Nežinomas asmuo',
   signInToContinue: 'Prašome prisijungti, kad tęstumėte',
@@ -673,6 +674,8 @@ const lt = {
   'User not allowed': 'Vartotojas neautorizuotas',
   'Login failed.': 'Prisijungimas nepavyko.',
   pleaseWaitSeconds: 'Prašome palaukti {seconds} sek.',
+  fb_embed_hint: 'Jei turinys neatsivaizduoja, jis galėjo būti ištrintas arba nustatytas kaip privatus.',
+  open_directly: 'Atidaryti tiesiogiai',
 };
 
 export default lt;

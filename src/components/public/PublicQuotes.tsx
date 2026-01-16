@@ -3,6 +3,7 @@ import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';
 import { Filter, Calendar, User, LogIn } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
+import logo from '../../assets/images/image32.png';
 
 interface PublicQuotesProps {
     onLogout?: () => void;
@@ -13,6 +14,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
     const [quotes, setQuotes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showFilters, setShowFilters] = useState(false);
 
     // Use global i18n
     const { t, language, setLanguage } = useI18n();
@@ -47,15 +49,25 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
     return (
         <div className="min-h-screen bg-gray-900 font-sans text-gray-100 selection:bg-cyan-500/30">
             {/* Header */}
-            <header className="bg-gray-800/50 backdrop-blur-md shadow-xl border-b border-gray-700/50 sticky top-0 z-50">
-                <div className="md:container mx-auto px-4 md:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight">
+            <header className="bg-gray-800/90 backdrop-blur-md shadow-xl border-b border-gray-700/50 sticky top-0 z-50">
+                <div className="md:container mx-auto px-4 md:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <img src={logo} alt="logo" className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-cover border border-gray-700/50 shadow-sm" />
+                        <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
                             {t('public_quotes_title')}
                         </span>
 
-                        {/* Language Selector (Header) */}
-                        <div className="hidden md:flex items-center gap-4">
+                        {/* Filter Toggle (Desktop) */}
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'}`}
+                        >
+                            <Filter className="w-4 h-4" />
+                            <span className="text-xs font-bold">{t('public_more_filters') || 'Filters'}</span>
+                        </button>
+
+                        {/* Language Selector (Header Desktop) */}
+                        <div className="hidden md:flex items-center gap-4 ml-2">
                             {AVAILABLE_LANGUAGES.map((l) => (
                                 <label key={l.code} className="flex items-center gap-2 text-xs font-medium text-gray-400 cursor-pointer hover:text-white transition-all duration-200">
                                     <input
@@ -72,13 +84,21 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-4">
+                        {/* Filter Toggle (Mobile) */}
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`md:hidden p-2 rounded-lg border transition-all ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 'border-gray-700 text-gray-400'}`}
+                        >
+                            <Filter className="w-4 h-4" />
+                        </button>
+
                         {/* Mobile Language Selector */}
                         <div className="md:hidden">
                             <select
                                 value={language}
                                 onChange={(e) => setLanguage(e.target.value)}
-                                className="bg-gray-800 text-gray-200 text-sm border-gray-700 rounded-lg shadow-inner focus:border-cyan-500 focus:ring-cyan-500 py-1.5 px-3"
+                                className="bg-gray-800 text-gray-200 text-xs border-gray-700 rounded-lg shadow-inner focus:border-cyan-500 focus:ring-cyan-500 py-1 px-2"
                             >
                                 {AVAILABLE_LANGUAGES.map((l) => (
                                     <option key={l.code} value={l.code}>{l.name}</option>
@@ -89,7 +109,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         {onLogout && (
                             <button
                                 onClick={onLogout}
-                                className="text-sm text-gray-400 hover:text-white font-semibold transition-colors flex items-center gap-2"
+                                className="text-sm text-gray-400 hover:text-white font-semibold transition-colors flex items-center gap-2 p-1"
                                 title={t('public_back_to_landing')}
                             >
                                 <span className="hidden sm:inline">{t('public_back_to_landing')}</span>
@@ -100,35 +120,33 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         {onOpenLogin && (
                             <button
                                 onClick={onOpenLogin}
-                                className="px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-gray-600/50 hover:border-gray-500 shadow-sm"
+                                className="px-3 py-1.5 md:px-4 md:py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-gray-600/50 hover:border-gray-500 shadow-sm"
                             >
                                 <LogIn className="w-3.5 h-3.5" />
-                                <span>{t('admin_login')}</span>
+                                <span className="hidden sm:inline">{t('admin_login')}</span>
                             </button>
                         )}
                     </div>
                 </div>
             </header>
 
-            <main className="md:container mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-8">
+            <main className="md:container mx-auto px-2 md:px-6 lg:px-8 pt-1 pb-4 md:pt-2 md:pb-8 space-y-4 md:space-y-8">
 
-                {/* Filters Placeholder */}
-                <div className="bg-gray-800/40 p-6 rounded-2xl shadow-2xl border border-gray-700/30 backdrop-blur-sm">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <button className="flex items-center px-5 py-2.5 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                            <User className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
-                            <span className="text-sm font-medium">{t('public_all_people')}</span>
-                        </button>
-                        <button className="flex items-center px-5 py-2.5 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                            <Calendar className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
-                            <span className="text-sm font-medium">{t('public_any_time')}</span>
-                        </button>
-                        <button className="flex items-center px-5 py-2.5 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                            <Filter className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
-                            <span className="text-sm font-medium">{t('public_more_filters')}</span>
-                        </button>
+                {/* Collapsible Filters - Completely hidden when not active */}
+                {showFilters && (
+                    <div className="bg-gray-800/40 rounded-2xl shadow-lg border border-cyan-500/20 backdrop-blur-sm overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+                        <div className="p-4 md:p-6 flex flex-col md:flex-row gap-4">
+                            <button className="flex items-center px-4 py-2 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
+                                <User className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
+                                <span className="text-sm font-medium">{t('public_all_people')}</span>
+                            </button>
+                            <button className="flex items-center px-4 py-2 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
+                                <Calendar className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
+                                <span className="text-sm font-medium">{t('public_any_time')}</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Content */}
                 {loading ? (
@@ -150,7 +168,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-10">
+                    <div className="grid grid-cols-1 gap-4 md:gap-6">
                         {quotes.length === 0 ? (
                             <div className="text-center py-40 bg-gray-800/20 rounded-2xl border border-gray-700/20 text-gray-500 italic">
                                 {t('public_no_quotes_found')}

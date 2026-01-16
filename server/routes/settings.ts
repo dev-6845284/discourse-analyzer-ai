@@ -7,7 +7,7 @@ const router = express.Router();
 // Get settings - accessible to authenticated users
 router.get('/', authorizeMiddleware, async (req, res) => {
     try {
-        const settings = await SystemSettings.findOne({ key: 'feature_toggles' });
+        const settings = await (SystemSettings as any).findOne({ key: 'feature_toggles' });
         // Default values if not found
         const defaultSettings = {
             search: true,
@@ -41,7 +41,7 @@ router.put('/', authorizeMiddleware, async (req, res) => {
 
         const userId = req.session?.user?._id;
 
-        const settings = await SystemSettings.findOneAndUpdate(
+        const settings = await (SystemSettings as any).findOneAndUpdate(
             { key: 'feature_toggles' },
             {
                 value: features,

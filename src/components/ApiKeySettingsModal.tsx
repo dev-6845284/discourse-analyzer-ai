@@ -12,6 +12,9 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
   const [geminiKey, setGeminiKey] = useState('');
   const [openAiKey, setOpenAiKey] = useState('');
   const [grokKey, setGrokKey] = useState('');
+  const [overwriteGemini, setOverwriteGemini] = useState(false);
+  const [overwriteOpenAi, setOverwriteOpenAi] = useState(false);
+  const [overwriteGrok, setOverwriteGrok] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -22,6 +25,9 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
       setGeminiKey('');
       setOpenAiKey('');
       setGrokKey('');
+      setOverwriteGemini(false);
+      setOverwriteOpenAi(false);
+      setOverwriteGrok(false);
       setError(null);
     }
   }, [isOpen]);
@@ -34,17 +40,27 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
     setIsSaving(true);
     setError(null);
     try {
-      const payload = {
-        GEMINI_API_KEY: geminiKey || null,
-        GROK_API_KEY: grokKey || null,
-        CHATGPT_API_KEY: openAiKey || null,
-      };
+      const payload: any = {};
+
+      if (overwriteGemini) {
+        payload.GEMINI_API_KEY = geminiKey || null;
+      }
+      if (overwriteOpenAi) {
+        payload.CHATGPT_API_KEY = openAiKey || null;
+      }
+      if (overwriteGrok) {
+        payload.GROK_API_KEY = grokKey || null;
+      }
+
       // Use /users/me/keyset endpoint which gets userId from authenticated session
       await api.put('/users/me/keyset', payload);
       // Clear form after successful save
       setGeminiKey('');
       setOpenAiKey('');
       setGrokKey('');
+      setOverwriteGemini(false);
+      setOverwriteOpenAi(false);
+      setOverwriteGrok(false);
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Save failed');
@@ -68,36 +84,72 @@ const ApiKeySettingsModal: React.FC<ApiKeySettingsModalProps> = ({ isOpen, onClo
         `}</style>
         <h2 className="text-2xl font-bold text-cyan-400 mb-4">{t('apiKeySettingsTitle')}</h2>
         <p className="text-gray-400 mb-6">{t('enterApiKeysNote')}</p>
-        
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">{t('geminiApiKeyLabel')}</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-300">{t('geminiApiKeyLabel')}</label>
+              <label className="inline-flex items-center text-xs text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mr-2 form-checkbox bg-gray-700 border-gray-600 text-cyan-500 rounded focus:ring-offset-gray-800"
+                  checked={overwriteGemini}
+                  onChange={(e) => setOverwriteGemini(e.target.checked)}
+                />
+                {t('overwriteKey')}
+              </label>
+            </div>
             <input
               type="password"
               value={geminiKey}
               onChange={(e) => setGeminiKey(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              placeholder={t('enterGeminiApiKey')}
+              disabled={!overwriteGemini}
+              className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 ${!overwriteGemini ? 'opacity-50 cursor-not-allowed' : ''}`}
+              placeholder={!overwriteGemini ? '' : t('enterGeminiApiKey')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">{t('chatGptApiKeyLabel')}</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-300">{t('chatGptApiKeyLabel')}</label>
+              <label className="inline-flex items-center text-xs text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mr-2 form-checkbox bg-gray-700 border-gray-600 text-cyan-500 rounded focus:ring-offset-gray-800"
+                  checked={overwriteOpenAi}
+                  onChange={(e) => setOverwriteOpenAi(e.target.checked)}
+                />
+                {t('overwriteKey')}
+              </label>
+            </div>
             <input
               type="password"
               value={openAiKey}
               onChange={(e) => setOpenAiKey(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              placeholder={t('enterChatGptApiKey')}
+              disabled={!overwriteOpenAi}
+              className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 ${!overwriteOpenAi ? 'opacity-50 cursor-not-allowed' : ''}`}
+              placeholder={!overwriteOpenAi ? '' : t('enterChatGptApiKey')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">{t('grokApiKeyLabel')}</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-300">{t('grokApiKeyLabel')}</label>
+              <label className="inline-flex items-center text-xs text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mr-2 form-checkbox bg-gray-700 border-gray-600 text-cyan-500 rounded focus:ring-offset-gray-800"
+                  checked={overwriteGrok}
+                  onChange={(e) => setOverwriteGrok(e.target.checked)}
+                />
+                {t('overwriteKey')}
+              </label>
+            </div>
             <input
               type="password"
               value={grokKey}
               onChange={(e) => setGrokKey(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-              placeholder={t('enterGrokApiKey')}
+              disabled={!overwriteGrok}
+              className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 ${!overwriteGrok ? 'opacity-50 cursor-not-allowed' : ''}`}
+              placeholder={!overwriteGrok ? '' : t('enterGrokApiKey')}
             />
           </div>
         </div>

@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         <div className="space-y-2">
 
-          {activeTab !== 'admin' && (
+          {activeTab !== 'admin' && (userRole === 'admin' || userRole === 'editor') && (
             <>
               <SidebarSection
                 title={t('searchTab')}

@@ -9,9 +9,9 @@ export const checkFeature = (featureKey: string) => {
                 return next();
             }
 
-            const settings = await SystemSettings.findOne({ key: 'feature_toggles' });
+            const settings = await (SystemSettings as any).findOne({ key: 'feature_toggles' }).exec();
             // If no settings found, default to true (enabled)
-            const isEnabled = settings?.value?.[featureKey] ?? true;
+            const isEnabled = (settings?.value as any)?.[featureKey] ?? true;
 
             if (!isEnabled) {
                 return res.status(403).json({
