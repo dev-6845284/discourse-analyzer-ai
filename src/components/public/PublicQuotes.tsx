@@ -3,6 +3,7 @@ import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';
 import { Filter, Calendar, User, LogIn } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
+import logo from '../../assets/images/image32.png';
 
 interface PublicQuotesProps {
     onLogout?: () => void;
@@ -50,7 +51,8 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
             {/* Header */}
             <header className="bg-gray-800/90 backdrop-blur-md shadow-xl border-b border-gray-700/50 sticky top-0 z-50">
                 <div className="md:container mx-auto px-4 md:px-6 lg:px-8 h-14 md:h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3 md:gap-6">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <img src={logo} alt="logo" className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-cover border border-gray-700/50 shadow-sm" />
                         <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent tracking-tight truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
                             {t('public_quotes_title')}
                         </span>
@@ -128,7 +130,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                 </div>
             </header>
 
-            <main className="md:container mx-auto px-2 md:px-6 lg:px-8 pt-2 pb-4 md:pt-4 md:pb-8 space-y-4 md:space-y-8">
+            <main className="md:container mx-auto px-2 md:px-6 lg:px-8 pt-1 pb-4 md:pt-2 md:pb-8 space-y-4 md:space-y-8">
 
                 {/* Collapsible Filters - Completely hidden when not active */}
                 {showFilters && (
@@ -166,7 +168,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-4 md:gap-10">
+                    <div className="grid grid-cols-1 gap-4 md:gap-6">
                         {quotes.length === 0 ? (
                             <div className="text-center py-40 bg-gray-800/20 rounded-2xl border border-gray-700/20 text-gray-500 italic">
                                 {t('public_no_quotes_found')}

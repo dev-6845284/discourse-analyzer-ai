@@ -104,8 +104,8 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
     return (
         <div id={`quote-card-${quote.id}`} className="bg-gray-800 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300 hover:shadow-cyan-500/10 hover:bg-gray-800/80 relative">
             {/* Header / Person Info - Sticky inside card */}
-            <div id={`quote-header-${quote.id}`} className="sticky top-0 z-20 bg-gray-800/95 backdrop-blur-md border-b border-gray-700/50 p-4 md:p-6 pb-2 md:pb-3 shadow-sm transition-all rounded-t-xl">
-                <div className="flex justify-between items-start">
+            <div id={`quote-header-${quote.id}`} className="sticky top-0 z-20 bg-gray-800/95 backdrop-blur-md border-b border-gray-700/50 pt-2 px-4 pb-2 md:pt-3 md:px-6 md:pb-3 shadow-sm transition-all rounded-t-xl">
+                <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white fn-bold shadow-lg text-sm md:text-base shrink-0">
                             {quote.person?.name?.charAt(0) || '?'}
@@ -114,7 +114,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                             <h3 id={`quote-author-${quote.id}`} className="text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
                                 {quote.person?.name || t('unknown_person')}
                             </h3>
-                            <div className="flex items-center gap-2 mt-0.5 md:mt-1">
+                            <div className="flex items-center gap-2 mt-0">
                                 {quote.date && (
                                     <span className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1 shrink-0">
                                         <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
@@ -145,8 +145,8 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
             <div id={`quote-content-${quote.id}`} className="p-4 md:p-6 pt-0 md:pt-1">
                 {/* Quote Text */}
-                <blockquote id={`quote-text-${quote.id}`} className="border-l-2 md:border-l-4 border-cyan-500 pl-3 md:pl-4 mb-3 md:mb-6 mt-1 md:mt-2">
-                    <p className="text-gray-200 text-base md:text-lg italic leading-relaxed font-serif">
+                <blockquote id={`quote-text-${quote.id}`} className="border-l-2 md:border-l-4 border-cyan-500 pl-3 md:pl-4 mb-3 md:mb-6 mt-0">
+                    <p className="text-gray-200 text-base md:text-lg italic leading-snug font-serif">
                         "{quote.text}"
                     </p>
                 </blockquote>

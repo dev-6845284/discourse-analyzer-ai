@@ -642,7 +642,7 @@ const lt = {
   public_turnstile_error: 'Turnstile klaida.',
   public_protected_by: 'Saugoma Turnstile ir Pasitikrink',
   admin_login: 'Prisijungimas',
-  public_quotes_title: 'Citatos',
+  public_quotes_title: 'Pasitikrink',
   public_back_to_landing: 'Atgal',
   public_all_people: 'Visi asmenys',
   public_any_time: 'Bet koks laikas',

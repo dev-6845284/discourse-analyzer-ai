@@ -641,7 +641,7 @@ const en = {
   public_turnstile_error: 'Turnstile error.',
   public_protected_by: 'Protected by Turnstile and DoubleCheck',
   admin_login: 'Login',
-  public_quotes_title: 'Quotes',
+  public_quotes_title: 'DoubleCheck',
   public_back_to_landing: 'Back to Landing',
   public_all_people: 'All People',
   public_any_time: 'Any Time',
