@@ -102,16 +102,16 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
     };
 
     return (
-        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700/50 overflow-hidden transition-all duration-300 hover:shadow-cyan-500/10 hover:bg-gray-800/80">
-            {/* Header / Person Info - Sticky on Mobile */}
-            <div className="sticky top-14 md:top-16 z-30 bg-gray-800/95 backdrop-blur-md border-b border-gray-700/50 p-4 md:p-6 pb-3 md:pb-4 shadow-sm transition-all">
+        <div id={`quote-card-${quote.id}`} className="bg-gray-800 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300 hover:shadow-cyan-500/10 hover:bg-gray-800/80 relative">
+            {/* Header / Person Info - Sticky inside card */}
+            <div id={`quote-header-${quote.id}`} className="sticky top-0 z-20 bg-gray-800/95 backdrop-blur-md border-b border-gray-700/50 p-4 md:p-6 pb-2 md:pb-3 shadow-sm transition-all rounded-t-xl">
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white fn-bold shadow-lg text-sm md:text-base shrink-0">
                             {quote.person?.name?.charAt(0) || '?'}
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
+                            <h3 id={`quote-author-${quote.id}`} className="text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
                                 {quote.person?.name || t('unknown_person')}
                             </h3>
                             <div className="flex items-center gap-2 mt-0.5 md:mt-1">
@@ -123,6 +123,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                 )}
                                 {isValidSourceUrl && (
                                     <a
+                                        id={`quote-source-link-${quote.id}`}
                                         href={quote.sourceUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -136,15 +137,15 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                         </div>
                     </div>
 
-                    <span className={`px-2 py-0.5 md:px-3 md:py-1 text-xs md:text-sm font-bold rounded-full ring-1 ring-inset whitespace-nowrap ml-2 ${verdictColor}`}>
+                    <span id={`quote-verdict-${quote.id}`} className={`px-2 py-0.5 md:px-3 md:py-1 text-xs md:text-sm font-bold rounded-full ring-1 ring-inset whitespace-nowrap ml-2 ${verdictColor}`}>
                         {t(`verdict_${verdictKey}`) || verdictKey}
                     </span>
                 </div>
             </div>
 
-            <div className="p-4 md:p-6 pt-2 md:pt-2">
+            <div id={`quote-content-${quote.id}`} className="p-4 md:p-6 pt-0 md:pt-1">
                 {/* Quote Text */}
-                <blockquote className="border-l-2 md:border-l-4 border-cyan-500 pl-3 md:pl-4 mb-4 md:mb-6 mt-2 md:mt-4">
+                <blockquote id={`quote-text-${quote.id}`} className="border-l-2 md:border-l-4 border-cyan-500 pl-3 md:pl-4 mb-3 md:mb-6 mt-1 md:mt-2">
                     <p className="text-gray-200 text-base md:text-lg italic leading-relaxed font-serif">
                         "{quote.text}"
                     </p>
@@ -152,7 +153,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Embedded Content */}
                 {embeddedIframeSrc && (
-                    <div className="mb-4">
+                    <div id={`quote-embed-${quote.id}`} className="mb-4">
                         {!showIframe ? (
                             <button
                                 onClick={() => setShowIframe(true)}
@@ -189,7 +190,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Original Context */}
                 {quote.context && (
-                    <div className="mb-4 text-xs md:text-[13px] text-gray-400 bg-gray-900/30 p-3 rounded-lg border border-gray-700/30">
+                    <div id={`quote-context-raw-${quote.id}`} className="mb-4 text-xs md:text-[13px] text-gray-400 bg-gray-900/30 p-3 rounded-lg border border-gray-700/30">
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">{t('contextLabel')}</span>
                         {quote.context}
                     </div>
@@ -197,7 +198,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
             </div>
 
             {/* Analysis Section */}
-            <div className="p-4 md:p-6 pt-4 border-t border-gray-700/50 space-y-3 md:space-y-4 bg-gray-900/10">
+            <div id={`quote-analysis-section-${quote.id}`} className="p-4 md:p-6 pt-4 border-t border-gray-700/50 space-y-3 md:space-y-4 bg-gray-900/10">
                 {/* Analysis Header */}
                 <div className="flex items-center gap-2">
                     <h3 className="text-xs md:text-sm font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
@@ -207,7 +208,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                 </div>
 
                 {/* Rationale / Overview */}
-                <div className="p-3 md:p-4 bg-gray-900/40 rounded-xl border-l-2 md:border-l-4 border-cyan-500/50 shadow-inner">
+                <div id={`quote-rationale-${quote.id}`} className="p-3 md:p-4 bg-gray-900/40 rounded-xl border-l-2 md:border-l-4 border-cyan-500/50 shadow-inner">
                     <p className="text-gray-200 text-xs md:text-sm italic leading-relaxed">
                         {quote.analysis.rationale || quote.analysis.overview}
                     </p>
@@ -215,21 +216,21 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Analysis Context (AI provided) */}
                 {quote.analysisContext && (
-                    <div className="text-[11px] md:text-xs text-gray-400 bg-gray-900/20 p-2 rounded-lg">
+                    <div id={`quote-analysis-context-${quote.id}`} className="text-[11px] md:text-xs text-gray-400 bg-gray-900/20 p-2 rounded-lg">
                         <span className="font-semibold uppercase tracking-tighter text-[10px] block text-gray-500 mb-0.5">{t('contextLabelShort')}</span>
                         {quote.analysisContext}
                     </div>
                 )}
 
                 {/* Categories */}
-                <div className="space-y-2 md:space-y-3 pt-1 md:pt-2">
+                <div id={`quote-categories-${quote.id}`} className="space-y-2 md:space-y-3 pt-1 md:pt-2">
                     {quote.analysis.categories.map((cat, idx) => {
                         const i18nKey = `category_${cat.name.replace(/ |&|\//g, '')}`;
                         const displayTitle = t(i18nKey) !== i18nKey ? t(i18nKey) : cat.name;
                         const catColor = AUDIT_CATEGORY_COLORS[cat.name as keyof typeof AUDIT_CATEGORY_COLORS] || 'bg-gray-600/20 text-gray-400 ring-gray-500/30';
 
                         return (
-                            <div key={idx} className="bg-gray-900/30 p-3 md:p-4 rounded-xl border border-gray-700/30 space-y-2 md:space-y-3">
+                            <div key={idx} id={`quote-category-${quote.id}-${idx}`} className="bg-gray-900/30 p-3 md:p-4 rounded-xl border border-gray-700/30 space-y-2 md:space-y-3">
                                 <div className="flex justify-between items-center gap-2">
                                     <span className={`px-2 py-0.5 text-[10px] md:text-[11px] font-semibold rounded-full ring-1 ring-inset truncate max-w-[70%] ${catColor}`}>
                                         {displayTitle}
@@ -263,7 +264,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Links / References */}
                 {quote.links && quote.links.length > 0 && (
-                    <div className="pt-2 border-t border-gray-700/30">
+                    <div id={`quote-references-${quote.id}`} className="pt-2 border-t border-gray-700/30">
                         <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                             {t('public_references')}
                         </h4>
@@ -275,6 +276,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                 return (
                                     <a
                                         key={i}
+                                        id={`quote-reference-link-${quote.id}-${i}`}
                                         href={finalUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
