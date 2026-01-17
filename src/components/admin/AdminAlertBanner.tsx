@@ -30,6 +30,7 @@ interface DashboardSummary {
   rateLimitHitsLastHour: number;
   blockedIPCount: number;
   requestsLastHour: number;
+  publicQuotesCount: number;
   hasIssues: boolean;
 }
 
@@ -40,8 +41,8 @@ interface AdminAlertBannerProps {
   onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({ 
-  isAdmin, 
+export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({
+  isAdmin,
   onViewDashboard,
   isCollapsed: externalCollapsed,
   onCollapsedChange,
@@ -50,7 +51,7 @@ export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [internalCollapsed, setInternalCollapsed] = useState(false);
-  
+
   // Use external state if provided, otherwise use internal state
   const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
   const setIsCollapsed = (collapsed: boolean) => {
@@ -91,24 +92,23 @@ export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({
   if (isCollapsed) {
     // Show minimal indicator when collapsed - always visible for quick access
     return (
-      <div 
+      <div
         className="fixed top-0 right-4 z-50 cursor-pointer"
         onClick={() => setIsCollapsed(false)}
         title="Click to expand security dashboard"
       >
-        <div className={`px-3 py-1.5 rounded-b-lg shadow-lg ${
-          summary.criticalAlerts > 0 
-            ? 'bg-red-600 hover:bg-red-500' 
-            : summary.hasIssues 
-              ? 'bg-yellow-600 hover:bg-yellow-500' 
-              : 'bg-blue-600 hover:bg-blue-500'
-        } text-white text-sm flex items-center gap-2 transition-colors`}>
+        <div className={`px-3 py-1.5 rounded-b-lg shadow-lg ${summary.criticalAlerts > 0
+          ? 'bg-red-600 hover:bg-red-500'
+          : summary.hasIssues
+            ? 'bg-yellow-600 hover:bg-yellow-500'
+            : 'bg-blue-600 hover:bg-blue-500'
+          } text-white text-sm flex items-center gap-2 transition-colors`}>
           {summary.criticalAlerts > 0 && <span className="animate-pulse">🚨</span>}
           {summary.criticalAlerts === 0 && summary.hasIssues && <span>⚠️</span>}
           {summary.criticalAlerts === 0 && !summary.hasIssues && <span>📊</span>}
           <span className="font-medium">{summary.unacknowledgedAlerts} alerts</span>
           <span className="opacity-75">|</span>
-          <span className="opacity-75">{summary.requestsLastHour} req/h</span>
+          <span className="opacity-75">{summary.requestsLastHour} req/h ({summary.publicQuotesCount} public)</span>
           <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -168,9 +168,13 @@ export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({
                 <span className="font-semibold">{summary.requestsLastHour}</span>
                 <span>requests (1h)</span>
               </div>
+              <div className="flex items-center gap-1.5 opacity-75 text-green-200">
+                <span className="font-semibold">{summary.publicQuotesCount}</span>
+                <span>public quotes</span>
+              </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {onViewDashboard && (
               <button
@@ -191,7 +195,7 @@ export const AdminAlertBanner: React.FC<AdminAlertBannerProps> = ({
             </button>
           </div>
         </div>
-        
+
         {error && (
           <div className="mt-1 text-xs text-red-200">
             {error}

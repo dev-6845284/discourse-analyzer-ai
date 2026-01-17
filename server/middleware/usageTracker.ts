@@ -13,24 +13,31 @@ const WINDOW_MS = 60 * 1000; // 1 minute window
 export const usageTracker = async (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
-  
+
+  // Capture endpoint early to avoid issues with req.url mutation in mounted routers
+  // Use originalUrl to get the full path, stripping query parameters
+  const currentEndpoint = (req.originalUrl || req.url).split('?')[0];
+
+  // console.log(`[USAGE_TRACKER] Starting for ${req.method} ${currentEndpoint}`);
+
   // Track request count for this IP
   trackRequestPattern(ip);
-  
+
   // Capture response details after response is sent
   res.on('finish', async () => {
+    // console.log(`[USAGE_TRACKER] Finishing for ${req.method} ${currentEndpoint}. Status: ${res.statusCode}`);
     try {
       const responseTime = Date.now() - startTime;
-      
+
       // Don't log static file requests or health checks
-      if (req.path.startsWith('/assets') || req.path === '/health') {
+      if (currentEndpoint.startsWith('/assets') || currentEndpoint === '/health') {
         return;
       }
-      
+
       const usageRecord = new ApiUsage({
         userId: req.session?.user?._id,
         sessionId: req.sessionID,
-        endpoint: req.path,
+        endpoint: currentEndpoint,
         method: req.method,
         statusCode: res.statusCode,
         responseTimeMs: responseTime,
@@ -38,23 +45,27 @@ export const usageTracker = async (req: Request, res: Response, next: NextFuncti
         userAgent: req.headers['user-agent']?.substring(0, 500),
         timestamp: new Date(),
         requestSize: req.headers['content-length'] ? parseInt(req.headers['content-length'], 10) : undefined,
-        responseSize: res.getHeader('content-length') 
-          ? parseInt(res.getHeader('content-length') as string, 10) 
+        responseSize: res.getHeader('content-length')
+          ? parseInt(res.getHeader('content-length') as string, 10)
           : undefined,
         rateLimited: res.statusCode === 429,
       });
-      
+
       await usageRecord.save();
-      
+      // console.log(`[USAGE_TRACKER] Saved usage for ${currentEndpoint}`);
+
       // Check for suspicious patterns
-      await checkSuspiciousActivity(ip, req, res.statusCode);
-      
+      await checkSuspiciousActivity(ip, req, res.statusCode, currentEndpoint);
+
     } catch (error) {
       // Don't fail the request if logging fails
       console.error('[USAGE_TRACKER] Failed to log usage:', error);
+      if (error instanceof Error) {
+        console.error(error.stack);
+      }
     }
   });
-  
+
   next();
 };
 
@@ -64,14 +75,14 @@ export const usageTracker = async (req: Request, res: Response, next: NextFuncti
 function trackRequestPattern(ip: string): void {
   const now = Date.now();
   const record = requestCounts.get(ip);
-  
+
   if (!record || now - record.windowStart > WINDOW_MS) {
     // Start new window
     requestCounts.set(ip, { count: 1, windowStart: now });
   } else {
     record.count++;
   }
-  
+
   // Clean up old entries periodically (simple cleanup)
   if (requestCounts.size > 10000) {
     const cutoff = now - WINDOW_MS;
@@ -87,12 +98,13 @@ function trackRequestPattern(ip: string): void {
  * Check for suspicious activity patterns and create alerts
  */
 async function checkSuspiciousActivity(
-  ip: string, 
-  req: Request, 
-  statusCode: number
+  ip: string,
+  req: Request,
+  statusCode: number,
+  endpoint: string
 ): Promise<void> {
   const record = requestCounts.get(ip);
-  
+
   // Check for high request rate
   if (record && record.count >= SUSPICIOUS_THRESHOLD) {
     await createSecurityAlert({
@@ -102,23 +114,23 @@ async function checkSuspiciousActivity(
       details: {
         requestCount: record.count,
         windowMs: WINDOW_MS,
-        endpoint: req.path,
+        endpoint: endpoint,
         userAgent: req.headers['user-agent']?.substring(0, 200),
       },
       ipAddress: ip,
       userId: req.session?.user?._id,
     });
   }
-  
+
   // Check for many failed login attempts
-  if (req.path.includes('/login') && statusCode === 401) {
+  if (endpoint.includes('/login') && statusCode === 401) {
     const recentFailures = await ApiUsage.countDocuments({
       ipAddress: ip,
       endpoint: { $regex: /login/i },
       statusCode: 401,
       timestamp: { $gte: new Date(Date.now() - 15 * 60 * 1000) }, // Last 15 min
     });
-    
+
     if (recentFailures >= 5) {
       await createSecurityAlert({
         type: 'failed_login_spike',
@@ -132,7 +144,7 @@ async function checkSuspiciousActivity(
       });
     }
   }
-  
+
   // Check for rate limit hits
   if (statusCode === 429) {
     await createSecurityAlert({
@@ -140,7 +152,7 @@ async function checkSuspiciousActivity(
       severity: 'low',
       message: `Rate limit exceeded for IP: ${ip}`,
       details: {
-        endpoint: req.path,
+        endpoint: endpoint,
         method: req.method,
       },
       ipAddress: ip,
@@ -167,7 +179,7 @@ async function createSecurityAlert(alertData: {
       ipAddress: alertData.ipAddress,
       timestamp: { $gte: new Date(Date.now() - 60 * 60 * 1000) },
     });
-    
+
     if (!recentAlert) {
       const alert = new SecurityAlert(alertData);
       await alert.save();
