@@ -139,7 +139,7 @@ router.get('/usage-stats', async (req: Request, res: Response) => {
       // Public Quotes specific count
       ApiUsage.countDocuments({
         timestamp: { $gte: since },
-        endpoint: { $regex: /^\/api\/public\/quotes/ },
+        endpoint: { $regex: '^/api/public/quotes' },
       }),
     ]);
 
@@ -329,7 +329,7 @@ router.get('/dashboard-summary', async (req: Request, res: Response) => {
       ApiUsage.countDocuments({ timestamp: { $gte: lastHour } }),
       ApiUsage.countDocuments({
         timestamp: { $gte: lastHour },
-        endpoint: { $regex: /^\/api\/public\/quotes/ }
+        endpoint: { $regex: '^/api/public/quotes' }
       }),
     ]);
 
