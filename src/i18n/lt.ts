@@ -641,6 +641,12 @@ const lt = {
   public_verification_failed: 'Patvirtinimas nepavyko. Bandykite dar kartą.',
   public_turnstile_error: 'Turnstile klaida.',
   public_protected_by: 'Saugoma Turnstile ir Pasitikrink',
+  securityCheckRequired: 'Reikalingas saugumo patikrinimas',
+  pleaseCompleteCaptchaToView: 'Norėdami peržiūrėti šią citatą, patvirtinkite, kad nesate robotas.',
+  verifying: 'Tikrinama...',
+  quoteNotFound: 'Citata nerasta',
+  quoteNotFoundDesc: 'Citata, kurios ieškote, neegzistuoja arba nėra vieša.',
+  browseAllQuotes: 'Naršyti visas citatas',
   admin_login: 'Prisijungimas',
   public_quotes_title: 'Pasitikrink',
   public_back_to_landing: 'Atgal',
@@ -679,6 +685,8 @@ const lt = {
   linkCopied: 'Nuoroda nukopijuota į mainų sritį!',
   copyLink: 'Kopijuoti nuorodą',
   share: 'Dalintis',
+  shareQuoteTitle: 'Dalintis citata',
+  goToLink: 'Eiti į nuorodą',
 };
 
 export default lt;

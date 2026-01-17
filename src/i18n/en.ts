@@ -640,6 +640,12 @@ const en = {
   public_verification_failed: 'Verification failed. Please try again.',
   public_turnstile_error: 'Turnstile error.',
   public_protected_by: 'Protected by Turnstile and DoubleCheck',
+  securityCheckRequired: 'Security Check Required',
+  pleaseCompleteCaptchaToView: 'Please complete the captcha to view this quote.',
+  verifying: 'Verifying...',
+  quoteNotFound: 'Quote Not Found',
+  quoteNotFoundDesc: "The quote you are looking for doesn't exist or is not public.",
+  browseAllQuotes: 'Browse All Quotes',
   admin_login: 'Login',
   public_quotes_title: 'DoubleCheck',
   public_back_to_landing: 'Back to Landing',
@@ -678,6 +684,8 @@ const en = {
   linkCopied: 'Link copied to clipboard!',
   copyLink: 'Copy Link',
   share: 'Share',
+  shareQuoteTitle: 'Share Quote',
+  goToLink: 'Go to Link',
 };
 
 export default en;

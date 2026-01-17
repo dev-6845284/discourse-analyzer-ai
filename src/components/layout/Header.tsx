@@ -2,6 +2,7 @@ import React from 'react';
 import logo from '../../assets/images/image64.png';
 import { UserInfo } from '../../types';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
+import { ThemeToggle } from '../ThemeToggle'; // Import the new component
 
 
 interface HeaderProps {
@@ -81,6 +82,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <option key={l.code} value={l.code}>{l.name}</option>
               ))}
             </select>
+
+            {/* Theme Toggle */}
+            <ThemeToggle className="ml-1" />
           </div>
 
 

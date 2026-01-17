@@ -173,7 +173,7 @@ const App: React.FC = () => {
   }
 
   if (currentPath === '/public/quotes') {
-    return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} />;
+    return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} onNavigate={navigateTo} />;
   }
 
   // 4. Public Single Quote Route
@@ -183,6 +183,7 @@ const App: React.FC = () => {
     return <PublicQuotePage
       quoteId={quoteId}
       onLogin={() => navigateTo('/login')}
+      onNavigate={navigateTo}
     />;
   }
 
@@ -208,7 +209,7 @@ const App: React.FC = () => {
   return (
     <div>
       {/* Provided translations via root I18nProvider */}
-      <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
         {/* Admin Security Alert Banner - shown in dev mode or for admins */}
         <AdminAlertBanner
           isAdmin={user?.role === 'admin'}
