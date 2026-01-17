@@ -23,6 +23,7 @@ import { useI18n } from './i18n';
 import type { Person } from './types';
 import { PublicLanding } from './components/public/PublicLanding';
 import { PublicQuotes } from './components/public/PublicQuotes';
+import { PublicQuotePage } from './components/public/PublicQuotePage';
 
 const App: React.FC = () => {
   const ctrl = useAppController();
@@ -173,6 +174,16 @@ const App: React.FC = () => {
 
   if (currentPath === '/public/quotes') {
     return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} />;
+  }
+
+  // 4. Public Single Quote Route
+  const quoteRouteMatch = currentPath.match(/^\/quote\/([a-zA-Z0-9]+)$/);
+  if (quoteRouteMatch) {
+    const quoteId = quoteRouteMatch[1];
+    return <PublicQuotePage
+      quoteId={quoteId}
+      onLogin={() => navigateTo('/login')}
+    />;
   }
 
   // 3. Dashboard Route (Protected)

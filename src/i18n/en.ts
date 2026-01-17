@@ -675,6 +675,9 @@ const en = {
   pleaseWaitSeconds: 'Please wait {seconds} seconds.',
   fb_embed_hint: "If content doesn't appear, it may have been deleted or set to private.",
   open_directly: 'Open directly',
+  linkCopied: 'Link copied to clipboard!',
+  copyLink: 'Copy Link',
+  share: 'Share',
 };
 
 export default en;

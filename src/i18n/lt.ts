@@ -676,6 +676,9 @@ const lt = {
   pleaseWaitSeconds: 'Prašome palaukti {seconds} sek.',
   fb_embed_hint: 'Jei turinys neatsivaizduoja, jis galėjo būti ištrintas arba nustatytas kaip privatus.',
   open_directly: 'Atidaryti tiesiogiai',
+  linkCopied: 'Nuoroda nukopijuota į mainų sritį!',
+  copyLink: 'Kopijuoti nuorodą',
+  share: 'Dalintis',
 };
 
 export default lt;

@@ -189,4 +189,89 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
     }
 });
 
+// Public Single Quote API
+router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid quote ID' });
+    }
+
+    const cacheKey = `quote:${id}`;
+
+    try {
+        // --- CACHE LOGIC START ---
+        const cachedResult = await publicQuotesCache.get(cacheKey);
+        if (cachedResult) {
+            console.log('[PUBLIC_QUOTE_SINGLE] Cache HIT', { cacheKey });
+            return res.json(cachedResult);
+        }
+        console.log('[PUBLIC_QUOTE_SINGLE] Cache MISS', { cacheKey });
+        // --- CACHE LOGIC END ---
+
+        const quote = await Quote.findOne({ _id: id, visibility: 'public' })
+            .populate('person', 'name description')
+            .lean();
+
+        if (!quote) {
+            return res.status(404).json({ message: 'Quote not found' });
+        }
+
+        const q: any = quote;
+
+        // Determine structure based on version (audit vs analysis)
+        let analysisSummary = {
+            verdict: 'Unknown',
+            overview: '',
+            categories: [] as any[]
+        };
+
+        if (q.metadata?.audit) {
+            // New Audit Structure
+            const cats = q.metadata.audit.categories || {};
+            analysisSummary.categories = Object.entries(cats).map(([key, value]: [string, any]) => ({
+                name: key,
+                severity: value.severity,
+                reasoning: value.reasoning,
+                evidence: value.evidence
+            }));
+            analysisSummary.verdict = q.metadata.audit.verdict || 'N/A';
+            analysisSummary.overview = q.metadata.audit.overview || '';
+            if (q.metadata.audit.rationale) {
+                (analysisSummary as any).rationale = q.metadata.audit.rationale;
+            }
+        } else if (q.metadata?.analysis) {
+            // Legacy Structure
+            const cats = q.metadata.analysis;
+            analysisSummary.categories = Object.entries(cats).map(([key, value]: [string, any]) => ({
+                name: key,
+                severity: value.rating || 'None',
+                reasoning: value.reasoning,
+            }));
+            analysisSummary.verdict = q.metadata.verdict || 'N/A';
+        }
+
+        const sanitizedQuote = {
+            id: q._id,
+            text: q.text,
+            date: q.date,
+            source: q.source,
+            sourceUrl: q.sourceUrl,
+            context: q.context,
+            analysisContext: q.analysisContext,
+            links: q.links || q.metadata?.links,
+            person: q.person,
+            analysis: analysisSummary
+        };
+
+        // Save to cache (TTL: 1 hour for single quotes as they don't change often)
+        await publicQuotesCache.set(cacheKey, sanitizedQuote, { ttl: 3600 });
+
+        res.json(sanitizedQuote);
+    } catch (error: any) {
+        console.error('[PUBLIC_QUOTE_SINGLE_ERROR]', error);
+        res.status(500).json({ message: 'Failed to fetch quote' });
+    }
+});
+
 export default router;

@@ -147,6 +147,19 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                         {new Date(quote.date).toLocaleDateString()}
                                     </span>
                                 )}
+                                <button
+                                    onClick={() => {
+                                        const url = `${window.location.origin}/quote/${quote.id}`;
+                                        navigator.clipboard.writeText(url);
+                                        // Optional: Show toast or feedback
+                                        alert(t('linkCopied') || 'Link copied to clipboard!');
+                                    }}
+                                    className="text-[10px] md:text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 shrink-0 transition-colors font-medium"
+                                    title={t('copyLink') || 'Copy Link'}
+                                >
+                                    <ExternalLink className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                                    {t('share') || 'Share'}
+                                </button>
                                 {isValidSourceUrl && (
                                     <a
                                         id={`quote-source-link-${quote.id}`}
