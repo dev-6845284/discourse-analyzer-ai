@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Eye, Clock, MessageSquare, ExternalLink } from 'lucide-react';
+import { Eye, Clock, MessageSquare, ExternalLink, Share2 } from 'lucide-react';
+import { Toast } from '../ui/Toast';
+import { ShareModal } from '../ui/ShareModal';
 import { useI18n } from '../../i18n';
 import StrengthBar from '../StrengthBar';
 import {
@@ -27,13 +29,16 @@ interface PublicQuoteProps {
             categories: { name: string; severity: string; reasoning: string; evidence?: string }[];
         };
     };
+    onNavigate?: (path: string) => void;
 }
 
-export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
+export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate }) => {
     const { t } = useI18n();
     const [showIframe, setShowIframe] = useState(false);
     const [iframeHeight, setIframeHeight] = useState(220);
     const [isIframeExpanded, setIsIframeExpanded] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [showToast, setShowToast] = useState(false);
     const prevHeightRef = useRef<number | null>(null);
 
     const verdictKey = quote.analysis.verdict;
@@ -128,16 +133,16 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
     };
 
     return (
-        <div id={`quote-card-${quote.id}`} className="bg-gray-800 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300 hover:shadow-cyan-500/10 hover:bg-gray-800/80 relative">
+        <div id={`quote-card-${quote.id}`} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700/50 transition-all duration-300 hover:shadow-cyan-500/10 hover:bg-gray-50 dark:hover:bg-gray-800/80 relative">
             {/* Header / Person Info - Sticky inside card */}
-            <div id={`quote-header-${quote.id}`} className="sticky top-0 z-20 bg-gray-800/95 backdrop-blur-md border-b border-gray-700/50 pt-2 px-4 pb-2 md:pt-3 md:px-6 md:pb-3 shadow-sm transition-all rounded-t-xl">
+            <div id={`quote-header-${quote.id}`} className="sticky top-0 z-20 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700/50 pt-2 px-4 pb-2 md:pt-3 md:px-6 md:pb-3 shadow-sm transition-all rounded-t-xl">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white fn-bold shadow-lg text-sm md:text-base shrink-0">
                             {quote.person?.name?.charAt(0) || '?'}
                         </div>
                         <div className="min-w-0">
-                            <h3 id={`quote-author-${quote.id}`} className="text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
+                            <h3 id={`quote-author-${quote.id}`} className="text-gray-900 dark:text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
                                 {quote.person?.name || t('unknown_person')}
                             </h3>
                             <div className="flex items-center gap-2 mt-0">
@@ -147,6 +152,14 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                         {new Date(quote.date).toLocaleDateString()}
                                     </span>
                                 )}
+                                <button
+                                    onClick={() => setIsShareModalOpen(true)}
+                                    className="text-[10px] md:text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 shrink-0 transition-colors font-medium"
+                                    title={t('share') || 'Share'}
+                                >
+                                    <Share2 className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                                    {t('share') || 'Share'}
+                                </button>
                                 {isValidSourceUrl && (
                                     <a
                                         id={`quote-source-link-${quote.id}`}
@@ -172,7 +185,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
             <div id={`quote-content-${quote.id}`} className="p-4 md:p-6 pt-0 md:pt-1">
                 {/* Quote Text */}
                 <blockquote id={`quote-text-${quote.id}`} className="border-l-2 md:border-l-4 border-cyan-500 pl-3 md:pl-4 mb-3 md:mb-6 mt-0">
-                    <p className="text-gray-200 text-base md:text-lg italic leading-snug font-serif">
+                    <p className="text-gray-800 dark:text-gray-200 text-base md:text-lg italic leading-snug font-serif">
                         "{quote.text}"
                     </p>
                 </blockquote>
@@ -183,7 +196,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                         {!showIframe ? (
                             <button
                                 onClick={() => setShowIframe(true)}
-                                className="flex items-center gap-2 px-3 py-2 bg-gray-900/50 hover:bg-gray-900 text-cyan-400 text-xs rounded border border-gray-700 border-dashed w-full justify-center transition-all"
+                                className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900/50 hover:bg-gray-200 dark:hover:bg-gray-900 text-cyan-600 dark:text-cyan-400 text-xs rounded border border-gray-300 dark:border-gray-700 border-dashed w-full justify-center transition-all"
                             >
                                 <Eye className="w-4 h-4" />
                                 {t('loadEmbeddedContent')}
@@ -230,7 +243,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Original Context */}
                 {quote.context && (
-                    <div id={`quote-context-raw-${quote.id}`} className="mb-4 text-xs md:text-[13px] text-gray-400 bg-gray-900/30 p-3 rounded-lg border border-gray-700/30">
+                    <div id={`quote-context-raw-${quote.id}`} className="mb-4 text-xs md:text-[13px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30 p-3 rounded-lg border border-gray-200 dark:border-gray-700/30">
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">{t('contextLabel')}</span>
                         {quote.context}
                     </div>
@@ -238,7 +251,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
             </div>
 
             {/* Analysis Section */}
-            <div id={`quote-analysis-section-${quote.id}`} className="p-4 md:p-6 pt-4 border-t border-gray-700/50 space-y-3 md:space-y-4 bg-gray-900/10">
+            <div id={`quote-analysis-section-${quote.id}`} className="p-4 md:p-6 pt-4 border-t border-gray-200 dark:border-gray-700/50 space-y-3 md:space-y-4 bg-gray-50 dark:bg-gray-900/10">
                 {/* Analysis Header */}
                 <div className="flex items-center gap-2">
                     <h3 className="text-xs md:text-sm font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
@@ -248,15 +261,15 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                 </div>
 
                 {/* Rationale / Overview */}
-                <div id={`quote-rationale-${quote.id}`} className="p-3 md:p-4 bg-gray-900/40 rounded-xl border-l-2 md:border-l-4 border-cyan-500/50 shadow-inner">
-                    <p className="text-gray-200 text-xs md:text-sm italic leading-relaxed">
+                <div id={`quote-rationale-${quote.id}`} className="p-3 md:p-4 bg-white dark:bg-gray-900/40 rounded-xl border-l-2 md:border-l-4 border-cyan-500/50 shadow-sm dark:shadow-inner">
+                    <p className="text-gray-800 dark:text-gray-200 text-xs md:text-sm italic leading-relaxed">
                         {quote.analysis.rationale || quote.analysis.overview}
                     </p>
                 </div>
 
                 {/* Analysis Context (AI provided) */}
                 {quote.analysisContext && (
-                    <div id={`quote-analysis-context-${quote.id}`} className="text-[11px] md:text-xs text-gray-400 bg-gray-900/20 p-2 rounded-lg">
+                    <div id={`quote-analysis-context-${quote.id}`} className="text-[11px] md:text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/20 p-2 rounded-lg">
                         <span className="font-semibold uppercase tracking-tighter text-[10px] block text-gray-500 mb-0.5">{t('contextLabelShort')}</span>
                         {quote.analysisContext}
                     </div>
@@ -270,7 +283,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                         const catColor = AUDIT_CATEGORY_COLORS[cat.name as keyof typeof AUDIT_CATEGORY_COLORS] || 'bg-gray-600/20 text-gray-400 ring-gray-500/30';
 
                         return (
-                            <div key={idx} id={`quote-category-${quote.id}-${idx}`} className="bg-gray-900/30 p-3 md:p-4 rounded-xl border border-gray-700/30 space-y-2 md:space-y-3">
+                            <div key={idx} id={`quote-category-${quote.id}-${idx}`} className="bg-white dark:bg-gray-900/30 p-3 md:p-4 rounded-xl border border-gray-200 dark:border-gray-700/30 space-y-2 md:space-y-3 shadow-sm dark:shadow-none">
                                 <div className="flex justify-between items-center gap-2">
                                     <span className={`px-2 py-0.5 text-[10px] md:text-[11px] font-semibold rounded-full ring-1 ring-inset truncate max-w-[70%] ${catColor}`}>
                                         {displayTitle}
@@ -282,17 +295,17 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                                             color={SEVERITY_HEX[cat.severity.toUpperCase() as keyof typeof SEVERITY_HEX]}
                                             tooltip={t(`severity_${cat.severity.toUpperCase()}`)}
                                             height={8}
-                                            width={50}
+                                            width={100}
                                         />
                                     </div>
                                 </div>
 
-                                <p className="text-gray-300 text-xs md:text-sm leading-relaxed">
+                                <p className="text-gray-600 dark:text-gray-300 text-xs md:text-sm leading-relaxed">
                                     {cat.reasoning}
                                 </p>
 
                                 {cat.evidence && (
-                                    <div className="bg-gray-800/50 p-2 md:p-3 rounded-lg border border-gray-700/50 text-xs md:text-[13px] text-gray-400 italic">
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 p-2 md:p-3 rounded-lg border border-gray-200 dark:border-gray-700/50 text-xs md:text-[13px] text-gray-500 dark:text-gray-400 italic">
                                         <span className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase block mb-1 not-italic">{t('public_evidence')}</span>
                                         "{cat.evidence}"
                                     </div>
@@ -304,7 +317,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
 
                 {/* Links / References */}
                 {quote.links && quote.links.length > 0 && (
-                    <div id={`quote-references-${quote.id}`} className="pt-2 border-t border-gray-700/30">
+                    <div id={`quote-references-${quote.id}`} className="pt-2 border-t border-gray-200 dark:border-gray-700/30">
                         <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                             {t('public_references')}
                         </h4>
@@ -333,6 +346,30 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote }) => {
                     </div>
                 )}
             </div>
+
+            <ShareModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                url={`${window.location.origin}/quote/${quote.id}`}
+                onCopy={() => {
+                    const url = `${window.location.origin}/quote/${quote.id}`;
+                    navigator.clipboard.writeText(url);
+                    setShowToast(true);
+                    // Optional: Close modal after copy, or keep open. Keeping open as per typical UX unless requested otherwise.
+                    // But usually for "Copy Link" action in a modal, it stays open or closes. 
+                    // Let's keep it clear: The user might want to drag the link etc. But clicking copy usually implies they are done if they just wanted the link.
+                    // However, to see the Toast, if the modal covers it... 
+                    // My Toast is fixed bottom-right. Modal is centered. Should be fine.
+                }}
+                onNavigate={onNavigate}
+            />
+
+            {showToast && (
+                <Toast
+                    message={t('linkCopied') || 'Link copied!'}
+                    onClose={() => setShowToast(false)}
+                />
+            )}
         </div>
     );
 };

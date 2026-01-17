@@ -23,6 +23,7 @@ import { useI18n } from './i18n';
 import type { Person } from './types';
 import { PublicLanding } from './components/public/PublicLanding';
 import { PublicQuotes } from './components/public/PublicQuotes';
+import { PublicQuotePage } from './components/public/PublicQuotePage';
 
 const App: React.FC = () => {
   const ctrl = useAppController();
@@ -136,9 +137,9 @@ const App: React.FC = () => {
   // Global Loading State (Session Check)
   if (ctrl.isAuthLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-gray-100 font-sans">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-900 dark:text-gray-100 font-sans">
         <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-xl font-medium text-gray-400">{t('initializing')}</p>
+        <p className="text-xl font-medium text-gray-600 dark:text-gray-400">{t('initializing')}</p>
       </div>
     );
   }
@@ -146,7 +147,7 @@ const App: React.FC = () => {
   // 1. Login Route
   if (currentPath === '/login') {
     return (
-      <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
         <div className="w-full px-4 md:container md:mx-auto md:px-6 lg:px-8">
           <LoginScreen
             googleButtonRef={googleButtonRef}
@@ -172,7 +173,18 @@ const App: React.FC = () => {
   }
 
   if (currentPath === '/public/quotes') {
-    return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} />;
+    return <PublicQuotes onLogout={() => navigateTo('/')} onOpenLogin={() => navigateTo('/login')} onNavigate={navigateTo} />;
+  }
+
+  // 4. Public Single Quote Route
+  const quoteRouteMatch = currentPath.match(/^\/quote\/([a-zA-Z0-9]+)$/);
+  if (quoteRouteMatch) {
+    const quoteId = quoteRouteMatch[1];
+    return <PublicQuotePage
+      quoteId={quoteId}
+      onLogin={() => navigateTo('/login')}
+      onNavigate={navigateTo}
+    />;
   }
 
   // 3. Dashboard Route (Protected)
@@ -197,7 +209,7 @@ const App: React.FC = () => {
   return (
     <div>
       {/* Provided translations via root I18nProvider */}
-      <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
         {/* Admin Security Alert Banner - shown in dev mode or for admins */}
         <AdminAlertBanner
           isAdmin={user?.role === 'admin'}
@@ -224,7 +236,7 @@ const App: React.FC = () => {
           />
 
           <div
-            className={`p-6 bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
+            className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-500 flex flex-col`}
           >
             <main className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1 min-w-0 overflow-auto">
 
@@ -250,8 +262,8 @@ const App: React.FC = () => {
                   searchContent={
                     <div className="space-y-4">
                       {/* Always visible person selector */}
-                      <div className="p-4 bg-gray-800/50 rounded-lg">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('personsName')}</label>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('personsName')}</label>
                         <div>
                           <PersonSelector
                             value={searchParams.personName}
@@ -267,9 +279,9 @@ const App: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="p-3 bg-gray-800/50 rounded-lg">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('aiProvider')}</label>
-                        <div className="flex rounded-md bg-gray-700">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('aiProvider')}</label>
+                        <div className="flex rounded-md bg-gray-200 dark:bg-gray-700">
                           <button
                             onClick={() => searchParams.handleAISelectionChange('gemini')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${searchParams.selectedAI === 'gemini'
@@ -301,8 +313,8 @@ const App: React.FC = () => {
                       </div>
 
                       {/* Search for Quotes (collapsible) */}
-                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.search && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.search ? 'border-gray-600 opacity-90' : ''}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                      <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.search && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.search ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-gray-100 dark:bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('searchForQuotes')} {!ctrl.systemSettings.search && t('disabled')}
                         </summary>
                         <SearchControls
@@ -401,7 +413,7 @@ const App: React.FC = () => {
                     </div>
                   }
                   peopleContent={
-                    <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-900 dark:text-gray-100">
                       <div className="flex-1 overflow-auto">
                         <PersonManager
                           onSelectPerson={(person: Person) => {

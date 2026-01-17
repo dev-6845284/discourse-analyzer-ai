@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Turnstile from 'react-turnstile';
 import api from '../../utils/api';
 import { ShieldCheck, MessageSquareQuote } from 'lucide-react';
+import { ThemeToggle } from '../ThemeToggle';
 import { useI18n } from '../../i18n';
 
 interface PublicLandingProps {
@@ -32,16 +33,24 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, on
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 flex flex-col justify-center items-center p-4 relative">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4 relative transition-colors duration-300">
             {onOpenLogin && (
-                <button
-                    onClick={onOpenLogin}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-white text-sm font-medium transition-colors"
-                >
-                    {t('admin_login')}
-                </button>
+                <div className="absolute top-4 right-4 flex items-center gap-3">
+                    <ThemeToggle />
+                    <button
+                        onClick={onOpenLogin}
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm font-medium transition-colors"
+                    >
+                        {t('admin_login')}
+                    </button>
+                </div>
             )}
-            <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-700">
+            {!onOpenLogin && (
+                <div className="absolute top-4 right-4">
+                    <ThemeToggle />
+                </div>
+            )}
+            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
                 <div className="p-8 text-center">
                     <div className="flex justify-center mb-6">
                         <div className="bg-cyan-900/30 p-4 rounded-full">
@@ -49,8 +58,8 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, on
                         </div>
                     </div>
 
-                    <h1 className="text-3xl font-bold text-white mb-2">{t('public_landing_title')}</h1>
-                    <p className="text-gray-400 mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('public_landing_title')}</h1>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8">
                         {t('public_landing_subtitle')}
                     </p>
 
@@ -76,7 +85,7 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, on
                     )}
 
                 </div>
-                <div className="bg-gray-900/50 p-4 text-center border-t border-gray-700">
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 text-center border-t border-gray-100 dark:border-gray-700">
                     <p className="text-xs text-gray-500">
                         {t('public_protected_by')}
                     </p>

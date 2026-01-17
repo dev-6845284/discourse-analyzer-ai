@@ -29,28 +29,28 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="hidden md:block text-4xl font-bold text-cyan-400 mb-4">{t('appTitle')}</h1>
-      <p className="text-gray-400 mb-8">{t('signInToContinue')}</p>
+      <h1 className="hidden md:block text-4xl font-bold text-cyan-600 dark:text-cyan-400 mb-4">{t('appTitle')}</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-8">{t('signInToContinue')}</p>
 
-      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md mb-8">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md mb-8 border border-gray-100 dark:border-gray-700">
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-300 text-sm font-bold mb-2">{t('emailLabel')}</label>
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">{t('emailLabel')}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="shadow appearance-none border border-gray-600 rounded w-full py-2 px-3 text-gray-100 bg-gray-700 leading-tight focus:outline-none focus:border-cyan-500"
+              className="shadow appearance-none border border-gray-300 dark:border-gray-600 rounded w-full py-2 px-3 text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 leading-tight focus:outline-none focus:border-cyan-500"
               required
             />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-bold mb-2">{t('passwordLabel')}</label>
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">{t('passwordLabel')}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="shadow appearance-none border border-gray-600 rounded w-full py-2 px-3 text-gray-100 bg-gray-700 leading-tight focus:outline-none focus:border-cyan-500"
+              className="shadow appearance-none border border-gray-300 dark:border-gray-600 rounded w-full py-2 px-3 text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 leading-tight focus:outline-none focus:border-cyan-500"
               required
             />
           </div>
@@ -71,9 +71,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ googleButtonRef, loginError, 
       </div>
 
       <div className="flex items-center w-full max-w-md mb-8">
-        <div className="flex-grow border-t border-gray-600"></div>
-        <span className="flex-shrink-0 mx-4 text-gray-400">{t('or')}</span>
-        <div className="flex-grow border-t border-gray-600"></div>
+        <div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+        <span className="flex-shrink-0 mx-4 text-gray-500 dark:text-gray-400">{t('or')}</span>
+        <div className="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
       </div>
 
       <div ref={googleButtonRef}></div>

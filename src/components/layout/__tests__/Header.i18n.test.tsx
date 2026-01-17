@@ -3,6 +3,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Header } from '../Header';
 import { I18nProvider } from '../../../i18n';
+import { ThemeProvider } from '../../../context/ThemeContext';
 
 // Small test consumer that displays a translated string so we can observe language changes
 const ResultsConsumer: React.FC<{ count: number }> = ({ count }) => {
@@ -25,19 +26,21 @@ describe('Header language selector', () => {
   test('persists selection to localStorage and updates other components, and rehydrates on reload', async () => {
     render(
       <I18nProvider>
-        <Header
-          user={defaultUser}
-          isFormCollapsed={false}
-          toggleFormCollapsed={() => { }}
-          logsVisible={false}
-          setLogsVisible={() => { }}
-          setIsApiKeyModalOpen={() => { }}
+        <ThemeProvider>
+          <Header
+            user={defaultUser}
+            isFormCollapsed={false}
+            toggleFormCollapsed={() => { }}
+            logsVisible={false}
+            setLogsVisible={() => { }}
+            setIsApiKeyModalOpen={() => { }}
 
-          handleLogout={() => { }}
-          onChangePassword={() => { }}
-          onEditProfile={() => { }}
-        />
-        <ResultsConsumer count={2} />
+            handleLogout={() => { }}
+            onChangePassword={() => { }}
+            onEditProfile={() => { }}
+          />
+          <ResultsConsumer count={2} />
+        </ThemeProvider>
       </I18nProvider>
     );
 
