@@ -67,53 +67,89 @@ export const PublicQuotePage: React.FC<PublicQuotePageProps> = ({ quoteId, onLog
         }
     };
 
+    const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans flex flex-col items-center justify-center p-4 transition-colors duration-300">
+            <div className="absolute top-4 right-4">
+                <ThemeToggle />
+            </div>
+            {children}
+        </div>
+    );
+
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-20">
+            <PageWrapper>
                 <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+            </PageWrapper>
         );
     }
 
     if (error === 'unauthorized') {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
-                <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('securityCheckRequired')}</h2>
-                <p className="text-gray-400 mb-6 max-w-md">
-                    {t('pleaseCompleteCaptchaToView')}
-                </p>
+            <PageWrapper>
+                <div className="text-center max-w-md">
+                    <h2 className="text-2xl font-bold mb-4">{t('securityCheckRequired')}</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        {t('pleaseCompleteCaptchaToView')}
+                    </p>
 
-                <div className="flex flex-col items-center gap-4">
-                    <Turnstile
-                        sitekey={SITE_KEY}
-                        onVerify={handleTurnstileVerify}
-                        theme="dark"
-                    />
+                    <div className="flex flex-col items-center gap-4">
+                        <Turnstile
+                            sitekey={SITE_KEY}
+                            onVerify={handleTurnstileVerify}
+                            theme="auto"
+                        />
 
-                    {isVerifying && (
-                        <p className="text-cyan-400 text-sm animate-pulse">{t('verifying')}</p>
-                    )}
+                        {isVerifying && (
+                            <p className="text-cyan-600 dark:text-cyan-400 text-sm animate-pulse">{t('verifying')}</p>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </PageWrapper>
         );
     }
 
     if (error === 'restricted') {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
-                <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('restrictedAccess')}</h2>
-                <p className="text-gray-400 mb-8 max-w-md">
-                    {t('pleaseLoginInNonProd')}
-                </p>
+            <PageWrapper>
+                <div className="text-center max-w-md">
+                    <h2 className="text-2xl font-bold mb-4">{t('restrictedAccess')}</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-8">
+                        {t('pleaseLoginInNonProd')}
+                    </p>
 
-                <div className="flex flex-col items-center gap-4">
-                    <button
-                        onClick={onLogin}
-                        className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition-colors"
-                    >
-                        {t('signIn')}
-                    </button>
+                    <div className="flex flex-col items-center gap-4">
+                        <button
+                            onClick={onLogin}
+                            className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition-colors"
+                        >
+                            {t('signIn')}
+                        </button>
 
+                        <a
+                            href="/public/quotes"
+                            onClick={(e) => {
+                                if (onNavigate) {
+                                    e.preventDefault();
+                                    onNavigate('/public/quotes');
+                                }
+                            }}
+                            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors"
+                        >
+                            {t('browseAllQuotes')}
+                        </a>
+                    </div>
+                </div>
+            </PageWrapper>
+        );
+    }
+
+    if (error === 'notFound') {
+        return (
+            <PageWrapper>
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold">{t('quoteNotFound')}</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mt-2">{t('quoteNotFoundDesc')}</p>
                     <a
                         href="/public/quotes"
                         onClick={(e) => {
@@ -122,24 +158,12 @@ export const PublicQuotePage: React.FC<PublicQuotePageProps> = ({ quoteId, onLog
                                 onNavigate('/public/quotes');
                             }
                         }}
-                        className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                        className="mt-4 inline-block text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
                     >
                         {t('browseAllQuotes')}
                     </a>
                 </div>
-            </div>
-        );
-    }
-
-    if (error === 'notFound') {
-        return (
-            <div className="text-center py-20">
-                <h2 className="text-2xl font-bold text-gray-100">{t('quoteNotFound')}</h2>
-                <p className="text-gray-400 mt-2">{t('quoteNotFoundDesc')}</p>
-                <a href="/public/quotes" className="mt-4 inline-block text-cyan-400 hover:text-cyan-300 transition-colors">
-                    {t('browseAllQuotes')}
-                </a>
-            </div>
+            </PageWrapper>
         );
     }
 
