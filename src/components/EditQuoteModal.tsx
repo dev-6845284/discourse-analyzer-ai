@@ -113,6 +113,17 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
     };
 
     const handleSave = () => {
+        // Validation
+        if (!text || !text.trim()) {
+            alert(t('quoteTextRequired') || 'Quote text is required');
+            return;
+        }
+
+        if (!personSearch || !personSearch.trim()) {
+            alert(t('personNameRequired') || 'Person name is required');
+            return;
+        }
+
         // Reconstruct updated quote object
         const updatedQuote: Quote = {
             ...quote,
@@ -124,7 +135,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
             languageCode,
             languageName: SUPPORTED_LANGUAGES.find(l => l.code === languageCode)?.name || quote.languageName,
             person: personId === '' ? quote.person : personId, // Keep existing person if personId is empty
-            personName,
+            personName: personSearch,
             metadata: {
                 ...quote.metadata,
                 title,
