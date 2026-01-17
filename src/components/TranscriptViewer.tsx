@@ -162,7 +162,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     try {
 
       // console.log('[handlePromote] Promote mode - creating new quotes');
-      if (!currentSessionId) return;
+      
       await promoteSession(currentSessionId, quoteGroups, selectedLanguage);
       alert(t('promotedToQuotesSuccess'));
 

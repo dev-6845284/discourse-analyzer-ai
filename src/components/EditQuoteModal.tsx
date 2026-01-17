@@ -78,7 +78,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
 
             fetchPeople();
         }
-    }, [isOpen, quote, fetchPeople]);
+    }, [isOpen, quote]);
 
     // Handle outside click for person dropdown
     useEffect(() => {
@@ -94,7 +94,6 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
     const handlePersonSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setPersonSearch(val);
-        setPersonName(val); // Assume manual entry until selected
         setIsPersonDropdownOpen(true);
         fetchPeople(val);
     };

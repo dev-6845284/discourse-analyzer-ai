@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Quote, Person, QuoteUpdatePayload, AuditCategory } from '../types';
+import { Quote, Person, QuoteUpdatePayload } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
 import EditQuoteModal from './EditQuoteModal';
