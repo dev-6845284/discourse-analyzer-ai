@@ -16,7 +16,6 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
     const { people, fetchPeople, isLoading: isLoadingPeople } = usePeople();
 
     // Form State
-    // Form State
     const [text, setText] = useState(quote.text);
     const [title, setTitle] = useState(quote.title || '');
     const [source, setSource] = useState(quote.source || '');
@@ -29,7 +28,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
 
     // Author State
     const [personId, setPersonId] = useState<string>((typeof quote.person === 'object' ? quote.person?._id : quote.person) || '');
-    const [personName, setPersonName] = useState(quote.personName || '');
+    const [setPersonName] = useState(quote.personName || '');
     const [personSearch, setPersonSearch] = useState('');
     const [isPersonDropdownOpen, setIsPersonDropdownOpen] = useState(false);
     const personWrapperRef = useRef<HTMLDivElement>(null);
