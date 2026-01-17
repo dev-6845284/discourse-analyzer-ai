@@ -34,14 +34,28 @@ router.get('/usage-stats', async (req: Request, res: Response) => {
       averageResponseTime,
       errorRate,
       rateLimitHits,
+      publicQuotesCount,
     ] = await Promise.all([
       // Total requests count
       ApiUsage.countDocuments({ timestamp: { $gte: since } }),
 
-      // Requests by endpoint (top 10)
+      // Requests by endpoint (top 10), normalized
       ApiUsage.aggregate([
         { $match: { timestamp: { $gte: since } } },
-        { $group: { _id: '$endpoint', count: { $sum: 1 }, avgTime: { $avg: '$responseTimeMs' } } },
+        {
+          $project: {
+            // Normalize public quote endpoints: replace ObjectId in path with :id
+            normalizedEndpoint: {
+              $cond: {
+                if: { $regexMatch: { input: '$endpoint', regex: '^/api/public/quotes/[0-9a-fA-F]{24}$' } },
+                then: '/api/public/quotes/:id',
+                else: '$endpoint'
+              }
+            },
+            responseTimeMs: 1
+          }
+        },
+        { $group: { _id: '$normalizedEndpoint', count: { $sum: 1 }, avgTime: { $avg: '$responseTimeMs' } } },
         { $sort: { count: -1 } },
         { $limit: 10 },
       ]),
@@ -121,6 +135,12 @@ router.get('/usage-stats', async (req: Request, res: Response) => {
         timestamp: { $gte: since },
         rateLimited: true,
       }),
+
+      // Public Quotes specific count
+      ApiUsage.countDocuments({
+        timestamp: { $gte: since },
+        endpoint: { $regex: /^\/api\/public\/quotes/ },
+      }),
     ]);
 
     const stats = {
@@ -131,6 +151,7 @@ router.get('/usage-stats', async (req: Request, res: Response) => {
       },
       summary: {
         totalRequests,
+        publicQuotesCount,
         rateLimitHits,
         averageResponseTime: averageResponseTime[0]?.avgTime?.toFixed(2) || 0,
         maxResponseTime: averageResponseTime[0]?.maxTime || 0,
@@ -299,12 +320,17 @@ router.get('/dashboard-summary', async (req: Request, res: Response) => {
       rateLimitHitsLastHour,
       blockedIPCount,
       requestsLastHour,
+      publicQuotesCount,
     ] = await Promise.all([
       SecurityAlert.countDocuments({ acknowledged: false }),
       SecurityAlert.countDocuments({ acknowledged: false, severity: { $in: ['critical', 'high'] } }),
       ApiUsage.countDocuments({ timestamp: { $gte: lastHour }, rateLimited: true }),
       BlockedIP.countDocuments(),
       ApiUsage.countDocuments({ timestamp: { $gte: lastHour } }),
+      ApiUsage.countDocuments({
+        timestamp: { $gte: lastHour },
+        endpoint: { $regex: /^\/api\/public\/quotes/ }
+      }),
     ]);
 
     res.json({
@@ -313,6 +339,7 @@ router.get('/dashboard-summary', async (req: Request, res: Response) => {
       rateLimitHitsLastHour,
       blockedIPCount,
       requestsLastHour,
+      publicQuotesCount,
       hasIssues: criticalAlerts > 0 || rateLimitHitsLastHour > 10,
     });
   } catch (error) {

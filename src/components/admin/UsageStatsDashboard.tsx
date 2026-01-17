@@ -22,9 +22,9 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n';
-import { 
-  getAdminUsageStats, 
-  getAdminSecurityAlerts, 
+import {
+  getAdminUsageStats,
+  getAdminSecurityAlerts,
   getBlockedIPs as fetchBlockedIPs,
   acknowledgeSecurityAlert,
   blockIP,
@@ -39,6 +39,7 @@ interface UsageStats {
   };
   summary: {
     totalRequests: number;
+    publicQuotesCount: number;
     rateLimitHits: number;
     averageResponseTime: number;
     maxResponseTime: number;
@@ -96,7 +97,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
   const fetchData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const [statsRes, alertsRes, blockedRes] = await Promise.all([
         getAdminUsageStats(timeRange),
@@ -118,7 +119,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
       await acknowledgeSecurityAlert(alertId);
-      setAlerts(prev => prev.map(a => 
+      setAlerts(prev => prev.map(a =>
         a._id === alertId ? { ...a, acknowledged: true } : a
       ));
     } catch (err) {
@@ -143,7 +144,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
 
   const handleUnblockIP = async (ip: string) => {
     if (!confirm(`Are you sure you want to unblock ${ip}?`)) return;
-    
+
     try {
       await unblockIP(ip);
       setBlockedIPs(prev => prev.filter(b => b.ipAddress !== ip));
@@ -228,11 +229,10 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === tab
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === tab
                   ? 'border-b-2 border-blue-600 text-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               {tab === 'overview' && '📊 Overview'}
               {tab === 'alerts' && `🔔 Alerts (${alerts.filter(a => !a.acknowledged).length})`}
@@ -252,10 +252,14 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
           {activeTab === 'overview' && stats && (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="text-blue-600 text-sm font-medium">Total Requests</div>
                   <div className="text-2xl font-bold text-blue-900">{stats.summary.totalRequests.toLocaleString()}</div>
+                </div>
+                <div className="bg-teal-50 rounded-lg p-4">
+                  <div className="text-teal-600 text-sm font-medium">Public Quotes</div>
+                  <div className="text-2xl font-bold text-teal-900">{stats.summary.publicQuotesCount?.toLocaleString() || 0}</div>
                 </div>
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <div className="text-yellow-600 text-sm font-medium">Rate Limit Hits</div>
@@ -337,7 +341,7 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                         title={`${hour._id}: ${hour.count} requests, ${hour.errors} errors`}
                       >
                         {hour.errors > 0 && (
-                          <div 
+                          <div
                             className="absolute bottom-0 left-0 right-0 bg-red-500 rounded-t"
                             style={{ height: `${(hour.errors / hour.count) * 100}%` }}
                           />
@@ -363,19 +367,17 @@ export const UsageStatsDashboard: React.FC<UsageStatsDashboardProps> = ({ onClos
                 alerts.map((alert) => (
                   <div
                     key={alert._id}
-                    className={`border rounded-lg p-4 ${getSeverityColor(alert.severity)} ${
-                      alert.acknowledged ? 'opacity-50' : ''
-                    }`}
+                    className={`border rounded-lg p-4 ${getSeverityColor(alert.severity)} ${alert.acknowledged ? 'opacity-50' : ''
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs font-semibold uppercase px-2 py-0.5 rounded ${
-                            alert.severity === 'critical' ? 'bg-red-600 text-white' :
-                            alert.severity === 'high' ? 'bg-orange-600 text-white' :
-                            alert.severity === 'medium' ? 'bg-yellow-600 text-white' :
-                            'bg-blue-600 text-white'
-                          }`}>
+                          <span className={`text-xs font-semibold uppercase px-2 py-0.5 rounded ${alert.severity === 'critical' ? 'bg-red-600 text-white' :
+                              alert.severity === 'high' ? 'bg-orange-600 text-white' :
+                                alert.severity === 'medium' ? 'bg-yellow-600 text-white' :
+                                  'bg-blue-600 text-white'
+                            }`}>
                             {alert.severity}
                           </span>
                           <span className="text-sm font-medium">{alert.type.replace(/_/g, ' ')}</span>
