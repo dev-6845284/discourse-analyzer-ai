@@ -102,7 +102,7 @@ const App: React.FC = () => {
     openChangePasswordModal,
     openEditProfileModal,
     handleResumeSession,
-    handleEditSource,
+
     handleSaveQuote,
 
     quotesState: { quotes, articles, isLoading, error, rawApiResponseError, markQuoteAsStored },
@@ -496,7 +496,7 @@ const App: React.FC = () => {
                 onDiscard={quotesState.handleDiscardQuote}
                 onRemove={quotesState.handleRemoveQuote}
                 clearError={quotesState.clearError}
-                onEditSource={handleEditSource}
+
                 onResumeSession={handleResumeSession}
                 onStoredPromoteSuccess={() => setSessionsRefreshTrigger(prev => prev + 1)}
                 storedQuotesRefreshTrigger={storedQuotesRefreshTrigger}

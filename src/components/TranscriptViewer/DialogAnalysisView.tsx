@@ -44,8 +44,7 @@ interface DialogAnalysisViewProps {
   onStartSelection?: () => void;
   selectedLanguage?: string;
   onLanguageChange?: (lang: string) => void;
-  lockedGroupId?: number;
-  isEditing?: boolean;
+
 }
 
 export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
@@ -67,8 +66,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   onStartSelection,
   selectedLanguage = 'en',
   onLanguageChange,
-  lockedGroupId,
-  isEditing,
+
 }) => {
   const [analysisLanguage, setAnalysisLanguage] = React.useState(selectedLanguage);
 
@@ -80,7 +78,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
     //   selectedStatements: Array.from(selectedStatements?.entries() || []),
     //   lockedGroupId,
     // });
-  }, [isSelectionMode, selectedStatements, lockedGroupId]);
+  }, [isSelectionMode, selectedStatements]);
 
   if (isDialogAnalyzing) {
     return (
@@ -222,7 +220,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
               </select>
             </div>
           )}
-          {!isSelectionMode && !isEditing && (
+          {!isSelectionMode && (
             <button
               onClick={onStartSelection}
               className="text-xs px-3 py-1 bg-cyan-600/20 text-cyan-400 border border-cyan-600/50 rounded hover:bg-cyan-600/30 transition-colors"
@@ -268,7 +266,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                               onChange={() => onToggleSelection?.(statementId, groupId)}
                               className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
                             />
-                            {isSelected && !lockedGroupId && (
+                            {isSelected && (
                               <div className="flex items-center bg-gray-700 rounded px-1 border border-gray-600">
                                 <button
                                   onClick={() => onGroupChange?.(statementId, Math.max(1, groupId - 1))}
@@ -289,8 +287,8 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                             <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
                               <div
                                 className={`h-full rounded-full ${item.importance >= 0.8 ? 'bg-red-500' :
-                                    item.importance >= 0.5 ? 'bg-yellow-500' :
-                                      'bg-green-500'
+                                  item.importance >= 0.5 ? 'bg-yellow-500' :
+                                    'bg-green-500'
                                   }`}
                                 style={{ width: `${item.importance * 100}%` }}
                               />
@@ -320,8 +318,8 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                     }
                   }}
                   className={`flex gap-4 text-sm p-2 rounded transition-all ${isHighlighted
-                      ? 'bg-cyan-900/50 border border-cyan-500/50 shadow-lg shadow-cyan-500/20'
-                      : 'hover:bg-gray-700/30'
+                    ? 'bg-cyan-900/50 border border-cyan-500/50 shadow-lg shadow-cyan-500/20'
+                    : 'hover:bg-gray-700/30'
                     }`}
                 >
                   <div className="w-24 flex-shrink-0 text-right">

@@ -18,7 +18,7 @@ interface QuoteCardActionsProps {
   onDiscard: () => void;
   onDelete: () => void;
   onRemove: () => void;
-  onEditSource?: () => void;
+  onEdit?: () => void;
   userRole?: string;
   onVisibilityChange?: (quoteId: string, visibility: 'public' | 'private') => void;
 }
@@ -38,7 +38,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   onDiscard,
   onDelete,
   onRemove, // Kept one
-  onEditSource,
+  onEdit,
   userRole,
   onVisibilityChange,
 }) => {
@@ -175,18 +175,17 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             </button>
           )}
 
-          {onEditSource && (
-            <button
-              onClick={onEditSource}
-              disabled={isBusy}
-              className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={t('editSourceStatements')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-          )}
+          {/* Edit button placeholder for future use */}
+          <button
+            onClick={onEdit}
+            disabled={isBusy}
+            className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={t('editQuote')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
 
           {!hideSaveButton && (
             <button

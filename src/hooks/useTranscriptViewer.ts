@@ -20,10 +20,8 @@ export interface UseTranscriptViewerProps {
     dialogAnalysis?: any[];
   };
   onSessionCreated?: (sessionId: string) => void;
-  initialSelectedStatements?: Map<string, number>;
-  lockedGroupId?: number;
-  editQuoteId?: string;
-  contentAnalysisId?: string;
+
+
 }
 
 export const useTranscriptViewer = ({
@@ -34,14 +32,9 @@ export const useTranscriptViewer = ({
   sessionId,
   initialSessionData,
   onSessionCreated,
-  initialSelectedStatements,
-  lockedGroupId,
-  editQuoteId,
-  contentAnalysisId,
 }: UseTranscriptViewerProps) => {
   const [viewMode, setViewMode] = useState<'transcript' | 'topics' | 'speakers' | 'dialog'>(() => {
-    // If we have initial selected statements (edit mode), start in dialog view
-    if (initialSelectedStatements && initialSelectedStatements.size > 0) return 'dialog';
+
     if (initialSessionData?.dialogAnalysis && initialSessionData.dialogAnalysis.length > 0) return 'dialog';
     if (initialSessionData?.speakerAnalysis && initialSessionData.speakerAnalysis.length > 0) return 'speakers';
     if (initialSessionData?.topicAnalysis && initialSessionData.topicAnalysis.length > 0) return 'topics';
@@ -55,10 +48,9 @@ export const useTranscriptViewer = ({
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   // Selection state for promotion
-  const [selectedStatements, setSelectedStatements] = useState<Map<string, number>>(initialSelectedStatements || new Map());
-  // If we have initial selected statements (edit mode), automatically enable selection mode
-  const [isSelectionMode, setIsSelectionMode] = useState(!!initialSelectedStatements && initialSelectedStatements.size > 0);
-  const [lastUsedGroupId, setLastUsedGroupId] = useState(lockedGroupId || 1);
+  const [selectedStatements, setSelectedStatements] = useState<Map<string, number>>(new Map());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [lastUsedGroupId, setLastUsedGroupId] = useState(1);
   const [selectedLanguage, setSelectedLanguage] = useState<string>(languageCode || 'en');
 
   // Speaker hint for AI identification
@@ -78,26 +70,19 @@ export const useTranscriptViewer = ({
 
   const formattedText = constructFormattedTranscript(segments);
 
-  // Ensure selection mode is enabled when we have initial selected statements
-  useEffect(() => {
-    if (initialSelectedStatements && initialSelectedStatements.size > 0) {
-      setSelectedStatements(new Map(initialSelectedStatements));
-      setIsSelectionMode(true);
-    }
-  }, [initialSelectedStatements]);
+
 
   const handleToggleSelection = (statementId: string, _groupId: number) => {
     const newMap = new Map(selectedStatements);
     if (newMap.has(statementId)) {
       newMap.delete(statementId);
     } else {
-      newMap.set(statementId, lockedGroupId || lastUsedGroupId);
+      newMap.set(statementId, lastUsedGroupId);
     }
     setSelectedStatements(newMap);
   };
 
   const handleGroupChange = (statementId: string, newGroupId: number) => {
-    if (lockedGroupId) return;
     const newMap = new Map(selectedStatements);
     if (newMap.has(statementId)) {
       newMap.set(statementId, newGroupId);
@@ -577,8 +562,7 @@ export const useTranscriptViewer = ({
     setSelectedLanguage,
     speakerHint,
     setSpeakerHint,
-    contentAnalysisId,
-    editQuoteId,
+
     getStepStatuses,
     handleRenameSpeaker,
     handleAddSpeaker,

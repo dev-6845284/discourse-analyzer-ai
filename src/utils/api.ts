@@ -209,10 +209,6 @@ export const getContentAnalysis = async (id: string) => {
   return api.get(`/analysis/content/${id}`);
 };
 
-export const updateQuoteSource = async (quoteId: string, contentAnalysisId: string, statementIds: string[]) => {
-  return api.post('/analysis/update-quote-source', { quoteId, contentAnalysisId, statementIds });
-};
-
 // Session-based analysis endpoints
 export const analyzeSessionTopics = async (
   sessionId: string,
@@ -354,6 +350,6 @@ export const getUserAssignedKeyset = (userId: string) =>
 
 // System Settings
 export const fetchSystemSettings = () => api.get('/settings');
- // ToDo The any type is used for parameters and return values, reducing type safety. Consider defining proper TypeScript interfaces for features, settings, and the return types to ensure type safety throughout the application.
+// ToDo The any type is used for parameters and return values, reducing type safety. Consider defining proper TypeScript interfaces for features, settings, and the return types to ensure type safety throughout the application.
 export const updateSystemSettings = (features: any) => api.put('/settings', { features });
 

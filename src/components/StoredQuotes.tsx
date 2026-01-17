@@ -24,12 +24,12 @@ interface StoredQuotesProps {
   selectedPerson: Person | null;
   selectedAI: string;
   isApiKeySet: boolean;
-  onEditSource?: (quote: Quote) => void;
+
   userRole?: string;
   refreshTrigger?: number;
 }
 
-const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, onEditSource, userRole, refreshTrigger }) => {
+const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, userRole, refreshTrigger }) => {
   const { t } = useI18n();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -382,7 +382,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onAccept={handleAccept}
               onDiscard={handleDiscard}
               onDelete={handleDelete}
-              onEditSource={onEditSource}
+
               onVisibilityChange={handleVisibilityChange}
               isApiKeySet={isApiKeySet}
               hideSaveButton={true}
