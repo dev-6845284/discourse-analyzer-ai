@@ -528,6 +528,11 @@ const lt = {
 
   // Generic small actions
   edit: 'Redaguoti',
+  editQuote: 'Redaguoti citatą',
+  quoteText: 'Citatos tekstas',
+  analysis: 'Analizė',
+  rationale: 'Pagrindimas',
+  evidence: 'Įrodymai',
   delete: 'Ištrinti',
 
   blockIPTitle: 'Blokuoti IP adresą',
