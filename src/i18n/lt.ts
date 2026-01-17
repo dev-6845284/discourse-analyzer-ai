@@ -687,6 +687,8 @@ const lt = {
   share: 'Dalintis',
   shareQuoteTitle: 'Dalintis citata',
   goToLink: 'Eiti į nuorodą',
+  restrictedAccess: 'Prieiga apribota',
+  pleaseLoginInNonProd: 'Šis turinys šioje aplinkoje prieinamas tik prisijungusiems vartotojams.',
 };
 
 export default lt;

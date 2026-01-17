@@ -686,6 +686,8 @@ const en = {
   share: 'Share',
   shareQuoteTitle: 'Share Quote',
   goToLink: 'Go to Link',
+  restrictedAccess: 'Restricted Access',
+  pleaseLoginInNonProd: 'This content is restricted to logged-in users in this environment.',
 };
 
 export default en;

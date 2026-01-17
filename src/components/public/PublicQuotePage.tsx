@@ -34,6 +34,8 @@ export const PublicQuotePage: React.FC<PublicQuotePageProps> = ({ quoteId, onLog
             console.error('Error fetching quote:', err);
             if (err.response?.status === 401) {
                 setError('unauthorized');
+            } else if (err.response?.status === 403) {
+                setError('restricted');
             } else if (err.response?.status === 404) {
                 setError('notFound');
             } else {
@@ -91,6 +93,39 @@ export const PublicQuotePage: React.FC<PublicQuotePageProps> = ({ quoteId, onLog
                     {isVerifying && (
                         <p className="text-cyan-400 text-sm animate-pulse">{t('verifying')}</p>
                     )}
+                </div>
+            </div>
+        );
+    }
+
+    if (error === 'restricted') {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-4">
+                <h2 className="text-2xl font-bold text-gray-100 mb-4">{t('restrictedAccess')}</h2>
+                <p className="text-gray-400 mb-8 max-w-md">
+                    {t('pleaseLoginInNonProd')}
+                </p>
+
+                <div className="flex flex-col items-center gap-4">
+                    <button
+                        onClick={onLogin}
+                        className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition-colors"
+                    >
+                        {t('signIn')}
+                    </button>
+
+                    <a
+                        href="/public/quotes"
+                        onClick={(e) => {
+                            if (onNavigate) {
+                                e.preventDefault();
+                                onNavigate('/public/quotes');
+                            }
+                        }}
+                        className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                    >
+                        {t('browseAllQuotes')}
+                    </a>
                 </div>
             </div>
         );

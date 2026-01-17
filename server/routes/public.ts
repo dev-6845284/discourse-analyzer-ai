@@ -4,7 +4,7 @@ import Quote from '../models/Quote';
 import '../models/Person'; // Ensure Person model is registered for populate
 import { generalRateLimiter } from '../middleware/rateLimiter';
 import mongoose from 'mongoose';
-import { isProduction, isLocal } from '../constants/env';
+import { isProduction, isLocal, isTest } from '../constants/env';
 import { publicQuotesCache } from '../services/publicQuotesCache';
 
 const router = express.Router();
@@ -56,8 +56,8 @@ const ensurePublicOrAuth = (req: express.Request, res: express.Response, next: e
 
 // Public Quotes API
 router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
-    // Safeguard: only logged users (not public guests) can see quotes on non-production (excluding local)
-    if (!isProduction() && !isLocal() && req.session?.user?.role === 'public_guest') {
+    // Safeguard: only logged users (not public guests) can see quotes on non-production (excluding local and test)
+    if (!isProduction() && !isLocal() && !isTest() && req.session?.user?.role === 'public_guest') {
         console.log('[PUBLIC_QUOTES] Safeguard: Returning empty list on non-production for public guest');
         return res.json([]);
     }
@@ -193,7 +193,13 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
 router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Safeguard: only logged users (not public guests) can see quotes on non-production (excluding local and test)
+    if (!isProduction() && !isLocal() && !isTest() && req.session?.user?.role === 'public_guest') {
+        console.log('[PUBLIC_QUOTE_SINGLE] Safeguard: Blocking access on non-production for public guest', { id });
+        return res.status(403).json({ message: 'Restricted access: Please log in to view this content in this environment.' });
+    }
+
+    if (!mongoose.isValidObjectId(id)) {
         return res.status(400).json({ message: 'Invalid quote ID' });
     }
 

@@ -1,10 +1,4 @@
-import request from 'supertest';
-import express from 'express';
-import session from 'express-session';
-import Quote from '../../server/models/Quote';
-import mongoose from 'mongoose';
-
-// 1. Define Redis mock
+// 1. Define Mocks
 const mockRedisGet = jest.fn();
 const mockRedisMulti = jest.fn();
 const mockRedisExec = jest.fn();
@@ -15,19 +9,16 @@ const mockRedisChain = {
     exec: mockRedisExec
 };
 
-// 2. Mock modules
-jest.mock('../../server/services/redis', () => {
-    return {
-        __esModule: true,
-        default: {
-            get: mockRedisGet,
-            zadd: jest.fn().mockResolvedValue(1),
-            multi: mockRedisMulti,
-            zrange: jest.fn().mockResolvedValue([]),
-            getPublicQuotesCacheSizeMB: jest.fn().mockReturnValue(100)
-        }
-    };
-});
+jest.mock('../../server/services/redis', () => ({
+    __esModule: true,
+    default: {
+        get: mockRedisGet,
+        zadd: jest.fn().mockResolvedValue(1),
+        multi: mockRedisMulti,
+        zrange: jest.fn().mockResolvedValue([]),
+        getPublicQuotesCacheSizeMB: jest.fn().mockReturnValue(100)
+    }
+}));
 
 jest.mock('../../server/models/Quote');
 jest.mock('../../server/services/turnstileService', () => ({
@@ -36,8 +27,23 @@ jest.mock('../../server/services/turnstileService', () => ({
 jest.mock('../../server/middleware/rateLimiter', () => ({
     generalRateLimiter: (req: any, res: any, next: any) => next()
 }));
+jest.mock('../../server/constants/env', () => ({
+    isProduction: jest.fn().mockReturnValue(false),
+    isLocal: jest.fn().mockReturnValue(false),
+    isTest: jest.fn().mockReturnValue(true),
+    getCurrentEnv: jest.fn().mockReturnValue('test'),
+    getPublicQuotesCacheSizeMB: jest.fn().mockReturnValue(50),
+    isDevelopment: jest.fn().mockReturnValue(false),
+    isPreview: jest.fn().mockReturnValue(false),
+    isStrictSecurity: jest.fn().mockReturnValue(false),
+    isRelaxedSecurity: jest.fn().mockReturnValue(true)
+}));
 
-// 3. Import dependencies
+import request from 'supertest';
+import express from 'express';
+import session from 'express-session';
+import Quote from '../../server/models/Quote';
+import mongoose from 'mongoose';
 import router from '../../server/routes/public';
 
 const app = express();
@@ -75,6 +81,7 @@ describe('GET /api/public/quotes/:id', () => {
 
         const response = await request(app).get(`/api/public/quotes/${validId}`);
 
+        if (response.status === 500) console.log('[DEBUG] Response Text:', response.text);
         expect(response.status).toBe(200);
         expect(response.body).toEqual(mockQuote);
         // Verify redis call with prefix
@@ -103,6 +110,7 @@ describe('GET /api/public/quotes/:id', () => {
 
         const response = await request(app).get(`/api/public/quotes/${validId}`);
 
+        if (response.status === 500) console.log('[DEBUG] Response Text:', response.text);
         expect(response.status).toBe(200);
         expect(response.body.text).toBe('DB Quote');
         expect(Quote.findOne).toHaveBeenCalled();

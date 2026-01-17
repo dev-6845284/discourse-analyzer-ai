@@ -39,5 +39,5 @@ module.exports = {
   model,
   connect: jest.fn(),
   disconnect: jest.fn(),
-  isValidObjectId: (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id),
+  isValidObjectId: (id) => id === 'mockid' || (typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id)),
 };
