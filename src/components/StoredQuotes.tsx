@@ -17,7 +17,7 @@ import { useI18n } from '../i18n';
 
 import { StoredQuoteFilterBar } from './StoredQuoteFilterBar';
 import { useStoredQuoteFilters } from '../hooks/useStoredQuoteFilters';
-import api, { getStoredQuotes, updateQuote, deleteQuote } from '../utils/api';
+import api, { getStoredQuotes, updateQuote, deleteQuote, formatApiError } from '../utils/api';
 
 import { SUPPORTED_LANGUAGES } from '../constants';
 
@@ -96,10 +96,10 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         draft: { ...q, audit },
         isAnalyzing: false
       } : q));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Analysis failed:', err);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isAnalyzing: false } : q));
-      // Optionally set error state
+      setError(formatApiError(err, 'Analysis failed'));
     }
   };
 
@@ -116,9 +116,10 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
       });
       const improvedQuote = response.data;
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, draft: { ...q, ...improvedQuote }, isImproving: false } : q));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Improvement failed:', err);
       setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, isImproving: false } : q));
+      setError(formatApiError(err, 'Improvement failed'));
     }
   };
 
@@ -168,9 +169,9 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
 
       await updateQuote(quote.id, auditPayload);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to persist accepted quote:', err);
-      setError('Failed to save changes to the server.');
+      setError(formatApiError(err, 'Failed to save changes'));
       // Revert optimistic update? Or just show error.
       // For now, just show error.
     }
