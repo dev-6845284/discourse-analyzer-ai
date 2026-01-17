@@ -104,7 +104,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   return (
     <div className="md:col-span-2 space-y-6 min-w-0 w-full mobile:w-[100vw] mobile:max-w-[100vw] mobile:box-border">
       <>
-        <div className="flex items-center justify-between mb-4 bg-gray-800 p-1 rounded-lg">
+        <div className="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
           <div className="flex space-x-1 flex-1">
             {activeTab !== 'admin' ? (
               <>
@@ -113,7 +113,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                     onClick={() => setResultsTab('new')}
                     className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'new'
                       ? 'bg-cyan-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
                       }`}
                   >
                     {t('searchResultsTab')}
@@ -123,7 +123,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                   onClick={() => setResultsTab('stored')}
                   className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'stored'
                     ? 'bg-cyan-600 text-white shadow'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                 >
                   {t('storedQuotesTab')}
@@ -133,7 +133,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                     onClick={() => setResultsTab('transcript')}
                     className={`py-2 px-1 text-sm font-medium rounded-md transition-colors ${resultsTab === 'transcript'
                       ? 'bg-cyan-600 text-white shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
                       }`}
                   >
                     {t('transcriptTab')}
@@ -144,7 +144,7 @@ export const MainContent: React.FC<MainContentProps> = ({
               <div className="flex-1">
                 <button
                   onClick={() => setActiveTab('search')}
-                  className="py-2 px-3 text-sm font-medium rounded-md bg-gray-700 text-gray-200 hover:bg-gray-600"
+                  className="py-2 px-3 text-sm font-medium rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   {t('backToQuotes') || 'Back to Quotes'}
                 </button>
@@ -178,43 +178,43 @@ export const MainContent: React.FC<MainContentProps> = ({
           <div>
             {adminView === 'users' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
+                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-cyan-400">{t('userManagement')}</h3>
                 </div>
                 <UserManager />
               </div>
             ) : adminView === 'logs' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
+                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-cyan-400">{t('analysis_logs')}</h3>
                 </div>
                 <LogViewer logsVisible={true} />
               </div>
             ) : adminView === 'management' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-800/50 rounded-lg flex items-center">
+                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex items-center">
                   <h3 className="text-lg font-semibold text-cyan-400">{t('api_management')}</h3>
                 </div>
                 <AccessControlManagement onClose={() => setAdminView && setAdminView(null)} inline />
               </div>
             ) : adminView === 'categories' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-800/50 rounded-lg flex items-center">
+                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex items-center">
                   <h3 className="text-lg font-semibold text-cyan-400">{t('analysisCategories')}</h3>
                 </div>
                 <AdminCategories />
               </div>
             ) : adminView === 'keysets' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-800/50 rounded-lg flex items-center">
+                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex items-center">
                   <h3 className="text-lg font-semibold text-cyan-400">{t('keyset_title')}</h3>
                 </div>
                 <KeysetManagement />
               </div>
             ) : (
-              <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 text-gray-300">
-                <h3 className="text-lg font-semibold text-cyan-400 mb-2">{t('adminActions') || 'Admin actions'}</h3>
-                <div className="text-sm text-gray-400">{t('adminPlaceholder') || 'Admin tools and management will be available here.'}</div>
+              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-300">
+                <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400 mb-2">{t('adminActions') || 'Admin actions'}</h3>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{t('adminPlaceholder') || 'Admin tools and management will be available here.'}</div>
               </div>
             )}
           </div>

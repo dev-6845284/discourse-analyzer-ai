@@ -99,7 +99,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                             <select
                                 value={language}
                                 onChange={(e) => setLanguage(e.target.value)}
-                                className="bg-gray-800 text-gray-200 text-xs border-gray-700 rounded-lg shadow-inner focus:border-cyan-500 focus:ring-cyan-500 py-1 px-2"
+                                className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs border border-gray-200 dark:border-gray-700 rounded-lg shadow-inner focus:border-cyan-500 focus:ring-cyan-500 py-1 px-2"
                             >
                                 {AVAILABLE_LANGUAGES.map((l) => (
                                     <option key={l.code} value={l.code}>{l.name}</option>
@@ -110,7 +110,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         {onLogout && (
                             <button
                                 onClick={onLogout}
-                                className="text-sm text-gray-400 hover:text-white font-semibold transition-colors flex items-center gap-2 p-1"
+                                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-semibold transition-colors flex items-center gap-2 p-1"
                                 title={t('public_back_to_landing')}
                             >
                                 <span className="hidden sm:inline">{t('public_back_to_landing')}</span>
@@ -136,14 +136,14 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
 
                 {/* Collapsible Filters - Completely hidden when not active */}
                 {showFilters && (
-                    <div className="bg-gray-800/40 rounded-2xl shadow-lg border border-cyan-500/20 backdrop-blur-sm overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-white/40 dark:bg-gray-800/40 rounded-2xl shadow-lg border border-cyan-500/20 backdrop-blur-sm overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-top-2">
                         <div className="p-4 md:p-6 flex flex-col md:flex-row gap-4">
-                            <button className="flex items-center px-4 py-2 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                                <User className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
+                            <button className="flex items-center px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
+                                <User className="w-4 h-4 mr-2.5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
                                 <span className="text-sm font-medium">{t('public_all_people')}</span>
                             </button>
-                            <button className="flex items-center px-4 py-2 border border-gray-700 rounded-xl text-gray-400 bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                                <Calendar className="w-4 h-4 mr-2.5 text-gray-500 group-hover:text-gray-400" />
+                            <button className="flex items-center px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
+                                <Calendar className="w-4 h-4 mr-2.5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
                                 <span className="text-sm font-medium">{t('public_any_time')}</span>
                             </button>
                         </div>
@@ -160,7 +160,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         <span className="text-gray-500 text-sm font-medium tracking-widest uppercase animate-pulse">{t('loading')}</span>
                     </div>
                 ) : error ? (
-                    <div className="text-center py-40 bg-gray-800/20 rounded-2xl border border-red-900/20 backdrop-blur-sm">
+                    <div className="text-center py-40 bg-gray-100/20 dark:bg-gray-800/20 rounded-2xl border border-red-900/20 backdrop-blur-sm">
                         <p className="text-red-400 mb-6 font-medium">{error}</p>
                         <button
                             onClick={fetchQuotes}
@@ -172,7 +172,7 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                 ) : (
                     <div className="grid grid-cols-1 gap-4 md:gap-6">
                         {quotes.length === 0 ? (
-                            <div className="text-center py-40 bg-gray-800/20 rounded-2xl border border-gray-700/20 text-gray-500 italic">
+                            <div className="text-center py-40 bg-gray-100/20 dark:bg-gray-800/20 rounded-2xl border border-gray-200 dark:border-gray-700/20 text-gray-500 italic">
                                 {t('public_no_quotes_found')}
                             </div>
                         ) : (

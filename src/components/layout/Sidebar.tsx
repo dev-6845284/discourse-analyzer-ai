@@ -50,8 +50,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { t } = useI18n();
 
   const containerClass = asDrawer
-    ? 'p-3 md:p-6 bg-gray-900/80 h-full overflow-y-auto min-w-0 w-full'
-    : 'md:col-span-1 p-3 md:p-6 bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto min-w-0 w-full';
+    ? 'p-3 md:p-6 bg-gray-50 dark:bg-gray-900/80 h-full overflow-y-auto min-w-0 w-full'
+    : 'md:col-span-1 p-3 md:p-6 bg-gray-50 dark:bg-gray-900/80 backdrop-blur-sm md:sticky top-0 h-auto md:h-screen overflow-y-auto min-w-0 w-full';
 
   return (
     <div className={containerClass}>
@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="mb-4 flex justify-end">
           <button
             onClick={onClose}
-            className="px-3 py-2 bg-gray-800 text-gray-200 rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-3 py-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
           >
             Close
           </button>
@@ -77,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="md:hidden mb-4">
           <button
             onClick={onToggleCollapse}
-            className="w-full flex items-center justify-between px-4 py-2 bg-gray-800 text-gray-200 font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
             aria-expanded={!isCollapsed}
             aria-controls="controls-panel"
           >
@@ -171,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setActiveTab && setActiveTab('admin');
                       setAdminView && setAdminView('management');
                     }}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('api_management')}
                   </button>
@@ -181,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setActiveTab && setActiveTab('admin');
                       setAdminView && setAdminView('categories');
                     }}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('analysisCategories')}
                   </button>
@@ -191,14 +191,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setActiveTab && setActiveTab('admin');
                       setAdminView && setAdminView('keysets');
                     }}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('keyset_management')}
                   </button>
 
                   <button
                     onClick={() => onOpenSettings && onOpenSettings()}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                   >
                     System Settings (Feature Toggles)
                   </button>
@@ -220,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setActiveTab && setActiveTab('admin');
                       setLogsVisible && setLogsVisible(true);
                     }}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('analysis_logs')}
                   </button>
@@ -254,7 +254,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       setAdminView && setAdminView('users');
                       setActiveTab && setActiveTab('admin');
                     }}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                   >
                     {t('userManagement')}
                   </button>
