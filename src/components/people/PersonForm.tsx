@@ -43,6 +43,22 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
     }
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    let newFormData = { ...formData, name: value };
+
+    const words = value.trim().split(/\s+/);
+    if (words.length === 2) {
+      newFormData = {
+        ...newFormData,
+        firstname: words[0],
+        surname: words[1],
+        aliases: value
+      };
+    }
+    setFormData(newFormData);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-800 rounded-lg shadow">
       <div>
@@ -52,7 +68,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
           type="text"
           required
           value={formData.name}
-          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          onChange={handleNameChange}
           className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
         />
       </div>
