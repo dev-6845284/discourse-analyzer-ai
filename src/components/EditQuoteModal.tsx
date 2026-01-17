@@ -28,7 +28,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
 
     // Author State
     const [personId, setPersonId] = useState<string>((typeof quote.person === 'object' ? quote.person?._id : quote.person) || '');
-    const [setPersonName] = useState(quote.personName || '');
+
     const [personSearch, setPersonSearch] = useState('');
     const [isPersonDropdownOpen, setIsPersonDropdownOpen] = useState(false);
     const personWrapperRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
             const pName = quote.personName || (typeof quote.person === 'object' ? quote.person?.name : '') || '';
 
             setPersonId(pId);
-            setPersonName(pName);
+
             setPersonSearch(pName);
 
             setRationale(
@@ -99,7 +99,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
 
     const handlePersonSelect = (person: Person) => {
         setPersonId(person._id || '');
-        setPersonName(person.name);
+
         setPersonSearch(person.name);
         setIsPersonDropdownOpen(false);
     };
