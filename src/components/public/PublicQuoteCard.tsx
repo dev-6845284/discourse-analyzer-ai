@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Eye, Clock, MessageSquare, ExternalLink, Share2 } from 'lucide-react';
+import { Eye, Clock, MessageSquare, ExternalLink, Share2, Facebook, Instagram, Hash, Globe } from 'lucide-react';
 import { Toast } from '../ui/Toast';
 import { ShareModal } from '../ui/ShareModal';
 import { useI18n } from '../../i18n';
@@ -21,7 +21,11 @@ interface PublicQuoteProps {
         context?: string;
         analysisContext?: string;
         links?: Array<{ url: string; title?: string }>;
-        person?: { name: string; description?: string };
+        person?: {
+            name: string;
+            description?: string;
+            links?: Array<{ url: string; type: 'facebook' | 'tiktok' | 'instagram' | 'custom' }>;
+        };
         analysis: {
             verdict: string;
             overview: string;
@@ -145,6 +149,29 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
                             <h3 id={`quote-author-${quote.id}`} className="text-gray-900 dark:text-gray-100 font-bold text-base md:text-lg leading-tight truncate">
                                 {quote.person?.name || t('unknown_person')}
                             </h3>
+                            {quote.person?.links && quote.person.links.length > 0 && (
+                                <div className="flex items-center gap-2 mt-1">
+                                    {quote.person.links.map((link, idx) => {
+                                        let Icon = Globe;
+                                        if (link.type === 'facebook') Icon = Facebook;
+                                        if (link.type === 'instagram') Icon = Instagram;
+                                        if (link.type === 'tiktok') Icon = Hash; // Basic icon for TikTok as lucide might not have it or used Hash
+
+                                        return (
+                                            <a
+                                                key={idx}
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-gray-400 hover:text-cyan-500 transition-colors"
+                                                title={link.type}
+                                            >
+                                                <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            )}
                             <div className="flex items-center gap-2 mt-0">
                                 {quote.date && (
                                     <span className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1 shrink-0">

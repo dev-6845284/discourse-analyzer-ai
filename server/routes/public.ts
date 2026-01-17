@@ -122,7 +122,7 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
         // --- CACHE LOGIC END ---
 
         const quotes = await Quote.find(query)
-            .populate('person', 'name description') // Only fetch name and description
+            .populate('person', 'name description links') // Fetch links to filter them later
             .sort(sortConfig)
             .lean(); // Use lean for better performance and to return plain objects
 
@@ -165,6 +165,19 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                 analysisSummary.verdict = q.metadata.verdict || 'N/A';
             }
 
+            // Securely filter person links
+            let safePerson = null;
+            if (q.person && typeof q.person === 'object') {
+                const p: any = q.person;
+                safePerson = {
+                    name: p.name,
+                    description: p.description,
+                    links: Array.isArray(p.links)
+                        ? p.links.filter((l: any) => l.isVisible).map((l: any) => ({ url: l.url, type: l.type }))
+                        : []
+                };
+            }
+
             return {
                 id: q._id,
                 text: q.text,
@@ -173,8 +186,9 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                 sourceUrl: q.sourceUrl,
                 context: q.context,
                 analysisContext: q.analysisContext, // Include analysis context
-                links: q.links || q.metadata?.links, // Include links
-                person: q.person,
+
+                links: q.links || q.metadata?.links, // Include quote-specific links
+                person: safePerson, // Use sanitized person
                 analysis: analysisSummary
             };
         });
@@ -216,7 +230,7 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
         // --- CACHE LOGIC END ---
 
         const quote = await Quote.findOne({ _id: id, visibility: 'public' })
-            .populate('person', 'name description')
+            .populate('person', 'name description links')
             .lean();
 
         if (!quote) {
@@ -257,6 +271,19 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
             analysisSummary.verdict = q.metadata.verdict || 'N/A';
         }
 
+        // Securely filter person links
+        let safePerson = null;
+        if (q.person && typeof q.person === 'object') {
+            const p: any = q.person;
+            safePerson = {
+                name: p.name,
+                description: p.description,
+                links: Array.isArray(p.links)
+                    ? p.links.filter((l: any) => l.isVisible).map((l: any) => ({ url: l.url, type: l.type }))
+                    : []
+            };
+        }
+
         const sanitizedQuote = {
             id: q._id,
             text: q.text,
@@ -266,7 +293,7 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
             context: q.context,
             analysisContext: q.analysisContext,
             links: q.links || q.metadata?.links,
-            person: q.person,
+            person: safePerson,
             analysis: analysisSummary
         };
 

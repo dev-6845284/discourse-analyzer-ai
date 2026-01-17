@@ -136,7 +136,7 @@ export const getOrCreatePersonByName = async (
 
 export const createPerson = async (req: Request, res: Response) => {
   try {
-    const { name, firstname, surname, aliases, description } = req.body;
+    const { name, firstname, surname, aliases, links, description } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -147,6 +147,7 @@ export const createPerson = async (req: Request, res: Response) => {
       firstname,
       surname,
       aliases: aliases || [],
+      links: links || [],
       description,
     });
 
@@ -201,7 +202,7 @@ export const getPeople = async (req: Request, res: Response) => {
 export const updatePerson = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, firstname, surname, aliases, description } = req.body;
+    const { name, firstname, surname, aliases, links, description } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
@@ -216,6 +217,7 @@ export const updatePerson = async (req: Request, res: Response) => {
         firstname,
         surname,
         aliases: aliases || [],
+        links: links || [],
         description,
       },
       { new: true, runValidators: true }
