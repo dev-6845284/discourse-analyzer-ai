@@ -124,7 +124,7 @@ const EditQuoteModal: React.FC<EditQuoteModalProps> = ({ isOpen, onClose, onSave
             date,
             languageCode,
             languageName: SUPPORTED_LANGUAGES.find(l => l.code === languageCode)?.name || quote.languageName,
-            person: personId || undefined, // If empty, undefined? Or keep as is? stored quotes usually have personId
+            person: personId === '' ? quote.person : personId, // Keep existing person if personId is empty
             personName,
             metadata: {
                 ...quote.metadata,
