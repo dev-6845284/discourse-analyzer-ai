@@ -253,6 +253,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         text: updatedQuote.text,
         person: typeof updatedQuote.person === 'object' ? (updatedQuote.person as Person)._id : updatedQuote.person,
         sourceUrl: updatedQuote.source,
+        analysisContext: updatedQuote.analysisContext,
         date: updatedQuote.date,
         metadata: {
           ...updatedQuote.metadata,
