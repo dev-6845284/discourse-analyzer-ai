@@ -175,7 +175,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             </button>
           )}
 
-          {/* Edit button placeholder for future use */}
+          {/* Edit button */}
           <button
             onClick={onEdit}
             disabled={isBusy}

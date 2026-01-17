@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Quote, Person, QuoteUpdatePayload } from '../types';
+import { Quote, Person, QuoteUpdatePayload, AuditCategory } from '../types';
 import QuoteCard from './QuoteCard';
 import Spinner from './Spinner';
+import EditQuoteModal from './EditQuoteModal';
 import { useI18n } from '../i18n';
 
 /*
@@ -34,6 +35,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
 
   const overrides = useMemo(() => {
     return selectedPerson ? { personId: selectedPerson._id } : {};
@@ -236,6 +238,49 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
     }
   };
 
+  const handleEdit = (quote: Quote) => {
+    setEditingQuote(quote);
+  };
+
+  const handleSaveEdit = async (updatedQuote: Quote) => {
+    setIsLoading(true);
+    try {
+      // Optimistic update
+      setQuotes(prev => prev.map(q => q.id === updatedQuote.id ? updatedQuote : q));
+
+      const updatePayload: QuoteUpdatePayload = {
+        text: updatedQuote.text,
+        person: typeof updatedQuote.person === 'object' ? (updatedQuote.person as Person)._id : updatedQuote.person,
+        sourceUrl: updatedQuote.source,
+        date: updatedQuote.date,
+        metadata: {
+          ...updatedQuote.metadata,
+          title: updatedQuote.title
+        },
+        // Audit fields if present
+        ...(updatedQuote.audit ? {
+          analyzedByProvider: updatedQuote.analyzedByProvider, // Preserve provider if not changed
+          analyzedAt: updatedQuote.analyzedAt
+        } : {})
+      };
+
+      if (updatedQuote.audit) {
+        updatePayload.metadata = {
+          ...updatePayload.metadata,
+          audit: updatedQuote.audit
+        };
+      }
+
+      await updateQuote(updatedQuote.id!, updatePayload);
+      setEditingQuote(null);
+    } catch (err) {
+      console.error('Failed to update quote:', err);
+      setError('Failed to save quote changes.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDelete = async (quote: Quote) => {
     if (!window.confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
       return;
@@ -382,6 +427,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
               onAccept={handleAccept}
               onDiscard={handleDiscard}
               onDelete={handleDelete}
+              onEdit={handleEdit}
 
               onVisibilityChange={handleVisibilityChange}
               isApiKeySet={isApiKeySet}
@@ -391,6 +437,15 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
             />
           ))}
         </div>
+      )}
+
+      {editingQuote && (
+        <EditQuoteModal
+          isOpen={true}
+          onClose={() => setEditingQuote(null)}
+          onSave={handleSaveEdit}
+          quote={editingQuote}
+        />
       )}
     </div>
   );

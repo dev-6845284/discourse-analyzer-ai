@@ -526,6 +526,11 @@ const en = {
 
   // Generic small actions
   edit: 'Edit',
+  editQuote: 'Edit Quote',
+  quoteText: 'Quote Text',
+  analysis: 'Analysis',
+  rationale: 'Rationale',
+  evidence: 'Evidence',
   delete: 'Delete',
 
   blockIPTitle: 'Block an IP Address',

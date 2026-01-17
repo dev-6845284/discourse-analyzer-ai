@@ -21,6 +21,7 @@ interface QuoteCardProps {
   onDiscard?: (quote: Quote) => void;
   onDelete?: (quote: Quote) => void;
   onRemove?: (quote: Quote) => void;
+  onEdit?: (quote: Quote) => void;
 
   isApiKeySet: boolean;
   hideSaveButton?: boolean;
@@ -39,6 +40,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   onDiscard,
   onDelete,
   onRemove,
+  onEdit,
   isApiKeySet,
   hideSaveButton,
   selectedAI,
@@ -242,6 +244,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             onDiscard={() => onDiscard && onDiscard(quote)}
             onDelete={() => onDelete && onDelete(quote)}
             onRemove={() => onRemove && onRemove(quote)}
+            onEdit={() => onEdit && onEdit(quote)}
 
             onVisibilityChange={onVisibilityChange}
           />
