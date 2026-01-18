@@ -139,15 +139,53 @@ export function useAppController() {
       importQuotesFromFile(
         file,
         (data: ExportData) => {
-          searchParams.setPersonName(data.personName);
-          quotesState.handleLoadQuotes(data);
+          uiState.openImportQuoteModal(data);
         },
         (errorMessage: string) => {
           alert(errorMessage);
         }
       );
     }
-  }, [quotesState, searchParams]);
+  }, [uiState]);
+
+  const handleImportConfirm = React.useCallback(async (person: Person | null) => {
+    if (!uiState.importQuoteData || !person) return;
+
+    try {
+      const quotesToImport = uiState.importQuoteData.quotes;
+      const total = quotesToImport.length;
+      let processed = 0;
+      setExtractionStatus(`Importing 0/${total} quotes...`);
+
+      // Use sequential processing for imports. 
+      // While slightly slower than parallel, it guarantees that if a new person needs to be created, 
+      // it happens only once (the first quote creates it, subsequent quotes find it).
+      // This avoids race conditions and duplicate person records in the backend.
+      for (const q of quotesToImport) {
+        const newQuote = {
+          ...q,
+          id: undefined, // Clear IDs to ensure new creation
+          _id: undefined,
+          person: person._id || person.name,
+          personName: person.name,
+          isStored: false, // Ensure it's treated as new to be stored
+        };
+
+        await saveQuote(newQuote);
+        processed++;
+        setExtractionStatus(`Importing ${processed}/${total} quotes...`);
+      }
+
+      alert(t('importSuccess', { count: total }));
+      uiState.closeImportQuoteModal();
+      setStoredQuotesRefreshTrigger(prev => prev + 1);
+      setResultsTab('stored');
+      searchParams.setPersonName(person.name); // Switch view to that person
+    } catch (error) {
+      console.error('Import failed', error);
+      alert('Failed to import some quotes. Please check console.');
+    }
+  }, [uiState, searchParams, t, setStoredQuotesRefreshTrigger, setResultsTab]);
 
   const handleSearch = React.useCallback(() => {
     setResultsTab('new');
@@ -525,6 +563,7 @@ export function useAppController() {
     handleFetchYoutubeTranscript,
     handleImportTranscript,
     handleImportAnalysis,
+    handleImportConfirm,
     openChangePasswordModal,
     openEditProfileModal,
     handleResumeSession,

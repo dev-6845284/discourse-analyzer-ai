@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { ExportData } from '../types';
 
 export interface TranscriptSegment {
   start: number;
@@ -29,6 +30,9 @@ export function useUIState() {
   const [isTranscriptViewerOpen, setIsTranscriptViewerOpen] = useState<boolean>(false);
   const [transcriptData, setTranscriptData] = useState<TranscriptData | null>(null);
 
+  const [isImportQuoteModalOpen, setIsImportQuoteModalOpen] = useState<boolean>(false);
+  const [importQuoteData, setImportQuoteData] = useState<ExportData | null>(null);
+
   const toggleFormCollapsed = useCallback(() => {
     setIsFormCollapsed((prev) => !prev);
   }, []);
@@ -55,6 +59,16 @@ export function useUIState() {
     setTranscriptData(prev => prev ? { ...prev, sessionId } : null);
   }, []);
 
+  const openImportQuoteModal = useCallback((data: ExportData) => {
+    setImportQuoteData(data);
+    setIsImportQuoteModalOpen(true);
+  }, []);
+
+  const closeImportQuoteModal = useCallback(() => {
+    setIsImportQuoteModalOpen(false);
+    setImportQuoteData(null);
+  }, []);
+
   return {
     isFormCollapsed,
     setIsFormCollapsed,
@@ -67,5 +81,9 @@ export function useUIState() {
     openTranscriptViewer,
     closeTranscriptViewer,
     updateTranscriptSessionId,
+    isImportQuoteModalOpen,
+    importQuoteData,
+    openImportQuoteModal,
+    closeImportQuoteModal,
   };
 }
