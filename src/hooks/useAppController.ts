@@ -155,34 +155,26 @@ export function useAppController() {
       const quotesToImport = uiState.importQuoteData.quotes;
       const total = quotesToImport.length;
       let processed = 0;
+      setExtractionStatus(`Importing 0/${total} quotes...`);
 
-      // Process sequentially to be safe, or parallel?
-      // Parallel is faster.
-      await Promise.all(quotesToImport.map(async (q) => {
+      // Use sequential processing for imports. 
+      // While slightly slower than parallel, it guarantees that if a new person needs to be created, 
+      // it happens only once (the first quote creates it, subsequent quotes find it).
+      // This avoids race conditions and duplicate person records in the backend.
+      for (const q of quotesToImport) {
         const newQuote = {
           ...q,
           id: undefined, // Clear IDs to ensure new creation
           _id: undefined,
-          person: person._id || person.name, // Use ID if existing, otherwise name which backend should handle (or we trust saveQuote logic)
+          person: person._id || person.name,
           personName: person.name,
           isStored: false, // Ensure it's treated as new to be stored
         };
 
-        // If person has no _id, it means we might be creating a new person for EACH quote?
-        // Ideally backend handles "if person name exists, use it, else create".
-        // Assuming saveQuote handles this.
-
-        // However, if we are importing 100 quotes for a NEW person, 
-        // parallel requests might create 100 duplicates of that person if not handled carefully in backend.
-        // It might be safer to create the person FIRST if it's new, but that requires a separate API call.
-        // For now, let's assume the backend handles lookup-or-create correctly or we risk it.
-        // Best practice: if person._id is missing, create person once, then use ID.
-        // But we don't have easy createPerson API exposed here handy without looking.
-        // Let's rely on standard saveQuote behavior for now, or use sequential to reduce race condition risk.
-
         await saveQuote(newQuote);
         processed++;
-      }));
+        setExtractionStatus(`Importing ${processed}/${total} quotes...`);
+      }
 
       alert(t('importSuccess', { count: total }));
       uiState.closeImportQuoteModal();
@@ -193,7 +185,7 @@ export function useAppController() {
       console.error('Import failed', error);
       alert('Failed to import some quotes. Please check console.');
     }
-  }, [uiState, searchParams]);
+  }, [uiState, searchParams, t, setStoredQuotesRefreshTrigger, setResultsTab]);
 
   const handleSearch = React.useCallback(() => {
     setResultsTab('new');

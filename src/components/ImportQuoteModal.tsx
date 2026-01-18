@@ -23,9 +23,17 @@ const ImportQuoteModal: React.FC<ImportQuoteModalProps> = ({
     const [personName, setPersonName] = useState<string>('');
 
     useEffect(() => {
+        if (!isOpen) {
+            setSelectedPerson(null);
+            setPersonName('');
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
         if (importData) {
             setPersonName(importData.personName || '');
-            // Note: We don't have the Person object ID here unless we search for it.
+            // Initialize with the name from import data. PersonSelector will handle
+            // matching this name to an existing person or allowing a new one to be created.
             // But PersonSelector might handle finding it by name if passed initially? 
             // Actually PersonSelector takes `value` (string name) and `onSelectPerson`.
             // It will display matching person.
@@ -38,7 +46,12 @@ const ImportQuoteModal: React.FC<ImportQuoteModalProps> = ({
     const handleConfirm = () => {
         // If no person selected from DB but name entered, pass a mock person object with just name
         // The handler in controller will deal with creating or using existing.
-        const finalPerson = selectedPerson || { name: personName };
+        const finalPerson: Person = selectedPerson || {
+            name: personName,
+            aliases: [],
+            links: [],
+            metadata: {}
+        };
         onConfirm(finalPerson);
     };
 

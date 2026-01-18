@@ -3,6 +3,7 @@ import { Quote } from '../../types';
 import Spinner from '../Spinner';
 import { useI18n } from '../../i18n';
 import { exportQuotesToFile } from '../../utils/file';
+import { Toast } from '../ui/Toast';
 
 interface QuoteCardActionsProps {
   quote: Quote;
@@ -38,7 +39,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   onAccept,
   onDiscard,
   onDelete,
-  onRemove, // Kept one
+  onRemove,
   onEdit,
   userRole,
   onVisibilityChange,
@@ -46,6 +47,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   const { t } = useI18n();
   const [analysisType, setAnalysisType] = React.useState<'audit' | 'flaws'>('audit');
   const [localSelectedAI, setLocalSelectedAI] = React.useState<string>(selectedAI);
+  const [showToast, setShowToast] = React.useState(false);
 
   React.useEffect(() => {
     setLocalSelectedAI(selectedAI);
@@ -62,9 +64,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
         quotes: [quote],
       };
       await navigator.clipboard.writeText(JSON.stringify(dataToExport, null, 2));
-      // Optional: Visual feedback could be added here, but for now specific feedback isn't requested beyond functionality
-      // We could use a temporary "Copied!" state for the button label if desired, but sticking to simple implementation first.
-      alert(t('copied'));
+      setShowToast(true);
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
@@ -281,6 +281,13 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             </button>
           )}
         </>
+      )}
+
+      {showToast && (
+        <Toast
+          message={t('copied')}
+          onClose={() => setShowToast(false)}
+        />
       )}
     </div>
   );

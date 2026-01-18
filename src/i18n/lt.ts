@@ -79,6 +79,8 @@ const lt = {
   exportTitle: 'Eksportuoti dabartines citatas į JSON failą',
   import: 'Importuoti',
   importTitle: 'Importuoti citatas iš JSON failo',
+  exportToJSON: 'Eksportuoti į JSON',
+  importFromJSON: 'Importuoti iš JSON',
   showControls: 'Rodyti',
   hideControls: 'Slėpti',
   controls: 'Valdikliai',
