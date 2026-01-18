@@ -94,38 +94,46 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
             return d.toISOString().split('T')[0];
         };
 
+        // Helper to ensure from <= to
+        const ensureOrder = (from: Date, to: Date) => {
+            if (from > to) {
+                return { from: formatDateOnly(to), to: formatDateOnly(from) };
+            }
+            return { from: formatDateOnly(from), to: formatDateOnly(to) };
+        };
+
         switch (timePeriod) {
             case 'day': {
                 const from = new Date(today);
                 from.setDate(from.getDate() - 1);
-                return { from: formatDateOnly(from), to: formatDateOnly(today) };
+                return ensureOrder(from, today);
             }
             case 'week': {
                 const from = new Date(today);
                 from.setDate(from.getDate() - 7);
-                return { from: formatDateOnly(from), to: formatDateOnly(today) };
+                return ensureOrder(from, today);
             }
             case 'month': {
                 const from = new Date(today);
                 from.setMonth(from.getMonth() - 1);
-                return { from: formatDateOnly(from), to: formatDateOnly(today) };
+                return ensureOrder(from, today);
             }
             case 'year': {
                 const from = new Date(today);
                 from.setFullYear(from.getFullYear() - 1);
-                return { from: formatDateOnly(from), to: formatDateOnly(today) };
+                return ensureOrder(from, today);
             }
             case 'dateRange': {
                 // From: first day of the selected month
                 const from = new Date(monthFromYear, monthFromMonth, 1);
                 // To: last day of the selected month
                 const to = new Date(monthToYear, monthToMonth + 1, 0);
-                return { from: formatDateOnly(from), to: formatDateOnly(to) };
+                return ensureOrder(from, to);
             }
             case 'yearRange': {
                 const from = new Date(yearFrom, 0, 1);
                 const to = new Date(yearTo, 11, 31);
-                return { from: formatDateOnly(from), to: formatDateOnly(to) };
+                return ensureOrder(from, to);
             }
             default:
                 return {};
@@ -171,16 +179,15 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
         }
     }, [sortField, sortOrder, selectedPersonId, getDateRange, onLogout, t]);
 
-    // Initial fetch
+    // Initial fetch (people only)
     useEffect(() => {
-        fetchQuotes();
         fetchPeople();
-    }, []);
+    }, [fetchPeople]);
 
     // Refetch when filters change
     useEffect(() => {
         fetchQuotes();
-    }, [sortField, sortOrder, selectedPersonId, timePeriod, monthFromMonth, monthFromYear, monthToMonth, monthToYear, yearFrom, yearTo]);
+    }, [sortField, sortOrder, selectedPersonId, getDateRange]);
 
     // Clear all filters
     const clearFilters = () => {
