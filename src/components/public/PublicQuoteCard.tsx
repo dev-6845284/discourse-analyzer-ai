@@ -44,6 +44,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
     const [isExpanded, setIsExpanded] = useState(false);
     const [isAnalysisExpanded, setIsAnalysisExpanded] = useState(true);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isAnalysisContextExpanded, setIsAnalysisContextExpanded] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const prevHeightRef = useRef<number | null>(null);
 
@@ -325,9 +326,38 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
 
                         {/* Analysis Context (AI provided) */}
                         {quote.analysisContext && (
-                            <div id={`quote-analysis-context-${quote.id}`} className="text-[11px] md:text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/20 p-2 rounded-lg text-left">
-                                <span className="font-semibold uppercase tracking-tighter text-[10px] block text-gray-500 mb-0.5">{t('contextLabelShort')}</span>
-                                {quote.analysisContext}
+                            <div className="bg-gray-100 dark:bg-gray-900/20 rounded-lg overflow-hidden transition-colors">
+                                <button
+                                    onClick={() => setIsAnalysisContextExpanded(!isAnalysisContextExpanded)}
+                                    className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors group gap-3"
+                                >
+                                    <div className="flex items-center gap-2 overflow-hidden flex-1">
+                                        <span className="font-semibold uppercase tracking-tighter text-[10px] text-gray-500 shrink-0">
+                                            {t('contextLabelShort') || 'Context'}
+                                        </span>
+                                        {!isAnalysisContextExpanded && (
+                                            <span
+                                                className="text-[10px] text-gray-500/70 dark:text-gray-400/70 whitespace-nowrap overflow-hidden"
+                                                style={{ maskImage: 'linear-gradient(to right, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)' }}
+                                            >
+                                                {quote.analysisContext}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1 text-gray-400 group-hover:text-cyan-500 transition-colors shrink-0">
+                                        <span className="text-[9px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {isAnalysisContextExpanded ? (t('hide') || 'Hide') : (t('show') || 'Show')}
+                                        </span>
+                                        {isAnalysisContextExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                    </div>
+                                </button>
+                                {isAnalysisContextExpanded && (
+                                    <div id={`quote-analysis-context-${quote.id}`} className="px-3 pb-3 pt-1 text-[11px] md:text-xs text-gray-600 dark:text-gray-400 text-left animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <div className="border-t border-gray-200 dark:border-gray-700/50 pt-2">
+                                            {quote.analysisContext}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
