@@ -1,3 +1,9 @@
+/**
+ * @AI_INSTRUCTION: PUBLIC API CACHING RULE
+ * All public API requests in this file MUST be cached in Redis using publicQuotesCache.
+ * This is critical for performance and scalability.
+ * See .agent/rules/caching.md for more details.
+ */
 import express from 'express';
 import { verifyTurnstileToken } from '../services/turnstileService';
 import Quote from '../models/Quote';
@@ -8,6 +14,16 @@ import { isProduction, isLocal, isTest } from '../constants/env';
 import { publicQuotesCache } from '../services/publicQuotesCache';
 
 const router = express.Router();
+
+// Cache TTL Configuration (in seconds)
+const CACHE_TTL_CONFIG = {
+    // TTL for "recent" data - no date filter or short time ranges (e.g., last 24 hours)
+    RECENT_DATA_TTL: 300, // 5 minutes
+    // TTL for "historical" data - longer time ranges that change less frequently
+    HISTORICAL_DATA_TTL: 3600, // 1 hour
+    // Threshold in milliseconds - if date range is within this, use RECENT_DATA_TTL
+    RECENT_THRESHOLD_MS: 2 * 24 * 60 * 60 * 1000, // 2 days
+};
 
 // Public Login (Turnstile Verification)
 router.post('/login', generalRateLimiter, async (req, res) => {
@@ -20,7 +36,12 @@ router.post('/login', generalRateLimiter, async (req, res) => {
         return res.status(400).json({ message: 'Turnstile token is required' });
     }
 
-    const isValid = await verifyTurnstileToken(token, ip);
+    // Securely handle development bypass
+    // Only enabled if explicitly configured via env var AND in local environment
+    const isBypassEnabled = process.env.ENABLE_TURNSTILE_BYPASS === 'true';
+    const isDevBypass = isBypassEnabled && isLocal() && token === 'dev-bypass-token';
+
+    const isValid = isDevBypass || await verifyTurnstileToken(token, ip);
 
     if (!isValid) {
         console.warn('[PUBLIC_LOGIN_FAILED]', { ip });
@@ -87,25 +108,47 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
             query.$text = { $search: text.trim() };
         }
 
-        if (dateFrom || dateTo) {
+        // Normalize dates to date-only format for cache consistency
+        // This ensures all users get the same cache key regardless of their local time
+        const normalizeDateString = (dateStr: string): string => {
+            // Extract just YYYY-MM-DD, ignoring any time component
+            return dateStr.split('T')[0];
+        };
+
+        // Normalized date strings for cache key (date-only, no time)
+        const normalizedDateFrom = dateFrom ? normalizeDateString(dateFrom as string) : undefined;
+        const normalizedDateTo = dateTo ? normalizeDateString(dateTo as string) : undefined;
+
+        if (normalizedDateFrom || normalizedDateTo) {
             query.date = {};
-            if (dateFrom) query.date.$gte = new Date(dateFrom as string);
-            if (dateTo) query.date.$lte = new Date(dateTo as string);
+            // For query: 'from' date starts at midnight, 'to' date ends at 23:59:59
+            if (normalizedDateFrom) {
+                query.date.$gte = new Date(normalizedDateFrom + 'T00:00:00.000Z');
+            }
+            if (normalizedDateTo) {
+                query.date.$lte = new Date(normalizedDateTo + 'T23:59:59.999Z');
+            }
         }
 
-        const sortConfig: any = { [sortField as string]: sortOrder === 'oldest' ? 1 : -1 };
+        // Allow sorting by savedAt (default), date (publication), or analyzedAt
+        const allowedSortFields = ['savedAt', 'date', 'analyzedAt'];
+        const sanitizedSortField = allowedSortFields.includes(sortField as string) ? sortField : 'savedAt';
+        const sortConfig: any = { [sanitizedSortField as string]: sortOrder === 'oldest' ? 1 : -1 };
+
+        // Limit for optimal caching
+        const QUOTES_LIMIT = 50;
 
         // --- CACHE LOGIC START ---
         // Create a unique cache key based on the query parameters
-        // We hash the query object to ensure consistency
+        // Use normalized date strings (date-only) for cache key to ensure all users share the same cache
         const cacheKeyParams = {
             personId,
             text,
-            dateFrom,
-            dateTo,
-            sortField,
+            dateFrom: normalizedDateFrom,  // Use normalized date-only string
+            dateTo: normalizedDateTo,      // Use normalized date-only string
+            sortField: sanitizedSortField,
             sortOrder,
-            query: JSON.stringify(query) // Include constructed query for safety
+            limit: QUOTES_LIMIT,
         };
         const crypto = require('crypto');
         const hash = crypto.createHash('sha256').update(JSON.stringify(cacheKeyParams)).digest('hex');
@@ -122,8 +165,9 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
         // --- CACHE LOGIC END ---
 
         const quotes = await Quote.find(query)
-            .populate('person', 'name description') // Only fetch name and description
+            .populate('person', 'name description links') // Fetch links to filter them later
             .sort(sortConfig)
+            .limit(QUOTES_LIMIT)
             .lean(); // Use lean for better performance and to return plain objects
 
         // Sanitize and Map Response
@@ -165,6 +209,19 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                 analysisSummary.verdict = q.metadata.verdict || 'N/A';
             }
 
+            // Securely filter person links
+            let safePerson = null;
+            if (q.person && typeof q.person === 'object') {
+                const p: any = q.person;
+                safePerson = {
+                    name: p.name,
+                    description: p.description,
+                    links: Array.isArray(p.links)
+                        ? p.links.filter((l: any) => l.isVisible).map((l: any) => ({ url: l.url, type: l.type }))
+                        : []
+                };
+            }
+
             return {
                 id: q._id,
                 text: q.text,
@@ -173,19 +230,78 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                 sourceUrl: q.sourceUrl,
                 context: q.context,
                 analysisContext: q.analysisContext, // Include analysis context
-                links: q.links || q.metadata?.links, // Include links
-                person: q.person,
+
+                links: q.links || q.metadata?.links, // Include quote-specific links
+                person: safePerson, // Use sanitized person
                 analysis: analysisSummary
             };
         });
 
-        // Save to cache (TTL: 5 minutes)
-        await publicQuotesCache.set(cacheKey, sanitizedQuotes, { ttl: 300 });
+        // Determine cache TTL based on date range
+        // Use shorter TTL for "recent" data (no date filter or last 24-48 hours)
+        // Use longer TTL for "historical" data (older date ranges)
+        let cacheTTL = CACHE_TTL_CONFIG.RECENT_DATA_TTL;
+
+        if (normalizedDateFrom) {
+            const dateFromMs = new Date(normalizedDateFrom + 'T00:00:00.000Z').getTime();
+            const now = Date.now();
+            const rangeMs = now - dateFromMs;
+
+            // If the date range starts more than 2 days ago, use historical TTL
+            if (rangeMs > CACHE_TTL_CONFIG.RECENT_THRESHOLD_MS) {
+                cacheTTL = CACHE_TTL_CONFIG.HISTORICAL_DATA_TTL;
+            }
+        }
+
+        // Save to cache with dynamic TTL
+        await publicQuotesCache.set(cacheKey, sanitizedQuotes, { ttl: cacheTTL });
 
         res.json(sanitizedQuotes);
     } catch (error: any) {
         console.error('[PUBLIC_QUOTES_ERROR]', error);
         res.status(500).json({ message: 'Failed to fetch quotes' });
+    }
+});
+
+// Public People API - Get people who have public quotes
+router.get('/people', ensurePublicOrAuth, async (req, res) => {
+    const cacheKey = 'people:public';
+
+    try {
+        // Try to get from cache
+        const cachedResults = await publicQuotesCache.get(cacheKey);
+        if (cachedResults) {
+            console.log('[PUBLIC_PEOPLE] Cache HIT', { cacheKey });
+            return res.json(cachedResults);
+        }
+
+        console.log('[PUBLIC_PEOPLE] Cache MISS', { cacheKey });
+
+        // Find distinct person IDs from public quotes
+        const personIds = await Quote.distinct('person', {
+            visibility: 'public',
+            isDeprecated: { $ne: true }
+        });
+
+        // Get person details
+        const Person = mongoose.model('Person');
+        const people = await Person.find(
+            { _id: { $in: personIds } },
+            { _id: 1, name: 1 }
+        ).sort({ name: 1 }).lean();
+
+        const sanitizedPeople = people.map((p: any) => ({
+            id: p._id,
+            name: p.name
+        }));
+
+        // Save to cache (TTL: 5 minutes)
+        await publicQuotesCache.set(cacheKey, sanitizedPeople, { ttl: 300 });
+
+        res.json(sanitizedPeople);
+    } catch (error: any) {
+        console.error('[PUBLIC_PEOPLE_ERROR]', error);
+        res.status(500).json({ message: 'Failed to fetch people' });
     }
 });
 
@@ -216,7 +332,7 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
         // --- CACHE LOGIC END ---
 
         const quote = await Quote.findOne({ _id: id, visibility: 'public' })
-            .populate('person', 'name description')
+            .populate('person', 'name description links')
             .lean();
 
         if (!quote) {
@@ -257,6 +373,19 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
             analysisSummary.verdict = q.metadata.verdict || 'N/A';
         }
 
+        // Securely filter person links
+        let safePerson = null;
+        if (q.person && typeof q.person === 'object') {
+            const p: any = q.person;
+            safePerson = {
+                name: p.name,
+                description: p.description,
+                links: Array.isArray(p.links)
+                    ? p.links.filter((l: any) => l.isVisible).map((l: any) => ({ url: l.url, type: l.type }))
+                    : []
+            };
+        }
+
         const sanitizedQuote = {
             id: q._id,
             text: q.text,
@@ -266,7 +395,7 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
             context: q.context,
             analysisContext: q.analysisContext,
             links: q.links || q.metadata?.links,
-            person: q.person,
+            person: safePerson,
             analysis: analysisSummary
         };
 

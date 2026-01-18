@@ -11,6 +11,10 @@ interface PublicLandingProps {
     onOpenLogin?: () => void;
 }
 
+// Securely handle development bypass
+// Only enabled if explicitly configured via env var AND in development mode
+const DEV_BYPASS_TURNSTILE = import.meta.env.VITE_ENABLE_TURNSTILE_BYPASS === 'true' && import.meta.env.DEV;
+
 export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, onOpenLogin }) => {
     const { t } = useI18n();
     const [error, setError] = useState<string | null>(null);
@@ -31,6 +35,13 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, on
             setIsValidating(false);
         }
     };
+
+    // Auto-bypass Turnstile during development if configured
+    React.useEffect(() => {
+        if (DEV_BYPASS_TURNSTILE) {
+            handleTurnstileVerify('dev-bypass-token');
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4 relative transition-colors duration-300">

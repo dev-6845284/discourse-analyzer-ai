@@ -12,11 +12,11 @@ interface PersonFormProps {
 export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const { t } = useI18n();
   const [formData, setFormData] = useState({
-
     name: initialData?.name || '',
     firstname: initialData?.firstname || '',
     surname: initialData?.surname || '',
     aliases: initialData?.aliases?.join(', ') || '',
+    links: initialData?.links || [],
     description: initialData?.description || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,30 +36,63 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         aliases: finalAliases,
       });
       if (!initialData) {
-        setFormData({ name: '', firstname: '', surname: '', aliases: '', description: '' });
+        setFormData({ name: '', firstname: '', surname: '', aliases: '', links: [], description: '' });
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    let newFormData = { ...formData, name: value };
+
+    const words = value.trim().split(/\s+/);
+    if (words.length === 2 && !initialData) {
+      newFormData = {
+        ...newFormData,
+        firstname: words[0],
+        surname: words[1],
+        aliases: value
+      };
+    }
+    setFormData(newFormData);
+  };
+
+  const addLink = () => {
+    setFormData({
+      ...formData,
+      links: [...formData.links, { url: '', type: 'custom', isVisible: false }]
+    });
+  };
+
+  const removeLink = (index: number) => {
+    const newLinks = [...formData.links];
+    newLinks.splice(index, 1);
+    setFormData({ ...formData, links: newLinks });
+  };
+
+  const updateLink = (index: number, field: keyof typeof formData.links[0], value: any) => {
+    const newLinks = [...formData.links];
+    newLinks[index] = { ...newLinks[index], [field]: value };
+    setFormData({ ...formData, links: newLinks });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-800 rounded-lg shadow">
       <div>
         <label className="block text-sm font-medium text-gray-300">{t('fullNameRequired')}</label>
-
         <input
           type="text"
           required
           value={formData.name}
-          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          onChange={handleNameChange}
           className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-300">{t('firstName')}</label>
-
           <input
             type="text"
             value={formData.firstname}
@@ -69,7 +102,6 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-300">{t('surname')}</label>
-
           <input
             type="text"
             value={formData.surname}
@@ -82,7 +114,6 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         <label className="block text-sm font-medium text-gray-300">
           {t('aliasesLabel')} <span className="text-gray-500 text-xs">{t('autoFilledFromName')}</span>
         </label>
-
         <input
           type="text"
           value={formData.aliases}
@@ -90,9 +121,59 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
           className="mt-1 block w-full rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Social Links</label>
+        <div className="space-y-2">
+          {formData.links.map((link, index) => (
+            <div key={index} className="flex items-center space-x-2 bg-gray-700 p-2 rounded">
+              <select
+                value={link.type}
+                onChange={(e) => updateLink(index, 'type', e.target.value)}
+                className="bg-gray-600 text-white text-sm rounded border-gray-500 p-1"
+              >
+                <option value="facebook">Facebook</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="custom">Custom</option>
+              </select>
+              <input
+                type="text"
+                value={link.url}
+                onChange={(e) => updateLink(index, 'url', e.target.value)}
+                placeholder="URL"
+                className="flex-1 bg-gray-600 text-white text-sm rounded border-gray-500 p-1"
+              />
+              <label className="flex items-center space-x-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={link.isVisible}
+                  onChange={(e) => updateLink(index, 'isVisible', e.target.checked)}
+                  className="rounded border-gray-500 bg-gray-600 text-cyan-500 focus:ring-cyan-500"
+                />
+                <span className="text-xs text-gray-300">Public</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => removeLink(index)}
+                className="text-red-400 hover:text-red-300 px-1"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addLink}
+            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center"
+          >
+            + Add Link
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-300">{t('description')}</label>
-
         <textarea
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -108,7 +189,6 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         >
           {t('cancel')}
         </button>
-
         <button
           type="submit"
           disabled={isSubmitting}
@@ -116,7 +196,6 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
         >
           {isSubmitting ? t('saving') : (initialData ? t('updatePerson') : t('savePerson'))}
         </button>
-
       </div>
     </form>
   );

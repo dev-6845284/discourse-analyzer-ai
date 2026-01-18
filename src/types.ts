@@ -219,12 +219,19 @@ export interface ExportData {
   quotes: Quote[];
 }
 
+export interface PersonLink {
+  url: string;
+  type: 'facebook' | 'tiktok' | 'instagram' | 'custom';
+  isVisible: boolean;
+}
+
 export interface Person {
   _id?: string;
   name: string;
   firstname?: string;
   surname?: string;
   aliases?: string[];
+  links?: PersonLink[];
   description?: string;
   metadata?: Record<string, any>;
   createdAt?: string;
