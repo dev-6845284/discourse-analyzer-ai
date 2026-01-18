@@ -320,6 +320,14 @@ const en = {
   updatePerson: 'Update Person',
   savePerson: 'Save Person',
   autoFilledFromName: '(Auto-filled from name if empty)',
+  socialLinks: 'Social Links',
+  addLink: '+ Add Link',
+  public: 'Public',
+  linkType_facebook: 'Facebook',
+  linkType_tiktok: 'TikTok',
+  linkType_instagram: 'Instagram',
+  linkType_custom: 'Custom',
+  urlPlaceholder: 'URL',
 
   // Category translations
   // Legacy AnalysisCategory

@@ -123,7 +123,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Social Links</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">{t('socialLinks')}</label>
         <div className="space-y-2">
           {formData.links.map((link, index) => (
             <div key={index} className="flex items-center space-x-2 bg-gray-700 p-2 rounded">
@@ -132,16 +132,16 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
                 onChange={(e) => updateLink(index, 'type', e.target.value)}
                 className="bg-gray-600 text-white text-sm rounded border-gray-500 p-1"
               >
-                <option value="facebook">Facebook</option>
-                <option value="tiktok">TikTok</option>
-                <option value="instagram">Instagram</option>
-                <option value="custom">Custom</option>
+                <option value="facebook">{t('linkType_facebook')}</option>
+                <option value="tiktok">{t('linkType_tiktok')}</option>
+                <option value="instagram">{t('linkType_instagram')}</option>
+                <option value="custom">{t('linkType_custom')}</option>
               </select>
               <input
                 type="text"
                 value={link.url}
                 onChange={(e) => updateLink(index, 'url', e.target.value)}
-                placeholder="URL"
+                placeholder={t('urlPlaceholder')}
                 className="flex-1 bg-gray-600 text-white text-sm rounded border-gray-500 p-1"
               />
               <label className="flex items-center space-x-1 cursor-pointer">
@@ -151,7 +151,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
                   onChange={(e) => updateLink(index, 'isVisible', e.target.checked)}
                   className="rounded border-gray-500 bg-gray-600 text-cyan-500 focus:ring-cyan-500"
                 />
-                <span className="text-xs text-gray-300">Public</span>
+                <span className="text-xs text-gray-300">{t('public')}</span>
               </label>
               <button
                 type="button"
@@ -167,7 +167,7 @@ export const PersonForm: React.FC<PersonFormProps> = ({ initialData, onSubmit, o
             onClick={addLink}
             className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center"
           >
-            + Add Link
+            {t('addLink')}
           </button>
         </div>
       </div>
