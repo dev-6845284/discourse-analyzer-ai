@@ -334,6 +334,14 @@ const lt = {
   updatePerson: 'Atnaujinti asmenį',
   savePerson: 'Išsaugoti asmenį',
   autoFilledFromName: '(Bus užpildyta automatiškai iš vardo, jei tuščia)',
+  socialLinks: 'Socialiniai tinklai',
+  addLink: '+ Pridėti nuorodą',
+  public: 'Vieša',
+  linkType_facebook: 'Facebook',
+  linkType_tiktok: 'TikTok',
+  linkType_instagram: 'Instagram',
+  linkType_custom: 'Kita',
+  urlPlaceholder: 'Nuoroda',
 
   // Kategorijų vertimai
   // Legacy AnalysisCategory

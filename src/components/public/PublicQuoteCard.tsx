@@ -164,7 +164,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-gray-400 hover:text-cyan-500 transition-colors"
-                                                title={link.type}
+                                                title={t(`linkType_${link.type}`)}
                                             >
                                                 <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />
                                             </a>
