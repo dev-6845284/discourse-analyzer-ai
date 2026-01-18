@@ -542,6 +542,8 @@ const lt = {
   rationale: 'Pagrindimas',
   evidence: 'Įrodymai',
   delete: 'Ištrinti',
+  read_more: 'Skaityti daugiau',
+  show_less: 'Rodyti mažiau',
 
   blockIPTitle: 'Blokuoti IP adresą',
   ipAddressPlaceholder: 'IP adresas',

@@ -116,6 +116,8 @@ const en = {
   collapse: 'Collapse',
   expandQuote: 'Expand quote',
   collapseQuote: 'Collapse quote',
+  read_more: 'Read More',
+  show_less: 'Show Less',
 
   // Search controls
   searchForQuotes: 'Search for Quotes',
