@@ -51,50 +51,38 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
     const verdictColor = VERDICT_COLORS[verdictKey as keyof typeof VERDICT_COLORS] || 'bg-gray-600/20 text-gray-400 ring-gray-500/30';
 
     // Helper to get embeddable URL from either an iframe string or a regular URL
+
     const getEmbedUrl = (str?: string) => {
         if (!str || typeof str !== 'string') return null;
 
-        let src: string | null = null;
         const normalizedStr = str.trim();
 
-        // 1. If it's an iframe code, extract the src
+        // 1. If it's an iframe code, extract the src (always allow raw iframes if user provided them)
         if (normalizedStr.includes('<iframe')) {
             const match = normalizedStr.match(/src="([^"]+)"/i);
-            src = match ? match[1] : null;
-        }
-        // 2. Check for known embeddables (whitelist)
-        else if (
-            normalizedStr.includes('facebook.com') ||
-            normalizedStr.includes('youtube.com/watch?v=') ||
-            normalizedStr.includes('youtu.be/')
-        ) {
-            src = normalizedStr;
+            return match ? match[1] : null; // Return immediately if it's an explicit iframe
         }
 
-        if (!src) return null;
+        // 2. Facebook logic (requires special endpoint)
+        if (normalizedStr.includes('facebook.com')) {
+            let src = normalizedStr;
+            // If it's already an embed URL, pass it
+            if (src.includes('plugins/post.php')) return src;
 
-        // --- Transformation Logic ---
-
-        // Decode HTML entities if any (e.g. &amp;)
-        src = src.replace(/&amp;/g, '&');
-
-        // Facebook - must use the plugins/post.php endpoint for iframes
-        if (src.includes('facebook.com') && !src.includes('plugins/post.php')) {
-            // Clean up mobile links and shares
+            // Otherwise transform standard post URL
             const cleanUrl = src.replace('m.facebook.com', 'www.facebook.com').split('?')[0];
             return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(cleanUrl)}&show_text=true&width=auto`;
         }
 
-        // YouTube - must use /embed/
-        if (src.includes('youtube.com/watch?v=')) {
-            return src.replace('watch?v=', 'embed/');
-        }
-        if (src.includes('youtu.be/')) {
-            const id = src.split('/').pop();
-            return `https://www.youtube.com/embed/${id}`;
+        // 3. YouTube Logic
+        // Captures ID from: youtube.com (watch, embed, shorts, live) and youtu.be
+        const ytMatch = normalizedStr.match(/(?:youtube(?:-nocookie)?\.com\/(?:(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        if (ytMatch && ytMatch[1]) {
+            return `https://www.youtube.com/embed/${ytMatch[1]}`;
         }
 
-        return src;
+        // 4. Fallback: If no known embed pattern is found, return null (whitelist behavior)
+        return null;
     };
 
     // Helper to get a clean, clickable URL even if the input is an iframe snippet
