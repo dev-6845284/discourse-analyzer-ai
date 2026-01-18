@@ -694,6 +694,24 @@ const lt = {
   goToLink: 'Eiti į nuorodą',
   restrictedAccess: 'Prieiga apribota',
   pleaseLoginInNonProd: 'Šis turinys šioje aplinkoje prieinamas tik prisijungusiems vartotojams.',
+
+  // Public Quotes Filters
+  public_sort_by: 'Rikiuoti pagal',
+  public_sort_publication_date: 'Publikacijos data',
+  public_sort_added_date: 'Pridėjimo data',
+  public_sort_newest: 'Naujausi pirmi',
+  public_sort_oldest: 'Seniausi pirmi',
+  public_filter_person: 'Asmuo',
+  public_filter_time: 'Laikotarpis',
+  public_time_last_day: 'Per 24 val.',
+  public_time_last_week: 'Per savaitę',
+  public_time_last_month: 'Per mėnesį',
+  public_time_last_year: 'Per metus',
+  public_time_custom_range: 'Pasirinkti datą',
+  public_time_year_range: 'Pagal metus',
+  public_from: 'Nuo',
+  public_to: 'Iki',
+  public_clear_filters: 'Išvalyti filtrus',
 };
 
 export default lt;

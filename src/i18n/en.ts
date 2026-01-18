@@ -693,6 +693,24 @@ const en = {
   goToLink: 'Go to Link',
   restrictedAccess: 'Restricted Access',
   pleaseLoginInNonProd: 'This content is restricted to logged-in users in this environment.',
+
+  // Public Quotes Filters
+  public_sort_by: 'Sort by',
+  public_sort_publication_date: 'Publication Date',
+  public_sort_added_date: 'Date Added',
+  public_sort_newest: 'Newest first',
+  public_sort_oldest: 'Oldest first',
+  public_filter_person: 'Person',
+  public_filter_time: 'Time Period',
+  public_time_last_day: 'Last 24 hours',
+  public_time_last_week: 'Last week',
+  public_time_last_month: 'Last month',
+  public_time_last_year: 'Last year',
+  public_time_custom_range: 'Custom range',
+  public_time_year_range: 'By year',
+  public_from: 'From',
+  public_to: 'To',
+  public_clear_filters: 'Clear filters',
 };
 
 export default en;

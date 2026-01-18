@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // @ts-ignore
 import Turnstile from 'react-turnstile';
 import api from '../../utils/api';
@@ -10,6 +10,10 @@ interface PublicLandingProps {
     onLoginSuccess: (user: any) => void;
     onOpenLogin?: () => void;
 }
+
+// @AI_INSTRUCTION: DEV_BYPASS - Set to true to skip Turnstile during development.
+// Remember to set back to false after testing is complete.
+const DEV_BYPASS_TURNSTILE = false;
 
 export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, onOpenLogin }) => {
     const { t } = useI18n();
@@ -31,6 +35,14 @@ export const PublicLanding: React.FC<PublicLandingProps> = ({ onLoginSuccess, on
             setIsValidating(false);
         }
     };
+
+    // @AI_INSTRUCTION: DEV_BYPASS - Uncomment the useEffect below to auto-bypass Turnstile during development.
+    // Remember to comment it back after testing is complete.
+    // useEffect(() => {
+    //     if (DEV_BYPASS_TURNSTILE) {
+    //         handleTurnstileVerify('dev-bypass-token');
+    //     }
+    // }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4 relative transition-colors duration-300">

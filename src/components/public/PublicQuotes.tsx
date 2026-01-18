@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';
-import { Filter, Calendar, User, LogIn } from 'lucide-react';
+import { Filter, Calendar, User, LogIn, ArrowUpDown, X, ChevronDown } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
 import { ThemeToggle } from '../ThemeToggle';
 import logo from '../../assets/images/image32.png';
@@ -12,25 +12,146 @@ interface PublicQuotesProps {
     onNavigate?: (path: string) => void;
 }
 
+interface Person {
+    id: string;
+    name: string;
+}
+
+type TimePeriodType = 'any' | 'day' | 'week' | 'month' | 'year' | 'dateRange' | 'yearRange';
+type SortField = 'savedAt' | 'date';
+type SortOrder = 'newest' | 'oldest';
+
 export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogin, onNavigate }) => {
     const [quotes, setQuotes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
 
+    // People for filter dropdown
+    const [people, setPeople] = useState<Person[]>([]);
+    const [loadingPeople, setLoadingPeople] = useState(false);
+
+    // Filter states
+    const [sortField, setSortField] = useState<SortField>('savedAt');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+    const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+    const [timePeriod, setTimePeriod] = useState<TimePeriodType>('any');
+
+    // Year and month constants
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+
+    // Custom month range (whole months only)
+    const [monthFromMonth, setMonthFromMonth] = useState<number>(currentMonth);
+    const [monthFromYear, setMonthFromYear] = useState<number>(currentYear - 1);
+    const [monthToMonth, setMonthToMonth] = useState<number>(currentMonth);
+    const [monthToYear, setMonthToYear] = useState<number>(currentYear);
+
+    // Year range
+    const [yearFrom, setYearFrom] = useState<number>(currentYear - 1);
+    const [yearTo, setYearTo] = useState<number>(currentYear);
+
     // Use global i18n
     const { t, language, setLanguage } = useI18n();
 
-    const fetchQuotes = async () => {
+    // Month options for dropdown
+    const monthOptions = [
+        { value: 0, label: language === 'lt' ? 'Sausis' : 'January' },
+        { value: 1, label: language === 'lt' ? 'Vasaris' : 'February' },
+        { value: 2, label: language === 'lt' ? 'Kovas' : 'March' },
+        { value: 3, label: language === 'lt' ? 'Balandis' : 'April' },
+        { value: 4, label: language === 'lt' ? 'Gegužė' : 'May' },
+        { value: 5, label: language === 'lt' ? 'Birželis' : 'June' },
+        { value: 6, label: language === 'lt' ? 'Liepa' : 'July' },
+        { value: 7, label: language === 'lt' ? 'Rugpjūtis' : 'August' },
+        { value: 8, label: language === 'lt' ? 'Rugsėjis' : 'September' },
+        { value: 9, label: language === 'lt' ? 'Spalis' : 'October' },
+        { value: 10, label: language === 'lt' ? 'Lapkritis' : 'November' },
+        { value: 11, label: language === 'lt' ? 'Gruodis' : 'December' },
+    ];
+
+    // Fetch people for dropdown
+    const fetchPeople = useCallback(async () => {
+        setLoadingPeople(true);
+        try {
+            const response = await api.get('/public/people');
+            setPeople(response.data);
+        } catch (err) {
+            console.error('Failed to fetch people:', err);
+        } finally {
+            setLoadingPeople(false);
+        }
+    }, []);
+
+    // Calculate date range based on time period
+    const getDateRange = useCallback((): { from?: string; to?: string } => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        switch (timePeriod) {
+            case 'day': {
+                const from = new Date(today);
+                from.setDate(from.getDate() - 1);
+                return { from: from.toISOString(), to: now.toISOString() };
+            }
+            case 'week': {
+                const from = new Date(today);
+                from.setDate(from.getDate() - 7);
+                return { from: from.toISOString(), to: now.toISOString() };
+            }
+            case 'month': {
+                const from = new Date(today);
+                from.setMonth(from.getMonth() - 1);
+                return { from: from.toISOString(), to: now.toISOString() };
+            }
+            case 'year': {
+                const from = new Date(today);
+                from.setFullYear(from.getFullYear() - 1);
+                return { from: from.toISOString(), to: now.toISOString() };
+            }
+            case 'dateRange': {
+                // From: first day of the selected month
+                const from = new Date(monthFromYear, monthFromMonth, 1);
+                // To: last day of the selected month (at 23:59:59)
+                const to = new Date(monthToYear, monthToMonth + 1, 0, 23, 59, 59);
+                return { from: from.toISOString(), to: to.toISOString() };
+            }
+            case 'yearRange': {
+                const from = new Date(yearFrom, 0, 1);
+                const to = new Date(yearTo, 11, 31, 23, 59, 59);
+                return { from: from.toISOString(), to: to.toISOString() };
+            }
+            default:
+                return {};
+        }
+    }, [timePeriod, monthFromMonth, monthFromYear, monthToMonth, monthToYear, yearFrom, yearTo]);
+
+    // Fetch quotes with filters
+    const fetchQuotes = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await api.get('/public/quotes');
+            const params = new URLSearchParams();
+            params.set('sortField', sortField);
+            params.set('sortOrder', sortOrder);
+
+            if (selectedPersonId) {
+                params.set('personId', selectedPersonId);
+            }
+
+            const dateRange = getDateRange();
+            if (dateRange.from) {
+                params.set('dateFrom', dateRange.from);
+            }
+            if (dateRange.to) {
+                params.set('dateTo', dateRange.to);
+            }
+
+            const response = await api.get(`/public/quotes?${params.toString()}`);
             setQuotes(response.data);
             setError(null);
         } catch (err: any) {
             console.error(err);
             if (err.response?.status === 401) {
-                // Session expired or invalid
                 if (onLogout) {
                     onLogout();
                 } else {
@@ -42,11 +163,41 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
         } finally {
             setLoading(false);
         }
-    };
+    }, [sortField, sortOrder, selectedPersonId, getDateRange, onLogout, t]);
 
+    // Initial fetch
     useEffect(() => {
         fetchQuotes();
+        fetchPeople();
     }, []);
+
+    // Refetch when filters change
+    useEffect(() => {
+        fetchQuotes();
+    }, [sortField, sortOrder, selectedPersonId, timePeriod, monthFromMonth, monthFromYear, monthToMonth, monthToYear, yearFrom, yearTo]);
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSortField('savedAt');
+        setSortOrder('newest');
+        setSelectedPersonId('');
+        setTimePeriod('any');
+        setMonthFromMonth(currentMonth);
+        setMonthFromYear(currentYear - 1);
+        setMonthToMonth(currentMonth);
+        setMonthToYear(currentYear);
+        setYearFrom(currentYear - 1);
+        setYearTo(currentYear);
+    };
+
+    // Check if any filter is active
+    const hasActiveFilters = sortField !== 'savedAt' || sortOrder !== 'newest' || selectedPersonId || timePeriod !== 'any';
+
+    // Generate year options
+    const yearOptions = [];
+    for (let y = currentYear; y >= 2020; y--) {
+        yearOptions.push(y);
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 selection:bg-cyan-500/30 transition-colors duration-300">
@@ -64,7 +215,11 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                             onClick={() => setShowFilters(!showFilters)}
                             className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-600 dark:text-cyan-400' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                         >
-                            <span className="text-xs font-bold">{t('public_more_filters') || 'Filters'}</span>
+                            <Filter className="w-3.5 h-3.5" />
+                            <span className="text-xs font-bold">{t('public_more_filters')}</span>
+                            {hasActiveFilters && (
+                                <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                            )}
                         </button>
 
                         {/* Language Selector (Header Desktop) */}
@@ -89,9 +244,12 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
                         {/* Filter Toggle (Mobile) */}
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`md:hidden p-2 rounded-lg border transition-all ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-600 dark:text-cyan-400' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                            className={`md:hidden p-2 rounded-lg border transition-all relative ${showFilters ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-600 dark:text-cyan-400' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                         >
                             <Filter className="w-4 h-4" />
+                            {hasActiveFilters && (
+                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse" />
+                            )}
                         </button>
 
                         {/* Mobile Language Selector */}
@@ -134,18 +292,202 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
 
             <main className="md:container mx-auto px-2 md:px-6 lg:px-8 pt-1 pb-4 md:pt-2 md:pb-8 space-y-4 md:space-y-8">
 
-                {/* Collapsible Filters - Completely hidden when not active */}
+                {/* Collapsible Filters */}
                 {showFilters && (
                     <div className="bg-white/40 dark:bg-gray-800/40 rounded-2xl shadow-lg border border-cyan-500/20 backdrop-blur-sm overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-top-2">
-                        <div className="p-4 md:p-6 flex flex-col md:flex-row gap-4">
-                            <button className="flex items-center px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                                <User className="w-4 h-4 mr-2.5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
-                                <span className="text-sm font-medium">{t('public_all_people')}</span>
-                            </button>
-                            <button className="flex items-center px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 opacity-40 cursor-not-allowed group transition-all" title={t('coming_soon')}>
-                                <Calendar className="w-4 h-4 mr-2.5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
-                                <span className="text-sm font-medium">{t('public_any_time')}</span>
-                            </button>
+                        <div className="p-4 md:p-6 space-y-4">
+                            {/* Filter Row 1: Sort & Person */}
+                            <div className="flex flex-col md:flex-row gap-4">
+                                {/* Sort Dropdown */}
+                                <div className="flex-1 space-y-2">
+                                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <ArrowUpDown className="w-3.5 h-3.5" />
+                                        {t('public_sort_by')}
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={sortField}
+                                            onChange={(e) => setSortField(e.target.value as SortField)}
+                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                                        >
+                                            <option value="savedAt">{t('public_sort_added_date')}</option>
+                                            <option value="date">{t('public_sort_publication_date')}</option>
+                                        </select>
+                                        <select
+                                            value={sortOrder}
+                                            onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                                            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                                        >
+                                            <option value="newest">{t('public_sort_newest')}</option>
+                                            <option value="oldest">{t('public_sort_oldest')}</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Person Dropdown */}
+                                <div className="flex-1 space-y-2">
+                                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <User className="w-3.5 h-3.5" />
+                                        {t('public_filter_person')}
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            value={selectedPersonId}
+                                            onChange={(e) => setSelectedPersonId(e.target.value)}
+                                            disabled={loadingPeople}
+                                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all appearance-none pr-8"
+                                        >
+                                            <option value="">{t('public_all_people')}</option>
+                                            {people.map((p) => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Filter Row 2: Time Period */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    {t('public_filter_time')}
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {/* Quick options */}
+                                    {[
+                                        { value: 'any', label: t('public_any_time') },
+                                        { value: 'day', label: t('public_time_last_day') },
+                                        { value: 'week', label: t('public_time_last_week') },
+                                        { value: 'month', label: t('public_time_last_month') },
+                                        { value: 'year', label: t('public_time_last_year') },
+                                    ].map((opt) => (
+                                        <button
+                                            key={opt.value}
+                                            onClick={() => setTimePeriod(opt.value as TimePeriodType)}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${timePeriod === opt.value
+                                                ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/50'
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                                                }`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => setTimePeriod('dateRange')}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${timePeriod === 'dateRange'
+                                            ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/50'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                                            }`}
+                                    >
+                                        {t('public_time_custom_range')}
+                                    </button>
+                                    <button
+                                        onClick={() => setTimePeriod('yearRange')}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${timePeriod === 'yearRange'
+                                            ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/50'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                                            }`}
+                                    >
+                                        {t('public_time_year_range')}
+                                    </button>
+                                </div>
+
+                                {/* Custom month range inputs */}
+                                {timePeriod === 'dateRange' && (
+                                    <div className="flex flex-col sm:flex-row gap-3 mt-3 p-3 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl">
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{t('public_from')}</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    value={monthFromMonth}
+                                                    onChange={(e) => setMonthFromMonth(Number(e.target.value))}
+                                                    className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                                >
+                                                    {monthOptions.map((m) => (
+                                                        <option key={m.value} value={m.value}>{m.label}</option>
+                                                    ))}
+                                                </select>
+                                                <select
+                                                    value={monthFromYear}
+                                                    onChange={(e) => setMonthFromYear(Number(e.target.value))}
+                                                    className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                                >
+                                                    {yearOptions.map((y) => (
+                                                        <option key={y} value={y}>{y}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{t('public_to')}</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    value={monthToMonth}
+                                                    onChange={(e) => setMonthToMonth(Number(e.target.value))}
+                                                    className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                                >
+                                                    {monthOptions.map((m) => (
+                                                        <option key={m.value} value={m.value}>{m.label}</option>
+                                                    ))}
+                                                </select>
+                                                <select
+                                                    value={monthToYear}
+                                                    onChange={(e) => setMonthToYear(Number(e.target.value))}
+                                                    className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                                >
+                                                    {yearOptions.map((y) => (
+                                                        <option key={y} value={y}>{y}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Year range inputs */}
+                                {timePeriod === 'yearRange' && (
+                                    <div className="flex flex-col sm:flex-row gap-3 mt-3 p-3 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl">
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{t('public_from')}</label>
+                                            <select
+                                                value={yearFrom}
+                                                onChange={(e) => setYearFrom(Number(e.target.value))}
+                                                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                            >
+                                                {yearOptions.map((y) => (
+                                                    <option key={y} value={y}>{y}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{t('public_to')}</label>
+                                            <select
+                                                value={yearTo}
+                                                onChange={(e) => setYearTo(Number(e.target.value))}
+                                                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                                            >
+                                                {yearOptions.map((y) => (
+                                                    <option key={y} value={y}>{y}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Clear Filters Button */}
+                            {hasActiveFilters && (
+                                <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700/50">
+                                    <button
+                                        onClick={clearFilters}
+                                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        {t('public_clear_filters')}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
