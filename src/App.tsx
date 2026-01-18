@@ -664,6 +664,11 @@ const App: React.FC = () => {
               onCloseSettingsModal={() => ctrl.setIsSettingsModalOpen(false)}
               systemSettings={ctrl.systemSettings}
               onUpdateSettings={ctrl.handleUpdateSettings}
+
+              isImportQuoteModalOpen={ctrl.uiState.isImportQuoteModalOpen}
+              closeImportQuoteModal={ctrl.uiState.closeImportQuoteModal}
+              importQuoteData={ctrl.uiState.importQuoteData}
+              onImportConfirm={ctrl.handleImportConfirm}
             />
           </div>
         </div>

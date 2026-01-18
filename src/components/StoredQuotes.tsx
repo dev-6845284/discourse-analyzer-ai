@@ -28,9 +28,11 @@ interface StoredQuotesProps {
 
   userRole?: string;
   refreshTrigger?: number;
+  onImport?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onExport?: () => void;
 }
 
-const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, userRole, refreshTrigger }) => {
+const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI, isApiKeySet, userRole, refreshTrigger, onImport, onExport }) => {
   const { t } = useI18n();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -396,9 +398,28 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <h2 className="text-2xl font-bold text-cyan-400 mb-4">
-        {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-cyan-400">
+          {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
+        </h2>
+        <div className="flex gap-2">
+          {onExport && (
+            <button
+              onClick={onExport}
+              className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm"
+              title={t('exportToJSON')}
+            >
+              {t('export')}
+            </button>
+          )}
+          {onImport && (
+            <label className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm cursor-pointer" title={t('importFromJSON')}>
+              {t('import')}
+              <input type="file" accept=".json" onChange={onImport} className="hidden" />
+            </label>
+          )}
+        </div>
+      </div>
 
       {/* Filter Bar */}
       <StoredQuoteFilterBar

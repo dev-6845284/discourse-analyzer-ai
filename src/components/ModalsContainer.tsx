@@ -8,6 +8,8 @@ import { UsageStatsDashboard } from './admin/UsageStatsDashboard';
 import { AdminSettings } from './admin/AdminSettings';
 const AdminCategoriesLazy = React.lazy(() => import('./admin/AdminCategories'));
 import type { TranscriptData } from '../utils/transcriptStorage';
+import ImportQuoteModal from './ImportQuoteModal';
+import { ExportData, Person } from '../types';
 
 interface ModalsProps {
   // Add quote modal
@@ -52,6 +54,12 @@ interface ModalsProps {
   onCloseSettingsModal?: () => void;
   systemSettings?: any;
   onUpdateSettings?: (settings: any) => Promise<void>;
+
+  // Import Quote Modal
+  isImportQuoteModalOpen?: boolean;
+  closeImportQuoteModal?: () => void;
+  importQuoteData?: ExportData | null;
+  onImportConfirm?: (person: Person | null) => void;
 }
 
 export const ModalsContainer: React.FC<ModalsProps> = ({
@@ -85,6 +93,10 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
   onCloseSettingsModal,
   systemSettings,
   onUpdateSettings,
+  isImportQuoteModalOpen,
+  closeImportQuoteModal,
+  importQuoteData,
+  onImportConfirm,
 }) => {
   return (
     <>
@@ -163,6 +175,15 @@ export const ModalsContainer: React.FC<ModalsProps> = ({
           user={{ _id: user._id, name: user.name }}
           onClose={() => onProfileUpdated(user.name)}
           onSubmit={(newName) => onProfileUpdated(newName)}
+        />
+      )}
+
+      {isImportQuoteModalOpen && closeImportQuoteModal && onImportConfirm && (
+        <ImportQuoteModal
+          isOpen={isImportQuoteModalOpen}
+          onClose={closeImportQuoteModal}
+          importData={importQuoteData || null}
+          onConfirm={onImportConfirm}
         />
       )}
     </>

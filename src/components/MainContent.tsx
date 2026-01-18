@@ -253,6 +253,8 @@ export const MainContent: React.FC<MainContentProps> = ({
 
               userRole={userRole}
               refreshTrigger={storedQuotesRefreshTrigger}
+              onImport={onImport}
+              onExport={onExport}
             />
           </div>
         ) : (
@@ -296,6 +298,8 @@ export const MainContent: React.FC<MainContentProps> = ({
 
                 userRole={userRole}
                 refreshTrigger={storedQuotesRefreshTrigger}
+                onImport={onImport}
+                onExport={onExport}
               />
             </div>
           ) : (
