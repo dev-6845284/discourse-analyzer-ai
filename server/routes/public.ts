@@ -1,3 +1,9 @@
+/**
+ * @AI_INSTRUCTION: PUBLIC API CACHING RULE
+ * All public API requests in this file MUST be cached in Redis using publicQuotesCache.
+ * This is critical for performance and scalability.
+ * See .agent/rules/caching.md for more details.
+ */
 import express from 'express';
 import { verifyTurnstileToken } from '../services/turnstileService';
 import Quote from '../models/Quote';
