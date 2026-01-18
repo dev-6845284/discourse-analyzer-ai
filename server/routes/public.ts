@@ -107,10 +107,26 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
             query.$text = { $search: text.trim() };
         }
 
-        if (dateFrom || dateTo) {
+        // Normalize dates to date-only format for cache consistency
+        // This ensures all users get the same cache key regardless of their local time
+        const normalizeDateString = (dateStr: string): string => {
+            // Extract just YYYY-MM-DD, ignoring any time component
+            return dateStr.split('T')[0];
+        };
+
+        // Normalized date strings for cache key (date-only, no time)
+        const normalizedDateFrom = dateFrom ? normalizeDateString(dateFrom as string) : undefined;
+        const normalizedDateTo = dateTo ? normalizeDateString(dateTo as string) : undefined;
+
+        if (normalizedDateFrom || normalizedDateTo) {
             query.date = {};
-            if (dateFrom) query.date.$gte = new Date(dateFrom as string);
-            if (dateTo) query.date.$lte = new Date(dateTo as string);
+            // For query: 'from' date starts at midnight, 'to' date ends at 23:59:59
+            if (normalizedDateFrom) {
+                query.date.$gte = new Date(normalizedDateFrom + 'T00:00:00.000Z');
+            }
+            if (normalizedDateTo) {
+                query.date.$lte = new Date(normalizedDateTo + 'T23:59:59.999Z');
+            }
         }
 
         // Allow sorting by savedAt (default), date (publication), or analyzedAt
@@ -123,16 +139,15 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
 
         // --- CACHE LOGIC START ---
         // Create a unique cache key based on the query parameters
-        // We hash the query object to ensure consistency
+        // Use normalized date strings (date-only) for cache key to ensure all users share the same cache
         const cacheKeyParams = {
             personId,
             text,
-            dateFrom,
-            dateTo,
+            dateFrom: normalizedDateFrom,  // Use normalized date-only string
+            dateTo: normalizedDateTo,      // Use normalized date-only string
             sortField: sanitizedSortField,
             sortOrder,
             limit: QUOTES_LIMIT,
-            query: JSON.stringify(query) // Include constructed query for safety
         };
         const crypto = require('crypto');
         const hash = crypto.createHash('sha256').update(JSON.stringify(cacheKeyParams)).digest('hex');
@@ -226,8 +241,8 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
         // Use longer TTL for "historical" data (older date ranges)
         let cacheTTL = CACHE_TTL_CONFIG.RECENT_DATA_TTL;
 
-        if (dateFrom) {
-            const dateFromMs = new Date(dateFrom as string).getTime();
+        if (normalizedDateFrom) {
+            const dateFromMs = new Date(normalizedDateFrom + 'T00:00:00.000Z').getTime();
             const now = Date.now();
             const rangeMs = now - dateFromMs;
 

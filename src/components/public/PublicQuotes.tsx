@@ -84,42 +84,48 @@ export const PublicQuotes: React.FC<PublicQuotesProps> = ({ onLogout, onOpenLogi
     }, []);
 
     // Calculate date range based on time period
+    // NOTE: Returns dates in YYYY-MM-DD format only (no time) for cache optimization
     const getDateRange = useCallback((): { from?: string; to?: string } => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Helper to format date as YYYY-MM-DD (date only, no time)
+        const formatDateOnly = (d: Date): string => {
+            return d.toISOString().split('T')[0];
+        };
 
         switch (timePeriod) {
             case 'day': {
                 const from = new Date(today);
                 from.setDate(from.getDate() - 1);
-                return { from: from.toISOString(), to: now.toISOString() };
+                return { from: formatDateOnly(from), to: formatDateOnly(today) };
             }
             case 'week': {
                 const from = new Date(today);
                 from.setDate(from.getDate() - 7);
-                return { from: from.toISOString(), to: now.toISOString() };
+                return { from: formatDateOnly(from), to: formatDateOnly(today) };
             }
             case 'month': {
                 const from = new Date(today);
                 from.setMonth(from.getMonth() - 1);
-                return { from: from.toISOString(), to: now.toISOString() };
+                return { from: formatDateOnly(from), to: formatDateOnly(today) };
             }
             case 'year': {
                 const from = new Date(today);
                 from.setFullYear(from.getFullYear() - 1);
-                return { from: from.toISOString(), to: now.toISOString() };
+                return { from: formatDateOnly(from), to: formatDateOnly(today) };
             }
             case 'dateRange': {
                 // From: first day of the selected month
                 const from = new Date(monthFromYear, monthFromMonth, 1);
-                // To: last day of the selected month (at 23:59:59)
-                const to = new Date(monthToYear, monthToMonth + 1, 0, 23, 59, 59);
-                return { from: from.toISOString(), to: to.toISOString() };
+                // To: last day of the selected month
+                const to = new Date(monthToYear, monthToMonth + 1, 0);
+                return { from: formatDateOnly(from), to: formatDateOnly(to) };
             }
             case 'yearRange': {
                 const from = new Date(yearFrom, 0, 1);
-                const to = new Date(yearTo, 11, 31, 23, 59, 59);
-                return { from: from.toISOString(), to: to.toISOString() };
+                const to = new Date(yearTo, 11, 31);
+                return { from: formatDateOnly(from), to: formatDateOnly(to) };
             }
             default:
                 return {};
