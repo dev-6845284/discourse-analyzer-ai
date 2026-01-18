@@ -328,7 +328,10 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
                         {quote.analysisContext && (
                             <div className="bg-gray-100 dark:bg-gray-900/20 rounded-lg overflow-hidden transition-colors">
                                 <button
+                                    id={`quote-context-toggle-${quote.id}`}
                                     onClick={() => setIsAnalysisContextExpanded(!isAnalysisContextExpanded)}
+                                    aria-expanded={isAnalysisContextExpanded}
+                                    aria-controls={`quote-analysis-context-content-${quote.id}`}
                                     className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors group gap-3"
                                 >
                                     <div className="flex items-center gap-2 overflow-hidden flex-1">
@@ -352,7 +355,12 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
                                     </div>
                                 </button>
                                 {isAnalysisContextExpanded && (
-                                    <div id={`quote-analysis-context-${quote.id}`} className="px-3 pb-3 pt-1 text-[11px] md:text-xs text-gray-600 dark:text-gray-400 text-left animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <div
+                                        id={`quote-analysis-context-content-${quote.id}`}
+                                        role="region"
+                                        aria-labelledby={`quote-context-toggle-${quote.id}`}
+                                        className="px-3 pb-3 pt-1 text-[11px] md:text-xs text-gray-600 dark:text-gray-400 text-left animate-in fade-in slide-in-from-top-1 duration-200"
+                                    >
                                         <div className="border-t border-gray-200 dark:border-gray-700/50 pt-2">
                                             {quote.analysisContext}
                                         </div>
