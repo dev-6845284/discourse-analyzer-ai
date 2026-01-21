@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { assignKeysetToUser, unassignKeysetFromUser, getAdminKeysets } from '../../utils/api';
 import { useI18n } from '../../i18n';
+import ModalWrapper from '../ui/ModalWrapper';
 
 interface Keyset {
   _id: string;
@@ -95,76 +96,73 @@ export const KeysetAssignmentModal: React.FC<KeysetAssignmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-xl font-bold text-gray-100 mb-4">{t('keyset_assignment')}</h2>
-        <p className="text-gray-400 mb-4">
-          {t('userManagement')}: <span className="font-semibold text-gray-200">{user.name || user.email}</span>
-        </p>
+    <ModalWrapper title={t('keyset_assignment')} onClose={onClose}>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">
+        {t('userManagement')}: <span className="font-semibold text-gray-900 dark:text-gray-200">{user.name || user.email}</span>
+      </p>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded text-red-300 text-sm">
-            {error}
-          </div>
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded text-red-600 dark:text-red-300 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="mb-4">
+        {assignedKeysetId && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            {t('keyset_current', { alias: keysets.find(k => k._id === assignedKeysetId)?.alias || 'Unknown' })}
+          </p>
         )}
-
-        <div className="mb-4">
-          {assignedKeysetId && (
-            <p className="text-sm text-gray-400 mb-3">
-              {t('keyset_current', { alias: keysets.find(k => k._id === assignedKeysetId)?.alias || 'Unknown' })}
-            </p>
-          )}
-          <label className="block text-sm font-medium text-gray-300 mb-2">{t('keyset_assigned')}</label>
-          {loading ? (
-            <div className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-400 text-sm">
-              Loading keysets...
-            </div>
-          ) : (
-            <select
-              value={selectedKeysetId || ''}
-              onChange={e => setSelectedKeysetId(e.target.value || null)}
-              disabled={keysets.length === 0}
-              className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 focus:border-blue-500 focus:outline-none transition-colors disabled:opacity-50"
-            >
-              <option value="">{t('keyset_none')}</option>
-              {keysets.map(keyset => (
-                <option key={keyset._id} value={keyset._id}>
-                  {keyset.alias}
-                </option>
-              ))}
-            </select>
-          )}
-          {!loading && keysets.length === 0 && (
-            <p className="text-sm text-gray-400 mt-2">No keysets available</p>
-          )}
-        </div>
-
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm disabled:opacity-50"
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('keyset_assigned')}</label>
+        {loading ? (
+          <div className="w-full p-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400 text-sm">
+            Loading keysets...
+          </div>
+        ) : (
+          <select
+            value={selectedKeysetId || ''}
+            onChange={e => setSelectedKeysetId(e.target.value || null)}
+            disabled={keysets.length === 0}
+            className="w-full p-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-gray-100 focus:border-cyan-500 focus:outline-none transition-colors disabled:opacity-50"
           >
-            {t('cancel')}
-          </button>
-          {assignedKeysetId && (
-            <button
-              onClick={handleUnassign}
-              disabled={loading}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded transition-colors text-sm disabled:opacity-50"
-            >
-              {t('keyset_unassign')}
-            </button>
-          )}
-          <button
-            onClick={handleAssign}
-            disabled={loading || !selectedKeysetId || selectedKeysetId === assignedKeysetId}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors text-sm disabled:opacity-50"
-          >
-            {t('keyset_assign')}
-          </button>
-        </div>
+            <option value="">{t('keyset_none')}</option>
+            {keysets.map(keyset => (
+              <option key={keyset._id} value={keyset._id}>
+                {keyset.alias}
+              </option>
+            ))}
+          </select>
+        )}
+        {!loading && keysets.length === 0 && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">No keysets available</p>
+        )}
       </div>
-    </div>
+
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={onClose}
+          disabled={loading}
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 rounded transition-colors text-sm disabled:opacity-50 font-semibold"
+        >
+          {t('cancel')}
+        </button>
+        {assignedKeysetId && (
+          <button
+            onClick={handleUnassign}
+            disabled={loading}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors text-sm disabled:opacity-50 font-semibold"
+          >
+            {t('keyset_unassign')}
+          </button>
+        )}
+        <button
+          onClick={handleAssign}
+          disabled={loading || !selectedKeysetId || selectedKeysetId === assignedKeysetId}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white rounded transition-colors text-sm disabled:opacity-50 font-semibold"
+        >
+          {t('keyset_assign')}
+        </button>
+      </div>
+    </ModalWrapper>
   );
 };
