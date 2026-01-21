@@ -32,7 +32,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
     const url = e.target.value;
     setYoutubeUrl(url);
     setUrlError(null);
-    
+
     // Validate URL format as user types
     if (url.trim() && !isValidYouTubeUrl(url)) {
       setUrlError(t('pleaseEnterValidYouTubeUrl'));
@@ -92,19 +92,19 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
   };
 
   return (
-    <div className="bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
-      <h2 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+    <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4 p-3">
+      <h2 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
         <FileText size={20} />
         {t('importSrtTranscriptTitle')}
       </h2>
 
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-gray-600 dark:text-gray-400">
         {t('srtImportNote')}
       </p>
 
       {/* YouTube URL Input */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
           {t('youtubeVideoUrlLabel')}
         </label>
         <input
@@ -114,14 +114,13 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
           onKeyPress={handleKeyPress}
           placeholder={t('youtubeUrlPlaceholder')}
           disabled={isLoading}
-          className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed ${
-            urlError 
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/50' 
-              : 'border-gray-600 focus:border-cyan-500 focus:ring-cyan-500/50'
-          }`}
+          className={`w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-200 dark:disabled:bg-gray-600 disabled:cursor-not-allowed ${urlError
+            ? 'border-red-500 focus:border-red-500 focus:ring-red-500/50'
+            : 'border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:ring-cyan-500/50'
+            }`}
         />
         {urlError && (
-          <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+          <p className="mt-1 text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
             <AlertCircle size={12} />
             {urlError}
           </p>
@@ -130,7 +129,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
 
       {/* SRT File Upload */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
           {t('srtSubtitleFileLabel')}
         </label>
         <div className="flex gap-2">
@@ -145,7 +144,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Upload size={18} />
             {selectedFile ? selectedFile.name : t('chooseSrtFile')}
@@ -159,7 +158,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
                 }
               }}
               disabled={isLoading}
-              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-400 hover:text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50"
+              className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg border border-gray-300 dark:border-gray-600 transition-colors disabled:opacity-50"
               title={t('clearSelectedFile')}
             >
               ✕
@@ -170,7 +169,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
 
       {/* Error Display */}
       {error && (
-        <div className="p-3 bg-red-900/30 border border-red-700 rounded-lg text-red-300 text-sm flex items-start gap-2">
+        <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
           <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
           {error}
         </div>
@@ -180,7 +179,7 @@ export const SrtTranscriptImporter: React.FC<SrtTranscriptImporterProps> = ({
       <button
         onClick={handleImport}
         disabled={isLoading || !selectedFile || !youtubeUrl.trim() || !!urlError}
-        className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

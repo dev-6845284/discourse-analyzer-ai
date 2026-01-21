@@ -25,7 +25,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
     setError(null);
     try {
       const content = await file.text();
-      
+
       if (importMode === 'json') {
         const transcript = parseTranscriptFromJson(content);
         onImport(transcript);
@@ -39,7 +39,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
         };
         onImport(transcript);
       }
-      
+
       // Reset
       setPastedContent('');
       if (fileInputRef.current) {
@@ -78,13 +78,13 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
   };
 
   return (
-    <div className="bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
-      <h2 className="text-lg font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+    <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4 p-3">
+      <h2 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
         <Upload size={20} />
         {t('importTranscriptDataTitle')}
       </h2>
 
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-gray-600 dark:text-gray-400">
         {t('skipYouTubeFetchByImporting')}
       </p>
 
@@ -95,11 +95,10 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
             setImportMode('json');
             setError(null);
           }}
-          className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors ${
-            importMode === 'json'
-              ? 'bg-cyan-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
+          className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors ${importMode === 'json'
+            ? 'bg-cyan-600 text-white'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
         >
           {t('jsonFormat')}
         </button>
@@ -108,11 +107,10 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
             setImportMode('text');
             setError(null);
           }}
-          className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors ${
-            importMode === 'text'
-              ? 'bg-cyan-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
+          className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors ${importMode === 'text'
+            ? 'bg-cyan-600 text-white'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
         >
           {t('plainTextFormat')}
         </button>
@@ -120,7 +118,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
 
       {/* File Upload */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">{t('uploadFile')}</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('uploadFile')}</label>
         <div className="relative">
           <input
             ref={fileInputRef}
@@ -133,7 +131,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
-            className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {importMode === 'json' ? t('chooseJsonFile') : t('chooseTextFile')}
           </button>
@@ -142,7 +140,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
 
       {/* Paste Mode */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">{t('orPasteContent')}</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('orPasteContent')}</label>
         <textarea
           value={pastedContent}
           onChange={(e) => {
@@ -156,7 +154,7 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
           }
           disabled={isLoading}
           rows={6}
-          className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 disabled:bg-gray-600 disabled:cursor-not-allowed font-mono text-xs"
+          className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 disabled:bg-gray-200 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-mono text-xs"
         />
       </div>
 
@@ -164,14 +162,14 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
       <button
         onClick={handlePasteImport}
         disabled={isLoading || !pastedContent.trim()}
-        className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+        className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
       >
         {isLoading ? t('importing') : t('importTranscript')}
       </button>
 
       {/* Error Message */}
       {error && (
-        <div className="flex gap-2 p-3 bg-red-900/30 border border-red-700 rounded-lg text-red-300 text-sm">
+        <div className="flex gap-2 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
           <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -183,8 +181,8 @@ export const TranscriptImporter: React.FC<TranscriptImporterProps> = ({
           <strong>{t('jsonFormatHelpTitle')}</strong> {t('jsonFormatHelpText')}
         </p>
         <p>
-          <strong>{t('plainTextFormatHelpTitle')}</strong> {t('plainTextFormatHelpText')} Example: <br/>
-          <span className="font-mono">(00:00) Hello world</span>
+          <strong>{t('plainTextFormatHelpTitle')}</strong> {t('plainTextFormatHelpText')} Example: <br />
+          <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">(00:00) Hello world</span>
         </p>
       </div>
     </div>

@@ -38,7 +38,7 @@ export const PersonList: React.FC<PersonListProps> = ({
           placeholder={t('searchPeople')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 rounded-md bg-gray-700 text-white border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
+          className="flex-1 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 shadow-sm focus:border-cyan-500 focus:ring-cyan-500 sm:text-sm border p-2"
         />
         <button
           type="submit"
@@ -48,32 +48,32 @@ export const PersonList: React.FC<PersonListProps> = ({
         </button>
       </form>
 
-      {isLoading && <div className="text-center py-4 text-gray-300">{t('loading')}</div>}
-      {error && <div className="text-red-400 py-2">{error}</div>}
+      {isLoading && <div className="text-center py-4 text-gray-500 dark:text-gray-300">{t('loading')}</div>}
+      {error && <div className="text-red-500 dark:text-red-400 py-2">{error}</div>}
 
       <div className="grid gap-3 sm:gap-4">
         {people.map((person) => (
           <div
             key={person._id}
-            className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700/60 transition-shadow border border-gray-700"
+            className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/60 transition-shadow border border-gray-200 dark:border-gray-700"
           >
             <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
               <div className="min-w-0">
                 {/* Line 1: Name */}
                 <div
-                  className="truncate text-sm text-gray-100 cursor-pointer"
+                  className="truncate text-sm text-gray-900 dark:text-gray-100 cursor-pointer font-medium"
                   onClick={() => onSelect && onSelect(person)}
                 >
                   {person.name}
                 </div>
 
                 {/* Line 2: Alias */}
-                <div className="text-xs text-gray-400 mt-1 truncate">{person.aliases.length > 0 ? `${t('aliasesLabel')} ${person.aliases.join(', ')}` : ''}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{person.aliases.length > 0 ? `${t('aliasesLabel')} ${person.aliases.join(', ')}` : ''}</div>
 
 
                 {/* Optional description shown below */}
                 {person.description && (
-                  <div className="text-xs text-gray-400 mt-1">{person.description}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{person.description}</div>
                 )}
               </div>
 
@@ -83,7 +83,7 @@ export const PersonList: React.FC<PersonListProps> = ({
                     onClick={(e) => { e.stopPropagation(); onEdit(person); }}
                     title={t('edit')}
                     aria-label={t('edit')}
-                    className="p-1 rounded text-cyan-400 hover:bg-gray-700"
+                    className="p-1 rounded text-cyan-600 dark:text-cyan-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <Edit size={16} />
                   </button>
@@ -94,7 +94,7 @@ export const PersonList: React.FC<PersonListProps> = ({
                     onClick={(e) => { e.stopPropagation(); onDelete(person); }}
                     title={t('delete')}
                     aria-label={t('delete')}
-                    className="p-1 rounded text-red-400 hover:bg-gray-700"
+                    className="p-1 rounded text-red-500 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -104,7 +104,7 @@ export const PersonList: React.FC<PersonListProps> = ({
           </div>
         ))}
         {!isLoading && people.length === 0 && (
-          <div className="text-center text-gray-400 py-4">{t('noPeopleFound')}</div>
+          <div className="text-center text-gray-500 dark:text-gray-400 py-4">{t('noPeopleFound')}</div>
         )}
       </div>
     </div>
