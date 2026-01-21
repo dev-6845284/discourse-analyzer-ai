@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Youtube, AlertCircle, Copy, ExternalLink, HelpCircle } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { 
-  parseYoutubeTranscriptText, 
-  extractYouTubeVideoId, 
+import {
+  parseYoutubeTranscriptText,
+  extractYouTubeVideoId,
   isYoutubeTranscriptFormat,
-  isValidYouTubeUrl 
+  isValidYouTubeUrl
 } from '../utils/youtubeTranscriptParser';
 import { TranscriptData } from '../utils/transcriptStorage';
 
@@ -29,7 +29,7 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
     const url = e.target.value;
     setYoutubeUrl(url);
     setUrlError(null);
-    
+
     if (url.trim() && !isValidYouTubeUrl(url)) {
       setUrlError(t('pleaseEnterValidYouTubeUrl'));
     }
@@ -96,33 +96,33 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
   };
 
   return (
-    <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 space-y-4">
+    <div className="p-4 bg-white border border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-lg space-y-4 shadow-sm dark:shadow-none">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-cyan-400 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-cyan-700 dark:text-cyan-400 flex items-center gap-2">
           <Youtube size={20} />
-          YouTube Transcript (Copy & Paste)
+          {t('youtubeTranscriptCopyPasteTitle')}
         </h2>
         <button
           onClick={() => setShowInstructions(!showInstructions)}
-          className="text-gray-400 hover:text-cyan-400 transition-colors"
+          className="text-gray-500 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400 transition-colors"
           title={t('showInstructions')}
         >
           <HelpCircle size={20} />
         </button>
       </div>
 
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-gray-600 dark:text-gray-400">
         {t('copyTranscriptNote')}
       </p>
 
       {/* Instructions Panel */}
       {showInstructions && (
-        <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-600 space-y-3">
-          <h3 className="font-medium text-cyan-300 flex items-center gap-2">
+        <div className="p-4 bg-gray-50 border border-gray-200 dark:bg-gray-900/50 dark:border-gray-600 rounded-lg space-y-3">
+          <h3 className="font-medium text-cyan-700 dark:text-cyan-300 flex items-center gap-2">
             <Copy size={16} />
             {t('howToGetTranscript')}
           </h3>
-          <ol className="text-sm text-gray-300 space-y-2 list-decimal list-inside">
+          <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-2 list-decimal list-inside">
             <li>{t('yt_step_open')}</li>
             <li>{t('yt_step_click_three_dots')}</li>
             <li>{t('yt_step_select_show_transcript')}</li>
@@ -140,8 +140,8 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
 
       {/* YouTube URL Input */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">
-          {t('youtubeVideoUrlLabel')} <span className="text-red-400">*</span>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          {t('youtubeVideoUrlLabel')} <span className="text-red-500 dark:text-red-400">*</span>
         </label>
         <input
           type="url"
@@ -150,21 +150,20 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
           onKeyDown={handleKeyPress}
           placeholder={t('youtubeUrlPlaceholder')}
           disabled={isLoading}
-          className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed ${
-            urlError
+          className={`w-full bg-white text-gray-900 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-100 disabled:text-gray-500 dark:bg-gray-700 dark:text-white disabled:dark:bg-gray-600 disabled:cursor-not-allowed ${urlError
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500/50'
-              : 'border-gray-600 focus:border-cyan-500 focus:ring-cyan-500/50'
-          }`}
+              : 'border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:ring-cyan-500/50'
+            }`}
         />
         {urlError && (
-          <p className="mt-1 text-sm text-red-400">{urlError}</p>
+          <p className="mt-1 text-sm text-red-500 dark:text-red-400">{urlError}</p>
         )}
       </div>
 
       {/* Transcript Paste Area */}
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">
-          {t('pasteTranscriptLabel')} <span className="text-red-400">*</span>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          {t('pasteTranscriptLabel')} <span className="text-red-500 dark:text-red-400">*</span>
         </label>
         <textarea
           value={pastedTranscript}
@@ -173,11 +172,10 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
           placeholder={t('pasteTranscriptPlaceholder')}
           disabled={isLoading}
           rows={8}
-          className={`w-full bg-gray-700 text-white border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-600 disabled:cursor-not-allowed font-mono text-sm ${
-            error
+          className={`w-full bg-white text-gray-900 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 disabled:bg-gray-100 disabled:text-gray-500 dark:bg-gray-700 dark:text-white disabled:dark:bg-gray-600 disabled:cursor-not-allowed font-mono text-sm ${error
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500/50'
-              : 'border-gray-600 focus:border-cyan-500 focus:ring-cyan-500/50'
-          }`}
+              : 'border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:ring-cyan-500/50'
+            }`}
         />
         {pastedTranscript && (
           <p className="mt-1 text-xs text-gray-500">
@@ -190,13 +188,13 @@ export const YoutubeTranscriptCopyPaste: React.FC<YoutubeTranscriptCopyPasteProp
       <button
         onClick={handleImport}
         disabled={isLoading || !pastedTranscript.trim() || !youtubeUrl.trim()}
-        className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
       >
         <Youtube size={18} />
         {isLoading ? t('processing') : t('importYouTubeTranscript')}
       </button>
       {error && (
-        <p className="mt-2 text-sm text-red-400 text-center">{error}</p>
+        <p className="mt-2 text-sm text-red-500 dark:text-red-400 text-center">{error}</p>
       )}
 
       {/* Keyboard Shortcut Hint */}
