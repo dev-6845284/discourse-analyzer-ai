@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye } from 'lucide-react';
+import { Eye, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Quote } from '../../types';
 import { SUPPORTED_LANGUAGES } from '../../constants';
@@ -25,6 +25,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
   const { t } = useI18n();
   const [iframeHeight, setIframeHeight] = React.useState<number>(220);
   const [expanded, setExpanded] = React.useState<boolean>(false);
+  const [isTextExpanded, setIsTextExpanded] = React.useState<boolean>(false);
   const [showIframe, setShowIframe] = React.useState<boolean>(false);
   const prevHeightRef = React.useRef<number | null>(null);
 
@@ -82,11 +83,32 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
         </div>
       )}
 
-      <blockquote className={`border-l-4 ${hasDraft ? 'border-green-500' : 'border-cyan-600 dark:border-cyan-500'} pl-4 mr-8`}>
-        <p className={`text-gray-700 dark:text-gray-200 italic ${isCollapsed ? 'truncate' : ''}`}>
-          "{displayQuote.text}"
-        </p>
-      </blockquote>
+      <div className={`relative ${!isCollapsed ? 'mb-2' : ''}`}>
+        <blockquote className={`border-l-4 ${hasDraft ? 'border-green-500' : 'border-cyan-600 dark:border-cyan-500'} pl-4 mr-8`}>
+          <p className={`text-gray-700 dark:text-gray-200 italic ${isCollapsed ? 'truncate' : (!isTextExpanded ? 'line-clamp-4' : '')}`}>
+            "{displayQuote.text}"
+          </p>
+        </blockquote>
+      </div>
+
+      {!isCollapsed && (
+        <button
+          onClick={() => setIsTextExpanded(!isTextExpanded)}
+          className="w-full py-1 text-xs flex items-center justify-center gap-1 text-gray-400 hover:text-cyan-600 dark:hover:text-cyan-400 mb-3 transition-colors"
+        >
+          {isTextExpanded ? (
+            <>
+              {t('show_less') || 'Show Less'}
+              <ChevronUp className="w-3 h-3" />
+            </>
+          ) : (
+            <>
+              {t('read_more') || 'Read More'}
+              <ChevronDown className="w-3 h-3" />
+            </>
+          )}
+        </button>
+      )}
 
       {!isCollapsed && (
         <>
