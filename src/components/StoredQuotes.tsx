@@ -399,21 +399,21 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
   return (
     <div className="h-full overflow-y-auto p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-cyan-400">
+        <h2 className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
           {selectedFilterPerson ? t('storedQuotesFor', { name: selectedFilterPerson.name }) : t('allStoredQuotes')}
         </h2>
         <div className="flex gap-2">
           {onExport && (
             <button
               onClick={onExport}
-              className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm"
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm border border-gray-300 dark:border-transparent"
               title={t('exportToJSON')}
             >
               {t('export')}
             </button>
           )}
           {onImport && (
-            <label className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm cursor-pointer" title={t('importFromJSON')}>
+            <label className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm cursor-pointer border border-gray-300 dark:border-transparent" title={t('importFromJSON')}>
               {t('import')}
               <input type="file" accept=".json" onChange={onImport} className="hidden" />
             </label>

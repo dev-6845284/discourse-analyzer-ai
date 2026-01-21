@@ -160,10 +160,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   };
 
   return (
-    <div className={`relative bg-gray-800 rounded-xl shadow-lg transition-all duration-300 hover:bg-gray-700/50 hover:shadow-cyan-500/10 ${isCollapsed ? 'py-4 px-6' : 'p-6'}`}>
+    <div className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:shadow-cyan-500/10 border border-gray-100 dark:border-transparent ${isCollapsed ? 'py-4 px-6' : 'p-6'}`}>
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute top-3 right-4 text-gray-400 hover:text-white text-2xl font-light leading-none z-10"
+        className="absolute top-3 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl font-light leading-none z-10"
         aria-label={isCollapsed ? t('expandQuote') : t('collapseQuote')}
         title={isCollapsed ? t('expand') : t('collapse')}
       >
@@ -197,11 +197,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
           {/* Display Context & Links (Read-only view) */}
           {!showAdvanced && (quote.analysisContext || (links && links.length > 0)) && (
-            <div className="mt-3 pt-3 border-t border-gray-700/30 text-xs">
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/30 text-xs">
               {quote.analysisContext && (
                 <div className="mb-2">
-                  <span className="text-gray-500 font-semibold uppercase tracking-wider text-[10px]">{t('contextLabel')}</span>
-                  <span className="text-gray-400 italic">{quote.analysisContext}</span>
+                  <span className="text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider text-[10px]">{t('contextLabel')}</span>
+                  <span className="text-gray-600 dark:text-gray-400 italic ml-1">{quote.analysisContext}</span>
                 </div>
               )}
               {links && links.length > 0 && <QuoteLinksDisplay links={links} />}

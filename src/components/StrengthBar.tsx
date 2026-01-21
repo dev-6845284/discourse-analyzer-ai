@@ -52,9 +52,9 @@ export const StrengthBar: React.FC<StrengthBarProps> = ({
             width: Math.max(6, Math.floor((width - (max - 1) * 2) / max)),
             height,
             borderRadius: 2,
-            background: i < filled ? color : '#6b7280', // filled: color, unfilled: gray-400
-            opacity: i < filled ? 1 : 0.35,
-            border: '1px solid #222',
+            background: i < filled ? color : (document.documentElement.classList.contains('dark') ? '#4b5563' : '#e5e7eb'), // filled: color, unfilled: dark-gray-600 : light-gray-200
+            opacity: i < filled ? 1 : (document.documentElement.classList.contains('dark') ? 0.35 : 0.5),
+            border: document.documentElement.classList.contains('dark') ? '1px solid #222' : '1px solid #ddd',
             marginRight: i < max - 1 ? 2 : 0,
             boxSizing: 'border-box',
             transition: 'background 0.2s',

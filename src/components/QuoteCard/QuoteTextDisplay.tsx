@@ -62,10 +62,10 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
   return (
     <>
       {hasDraft && (
-        <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-          <div className="text-yellow-500 text-xs font-bold uppercase mb-2">{t('originalContent')}</div>
-          <blockquote className="border-l-4 border-yellow-600 pl-4">
-            <p className="text-gray-400 italic text-sm">"{quote.text}"</p>
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg">
+          <div className="text-yellow-700 dark:text-yellow-500 text-xs font-bold uppercase mb-2">{t('originalContent')}</div>
+          <blockquote className="border-l-4 border-yellow-400 dark:border-yellow-600 pl-4">
+            <p className="text-gray-600 dark:text-gray-400 italic text-sm">"{quote.text}"</p>
           </blockquote>
           {((quote.audit || quote.metadata?.legacyAnalysis || quote.analysis) && !(quote.draft?.audit || quote.draft?.metadata?.legacyAnalysis || quote.draft?.analysis)) && (
             <div className="mt-2 text-xs text-gray-500">{t('originalAnalysisAvailable')}</div>
@@ -75,15 +75,15 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
 
       {authorName && (
         <div className="mb-3">
-          <div className="text-cyan-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">{t('authorLabel')}</div>
-          <div className="text-gray-100 font-bold text-lg leading-tight" title={authorName}>
+          <div className="text-cyan-600 dark:text-cyan-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">{t('authorLabel')}</div>
+          <div className="text-gray-800 dark:text-gray-100 font-bold text-lg leading-tight" title={authorName}>
             {authorName}
           </div>
         </div>
       )}
 
-      <blockquote className={`border-l-4 ${hasDraft ? 'border-green-500' : 'border-cyan-500'} pl-4 mr-8`}>
-        <p className={`text-gray-200 italic ${isCollapsed ? 'truncate' : ''}`}>
+      <blockquote className={`border-l-4 ${hasDraft ? 'border-green-500' : 'border-cyan-600 dark:border-cyan-500'} pl-4 mr-8`}>
+        <p className={`text-gray-700 dark:text-gray-200 italic ${isCollapsed ? 'truncate' : ''}`}>
           "{displayQuote.text}"
         </p>
       </blockquote>
@@ -100,7 +100,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                   {!showIframe ? (
                     <button
                       onClick={() => setShowIframe(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-cyan-400 text-xs rounded transition-colors w-full justify-center border border-gray-600 border-dashed"
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-cyan-600 dark:text-cyan-400 text-xs rounded transition-colors w-full justify-center border border-gray-200 dark:border-gray-600 border-dashed"
                     >
                       <Eye className="h-4 w-4" />
                       {t('loadEmbeddedContent') || 'Load Embedded Content'}
@@ -112,14 +112,14 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                           <button
                             onClick={toggleExpanded}
                             title={expanded ? t('collapse') : t('expand')}
-                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-xs border border-gray-200 dark:border-transparent"
                           >
                             {expanded ? '-' : '+'}
                           </button>
                           <button
                             onClick={increaseHeight}
                             title={t('increase')}
-                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-xs border border-gray-200 dark:border-transparent"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                               <path d="M12 6v4" />
@@ -131,7 +131,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                           <button
                             onClick={decreaseHeight}
                             title={t('decrease')}
-                            className="px-2 py-1 bg-gray-700 text-gray-200 rounded-md text-xs"
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-xs border border-gray-200 dark:border-transparent"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}>
                               <path d="M6 8l4 4-4 4" />
@@ -139,7 +139,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                             </svg>
                           </button>
                         </div>
-                        <div className="text-xs text-gray-400">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
                       </div>
                       <div className={`rounded-md overflow-hidden border-0 ${expanded ? 'w-full' : 'w-full'}`} style={{ backgroundColor: '#ffffff' }}>
                         <iframe
@@ -160,7 +160,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                     href={displayQuote.source}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-cyan-400 truncate hover:underline flex-1 min-w-0"
+                    className="text-cyan-600 dark:text-cyan-400 truncate hover:underline flex-1 min-w-0"
                     title={displayQuote.title}
                   >
                     {displayQuote.title}
@@ -175,7 +175,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                   href={displayQuote.source}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-cyan-400 truncate hover:underline text-[11px]"
+                  className="text-cyan-600 dark:text-cyan-400 truncate hover:underline text-[11px]"
                   title={displayQuote.title}
                 >
                   {displayQuote.title}
@@ -186,7 +186,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                   value={displayQuote.languageCode}
                   onChange={(e) => onLanguageChange(quote.id, e.target.value)}
                   disabled={isBusy || hasDraft}
-                  className="bg-gray-700/50 text-gray-300 text-xs rounded border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label={t('quoteLanguageLabel')}
                 >
                   {SUPPORTED_LANGUAGES.map((lang: any) => (
@@ -195,7 +195,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                     </option>
                   ))}
                 </select>
-                <span className="text-gray-400">{displayQuote.date}</span>
+                <span className="text-gray-500 dark:text-gray-400">{displayQuote.date}</span>
               </div>
             </div>
           )}

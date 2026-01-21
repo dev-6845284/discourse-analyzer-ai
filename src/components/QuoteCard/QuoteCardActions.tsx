@@ -71,18 +71,18 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
   };
 
   return (
-    <div className="mt-4 pt-4 border-t border-gray-700/50 flex gap-2 justify-end items-center flex-wrap">
+    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/50 flex gap-2 justify-end items-center flex-wrap">
       {/* Visibility controls for admins/mods/editors */}
       {userRole && ['admin', 'moderator', 'editor'].includes(userRole) && onVisibilityChange && quote.isStored && (
-        <div className="flex items-center gap-2 border-r border-gray-700 pr-4 mr-2">
+        <div className="flex items-center gap-2 border-r border-gray-200 dark:border-gray-700 pr-4 mr-2">
           <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mr-1">Visibility</span>
-          <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+          <div className="flex rounded-md bg-gray-100 dark:bg-gray-800 p-0.5 border border-gray-300 dark:border-gray-700">
             <button
               type="button"
               onClick={() => onVisibilityChange && onVisibilityChange(quote.id || quote._id || '', 'public')}
               className={`px-3 py-0.5 text-[10px] font-medium transition-colors rounded-l-[4px] ${quote.visibility === 'public'
                 ? 'bg-green-600 text-white shadow-sm'
-                : 'text-gray-400 hover:bg-gray-700'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
               Public
@@ -92,7 +92,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
               onClick={() => onVisibilityChange && onVisibilityChange(quote.id || quote._id || '', 'private')}
               className={`px-3 py-0.5 text-[10px] font-medium transition-colors rounded-r-[4px] ${quote.visibility === 'private' || !quote.visibility
                 ? 'bg-slate-600 text-white shadow-sm'
-                : 'text-gray-400 hover:bg-gray-700'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
               Private
@@ -125,9 +125,9 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
       ) : (
         <>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 border-r border-gray-700 pr-4 mr-2">
+            <div className="flex items-center gap-2 border-r border-gray-200 dark:border-gray-700 pr-4 mr-2">
               <span className="text-xs text-gray-500 uppercase font-bold tracking-wider mr-1">Model</span>
-              <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+              <div className="flex rounded-md bg-gray-100 dark:bg-gray-800 p-0.5 border border-gray-300 dark:border-gray-700">
                 {['gemini', 'grok', 'openai'].map((model, idx, arr) => (
                   <button
                     key={model}
@@ -135,7 +135,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
                     onClick={() => setLocalSelectedAI(model)}
                     className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${localSelectedAI === model
                       ? 'bg-cyan-600 text-white shadow-sm'
-                      : 'text-gray-400 hover:bg-gray-700'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                       } ${idx === 0 ? 'rounded-l-[4px]' : ''} ${idx === arr.length - 1 ? 'rounded-r-[4px]' : ''}`}
                   >
                     {model === 'gemini' ? 'Gemini' : model === 'grok' ? 'Grok' : 'OpenAI'}
@@ -145,7 +145,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex rounded-md bg-gray-800 p-0.5 border border-gray-700">
+              <div className="flex rounded-md bg-gray-100 dark:bg-gray-800 p-0.5 border border-gray-300 dark:border-gray-700">
                 {(['audit', 'flaws'] as const).map((type, idx, arr) => (
                   <button
                     key={type}
@@ -153,7 +153,7 @@ const QuoteCardActions: React.FC<QuoteCardActionsProps> = ({
                     onClick={() => setAnalysisType(type)}
                     className={`px-2 py-0.5 text-[10px] font-medium transition-colors capitalize ${analysisType === type
                       ? 'bg-cyan-600 text-white shadow-sm'
-                      : 'text-gray-400 hover:bg-gray-700'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                       } ${idx === 0 ? 'rounded-l-[4px]' : ''} ${idx === arr.length - 1 ? 'rounded-r-[4px]' : ''}`}
                   >
                     {type}

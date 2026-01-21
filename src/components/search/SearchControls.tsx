@@ -58,19 +58,19 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="bg-gray-800/50 rounded-lg">
+    <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-transparent p-1">
 
 
       {/* Time Period Selection */}
       <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('timePeriod')}
         </label>
         <div className="space-y-2">
           <select
             value={timePeriod.type}
             onChange={(e) => timePeriod.handleTypeChange(e.target.value)}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
           >
             <option value="day">{t('lastDay')}</option>
             <option value="week">{t('lastWeek')}</option>
@@ -88,7 +88,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
               onChange={(e) =>
                 timePeriod.handleValueChange(parseInt(e.target.value, 10) || 1)
               }
-              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+              className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
               placeholder={`Number of ${timePeriod.type}`}
             />
           )}
@@ -98,7 +98,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
               <div>
                 <label
                   htmlFor="dateFrom"
-                  className="block text-xs text-gray-400 mb-1"
+                  className="block text-xs text-gray-500 dark:text-gray-400 mb-1"
                 >
                   {t('from')}
                 </label>
@@ -107,13 +107,13 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
                   id="dateFrom"
                   value={timePeriod.customDateFrom}
                   onChange={(e) => timePeriod.setCustomDateFrom(e.target.value)}
-                  className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
                 />
               </div>
               <div>
                 <label
                   htmlFor="dateTo"
-                  className="block text-xs text-gray-400 mb-1"
+                  className="block text-xs text-gray-500 dark:text-gray-400 mb-1"
                 >
                   {t('to')}
                 </label>
@@ -122,13 +122,13 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
                   id="dateTo"
                   value={timePeriod.customDateTo}
                   onChange={(e) => timePeriod.setCustomDateTo(e.target.value)}
-                  className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
                 />
               </div>
             </div>
           )}
 
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {t('willSearchFrom', { description: timePeriod.description })}
           </p>
         </div>
@@ -136,14 +136,14 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
 
       {/* Status Filters - Always Visible */}
       <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-300 mb-2">{t('statusFilters')}</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('statusFilters')}</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{t('analyzed')}</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('analyzed')}</label>
             <select
               value={statusFilters.isAnalyzed}
               onChange={(e) => statusFilters.setIsAnalyzed(e.target.value as 'all' | 'true' | 'false')}
-              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+              className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
             >
               <option value="all">{t('all')}</option>
               <option value="true">{t('analyzed')}</option>
@@ -151,11 +151,11 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{t('improved')}</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('improved')}</label>
             <select
               value={statusFilters.isImproved}
               onChange={(e) => statusFilters.setIsImproved(e.target.value as 'all' | 'true' | 'false')}
-              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+              className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
             >
               <option value="all">{t('all')}</option>
               <option value="true">{t('improved')}</option>
@@ -168,7 +168,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
       <div className="mt-4">
         <label
           htmlFor="resultCount"
-          className="block text-sm font-medium text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           {t('numberOfResults')}
         </label>
@@ -181,13 +181,13 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           onChange={(e) =>
             searchParams.setResultCount(parseInt(e.target.value, 10))
           }
-          className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+          className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
         />
       </div>
       <div className="mt-4">
         <label
           htmlFor="maxQuoteLength"
-          className="block text-sm font-medium text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           {t('maxQuoteLength')}
         </label>
@@ -200,13 +200,13 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           onChange={(e) =>
             searchParams.setMaxQuoteLength(parseInt(e.target.value, 10))
           }
-          className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+          className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
         />
       </div>
       <div className="mt-4">
         <label
           htmlFor="temperature"
-          className="block text-sm font-medium text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
         >
           {t('searchCreativity', { value: searchParams.temperature.toFixed(1) })}
         </label>
@@ -220,11 +220,11 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           onChange={(e) =>
             searchParams.setTemperature(parseFloat(e.target.value))
           }
-          className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+          className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
         />
       </div>
       <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('languages')}
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -232,70 +232,65 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
             <button
               key={lang.code}
               onClick={() => languages.onChange(lang.code)}
-              className={`px-2 py-1 text-sm rounded-md transition-colors cursor-pointer ${
-                languages.selected.includes(lang.code)
-                  ? 'bg-cyan-600 text-white'
-                  : 'bg-gray-700 hover:bg-gray-600'
-              }`}
+              className={`px-2 py-1 text-sm rounded-md transition-colors cursor-pointer border ${languages.selected.includes(lang.code)
+                ? 'bg-cyan-600 text-white border-cyan-600'
+                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                }`}
             >
               {lang.name}
             </button>
           ))}
         </div>
       </div>
-      
+
       {/* Agentic Search Toggle */}
-      <div className={`mt-4 p-3 bg-gray-700/50 rounded-lg border border-gray-600 ${searchParams.selectedAI === 'grok' ? 'opacity-50' : ''}`}>
+      <div className={`mt-4 p-3 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 ${searchParams.selectedAI === 'grok' ? 'opacity-50' : ''}`}>
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {t('agenticSearch')}
             {searchParams.selectedAI === 'grok' && (
-              <span className="ml-2 text-xs text-gray-400">{t('notAvailableWithGrok')}</span>
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{t('notAvailableWithGrok')}</span>
             )}
           </label>
           <button
             onClick={() => searchParams.selectedAI !== 'grok' && searchParams.setIsAgentic(!searchParams.isAgentic)}
             disabled={searchParams.selectedAI === 'grok'}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
-              searchParams.isAgentic ? 'bg-cyan-600' : 'bg-gray-600'
-            } ${searchParams.selectedAI === 'grok' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 ${searchParams.isAgentic ? 'bg-cyan-600' : 'bg-gray-400 dark:bg-gray-600'
+              } ${searchParams.selectedAI === 'grok' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                searchParams.isAgentic ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${searchParams.isAgentic ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
-        
+
         {searchParams.isAgentic && (
           <div className="mt-3">
-            <label className="block text-xs text-gray-400 mb-1">{t('mode')}</label>
-            <div className="flex rounded-md bg-gray-800">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('mode')}</label>
+            <div className="flex rounded-md bg-gray-100 dark:bg-gray-800 p-0.5">
               <button
                 onClick={() => searchParams.setAgenticMode('quotes')}
-                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-l-md ${
-                  searchParams.agenticMode === 'quotes'
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700'
-                }`}
+                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-l-md ${searchParams.agenticMode === 'quotes'
+                    ? 'bg-cyan-600 text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
               >
                 {t('quotes')}
               </button>
               <button
                 onClick={() => searchParams.setAgenticMode('articles')}
-                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-r-md ${
-                  searchParams.agenticMode === 'articles'
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700'
-                }`}
+                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-r-md ${searchParams.agenticMode === 'articles'
+                    ? 'bg-cyan-600 text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
               >
                 {t('articles')}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
-              {searchParams.agenticMode === 'quotes' 
-                ? t('agenticQuotesDescription') 
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {searchParams.agenticMode === 'quotes'
+                ? t('agenticQuotesDescription')
                 : t('agenticArticlesDescription')}
             </p>
           </div>
@@ -311,7 +306,7 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           {isLoading ? <Spinner className="mr-2 w-4 h-4" /> : null}
           {isLoading ? (searchParams.isAgentic ? t('agentWorking') : t('searching')) : t('search')}
         </button>
-        
+
         {isLoading && (
           <button
             onClick={onCancel}

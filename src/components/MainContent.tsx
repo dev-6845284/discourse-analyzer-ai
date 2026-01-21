@@ -156,7 +156,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             {onPublicView && (
               <button
                 onClick={onPublicView}
-                className="p-2 bg-gray-700 text-gray-400 hover:text-cyan-400 rounded-md transition-colors"
+                className="p-2 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-cyan-600 dark:hover:text-cyan-400 rounded-md transition-colors border border-gray-200 dark:border-transparent"
                 title={t('public_landing_title')}
               >
                 <Globe className="w-5 h-5" />
@@ -165,7 +165,7 @@ export const MainContent: React.FC<MainContentProps> = ({
             {userRole === 'admin' && (
               <button
                 onClick={() => setActiveTab(activeTab === 'admin' ? 'search' : 'admin')}
-                className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'admin' ? 'bg-cyan-600 text-white shadow' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${activeTab === 'admin' ? 'bg-cyan-600 text-white shadow' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-transparent'
                   }`}
               >
                 {t('adminActions') || 'Admin Actions'}
@@ -234,13 +234,13 @@ export const MainContent: React.FC<MainContentProps> = ({
         ) : resultsTab === 'stored' ? (
           <div className="space-y-4">
             {selectedPerson && (
-              <div className="p-4 bg-gray-800/50 rounded-lg flex justify-between items-center">
-                <span className="text-gray-300">
+              <div className="p-4 bg-white dark:bg-gray-800/50 rounded-lg flex justify-between items-center border border-gray-200 dark:border-transparent">
+                <span className="text-gray-600 dark:text-gray-300">
                   {t('filteredBy', { name: selectedPerson.name })}
                 </span>
                 <button
                   onClick={() => setSelectedPerson(null)}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
+                  className="text-sm text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 hover:underline"
                 >
                   {t('clearFilter')}
                 </button>
@@ -270,14 +270,14 @@ export const MainContent: React.FC<MainContentProps> = ({
                 </button>
               </div>
               {articles.map((article, idx) => (
-                <div key={idx} className="p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-cyan-500/50 transition-colors">
-                  <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline font-medium text-lg block mb-2">
+                <div key={idx} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-cyan-500/50 transition-colors">
+                  <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline font-medium text-lg block mb-2">
                     {article.title}
                   </a>
-                  <p className="text-gray-300 text-sm leading-relaxed">{article.summary}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{article.summary}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {article.tags.map((tag: string) => (
-                      <span key={tag} className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-full border border-gray-600">
+                      <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full border border-gray-200 dark:border-gray-600">
                         {tag}
                       </span>
                     ))}
