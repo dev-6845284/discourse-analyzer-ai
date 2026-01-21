@@ -10,7 +10,16 @@ export const DevRoleSelector: React.FC = () => {
   const [available, setAvailable] = React.useState<Role[]>(Array.from(ROLES));
   const [selected, setSelected] = React.useState<Role | null>((user?.role as Role) || null);
   const [loading, setLoading] = React.useState(false);
-  const isDev = typeof process !== 'undefined' && (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development');
+
+  // Robust dev check for both Node-like and Vite-like environments
+  const isDev = (() => {
+    try {
+      if (typeof process !== 'undefined' && (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development')) return true;
+      if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) return true;
+      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) return true;
+    } catch (e) { }
+    return false;
+  })();
 
   React.useEffect(() => {
     if (!isDev) return;
@@ -18,7 +27,6 @@ export const DevRoleSelector: React.FC = () => {
     // try to fetch role list from server if available
     getDevRoles().then(res => {
       if (res?.data?.roles && Array.isArray(res.data.roles)) {
-        // Narrow the roles reported by the server to our known union (filter unknown values)
         const rolesFromServer = (res.data.roles as string[]).filter((r): r is Role => (ROLES as readonly string[]).includes(r));
         if (rolesFromServer.length > 0) setAvailable(rolesFromServer);
       }
@@ -39,7 +47,6 @@ export const DevRoleSelector: React.FC = () => {
       }
     } catch (e: any) {
       console.error('Failed to set dev role:', e);
-      alert('Failed to set role');
     } finally {
       setLoading(false);
     }
@@ -48,24 +55,33 @@ export const DevRoleSelector: React.FC = () => {
   if (!isDev) return null;
 
   return (
-    <div className="flex items-center gap-3">
-      {available.map(r => (
-        <label key={r} className="flex items-center gap-2 text-xs md:text-sm">
-          <input
-            type="radio"
-            name="dev-role"
-            value={r}
-            checked={selected === r}
-            disabled={loading}
-            onChange={() => {
+    <div className="flex flex-col gap-2 p-1">
+      <div className="grid grid-cols-2 gap-2">
+        {available.map(r => (
+          <button
+            key={r}
+            onClick={() => {
               setSelected(r);
               apply(r);
             }}
-            className="w-3 h-3"
-          />
-          <span className="capitalize">{r}</span>
-        </label>
-      ))}
+            disabled={loading}
+            className={`
+              flex items-center justify-center px-2 py-1.5 rounded-md text-xs font-semibold capitalize transition-all
+              ${selected === r
+                ? 'bg-cyan-600 text-white shadow-sm ring-1 ring-cyan-500'
+                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}
+              ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+            `}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+      {loading && (
+        <div className="text-[10px] text-cyan-600 dark:text-cyan-400 animate-pulse text-center">
+          Switching role...
+        </div>
+      )}
     </div>
   );
 };

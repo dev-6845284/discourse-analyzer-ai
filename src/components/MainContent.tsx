@@ -178,36 +178,36 @@ export const MainContent: React.FC<MainContentProps> = ({
           <div>
             {adminView === 'users' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-cyan-400">{t('userManagement')}</h3>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex justify-between items-center border border-gray-100 dark:border-transparent">
+                  <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('userManagement')}</h3>
                 </div>
                 <UserManager />
               </div>
             ) : adminView === 'logs' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-cyan-400">{t('analysis_logs')}</h3>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex justify-between items-center border border-gray-100 dark:border-transparent">
+                  <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('analysis_logs')}</h3>
                 </div>
                 <LogViewer logsVisible={true} />
               </div>
             ) : adminView === 'management' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex items-center">
-                  <h3 className="text-lg font-semibold text-cyan-400">{t('api_management')}</h3>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex items-center border border-gray-100 dark:border-transparent">
+                  <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('api_management')}</h3>
                 </div>
                 <AccessControlManagement onClose={() => setAdminView && setAdminView(null)} inline />
               </div>
             ) : adminView === 'categories' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex items-center">
-                  <h3 className="text-lg font-semibold text-cyan-400">{t('analysisCategories')}</h3>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex items-center border border-gray-100 dark:border-transparent">
+                  <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('analysisCategories')}</h3>
                 </div>
                 <AdminCategories />
               </div>
             ) : adminView === 'keysets' ? (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg flex items-center">
-                  <h3 className="text-lg font-semibold text-cyan-400">{t('keyset_title')}</h3>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex items-center border border-gray-100 dark:border-transparent">
+                  <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('keyset_title')}</h3>
                 </div>
                 <KeysetManagement />
               </div>

@@ -81,30 +81,37 @@ export const UserManager: React.FC = () => {
   if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
 
   return (
-    <div className="max-w-6xl mx-auto w-full">
-      <div className="flex justify-between items-center mb-3">
-        <h1 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('userManagement')}</h1>
+    <div className="space-y-6">
+      <div className="flex justify-end items-center px-1">
         <button
           onClick={handleAddUser}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
           {t('addUser')}
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+        <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/30 rounded-xl text-red-600 dark:text-red-400 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          <p className="text-sm font-medium">{error}</p>
         </div>
       )}
 
-      <UserList
-        users={users}
-        onEdit={handleEditUser}
-        onDelete={handleDeleteUser}
-        onChangePassword={handleChangePassword}
-        onAssignKeyset={handleAssignKeyset}
-      />
+      <div className="bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50 overflow-hidden">
+        <UserList
+          users={users}
+          onEdit={handleEditUser}
+          onDelete={handleDeleteUser}
+          onChangePassword={handleChangePassword}
+          onAssignKeyset={handleAssignKeyset}
+        />
+      </div>
 
       {isFormOpen && (
         <UserForm

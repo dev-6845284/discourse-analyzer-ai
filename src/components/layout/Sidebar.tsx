@@ -155,6 +155,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </>
           )}
 
+          {/* Testing section moved outside of admin-gated block to allow switching back in dev mode */}
+          <SidebarSection
+            title={t('testing')}
+            sectionKey="testing"
+            openSection={openSection}
+            setOpenSection={setOpenSection}
+            tag={t('adminTag')}
+            defaultOpen={true}
+          >
+            <div className="flex flex-col gap-2">
+              <DevRoleSelector />
+            </div>
+          </SidebarSection>
+
           {userRole === 'admin' && activeTab !== 'search' && (
             <>
               <SidebarSection
@@ -224,19 +238,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   >
                     {t('analysis_logs')}
                   </button>
-                </div>
-              </SidebarSection>
-
-              <SidebarSection
-                title={t('testing')}
-                sectionKey="testing"
-                openSection={openSection}
-                setOpenSection={setOpenSection}
-                tag={t('adminTag')}
-                defaultOpen={true}
-              >
-                <div className="flex flex-col gap-2">
-                  <DevRoleSelector />
                 </div>
               </SidebarSection>
 
