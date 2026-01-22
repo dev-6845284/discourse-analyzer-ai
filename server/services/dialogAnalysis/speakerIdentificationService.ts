@@ -71,7 +71,7 @@ export interface SpeakerAnalysisRequest {
   }>;
   language: string;
   model: string;
-  apiKeys: Record<string, string>;
+  userId: string;
   sessionId?: string;
   logId?: string;
   /** Similarity threshold for cross-block speaker matching (default: 0.85) */
@@ -350,10 +350,9 @@ function getLlmConfig(
   model: string,
   apiKeys: Record<string, string>
 ): { provider: string; modelName: string; apiKey: string } {
-  // Prefer canonical 'openai' provider; accept legacy 'chatgpt' and gpt-* model names
-  const normalizedModel = (model === 'chatgpt' || model.startsWith('gpt')) ? 'openai' : model;
+  const provider = getProviderFromModel(model);
 
-  if (normalizedModel === 'openai' && apiKeys.openai) {
+  if (provider === 'openai' && apiKeys.openai) {
     return {
       provider: 'openai',
       modelName: MODEL_CONFIG.chatgpt.model,
@@ -361,7 +360,7 @@ function getLlmConfig(
     };
   }
 
-  if ((model === 'grok' || model.startsWith('grok')) && apiKeys.grok) {
+  if (provider === 'grok' && apiKeys.grok) {
     return {
       provider: MODEL_CONFIG.grok.provider,
       modelName: MODEL_CONFIG.grok.model,
@@ -490,6 +489,9 @@ async function processIdentifiedSpeakers(
 // Main Export
 // ============================================================================
 
+import { getEffectiveApiKeyForUser } from '../apiKeyService';
+import { getProviderFromModel } from './utils';
+
 /**
  * Main function to identify speakers in transcript blocks.
  * Processes blocks sequentially, maintaining speaker continuity across blocks.
@@ -501,7 +503,7 @@ export async function identifySpeakers(
     blocks,
     language,
     model,
-    apiKeys,
+    userId,
     sessionId,
     logId,
     speakerSimilarityThreshold = DEFAULT_SPEAKER_SIMILARITY_THRESHOLD,
@@ -512,6 +514,21 @@ export async function identifySpeakers(
   const results: SpeakerAnalysisResult[] = [];
   const registry = createSpeakerRegistry(speakerSimilarityThreshold);
   let blockContext: BlockContext | null = null;
+
+  // Resolve API key
+  const providerKey = getProviderFromModel(model);
+  const key = await getEffectiveApiKeyForUser(userId, providerKey);
+
+  if (!key || key.trim() === '') {
+    throw new Error(`Failed to resolve API key for provider '${providerKey}' (User: ${userId}). Please check your settings.`);
+  }
+
+  const apiKeys: Record<string, string> = { [providerKey]: key };
+  // For safety with getLlmConfig which checks specific keys, populate all potential keys with the resolved key
+  // since we are processing a specific model
+  apiKeys['openai'] = key;
+  apiKeys['grok'] = key;
+  apiKeys['gemini'] = key;
 
   // Get LLM configuration once before the loop
   const llmConfig = getLlmConfig(model, apiKeys);

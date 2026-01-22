@@ -7,6 +7,8 @@ import geminiService from '../../llm_services/geminiService';
 import grokService from '../../llm_services/grokService';
 import chatGptService from '../../llm_services/chatGptService';
 import { TopicAnalysisResult } from '../../types';
+import { getEffectiveApiKeyForUser } from '../../services/apiKeyService';
+import { getProviderFromModel } from './utils';
 
 export interface TranscriptAnalysisRequest {
   blocks: Array<{
@@ -22,7 +24,7 @@ export interface TranscriptAnalysisRequest {
   }>;
   language: string;
   model: string;
-  apiKeys: Record<string, string>;
+  userId: string;
 }
 
 /**
@@ -34,37 +36,32 @@ export async function extractBlockTopics(
   endTime: number,
   text: string,
   model: string,
-  apiKeys: Record<string, string>,
+  apiKey: string,
   language: string,
   segmentTiming?: Array<{ start: number; end: number; text: string }>
 ): Promise<TopicAnalysisResult> {
   try {
     let result: TopicAnalysisResult;
 
-    // Normalize legacy aliases to canonical provider names
-    const normalizedModel = (model === 'chatgpt' || model.startsWith('gpt')) ? 'openai' : model;
+    const provider = getProviderFromModel(model);
 
-    if (normalizedModel === 'gemini' || normalizedModel === 'gemini-flash') {
-      const apiKey = apiKeys['gemini'];
+    if (provider === 'gemini') {
       if (!apiKey) {
         throw new Error('Gemini API key not found');
       }
       result = await geminiService.extractTopics(apiKey, text, language, 0.3);
-    } else if (normalizedModel === 'grok' || normalizedModel === 'grok-fast') {
-      const apiKey = apiKeys['grok'];
+    } else if (provider === 'grok') {
       if (!apiKey) {
         throw new Error('Grok API key not found');
       }
       result = await grokService.extractTopics(apiKey, text, language, 0.3);
-    } else if (normalizedModel === 'openai') {
-      const apiKey = apiKeys['openai'];
+    } else if (provider === 'openai') {
       if (!apiKey) {
         throw new Error('OpenAI API key not found');
       }
       result = await chatGptService.extractTopics(apiKey, text, language, 0.3);
     } else {
-      // Default to Gemini
-      const apiKey = apiKeys['gemini'];
+      // Default to Gemini (should be covered by getProviderFromModel default, but safe fallback)
       if (!apiKey) {
         throw new Error('No API key found for topic extraction');
       }
@@ -111,6 +108,20 @@ export async function extractTranscriptTopics(
 ): Promise<TopicAnalysisResult[]> {
   const results: TopicAnalysisResult[] = [];
 
+  // Resolve API key
+  const provider = getProviderFromModel(request.model);
+  console.log(`[TopicAnalysis] Resolving key for user ${request.userId}, model ${request.model} (provider: ${provider})`);
+
+  const key = await getEffectiveApiKeyForUser(request.userId, provider);
+  if (!key || key.trim() === '') {
+    throw new Error(`Failed to resolve API key for provider '${provider}' (User: ${request.userId}). Please check your settings.`);
+  }
+
+  // apiKeys map construction removed
+
+  console.log(`[TopicAnalysis Debug] Model: ${request.model}, Provider: ${provider}, Resolved Key Length: ${key?.length}`);
+
+
   for (const block of request.blocks) {
     const result = await extractBlockTopics(
       block.blockId,
@@ -118,7 +129,7 @@ export async function extractTranscriptTopics(
       block.endTime,
       block.text,
       request.model,
-      request.apiKeys,
+      key,
       request.language,
       block.segmentTiming
     );
@@ -130,3 +141,4 @@ export async function extractTranscriptTopics(
 
   return results;
 }
+

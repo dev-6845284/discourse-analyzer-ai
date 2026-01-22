@@ -34,11 +34,11 @@ const getStepIcon = (step: AnalysisStep): React.ReactNode => {
 const getStatusIndicator = (status: StepStatus): React.ReactNode => {
   switch (status) {
     case 'completed':
-      return <Check size={14} className="text-green-400" />;
+      return <Check size={14} className="text-green-600 dark:text-green-400" />;
     case 'processing':
-      return <Loader2 size={14} className="text-yellow-400 animate-spin" />;
+      return <Loader2 size={14} className="text-yellow-600 dark:text-yellow-400 animate-spin" />;
     case 'error':
-      return <AlertCircle size={14} className="text-red-400" />;
+      return <AlertCircle size={14} className="text-red-600 dark:text-red-400" />;
     default:
       return null;
   }
@@ -50,30 +50,30 @@ const getStepStyles = (
   isActive: boolean,
   canNavigate: boolean
 ): string => {
-  const baseStyles = 'flex items-center justify-center gap-1 px-2 py-2 rounded-lg font-medium transition-all duration-200';
-  
+  const baseStyles = 'flex items-center justify-center gap-1 px-2 py-2 rounded-lg font-medium transition-all duration-200 border';
+
   if (isActive) {
-    return `${baseStyles} bg-cyan-600 text-white shadow-lg shadow-cyan-600/20`;
+    return `${baseStyles} bg-cyan-600 text-white shadow-lg shadow-cyan-600/20 border-cyan-600`;
   }
-  
+
   if (status === 'completed') {
-    return `${baseStyles} bg-green-600/20 text-green-400 border border-green-600/50 hover:bg-green-600/30 cursor-pointer`;
+    return `${baseStyles} bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-600/20 dark:text-green-400 dark:border-green-600/50 dark:hover:bg-green-600/30 cursor-pointer`;
   }
-  
+
   if (status === 'processing') {
-    return `${baseStyles} bg-yellow-600/20 text-yellow-400 border border-yellow-600/50`;
+    return `${baseStyles} bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-600/20 dark:text-yellow-400 dark:border-yellow-600/50`;
   }
-  
+
   if (status === 'error') {
-    return `${baseStyles} bg-red-600/20 text-red-400 border border-red-600/50 hover:bg-red-600/30 cursor-pointer`;
+    return `${baseStyles} bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-600/20 dark:text-red-400 dark:border-red-600/50 dark:hover:bg-red-600/30 cursor-pointer`;
   }
-  
+
   // Pending
   if (canNavigate) {
-    return `${baseStyles} bg-gray-700 text-gray-300 hover:bg-gray-600 cursor-pointer`;
+    return `${baseStyles} bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-transparent dark:hover:bg-gray-600 cursor-pointer`;
   }
-  
-  return `${baseStyles} bg-gray-800 text-gray-500 cursor-not-allowed opacity-50`;
+
+  return `${baseStyles} bg-gray-100 text-gray-400 border-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:border-transparent cursor-not-allowed opacity-50`;
 };
 
 export const StepProgressBar: React.FC<StepProgressBarProps> = ({
@@ -87,22 +87,22 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
   const canNavigateToStep = (stepIndex: number, step: StepInfo): boolean => {
     // Can always navigate to transcript
     if (step.step === 'transcript') return true;
-    
+
     // Can navigate if step is completed or has error
     if (step.status === 'completed' || step.status === 'error') return true;
-    
+
     // Can navigate to next step if previous step is completed
     const prevStep = steps[stepIndex - 1];
     if (prevStep && prevStep.status === 'completed') return true;
-    
+
     return false;
   };
 
   const handleStepClick = (step: StepInfo, stepIndex: number) => {
     const canNavigate = canNavigateToStep(stepIndex, step);
-    
+
     if (step.status === 'processing') return; // Don't allow click during processing
-    
+
     if (step.status === 'pending' && canNavigate && onStartStep) {
       // If clicking a pending step that we can start, trigger the action
       onStartStep(step.step);
@@ -112,33 +112,31 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-1 p-4 border-b border-gray-700 flex-shrink-0 bg-gray-800/50 overflow-x-auto">
+    <div className="flex items-center gap-1 p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800/50 overflow-x-auto">
       {steps.map((step, index) => {
         const isActive = step.step === currentStep;
         const canNavigate = canNavigateToStep(index, step);
-        
+
         return (
           <React.Fragment key={step.step}>
             {/* Connector line */}
             {index > 0 && (
               <div className="flex items-center px-1">
-                <div 
-                  className={`h-0.5 w-6 transition-colors ${
-                    steps[index - 1].status === 'completed' 
-                      ? 'bg-green-500' 
-                      : 'bg-gray-600'
-                  }`} 
+                <div
+                  className={`h-0.5 w-6 transition-colors ${steps[index - 1].status === 'completed'
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
                 />
-                <div 
-                  className={`w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent ${
-                    steps[index - 1].status === 'completed'
+                <div
+                  className={`w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent ${steps[index - 1].status === 'completed'
                       ? 'border-l-green-500'
-                      : 'border-l-gray-600'
-                  }`}
+                      : 'border-l-gray-300 dark:border-l-gray-600'
+                    }`}
                 />
               </div>
             )}
-            
+
             {/* Step button */}
             <button
               onClick={() => handleStepClick(step, index)}
@@ -150,15 +148,15 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({
               <span className="flex items-center justify-center w-5 h-5 rounded-full bg-black/20 text-xs">
                 {index + 1}
               </span>
-              
+
               {/* Step icon */}
               {getStepIcon(step.step)}
-              
+
               {/* Result count as badge */}
               {step.resultCount !== undefined && step.resultCount > 0 && (
                 <span className="text-xs opacity-75 ml-0.5">({step.resultCount})</span>
               )}
-              
+
               {/* Status indicator */}
               {getStatusIndicator(step.status)}
             </button>

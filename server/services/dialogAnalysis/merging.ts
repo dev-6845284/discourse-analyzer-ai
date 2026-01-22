@@ -1,4 +1,6 @@
 import { TopicGroup } from '../../types';
+import { getEffectiveApiKeyForUser } from '../apiKeyService';
+import { getProviderFromModel } from './utils';
 import { buildMergeTopicsPrompt } from '../../llm_services/prompts';
 import { extractJsonFromResponse } from './utils';
 import { generateContent } from './llmHelper';
@@ -10,7 +12,7 @@ export async function mergeTopics(
   groups: TopicGroup[],
   language: string,
   model: string,
-  apiKeys: Record<string, string>,
+  userId: string,
   sessionId?: string,
   logId?: string
 ): Promise<TopicGroup[]> {
@@ -22,15 +24,21 @@ export async function mergeTopics(
   // Prepare the list of topics for the model
   const prompt = buildMergeTopicsPrompt(groups, language);
 
+  const provider = getProviderFromModel(model);
+  const apiKey = await getEffectiveApiKeyForUser(userId, provider);
+  if (!apiKey) {
+    throw new Error(`Failed to resolve API key for model ${model} (provider: ${provider})`);
+  }
+
   try {
-    const responseText = await generateContent(model, apiKeys, {
+    const responseText = await generateContent(model, apiKey, {
       prompt,
       sessionId,
       logId,
       metadata: { task: 'dialog-analysis', stage: 'merge-topics' },
     });
     const responseJson = extractJsonFromResponse(responseText);
-    
+
     if (!responseJson.groups || !Array.isArray(responseJson.groups)) {
       console.warn('[DialogAnalysis] Invalid merge response format. Skipping merge.');
       return groups;
@@ -44,10 +52,10 @@ export async function mergeTopics(
       if (!indices || indices.length === 0) continue;
 
       // Validate indices
-      const validIndices = indices.filter(idx => 
-        typeof idx === 'number' && 
-        idx >= 0 && 
-        idx < groups.length && 
+      const validIndices = indices.filter(idx =>
+        typeof idx === 'number' &&
+        idx >= 0 &&
+        idx < groups.length &&
         !processedIndices.has(idx)
       );
 
@@ -81,7 +89,7 @@ export async function mergeTopics(
         newGroups.push(groups[i]);
       }
     }
-    
+
     if (missedIndices.length > 0) {
       console.warn(`[DialogAnalysis] WARNING: ${missedIndices.length} groups not in merge response. Added as-is: ${missedIndices.join(', ')}`);
     }
@@ -95,7 +103,7 @@ export async function mergeTopics(
 
     const newGroupsFiltered = newGroups.filter(g => g.dialogLines.length > 0);
     const totalLinesAfter = newGroupsFiltered.reduce((sum, g) => sum + g.dialogLines.length, 0);
-    
+
     // CRITICAL: Verify no data loss during merge
     if (totalLinesBefore !== totalLinesAfter) {
       console.error(`[DialogAnalysis] ERROR: Data loss during merge! Before: ${totalLinesBefore} lines, After: ${totalLinesAfter} lines. Difference: ${totalLinesBefore - totalLinesAfter}`);

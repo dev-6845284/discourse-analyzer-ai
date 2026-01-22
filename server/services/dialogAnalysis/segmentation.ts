@@ -1,5 +1,7 @@
 import { DialogLine, TopicGroup } from '../../types';
 import { inferInitialTopic, processChunk, SegmentationResponse } from './segmentationLlm';
+import { getEffectiveApiKeyForUser } from '../apiKeyService';
+import { getProviderFromModel } from './utils';
 
 /**
  * Segments a dialog into topic groups using an LLM-based approach.
@@ -8,7 +10,7 @@ import { inferInitialTopic, processChunk, SegmentationResponse } from './segment
  * @param language - Language of the dialog.
  * @param fastModel - Fast LLM model to use for chunk processing.
  * @param betterModel - Better LLM model to use for initial topic inference.
- * @param apiKeys - API keys for accessing the LLM service.
+ * @param userId - User ID for API key resolution.
  * @param sessionId - Optional session ID for logging.
  * @param logId - Optional log ID for logging.
  * @returns A promise that resolves to an array of topic groups.
@@ -18,12 +20,25 @@ export async function segmentTopics(
   language: string,
   fastModel: string,
   betterModel: string,
-  apiKeys: Record<string, string>,
+  userId: string,
   sessionId?: string,
   logId?: string
 ): Promise<TopicGroup[]> {
   const groups: TopicGroup[] = [];
-  
+
+  // Resolve API keys
+  const betterProvider = getProviderFromModel(betterModel);
+  const betterKey = await getEffectiveApiKeyForUser(userId, betterProvider);
+  if (!betterKey) {
+    throw new Error(`Failed to resolve API key for better model ${betterModel} (provider: ${betterProvider})`);
+  }
+
+  const fastProvider = getProviderFromModel(fastModel);
+  const fastKey = await getEffectiveApiKeyForUser(userId, fastProvider);
+  if (!fastKey) {
+    throw new Error(`Failed to resolve API key for fast model ${fastModel} (provider: ${fastProvider})`);
+  }
+
   // 1. Initial topic detection (first 10 minutes of dialog)
   const initialChunkDuration = 3 * 60; // 180 seconds
   const startTime = allLines[0].timestamp;
@@ -38,9 +53,10 @@ export async function segmentTopics(
 
   // Infer the initial topic using the better model
   console.log('[DialogAnalysis] Inferring initial topic from first 10 minutes...');
-  const initialTitle = await inferInitialTopic(initialLines, language, betterModel, apiKeys, sessionId, logId);
+  console.log('[DialogAnalysis] Inferring initial topic from first 10 minutes...');
+  const initialTitle = await inferInitialTopic(initialLines, language, betterModel, betterKey, sessionId, logId);
   console.log(`[DialogAnalysis] Initial topic identified: "${initialTitle}"`);
-  
+
   // Create the first topic group with the initial lines
   let currentGroup: TopicGroup = {
     id: `topic-${Date.now()}-0`,
@@ -58,7 +74,7 @@ export async function segmentTopics(
     // Get the next chunk of lines based on the chunk duration
     const chunkStartTime = remainingLines[0].timestamp;
     let chunkEndIndex = remainingLines.findIndex(l => l.timestamp > chunkStartTime + chunkDuration);
-    
+
     // If no lines are found beyond the chunk duration, take all remaining lines
     if (chunkEndIndex === -1) {
       chunkEndIndex = remainingLines.length;
@@ -79,7 +95,7 @@ export async function segmentTopics(
         currentGroup,
         language,
         fastModel, // Use the fast model for chunk processing
-        apiKeys,
+        fastKey,
         sessionId,
         logId
       );
