@@ -50,13 +50,13 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
     const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
     return (
       <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50 space-y-4">
-        {'classification' in audit ? (
+        {'finalAssessment' in audit ? (
           <>
             {/* Flaws Classification */}
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-300">{t('flawsReport') || 'Rhetorical Analysis'}</h3>
               <span className="px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset bg-purple-100 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 ring-purple-200 dark:ring-purple-500/30 text-right">
-                {t(`verdict_${audit.classification}`) || audit.classification}
+                {t(`verdict_${audit.verdict || audit.classification}`) || audit.verdict || audit.classification}
               </span>
             </div>
             {/* Final Assessment */}

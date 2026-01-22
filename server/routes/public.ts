@@ -190,7 +190,7 @@ router.get('/quotes', ensurePublicOrAuth, async (req, res) => {
                     reasoning: value.reasoning,
                     evidence: value.evidence // Include evidence field
                 }));
-                analysisSummary.verdict = q.metadata.audit.verdict || 'N/A';
+                analysisSummary.verdict = q.metadata.audit.verdict || q.metadata.audit.classification || 'N/A';
                 analysisSummary.overview = q.metadata.audit.overview || '';
                 // Include rationale if not already synonymous with overview, but usually overview covers it.
                 // If there's a distinct rationale field:
@@ -357,7 +357,7 @@ router.get('/quotes/:id', ensurePublicOrAuth, async (req, res) => {
                 reasoning: value.reasoning,
                 evidence: value.evidence
             }));
-            analysisSummary.verdict = q.metadata.audit.verdict || 'N/A';
+            analysisSummary.verdict = q.metadata.audit.verdict || q.metadata.audit.classification || 'N/A';
             analysisSummary.overview = q.metadata.audit.overview || '';
             if (q.metadata.audit.rationale) {
                 (analysisSummary as any).rationale = q.metadata.audit.rationale;

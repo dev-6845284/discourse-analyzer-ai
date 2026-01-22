@@ -4,6 +4,19 @@ import Quote from '../models/Quote';
 import Person from '../models/Person';
 import { getAllCategories } from './categoryService';
 
+// Helper to normalize quote structure (handle legacy fields)
+const normalizeQuote = (q: any) => {
+  if (!q) return q;
+  const quote = q.toObject ? q.toObject() : q;
+
+  if (quote.metadata?.audit) {
+    if (!quote.metadata.audit.verdict && quote.metadata.audit.classification) {
+      quote.metadata.audit.verdict = quote.metadata.audit.classification;
+    }
+  }
+  return quote;
+};
+
 export const saveQuote = async (req: Request, res: Response) => {
   try {
     const {
@@ -64,7 +77,7 @@ export const saveQuote = async (req: Request, res: Response) => {
 
     await quote.save();
 
-    res.status(201).json(quote);
+    res.status(201).json(normalizeQuote(quote));
   } catch (error: any) {
     console.error('Error saving quote:', error);
     res.status(500).json({ error: 'Failed to save quote', details: error.message });
@@ -224,9 +237,10 @@ export const getQuotes = async (req: Request, res: Response) => {
 
     const quotes = await Quote.find(query)
       .populate('person')
-      .sort(sortConfig);
+      .sort(sortConfig)
+      .lean();
 
-    res.json(quotes);
+    res.json(quotes.map(normalizeQuote));
   } catch (error: any) {
     console.error('Error fetching quotes:', error);
     res.status(500).json({ error: 'Failed to fetch quotes', details: error.message });
@@ -259,7 +273,7 @@ export const updateQuote = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Quote not found' });
     }
 
-    res.json(quote);
+    res.json(normalizeQuote(quote));
   } catch (error: any) {
     console.error('Error updating quote:', error);
     res.status(500).json({ error: 'Failed to update quote', details: error.message });

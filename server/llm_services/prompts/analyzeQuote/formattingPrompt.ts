@@ -85,7 +85,7 @@ from the provided audit notes.
 ### REQUIRED JSON STRUCTURE
 
 {
-  "classification": "<CLASSIFICATION>",
+  "verdict": "<VERDICT>",
   "finalAssessment": "<final assessment in ${quoteLanguageName}>",
   "categories": {
     ${categoriesJson}
@@ -96,7 +96,7 @@ from the provided audit notes.
 
 ### FIELD CONSTRAINTS
 
-#### classification
+#### verdict
 - Copy EXACTLY from the audit notes.
 - Must be one of:
   "TOXIC POLITICAL RHETORIC"
