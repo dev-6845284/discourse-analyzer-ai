@@ -11,12 +11,34 @@ export const DevRoleSelector: React.FC = () => {
   const [selected, setSelected] = React.useState<Role | null>((user?.role as Role) || null);
   const [loading, setLoading] = React.useState(false);
 
+
   // Robust dev check for both Node-like and Vite-like environments
   const isDev = (() => {
     try {
-      if (typeof process !== 'undefined' && (process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development')) return true;
-      if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) return true;
-      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) return true;
+      // Strictly allow only local environment
+      if (typeof window !== 'undefined') {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return true;
+      }
+
+      // Allow if explicit 'local' environment (custom setup)
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'local') return true;
+
+      // Allow Vite dev server (usually implies local development)
+      if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+        // Double check we are not in a deployed environment if possible, 
+        // but import.meta.env.DEV is usually reliable for local dev server.
+        // However, if we build with mode=development, it might be true. 
+        // Safe to keep if we trust the user knows 'dev' means local dev server or unminified build.
+        // Given the user request "expect local", relying on hostname is safest, but we need to support development on valid setups.
+        // Let's rely on the hostname check primarily if we are in a browser.
+        if (typeof window !== 'undefined') {
+          // If we are in browser, we already returned true for localhost. 
+          // If we are here, hostname is NOT localhost.
+          // If we are on a deployed dev site (e.g. dev.example.com) with DEV=true, we should probably return FALSE.
+          return false;
+        }
+        return true; // Non-browser env (unlikely here)
+      }
     } catch (e) { }
     return false;
   })();
