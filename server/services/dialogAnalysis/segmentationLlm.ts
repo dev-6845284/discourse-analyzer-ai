@@ -15,7 +15,7 @@ export async function inferInitialTopic(
   lines: DialogLine[],
   language: string,
   model: string,
-  apiKeys: Record<string, string>,
+  apiKey: string,
   sessionId?: string,
   logId?: string
 ): Promise<string> {
@@ -25,7 +25,7 @@ export async function inferInitialTopic(
   const startTime = Date.now();
 
   const response = await withTimeout(
-    generateContent(model, apiKeys, {
+    generateContent(model, apiKey, {
       prompt,
       sessionId,
       logId,
@@ -34,7 +34,7 @@ export async function inferInitialTopic(
     60000,
     "Initial topic inference timed out"
   );
-  
+
   console.log(`[DialogAnalysis] Initial topic inferred in ${Date.now() - startTime}ms.`);
   return response.trim();
 }
@@ -44,7 +44,7 @@ export async function processChunk(
   currentGroup: TopicGroup,
   language: string,
   model: string,
-  apiKeys: Record<string, string>,
+  apiKey: string,
   sessionId?: string,
   logId?: string
 ): Promise<SegmentationResponse> {
@@ -54,7 +54,7 @@ export async function processChunk(
   const startTime = Date.now();
 
   const responseText = await withTimeout(
-    generateContent(model, apiKeys, {
+    generateContent(model, apiKey, {
       prompt,
       sessionId,
       logId,

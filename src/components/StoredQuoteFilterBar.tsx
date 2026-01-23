@@ -111,14 +111,14 @@ const PersonFilterSelector: React.FC<{
           value={value}
           onChange={handleInputChange}
           onFocus={handleFocus}
-          className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2 pr-8"
+          className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2 pr-8"
           placeholder={t('filterByPersonPlaceholder')}
           autoComplete="off"
         />
         {value && (
           <button
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
             type="button"
           >
             ×
@@ -126,7 +126,7 @@ const PersonFilterSelector: React.FC<{
         )}
       </div>
       {isOpen && (
-        <ul className="absolute z-20 w-full bg-gray-800 shadow-lg max-h-48 rounded-md py-1 text-sm ring-1 ring-gray-600 overflow-auto mt-1">
+        <ul className="absolute z-20 w-full bg-white dark:bg-gray-800 shadow-lg max-h-48 rounded-md py-1 text-sm ring-1 ring-gray-300 dark:ring-gray-600 overflow-auto mt-1 border border-gray-200 dark:border-transparent">
           {isLoading && <li className="py-2 px-3 text-gray-400">{t('loading')}</li>}
           {!isLoading && people.length === 0 && value && (
             <li className="py-2 px-3 text-gray-500 italic">{t('noPeopleFound')}</li>
@@ -134,7 +134,7 @@ const PersonFilterSelector: React.FC<{
           {!isLoading && people.map((person) => (
             <li
               key={person._id}
-              className="cursor-pointer py-2 px-3 hover:bg-cyan-600 hover:text-white text-gray-300"
+              className="cursor-pointer py-2 px-3 hover:bg-cyan-600 hover:text-white text-gray-700 dark:text-gray-300"
               onClick={() => handleSelect(person)}
             >
               <span className="block truncate font-medium">{person.name}</span>
@@ -166,20 +166,20 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
   const RATING_OPTIONS = getRatingOptions(t);
 
   return (
-    <div className="p-4 bg-gray-800/50 rounded-lg mb-4">
+    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-lg mb-4 border border-gray-200 dark:border-transparent">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-300">{t('filterSortQuotes')}</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('filterSortQuotes')}</h3>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="text-xs text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
           >
             {showAdvancedFilters ? t('hideAdvanced') : t('showAdvanced')}
           </button>
           {hasActiveFilters && (
             <button
               onClick={onReset}
-              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+              className="text-xs text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors"
             >
               {t('resetFilters')}
             </button>
@@ -188,12 +188,12 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
       </div>
 
       {/* Sorting Controls */}
-      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-700/50">
-        <span className="text-xs text-gray-400">{t('sortByLabel')}</span>
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100 dark:border-gray-700/50">
+        <span className="text-xs text-gray-500 dark:text-gray-400">{t('sortByLabel')}</span>
         <select
           value={filters.sortField}
           onChange={(e) => onFilterChange('sortField', e.target.value as SortField)}
-          className="bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-2 py-1"
+          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-2 py-1"
         >
           {SORT_FIELD_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -201,24 +201,22 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
             </option>
           ))}
         </select>
-        <div className="flex rounded-md bg-gray-700">
+        <div className="flex rounded-md bg-gray-200 dark:bg-gray-700 p-0.5">
           <button
             onClick={() => onFilterChange('sortOrder', 'newest')}
-            className={`px-3 py-1 text-xs font-medium transition-colors rounded-l-md ${
-              filters.sortOrder === 'newest'
-                ? 'bg-cyan-600 text-white'
-                : 'text-gray-300 hover:bg-gray-600'
-            }`}
+            className={`px-3 py-1 text-xs font-medium transition-colors rounded-l-[4px] ${filters.sortOrder === 'newest'
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
           >
             {t('newest')}
           </button>
           <button
             onClick={() => onFilterChange('sortOrder', 'oldest')}
-            className={`px-3 py-1 text-xs font-medium transition-colors rounded-r-md ${
-              filters.sortOrder === 'oldest'
-                ? 'bg-cyan-600 text-white'
-                : 'text-gray-300 hover:bg-gray-600'
-            }`}
+            className={`px-3 py-1 text-xs font-medium transition-colors rounded-r-[4px] ${filters.sortOrder === 'oldest'
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
           >
             {t('oldest')}
           </button>
@@ -228,19 +226,19 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {/* Text Search */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('searchText')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('searchText')}</label>
           <input
             type="text"
             value={filters.text}
             onChange={(e) => onFilterChange('text', e.target.value)}
             placeholder={t('searchText')}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           />
         </div>
 
         {/* Person Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('personLabel')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('personLabel')}</label>
           <PersonFilterSelector
             value={personName}
             onChange={onPersonNameChange}
@@ -250,33 +248,33 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Date From */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('dateFrom')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('dateFrom')}</label>
           <input
             type="date"
             value={filters.dateFrom}
             onChange={(e) => onFilterChange('dateFrom', e.target.value)}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           />
         </div>
 
         {/* Date To */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('dateTo')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('dateTo')}</label>
           <input
             type="date"
             value={filters.dateTo}
             onChange={(e) => onFilterChange('dateTo', e.target.value)}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           />
         </div>
 
         {/* Rating Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('ratingLabel')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('ratingLabel')}</label>
           <select
             value={filters.rating}
             onChange={(e) => onFilterChange('rating', e.target.value as AnalysisRating | 'all')}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
             {RATING_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -288,11 +286,11 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Language Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('languageLabel')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('languageLabel')}</label>
           <select
             value={filters.language}
             onChange={(e) => onFilterChange('language', e.target.value)}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
             {LANGUAGE_OPTIONS.map((lang) => (
               <option key={lang.code} value={lang.code}>
@@ -304,11 +302,11 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Provider Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('providerLabel')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('providerLabel')}</label>
           <select
             value={filters.provider}
             onChange={(e) => onFilterChange('provider', e.target.value)}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
             {AI_PROVIDERS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -320,11 +318,11 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Analysis Status Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('analysisStatus')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('analysisStatus')}</label>
           <select
             value={filters.isAnalyzed}
             onChange={(e) => onFilterChange('isAnalyzed', e.target.value as 'all' | 'true' | 'false')}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
             <option value="all">{t('all')}</option>
             <option value="true">{t('analyzed')}</option>
@@ -334,11 +332,11 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
         {/* Improvement Status Filter */}
         <div>
-          <label className="block text-xs text-gray-400 mb-1">{t('improvementStatus')}</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('improvementStatus')}</label>
           <select
             value={filters.isImproved}
             onChange={(e) => onFilterChange('isImproved', e.target.value as 'all' | 'true' | 'false')}
-            className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
+            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm px-3 py-2"
           >
             <option value="all">{t('all')}</option>
             <option value="true">{t('improved')}</option>
@@ -349,79 +347,79 @@ export const StoredQuoteFilterBar: React.FC<StoredQuoteFilterBarProps> = ({
 
       {/* Advanced Filters - Date Ranges for savedAt, analyzedAt, improvedAt */}
       {showAdvancedFilters && (
-        <div className="mt-4 pt-4 border-t border-gray-700/50">
-          <h4 className="text-xs font-medium text-gray-400 mb-3">{t('advancedDateFilters')}</h4>
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">{t('advancedDateFilters')}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Saved At Range */}
-            <div className="bg-gray-700/30 p-3 rounded-lg">
-              <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('savedDate')}</label>
+            <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-transparent">
+              <label className="block text-xs text-cyan-600 dark:text-cyan-400 mb-2 font-medium">{t('savedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-              <label className="block text-[10px] text-gray-500 mb-1">{t('from')}</label>
+                  <label className="block text-[10px] text-gray-400 dark:text-gray-500 mb-1">{t('from')}</label>
                   <input
                     type="date"
                     value={filters.savedAtFrom}
                     onChange={(e) => onFilterChange('savedAtFrom', e.target.value)}
-                    className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
+                    className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">{t('to')}</label>
+                  <label className="block text-[10px] text-gray-400 dark:text-gray-500 mb-1">{t('to')}</label>
                   <input
                     type="date"
                     value={filters.savedAtTo}
                     onChange={(e) => onFilterChange('savedAtTo', e.target.value)}
-                    className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
+                    className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
                   />
                 </div>
               </div>
             </div>
 
             {/* Analyzed At Range */}
-            <div className="bg-gray-700/30 p-3 rounded-lg">
-              <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('analyzedDate')}</label>
+            <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-transparent">
+              <label className="block text-xs text-cyan-600 dark:text-cyan-400 mb-2 font-medium">{t('analyzedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">{t('from')}</label>
+                  <label className="block text-[10px] text-gray-400 dark:text-gray-500 mb-1">{t('from')}</label>
                   <input
                     type="date"
                     value={filters.analyzedAtFrom}
                     onChange={(e) => onFilterChange('analyzedAtFrom', e.target.value)}
-                    className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
+                    className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">{t('to')}</label>
+                  <label className="block text-[10px] text-gray-400 dark:text-gray-500 mb-1">{t('to')}</label>
                   <input
                     type="date"
                     value={filters.analyzedAtTo}
                     onChange={(e) => onFilterChange('analyzedAtTo', e.target.value)}
-                    className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
+                    className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
                   />
                 </div>
               </div>
             </div>
 
             {/* Improved At Range */}
-            <div className="bg-gray-700/30 p-3 rounded-lg">
-              <label className="block text-xs text-cyan-400 mb-2 font-medium">{t('improvedDate')}</label>
+            <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-transparent">
+              <label className="block text-xs text-cyan-600 dark:text-cyan-400 mb-2 font-medium">{t('improvedDate')}</label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">{t('from')}</label>
+                  <label className="block text-[10px] text-gray-400 dark:text-gray-500 mb-1">{t('from')}</label>
                   <input
                     type="date"
                     value={filters.improvedAtFrom}
                     onChange={(e) => onFilterChange('improvedAtFrom', e.target.value)}
-                    className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
+                    className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 mb-1">{t('to')}</label>
+                  <label className="block text-[10px] text-gray-400 dark:text-gray-500 mb-1">{t('to')}</label>
                   <input
                     type="date"
                     value={filters.improvedAtTo}
                     onChange={(e) => onFilterChange('improvedAtTo', e.target.value)}
-                    className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
+                    className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs px-2 py-1.5"
                   />
                 </div>
               </div>

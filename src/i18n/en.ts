@@ -70,6 +70,8 @@ const en = {
   youtubeFetchSupportsNote: 'Supports YouTube URLs, auto-generated captions, and multiple languages',
   youtubeTranscriptButtonNote: 'Fetch YouTube video transcripts using multiple methods',
   getYouTubeTranscript: 'Get YouTube Transcript',
+  getYouTubeTranscriptTitle: 'Get YouTube Transcript',
+  choosePreferredMethod: 'Choose your preferred method',
   chooseFromMethods: 'Choose from: Auto-fetch, Copy-paste, Bookmarklet, or SRT import',
   // Sidebar
   appTitle: 'DoubleCheck',

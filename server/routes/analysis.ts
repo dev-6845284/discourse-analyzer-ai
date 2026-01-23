@@ -206,9 +206,11 @@ router.post('/update-quote-source', async (req, res) => {
 // ============================
 
 // Analyze topics from session transcript (Step 1)
+
+// Analyze topics from session transcript (Step 1)
 router.post('/sessions/:id/analyze-topics', async (req, res) => {
   const sessionId = req.params.id;
-  const { language, model, apiKeys } = req.body;
+  let { language, model } = req.body;
 
   try {
     // Get session and verify ownership
@@ -226,10 +228,6 @@ router.post('/sessions/:id/analyze-topics', async (req, res) => {
       return res.status(400).json({ message: 'Session has no transcript data. Save transcript first.' });
     }
 
-    if (!apiKeys || typeof apiKeys !== 'object') {
-      return res.status(400).json({ message: 'API keys are required' });
-    }
-
     // Update status
     await analysisSessionService.updateSessionStatus(sessionId, 'analyzing_topics');
 
@@ -245,7 +243,7 @@ router.post('/sessions/:id/analyze-topics', async (req, res) => {
       blocks,
       language: language || transcriptData.languageCode || 'lt',
       model: model || 'gemini',
-      apiKeys,
+      userId: req.session.user!._id as string,
     });
 
     await analysisSessionService.updateSessionStep(sessionId, 'topicAnalysis', results, 'analyzing_topics');
@@ -290,7 +288,7 @@ router.put('/sessions/:id/selected-blocks', async (req, res) => {
 // Analyze speakers from session data (Step 2)
 router.post('/sessions/:id/analyze-speakers', async (req, res) => {
   const sessionId = req.params.id;
-  const { language, model, apiKeys, speakerHint } = req.body;
+  let { language, model, speakerHint } = req.body;
 
   let logId: string | undefined;
 
@@ -312,10 +310,6 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
 
     if (!analysisData.selectedBlockIds || analysisData.selectedBlockIds.length === 0) {
       return res.status(400).json({ message: 'No blocks selected for speaker analysis. Select blocks first.' });
-    }
-
-    if (!apiKeys || typeof apiKeys !== 'object') {
-      return res.status(400).json({ message: 'API keys are required' });
     }
 
     // Filter blocks to only include selected ones
@@ -340,7 +334,7 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
       blocks: selectedBlocks,
       language: language || 'lt',
       model: model || 'gemini',
-      apiKeys,
+      userId: req.session.user!._id as string,
       sessionId: req.session.id!,
       logId,
       speakerHint,
@@ -368,7 +362,7 @@ router.post('/sessions/:id/analyze-speakers', async (req, res) => {
 // Analyze dialog topics from session data (Step 3)
 router.post('/sessions/:id/analyze-dialog', async (req, res) => {
   const sessionId = req.params.id;
-  const { language, fastModel, betterModel, apiKeys } = req.body;
+  let { language, fastModel, betterModel } = req.body;
 
   let logId: string | undefined;
 
@@ -388,10 +382,6 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
       return res.status(400).json({ message: 'Session has no speaker analysis data. Run speaker analysis first.' });
     }
 
-    if (!apiKeys || typeof apiKeys !== 'object') {
-      return res.status(400).json({ message: 'API keys are required' });
-    }
-
     logId = addLogEntry(req.session.id!, 'analyze-dialog-topics', {
       dialogBlockCount: speakerData.speakerAnalysis.length,
       language: language || 'lt',
@@ -408,7 +398,7 @@ router.post('/sessions/:id/analyze-dialog', async (req, res) => {
       language: language || 'lt',
       fastModel,
       betterModel,
-      apiKeys,
+      userId: req.session.user!._id as string,
       sessionId: req.session.id!,
       logId,
     });

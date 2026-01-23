@@ -45,22 +45,25 @@ export const StrengthBar: React.FC<StrengthBarProps> = ({
       title={tooltip}
       style={{ width, height }}
     >
-      {Array.from({ length: max }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: Math.max(6, Math.floor((width - (max - 1) * 2) / max)),
-            height,
-            borderRadius: 2,
-            background: i < filled ? color : '#6b7280', // filled: color, unfilled: gray-400
-            opacity: i < filled ? 1 : 0.35,
-            border: '1px solid #222',
-            marginRight: i < max - 1 ? 2 : 0,
-            boxSizing: 'border-box',
-            transition: 'background 0.2s',
-          }}
-        />
-      ))}
+      {Array.from({ length: max }).map((_, i) => {
+        const isFilled = i < filled;
+        return (
+          <div
+            key={i}
+            className={`box-border transition-colors duration-200 border border-[#ddd] dark:border-[#222] ${isFilled
+                ? 'opacity-100'
+                : 'bg-gray-200 dark:bg-gray-600 opacity-50 dark:opacity-[0.35]'
+              }`}
+            style={{
+              width: Math.max(6, Math.floor((width - (max - 1) * 2) / max)),
+              height,
+              borderRadius: 2,
+              backgroundColor: isFilled ? color : undefined,
+              marginRight: i < max - 1 ? 2 : 0,
+            }}
+          />
+        );
+      })}
     </div>
   );
 };

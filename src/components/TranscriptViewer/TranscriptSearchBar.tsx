@@ -28,15 +28,15 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
   const { t } = useI18n();
 
   return (
-    <div className="flex gap-3 p-4 border-b border-gray-700 flex-shrink-0 flex-wrap">
+    <div className="flex gap-3 p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex-wrap bg-white dark:bg-gray-900">
       <div className="flex-1 relative min-w-0">
-        <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        <SearchIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder={t('searchInTranscript')}
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
+          className="w-full bg-white text-gray-900 border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-700 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-cyan-500 dark:focus:border-blue-500 focus:ring-1 focus:ring-cyan-500/50 dark:focus:ring-blue-500/50 placeholder-gray-400"
         />
       </div>
       <button

@@ -76,36 +76,36 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         clearError={clearError}
       />
 
-      <div className="p-4 bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between">
+      <div className="p-4 bg-white dark:bg-gray-800/50 rounded-lg mb-6 flex flex-wrap gap-4 items-center justify-between border border-gray-200 dark:border-transparent">
         <div>
-          <h2 className="text-2xl font-semibold text-cyan-400 mb-2">
+          <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-400 mb-2">
             {t('results', { count: results.length })}
           </h2>
           {personName && (
-            <p className="text-gray-400">
+            <p className="text-gray-500 dark:text-gray-400">
               Showing quotes for:{' '}
-              <span className="font-bold text-gray-300">{personName}</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300">{personName}</span>
             </p>
           )}
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">{t('sortBy')}</span>
-            <div className="flex rounded-md bg-gray-700">
+            <span className="text-sm text-gray-500 dark:text-gray-400">{t('sortBy')}</span>
+            <div className="flex rounded-md bg-gray-200 dark:bg-gray-700 p-0.5">
               <button
                 onClick={() => setSortOrder('newest')}
-                className={`px-3 py-1 text-sm font-medium transition-colors rounded-l-md ${sortOrder === 'newest'
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-600'
+                className={`px-3 py-1 text-sm font-medium transition-colors rounded-l-[4px] ${sortOrder === 'newest'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
               >
                 {t('newest')}
               </button>
               <button
                 onClick={() => setSortOrder('oldest')}
-                className={`px-3 py-1 text-sm font-medium transition-colors rounded-r-md ${sortOrder === 'oldest'
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-600'
+                className={`px-3 py-1 text-sm font-medium transition-colors rounded-r-[4px] ${sortOrder === 'oldest'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
               >
                 {t('oldest')}
@@ -117,13 +117,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           {onExport && (
             <button
               onClick={onExport}
-              className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm"
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm border border-gray-300 dark:border-transparent"
             >
               {t('export')}
             </button>
           )}
           {onImport && (
-            <label className="px-4 py-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors text-sm cursor-pointer">
+            <label className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm cursor-pointer border border-gray-300 dark:border-transparent">
               {t('import')}
               <input type="file" accept=".json" onChange={onImport} className="hidden" />
             </label>
@@ -139,14 +139,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       </div>
 
       {/* Status filters */}
-      <div className="mb-4 p-3 bg-gray-800/40 rounded-md">
+      <div className="mb-4 p-3 bg-white dark:bg-gray-800/40 rounded-md border border-gray-100 dark:border-transparent">
         <div className="grid grid-cols-2 gap-3 max-w-sm">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{t('analyzed')}</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('analyzed')}</label>
             <select
               value={sf.isAnalyzed}
               onChange={(e) => sf.setIsAnalyzed(e.target.value as 'all' | 'true' | 'false')}
-              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+              className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
             >
               <option value="all">{t('all')}</option>
               <option value="true">{t('analyzed')}</option>
@@ -154,11 +154,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{t('improved')}</label>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('improved')}</label>
             <select
               value={sf.isImproved}
               onChange={(e) => sf.setIsImproved(e.target.value as 'all' | 'true' | 'false')}
-              className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
+              className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-sm"
             >
               <option value="all">{t('all')}</option>
               <option value="true">{t('improved')}</option>

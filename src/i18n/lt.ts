@@ -72,6 +72,8 @@ const lt = {
   youtubeFetchSupportsNote: 'Palaiko YouTube nuorodas, automatiškai sugeneruotas subtitrus ir kelias kalbas',
   youtubeTranscriptButtonNote: 'Gaukite YouTube vaizdo įrašo transkriptus įvairiais metodais',
   getYouTubeTranscript: 'Gauti YouTube transkriptą',
+  getYouTubeTranscriptTitle: 'Gauti YouTube transkriptą',
+  choosePreferredMethod: 'Pasirinkite pageidaujamą metodą',
   chooseFromMethods: 'Pasirinkite iš: auto-gauti, kopijuoti-įklijuoti, bookmarklet arba SRT importas',
   // Sidebar
   appTitle: 'Pasitikrink',

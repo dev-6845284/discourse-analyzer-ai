@@ -46,7 +46,7 @@ export const PersonManager: React.FC<PersonManagerProps> = ({ onSelectPerson }) 
   return (
     <div className="h-full flex flex-col p-4 overflow-y-auto">
       <div className="flex justify-between items-center mb-3">
-        <h2 className="text-lg font-semibold text-cyan-400">{t('peopleTab')}</h2>
+        <h2 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">{t('peopleTab')}</h2>
 
         {!isCreating && !editingPerson && (
           <button

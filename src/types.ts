@@ -69,7 +69,9 @@ export type FlawsClassification =
   | "DEMOCRATICALLY DANGEROUS SPEECH";
 
 export interface FlawsResult {
-  classification: FlawsClassification;
+  verdict: FlawsClassification;
+  /** @deprecated use verdict */
+  classification?: FlawsClassification;
   finalAssessment: string;
   categories: {
     [key in AuditCategory]: AuditDetail;

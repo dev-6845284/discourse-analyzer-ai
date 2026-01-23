@@ -44,9 +44,9 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({ user, onClose, onS
   };
 
   return (
-    <ModalWrapper title={t('changePasswordFor', { name: user.name || user.alias })}>
+    <ModalWrapper title={t('changePasswordFor', { name: user.name || user.alias })} onClose={onClose}>
       {error && (
-        <div className="mb-4 bg-red-900/30 border border-red-700 rounded text-red-300 px-4 py-3">
+        <div className="mb-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded text-red-600 dark:text-red-300 px-4 py-3">
           {error}
         </div>
       )}
@@ -57,8 +57,8 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({ user, onClose, onS
         <FormInput label={t('confirmPassword')} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} />
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none">{t('cancel')}</button>
-          <button type="submit" disabled={isSubmitting} className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 px-4 rounded focus:outline-none disabled:opacity-50">{isSubmitting ? t('updating') : t('updatePassword')}</button>
+          <button type="button" onClick={onClose} className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none transition-colors">{t('cancel')}</button>
+          <button type="submit" disabled={isSubmitting} className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white font-semibold py-2 px-4 rounded focus:outline-none transition-colors disabled:opacity-50">{isSubmitting ? t('updating') : t('updatePassword')}</button>
         </div>
       </form>
     </ModalWrapper>

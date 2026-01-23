@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Quote, AnalysisCategory, AnalysisResult, AuditCategory } from '../types';
 import { useI18n } from '../i18n';
 import AnalysisReport from './AnalysisReport';
@@ -50,6 +51,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isAnalysisExpanded, setIsAnalysisExpanded] = useState(true);
+  const [isContextExpanded, setIsContextExpanded] = useState(false);
   const [analysisContext, setAnalysisContext] = useState(quote.analysisContext || '');
 
   const [links, setLinks] = useState<LinkData[]>(
@@ -160,10 +163,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   };
 
   return (
-    <div className={`relative bg-gray-800 rounded-xl shadow-lg transition-all duration-300 hover:bg-gray-700/50 hover:shadow-cyan-500/10 ${isCollapsed ? 'py-4 px-6' : 'p-6'}`}>
+    <div className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:shadow-cyan-500/10 border border-gray-100 dark:border-transparent ${isCollapsed ? 'py-4 px-6' : 'p-6'}`}>
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute top-3 right-4 text-gray-400 hover:text-white text-2xl font-light leading-none z-10"
+        className="absolute top-3 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl font-light leading-none z-10"
         aria-label={isCollapsed ? t('expandQuote') : t('collapseQuote')}
         title={isCollapsed ? t('expand') : t('collapse')}
       >
@@ -183,13 +186,40 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
       {!isCollapsed && (
         <>
+
           {displayQuote.audit && (
-            <AnalysisReport
-              audit={displayQuote.audit}
-              selectable={hasDraft}
-              selectedCategories={selectedCategories as AuditCategory[]}
-              onToggleCategory={handleToggleCategory as (category: AuditCategory) => void}
-            />
+            <div className="mt-4 border-t border-gray-100 dark:border-gray-700/50 pt-4">
+              <button
+                onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}
+                className="w-full flex items-center justify-between group bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:border-cyan-500/50 hover:shadow-cyan-500/10 transition-all mb-2"
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-md ${isAnalysisExpanded ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'} transition-colors`}>
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-widest">
+                    {t('auditReport')}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 text-gray-400 group-hover:text-cyan-500 transition-colors">
+                  <span className="text-[10px] font-medium uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isAnalysisExpanded ? (t('hide') || 'Hide') : (t('show') || 'Show')}
+                  </span>
+                  {isAnalysisExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </button>
+
+              {isAnalysisExpanded && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                  <AnalysisReport
+                    audit={displayQuote.audit}
+                    selectable={hasDraft}
+                    selectedCategories={selectedCategories as AuditCategory[]}
+                    onToggleCategory={handleToggleCategory as (category: AuditCategory) => void}
+                  />
+                </div>
+              )}
+            </div>
           )}
 
 
@@ -197,11 +227,34 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
           {/* Display Context & Links (Read-only view) */}
           {!showAdvanced && (quote.analysisContext || (links && links.length > 0)) && (
-            <div className="mt-3 pt-3 border-t border-gray-700/30 text-xs">
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/30 text-xs">
               {quote.analysisContext && (
-                <div className="mb-2">
-                  <span className="text-gray-500 font-semibold uppercase tracking-wider text-[10px]">{t('contextLabel')}</span>
-                  <span className="text-gray-400 italic">{quote.analysisContext}</span>
+                <div className="mb-2 bg-gray-50 dark:bg-gray-900/20 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700/30">
+                  <button
+                    onClick={() => setIsContextExpanded(!isContextExpanded)}
+                    className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors group gap-3"
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden flex-1">
+                      <span className="text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-wider text-[10px] shrink-0">
+                        {t('contextLabel') || 'Context'}
+                      </span>
+                      {!isContextExpanded && (
+                        <span className="text-gray-500 dark:text-gray-400 text-xs italic truncate">
+                          {quote.analysisContext}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-400 group-hover:text-cyan-500 transition-colors shrink-0">
+                      {isContextExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </div>
+                  </button>
+                  {isContextExpanded && (
+                    <div className="px-3 pb-3 pt-1 border-t border-gray-200 dark:border-gray-700/50">
+                      <span className="text-gray-600 dark:text-gray-400 text-xs italic block mt-1">
+                        {quote.analysisContext}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
               {links && links.length > 0 && <QuoteLinksDisplay links={links} />}

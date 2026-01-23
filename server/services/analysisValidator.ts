@@ -82,8 +82,13 @@ export function validateFlawsResult(parsed: any, rawResponse: string) {
   try {
     ensureObject(parsed, 'flaws result');
 
-    if (!parsed.classification || typeof parsed.classification !== 'string') {
-      throw new Error(`Missing or invalid 'classification'.`);
+    // Backward compatibility: map classification to verdict if verdict is missing
+    if (!parsed.verdict && parsed.classification) {
+      parsed.verdict = parsed.classification;
+    }
+
+    if (!parsed.verdict || typeof parsed.verdict !== 'string') {
+      throw new Error(`Missing or invalid 'verdict'.`);
     }
     if (!parsed.finalAssessment || typeof parsed.finalAssessment !== 'string') {
       throw new Error(`Missing or invalid 'finalAssessment'.`);

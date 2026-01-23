@@ -7,10 +7,10 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 const FormInput: React.FC<FormInputProps> = ({ label, className = '', ...rest }) => {
   return (
     <div className="mb-4">
-      {label && <label className="block text-gray-200 text-sm font-semibold mb-2">{label}</label>}
+      {label && <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">{label}</label>}
       <input
         {...rest}
-        className={`bg-gray-900 border border-gray-600 rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:border-cyan-400 ${className}`}
+        className={`bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded w-full py-2 px-3 text-gray-900 dark:text-gray-100 leading-tight focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 ${className}`}
       />
     </div>
   );

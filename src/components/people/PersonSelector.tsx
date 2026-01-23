@@ -44,7 +44,7 @@ export const PersonSelector: React.FC<PersonSelectorProps> = ({ value, onChange,
     setIsOpen(true);
     // If the list is empty (and we haven't searched yet), fetch all
     if (people.length === 0) {
-        fetchPeople(value);
+      fetchPeople(value);
     }
   };
 
@@ -61,22 +61,22 @@ export const PersonSelector: React.FC<PersonSelectorProps> = ({ value, onChange,
         value={value}
         onChange={handleInputChange}
         onFocus={handleFocus}
-        className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+        className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
         placeholder={placeholder || "e.g., Albert Einstein"}
         autoComplete="off"
       />
       {isOpen && (
         <ul className="absolute z-10 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm mt-1 text-gray-900">
           {isLoading && <li className="py-2 px-3 text-gray-500">Loading...</li>}
-          
+
           {!isLoading && people.length === 0 && value && (
-             <li className="py-2 px-3 text-gray-500 italic">No people found</li>
+            <li className="py-2 px-3 text-gray-500 italic">No people found</li>
           )}
 
           {!isLoading && people.map((person) => (
             <li
               key={person._id}
-              className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white group"
+              className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white text-gray-900 group"
               onClick={() => handleSelect(person)}
             >
               <span className="block truncate font-medium">{person.name}</span>

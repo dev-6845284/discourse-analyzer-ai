@@ -474,21 +474,16 @@ export const analyzeTranscriptTopics = async (req: Request, res: Response) => {
     const effectiveModel = model || 'gemini';
     console.log(`[TopicAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${effectiveModel}`);
 
-    const apiKey = await getApiKey(req, effectiveModel);
-
-    // Reconstruct apiKeys object for the extractor service (it works with object still?)
-    // Note: extractTranscriptTopics assumes it receives a map of keys? 
-    // Let's check extractTranscriptTopics signature. 
-    // It takes apiKeys: Record<string, string>. 
-    // We should probably assume it uses the same provider as model.
-    // Ideally we refactor extractTranscriptTopics too, but for now let's pass a constructed object.
-    const apiKeys = { [getProviderFromModel(effectiveModel)]: apiKey };
+    if (!req.session?.user?._id) {
+      throw new Error('User authentication required for analysis.');
+    }
+    const userId = req.session.user._id.toString();
 
     const results = await extractTranscriptTopics({
       blocks,
       language: language || 'lt',
       model: effectiveModel,
-      apiKeys,
+      userId,
     });
 
     if (sessionId) {
@@ -533,14 +528,16 @@ export const analyzeTranscriptSpeakers = async (req: Request, res: Response) => 
     const effectiveModel = model || 'gemini';
     console.log(`[SpeakerAnalysis] Analyzing ${blocks.length} transcript blocks with model: ${effectiveModel}`);
 
-    const apiKey = await getApiKey(req, effectiveModel);
-    const apiKeys = { [getProviderFromModel(effectiveModel)]: apiKey };
+    if (!req.session?.user?._id) {
+      throw new Error('User authentication required for analysis.');
+    }
+    const userId = req.session.user._id.toString();
 
     const results = await identifySpeakers({
       blocks,
       language: language || 'lt',
       model: effectiveModel,
-      apiKeys,
+      userId,
       sessionId,
       logId,
     });
@@ -594,33 +591,17 @@ export const analyzeDialogTopics = async (req: Request, res: Response) => {
 
     console.log(`[DialogAnalysis] Analyzing dialog with ${dialog.length} blocks`);
 
-    // We need keys for BOTH fastModel and betterModel.
-    // They might be the same provider or different.
-    const apiKeys: Record<string, string> = {};
-
-    if (fastModel) {
-      const provider = getProviderFromModel(fastModel);
-      if (!apiKeys[provider]) {
-        apiKeys[provider] = await getApiKey(req, provider);
-      }
+    if (!req.session?.user?._id) {
+      throw new Error('User authentication required for analysis.');
     }
-    if (betterModel) {
-      const provider = getProviderFromModel(betterModel);
-      if (!apiKeys[provider]) {
-        apiKeys[provider] = await getApiKey(req, provider);
-      }
-    }
-    // ensure at least default (gemini) is there if models undefined (defaults in service?)
-    if (!fastModel && !betterModel && !apiKeys['gemini']) {
-      apiKeys['gemini'] = await getApiKey(req, 'gemini');
-    }
+    const userId = req.session.user._id.toString();
 
     const results = await analyzeDialogTopicsService({
       dialog,
       language: language || 'lt',
       fastModel,
       betterModel,
-      apiKeys,
+      userId,
       sessionId: req.session.id || sessionId,
       logId,
     });

@@ -49,33 +49,33 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
   if (isAuditResult(props)) {
     const { audit, selectable = false, selectedCategories = [], onToggleCategory } = props;
     return (
-      <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
-        {'classification' in audit ? (
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50 space-y-4">
+        {'finalAssessment' in audit ? (
           <>
             {/* Flaws Classification */}
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-cyan-300">{t('flawsReport') || 'Rhetorical Analysis'}</h3>
-              <span className="px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset bg-purple-600/20 text-purple-300 ring-purple-500/30 text-right">
-                {t(`verdict_${audit.classification}`) || audit.classification}
+              <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-300">{t('flawsReport') || 'Rhetorical Analysis'}</h3>
+              <span className="px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset bg-purple-100 dark:bg-purple-600/20 text-purple-700 dark:text-purple-300 ring-purple-200 dark:ring-purple-500/30 text-right">
+                {t(`verdict_${audit.verdict || audit.classification}`) || audit.verdict || audit.classification}
               </span>
             </div>
             {/* Final Assessment */}
-            <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-purple-500">
-              <p className="text-gray-200 text-sm italic">{audit.finalAssessment}</p>
+            <div className="p-3 bg-gray-50 dark:bg-gray-800/70 rounded-lg border-l-4 border-purple-500 shadow-sm border border-gray-100 dark:border-transparent">
+              <p className="text-gray-700 dark:text-gray-200 text-sm italic">{audit.finalAssessment}</p>
             </div>
           </>
         ) : (
           <>
             {/* Verdict Badge */}
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-cyan-300">{t('auditReport')}</h3>
+              <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-300">{t('auditReport')}</h3>
               <span className={`px-3 py-1 text-sm font-bold rounded-full ring-1 ring-inset ${VERDICT_COLORS[audit.verdict]}`}>
                 {t(`verdict_${audit.verdict}`) || audit.verdict}
               </span>
             </div>
             {/* Rationale */}
-            <div className="p-3 bg-gray-800/70 rounded-lg border-l-4 border-cyan-500">
-              <p className="text-gray-200 text-sm italic">{audit.rationale}</p>
+            <div className="p-3 bg-gray-50 dark:bg-gray-800/70 rounded-lg border-l-4 border-cyan-500 shadow-sm border border-gray-100 dark:border-transparent">
+              <p className="text-gray-700 dark:text-gray-200 text-sm italic">{audit.rationale}</p>
             </div>
           </>
         )}
@@ -107,7 +107,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
           return (
             <div
               key={category}
-              className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}
+              className={`p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex gap-3 border border-gray-100 dark:border-transparent ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}
             >
               {selectable && onToggleCategory && (
                 <div className="pt-1">
@@ -115,7 +115,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
                     type="checkbox"
                     checked={selectedCategories.includes(category as AuditCategory)}
                     onChange={() => onToggleCategory(category as AuditCategory)}
-                    className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
+                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-white dark:bg-gray-700"
                   />
                 </div>
               )}
@@ -133,7 +133,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
                     width={60}
                   />
                 </div>
-                <p className="mt-2 text-gray-300 text-sm">{detail.evidence}</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm">{detail.evidence}</p>
               </div>
             </div>
           );
@@ -145,17 +145,17 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
   // Legacy analysis
   const { analysis, selectable = false, selectedCategories = [], onToggleCategory } = props as LegacyAnalysisReportProps;
   return (
-    <div className="mt-4 pt-4 border-t border-gray-700/50 space-y-4">
-      <h3 className="text-lg font-semibold text-cyan-300">{t('analysisReportLegacy')}</h3>
+    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50 space-y-4">
+      <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-300">{t('analysisReportLegacy')}</h3>
       {(Object.entries(analysis) as [AnalysisCategory, AnalysisDetail][]).map(([category, detail]) => (
-        <div key={category} className={`p-3 bg-gray-800/50 rounded-lg flex gap-3 ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}>
+        <div key={category} className={`p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex gap-3 border border-gray-100 dark:border-transparent ${selectable && !selectedCategories.includes(category) ? 'opacity-50' : ''}`}>
           {selectable && onToggleCategory && (
             <div className="pt-1">
               <input
                 type="checkbox"
                 checked={selectedCategories.includes(category as AnalysisCategory)}
                 onChange={() => onToggleCategory(category as AnalysisCategory)}
-                className="w-4 h-4 rounded border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-gray-700"
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500 bg-white dark:bg-gray-700"
               />
             </div>
           )}
@@ -173,7 +173,7 @@ const AnalysisReport: React.FC<AnalysisReportProps> = (props) => {
                 width={60}
               />
             </div>
-            <p className="mt-2 text-gray-300 text-sm">{detail.justification}</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm">{detail.justification}</p>
           </div>
         </div>
       ))}

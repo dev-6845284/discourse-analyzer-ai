@@ -46,7 +46,7 @@ describe('StrengthBar', () => {
       expect(getComputedStyle(el).opacity).toBe('1');
     });
     unfilled.forEach(el => {
-      expect(getComputedStyle(el).opacity).toBe('0.35');
+      expect(getComputedStyle(el).opacity).toBe('0.5');
     });
   });
 });

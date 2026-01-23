@@ -80,7 +80,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   const [similarMatches, setSimilarMatches] = useState<PersonSimilarityMatch[]>([]);
   const [isCheckingMatches, setIsCheckingMatches] = useState(false);
   const { t } = useI18n();
-  
+
   // Merge-related state
   const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
   const [showMergeModal, setShowMergeModal] = useState(false);
@@ -275,17 +275,17 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-gray-800/30 space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-800/30 space-y-6">
       <div className="flex justify-between items-center mb-4">
-        <p className="text-gray-300">{t('analyzedBlocks', { count: speakerResults.length })}</p>
+        <p className="text-gray-600 dark:text-gray-300">{t('analyzedBlocks', { count: speakerResults.length })}</p>
         <div className="flex gap-2 items-center">
           <div className="flex items-center gap-2 mr-2">
-            <label htmlFor="speaker-language-select" className="text-xs text-gray-400">{t('language')}</label>
+            <label htmlFor="speaker-language-select" className="text-xs text-gray-500 dark:text-gray-400">{t('language')}</label>
             <select
               id="speaker-language-select"
               value={selectedLanguage}
               onChange={(e) => onLanguageChange?.(e.target.value)}
-              className="bg-gray-800 text-gray-300 text-xs rounded border border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
             >
               <option value="en">English</option>
               <option value="lt">Lithuanian</option>
@@ -300,28 +300,28 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
           </div>
           <button
             onClick={() => onAnalyzeDialog(selectedLanguage)}
-            className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
+            className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1 shadow-sm"
           >
             <Zap size={12} />
             {t('analyzeDialogTopics')}
           </button>
           <button
             onClick={onImportSpeakers}
-            className="text-xs px-3 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 flex items-center gap-1"
+            className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-600/50 flex items-center gap-1"
           >
             <Upload size={12} />
             {t('import')}
           </button>
           <button
             onClick={onExportSpeakers}
-            className="text-xs px-3 py-1 bg-emerald-600/30 text-emerald-300 rounded hover:bg-emerald-600/50 flex items-center gap-1"
+            className="text-xs px-3 py-1 bg-emerald-100 dark:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-600/50 flex items-center gap-1"
           >
             <Download size={12} />
             {t('exportJson')}
           </button>
           <button
             onClick={onClearAnalysis}
-            className="text-xs px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
           >
             {t('clearAnalysis')}
           </button>
@@ -329,14 +329,14 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
       </div>
 
       {/* Global Speakers Editor */}
-      <div className="bg-gray-800/60 border border-gray-700 rounded-lg p-4">
+      <div className="bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-gray-300">{t('identifiedSpeakers', { count: allSpeakers.length })}</h4>
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('identifiedSpeakers', { count: allSpeakers.length })}</h4>
           <div className="flex items-center gap-2">
             {selectedForMerge.size >= 2 && (
               <button
                 onClick={handleOpenMergeModal}
-                className="text-xs px-2 py-1 bg-orange-600/30 text-orange-300 rounded hover:bg-orange-600/50 flex items-center gap-1"
+                className="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-600/30 text-orange-700 dark:text-orange-300 rounded hover:bg-orange-200 dark:hover:bg-orange-600/50 flex items-center gap-1"
               >
                 <GitMerge size={12} />
                 {t('mergeSelected', { count: selectedForMerge.size })}
@@ -345,7 +345,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             {selectedForMerge.size > 0 && (
               <button
                 onClick={() => setSelectedForMerge(new Set())}
-                className="text-xs px-2 py-1 text-gray-400 hover:text-gray-300"
+                className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               >
                 {t('clearSelection')}
               </button>
@@ -353,7 +353,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             {!isAddingNew && (
               <button
                 onClick={() => setIsAddingNew(true)}
-                className="text-xs px-2 py-1 bg-green-600/30 text-green-300 rounded hover:bg-green-600/50 flex items-center gap-1"
+                className="text-xs px-2 py-1 bg-green-100 dark:bg-green-600/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-600/50 flex items-center gap-1"
               >
                 <Plus size={12} />
                 {t('addSpeaker')}
@@ -361,16 +361,16 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             )}
           </div>
         </div>
-        
+
         {removeError && (
-          <div className="text-xs text-red-400 mb-2 p-2 bg-red-900/20 rounded">
+          <div className="text-xs text-red-600 dark:text-red-400 mb-2 p-2 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-transparent">
             {removeError}
           </div>
         )}
 
         <div className="flex flex-wrap gap-2">
           {allSpeakers.map(speaker => (
-            <div key={speaker.id} className={`flex items-center gap-1 rounded-lg px-2 py-1 ${selectedForMerge.has(speaker.id) ? 'bg-orange-700/30 border border-orange-600/50' : 'bg-gray-700/50'}`}>
+            <div key={speaker.id} className={`flex items-center gap-1 rounded-lg px-2 py-1 ${selectedForMerge.has(speaker.id) ? 'bg-orange-50 border border-orange-200 dark:bg-orange-700/30 dark:border-orange-600/50' : 'bg-gray-100 border border-gray-200 dark:bg-gray-700/50 dark:border-transparent'}`}>
               {editingSpeaker === speaker.id ? (
                 <>
                   <input
@@ -379,18 +379,18 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                     onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     autoFocus
-                    className="text-xs bg-gray-800 text-white px-2 py-0.5 rounded border border-gray-600 focus:border-cyan-500 focus:outline-none w-32"
+                    className="text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none w-32"
                   />
                   <button
                     onClick={handleSaveEdit}
-                    className="text-green-400 hover:text-green-300 p-0.5"
+                    className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 p-0.5"
                     title="Save (Enter)"
                   >
                     <Check size={14} />
                   </button>
                   <button
                     onClick={handleCancelEdit}
-                    className="text-gray-400 hover:text-gray-300 p-0.5"
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-0.5"
                     title="Cancel (Escape)"
                   >
                     <X size={14} />
@@ -402,14 +402,14 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                     type="checkbox"
                     checked={selectedForMerge.has(speaker.id)}
                     onChange={() => toggleSpeakerSelection(speaker.id)}
-                    className="w-3 h-3 rounded border-gray-600 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                    className="w-3 h-3 rounded border-gray-300 dark:border-gray-600 text-orange-500 focus:ring-orange-500 cursor-pointer"
                     title={t('selectForMerge')}
                   />
                   {/* Person link indicator */}
                   {speaker.personId ? (
                     <button
                       onClick={() => setSpeakerToLink(speaker)}
-                      className="text-cyan-400 hover:text-cyan-300 p-0.5"
+                      className="text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 dark:hover:text-cyan-300 p-0.5"
                       title={t('linkedTo', { name: speaker.personName || t('person') })}
                     >
                       <Link2 size={12} />
@@ -417,13 +417,13 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   ) : (
                     <button
                       onClick={() => setSpeakerToLink(speaker)}
-                      className="text-gray-600 hover:text-cyan-400 p-0.5"
+                      className="text-gray-400 hover:text-cyan-600 dark:text-gray-600 dark:hover:text-cyan-400 p-0.5"
                       title={t('linkToPersonRecord')}
                     >
                       <Link2 size={12} />
                     </button>
                   )}
-                  <span className={`text-xs ${speaker.personId ? 'text-cyan-300' : 'text-gray-300'}`}>
+                  <span className={`text-xs ${speaker.personId ? 'text-cyan-700 dark:text-cyan-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                     {speaker.name}
                     {speaker.personId && speaker.personName && speaker.personName !== speaker.name && (
                       <span className="text-gray-500 ml-1">({speaker.personName})</span>
@@ -431,7 +431,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   </span>
                   <button
                     onClick={() => handleStartEdit(speaker.id, speaker.name)}
-                    className="text-gray-500 hover:text-cyan-400 p-0.5"
+                    className="text-gray-400 hover:text-cyan-600 dark:text-gray-500 dark:hover:text-cyan-400 p-0.5"
                     title={t('renameSpeaker')}
                   >
                     <Edit2 size={12} />
@@ -439,7 +439,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   {!isSpeakerUsed(speaker.id) && (
                     <button
                       onClick={() => handleRemoveSpeaker(speaker)}
-                      className="text-gray-500 hover:text-red-400 p-0.5"
+                      className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 p-0.5"
                       title={t('removeSpeakerUnused')}
                     >
                       <Trash2 size={12} />
@@ -449,9 +449,9 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
               )}
             </div>
           ))}
-          
+
           {isAddingNew && (
-            <div className="flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1">
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg px-2 py-1 border border-gray-200 dark:border-transparent">
               <input
                 type="text"
                 value={newSpeakerName}
@@ -467,15 +467,15 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                 placeholder={t('speakerNamePlaceholder')}
                 autoFocus
                 disabled={isCheckingMatches}
-                className="text-xs bg-gray-800 text-white px-2 py-0.5 rounded border border-gray-600 focus:border-cyan-500 focus:outline-none w-32 disabled:opacity-50"
+                className="text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 focus:border-cyan-500 focus:outline-none w-32 disabled:opacity-50"
               />
               {isCheckingMatches ? (
-                <span className="text-xs text-gray-400 px-2">{t('checking')}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 px-2">{t('checking')}</span>
               ) : (
                 <>
                   <button
                     onClick={handleAddSpeaker}
-                    className="text-green-400 hover:text-green-300 p-0.5"
+                    className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 p-0.5"
                     title={t('addEnter')}
                   >
                     <Check size={14} />
@@ -486,7 +486,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                       setNewSpeakerName('');
                       setSimilarMatches([]);
                     }}
-                    className="text-gray-400 hover:text-gray-300 p-0.5"
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 p-0.5"
                     title={t('cancelEscape')}
                   >
                     <X size={14} />
@@ -499,19 +499,19 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
 
         {/* Similar persons confirmation dialog */}
         {similarMatches.length > 0 && (
-          <div className="mt-2 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-            <p className="text-sm text-yellow-200 mb-2">
+          <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 rounded-lg">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
               {t('similarExistingPersonsFoundFor', { name: newSpeakerName })}
             </p>
             <div className="space-y-2">
               {similarMatches.map(match => (
                 <div
                   key={match.personId}
-                  className="flex items-center justify-between bg-gray-800/50 rounded p-2"
+                  className="flex items-center justify-between bg-white dark:bg-gray-800/50 rounded p-2 border border-yellow-100 dark:border-transparent"
                 >
                   <div className="flex-1">
-                    <span className="text-sm text-gray-200">{match.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">
+                    <span className="text-sm text-gray-900 dark:text-gray-200 font-medium">{match.name}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
                       ({Math.round(match.similarity * 100)}% {t('match')}{match.isExact && `, ${t('exact')}`})
                     </span>
                     {match.aliases.length > 0 && (
@@ -522,7 +522,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                   </div>
                   <button
                     onClick={() => handleSelectExistingPerson(match)}
-                    className="text-xs px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded"
+                    className="text-xs px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded shadow-sm"
                   >
                     {t('useThis')}
                   </button>
@@ -532,13 +532,13 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             <div className="mt-3 flex gap-2">
               <button
                 onClick={handleCreateNewSpeaker}
-                className="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded"
+                className="text-xs px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded shadow-sm"
               >
                 {t('createNewAnyway', { name: newSpeakerName })}
               </button>
               <button
                 onClick={handleCancelSimilarSelection}
-                className="text-xs px-3 py-1 text-gray-400 hover:text-gray-300"
+                className="text-xs px-3 py-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               >
                 {t('cancel')}
               </button>
@@ -550,35 +550,35 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
       {speakerResults.map(block => (
         <div
           key={block.blockId}
-          className="bg-gray-800/60 border border-gray-700 rounded-lg overflow-hidden"
+          className="bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm"
         >
-          <div className="p-3 bg-gray-900/50 border-b border-gray-700 flex justify-between items-center">
-            <span className="font-mono text-sm text-blue-400">
+          <div className="p-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <span className="font-mono text-sm text-blue-600 dark:text-blue-400">
               {formatTimestamp(block.startTime)} - {formatTimestamp(block.endTime)}
             </span>
             <div className="flex gap-2">
               {block.identifiedSpeakers.map(speaker => (
-                <span key={speaker} className="text-xs px-2 py-1 bg-gray-700 rounded-full text-gray-300">
+                <span key={speaker} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-transparent">
                   {speaker}
                 </span>
               ))}
             </div>
           </div>
-          
+
           <div className="p-4">
             {/* Table header */}
-            <div className="hidden md:grid md:grid-cols-[80px_80px_150px_1fr] gap-3 mb-3 pb-3 border-b border-gray-700 text-xs font-semibold text-gray-400">
+            <div className="hidden md:grid md:grid-cols-[80px_80px_150px_1fr] gap-3 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400">
               <div>{t('start')}</div>
               <div>{t('end')}</div>
               <div>{t('speaker')}</div>
               <div>{t('text')}</div>
             </div>
-            
+
             {/* Dialogue rows */}
             <div className="space-y-1">
               {block.dialogue.map((line) => (
-                <div key={line.id} className="grid grid-cols-1 md:grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-700/30 rounded px-2 transition-colors">
-                  <div className="font-mono text-blue-400">
+                <div key={line.id} className="grid grid-cols-1 md:grid-cols-[80px_80px_150px_1fr] gap-3 text-xs py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded px-2 transition-colors">
+                  <div className="font-mono text-blue-600 dark:text-blue-400">
                     {line.startTime !== undefined ? formatTimestamp(line.startTime) : '—'}
                   </div>
                   <div className="font-mono text-blue-400/60">
@@ -588,7 +588,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                     <select
                       value={line.speakerId}
                       onChange={(e) => onUpdateLineSpeaker?.(block.blockId, line.id, e.target.value)}
-                      className="text-xs bg-gray-800 text-purple-400 font-semibold rounded border border-gray-600 px-2 py-1 focus:border-cyan-500 focus:outline-none w-full cursor-pointer hover:bg-gray-700"
+                      className="text-xs bg-white dark:bg-gray-800 text-purple-700 dark:text-purple-400 font-semibold rounded border border-gray-300 dark:border-gray-600 px-2 py-1 focus:border-cyan-500 focus:outline-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       {allSpeakers.map(speaker => (
                         <option key={speaker.id} value={speaker.id}>
@@ -597,10 +597,10 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
                       ))}
                     </select>
                   </div>
-                  <div className="text-gray-300 flex items-center gap-2">
+                  <div className="text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <span className="flex-1">{line.text}</span>
                     {line.timingMismatch && (
-                      <span className="text-amber-400 flex-shrink-0" title={t('timingWasFuzzyMatched')}>⚠</span>
+                      <span className="text-amber-500 dark:text-amber-400 flex-shrink-0" title={t('timingWasFuzzyMatched')}>⚠</span>
                     )}
                   </div>
                 </div>
@@ -612,22 +612,22 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
 
       {/* Merge Confirmation Modal */}
       {showMergeModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
-              <GitMerge size={20} className="text-orange-400" />
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-cyan-700 dark:text-cyan-400 mb-4 flex items-center gap-2">
+              <GitMerge size={20} className="text-orange-500 dark:text-orange-400" />
               {t('mergeSpeakers')}
             </h3>
-            
-            <p className="text-sm text-gray-300 mb-4">
+
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
               {t('mergeSpeakersWarning', { count: selectedSpeakers.length })}
             </p>
 
             <div className="mb-4">
-              <p className="text-xs text-gray-400 mb-2">{t('speakersToMerge')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('speakersToMerge')}</p>
               <div className="flex flex-wrap gap-1">
                 {selectedSpeakers.map(s => (
-                  <span key={s.id} className="text-xs px-2 py-1 bg-gray-700 rounded text-gray-300">
+                  <span key={s.id} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-transparent">
                     {s.name}
                   </span>
                 ))}
@@ -635,17 +635,17 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
             </div>
 
             <div className="mb-6">
-              <label className="text-xs text-gray-400 mb-2 block">{t('keepSpeakerAs')}</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">{t('keepSpeakerAs')}</label>
               <select
                 value={targetSpeakerId || ''}
                 onChange={(e) => setTargetSpeakerId(e.target.value)}
-                className="w-full bg-gray-700 text-white text-sm rounded border border-gray-600 px-3 py-2 focus:border-orange-500 focus:outline-none"
+                className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm rounded border border-gray-300 dark:border-gray-600 px-3 py-2 focus:border-orange-500 focus:outline-none"
               >
                 {selectedSpeakers.map(s => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {t('otherSpeakersWillBeRemoved')}
               </p>
             </div>
@@ -654,14 +654,14 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
               <button
                 onClick={handleCancelMerge}
                 disabled={isMerging}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 disabled:opacity-50"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={handleConfirmMerge}
                 disabled={isMerging || !targetSpeakerId}
-                className="px-4 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-500 disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-500 disabled:opacity-50 flex items-center gap-2 shadow-sm"
               >
                 {isMerging ? (
                   <>

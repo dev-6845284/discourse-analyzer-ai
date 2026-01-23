@@ -79,10 +79,19 @@ router.put('/me/keyset', isAuthenticated, async (req, res) => {
     if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    const { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY } = req.body;
+
+    // Explicitly extract keys to avoid any ambiguity or potential destructuring issues
+    const GEMINI_API_KEY = req.body.GEMINI_API_KEY;
+    const CHATGPT_API_KEY = req.body.CHATGPT_API_KEY;
+    const GROK_API_KEY = req.body.GROK_API_KEY;
+
+    console.log(`[UsersRoute] Updating keyset for ${userId}. Keys present: Gemini=${!!GEMINI_API_KEY}, ChatGPT=${!!CHATGPT_API_KEY}, Grok=${!!GROK_API_KEY}`);
+    console.log(`[UsersRoute] Values (first 4 chars): Gemini=${GEMINI_API_KEY?.substring(0, 4)}, ChatGPT=${CHATGPT_API_KEY?.substring(0, 4)}, Grok=${GROK_API_KEY?.substring(0, 4)}`);
+
     const svc = await import('../services/apiKeyService');
     const updated = await svc.upsertUserKeyset(userId, { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY });
     res.json(updated);
+
   } catch (error) {
     res.status(500).json({ message: 'Error updating user keyset', error: error instanceof Error ? error.message : String(error) });
   }
@@ -155,7 +164,12 @@ router.put('/:id/keyset', isAuthenticated, async (req, res) => {
     const isAdminUser = requestingUser?.role === 'admin';
     if (!isSelf && !isAdminUser) return res.status(403).json({ message: 'Unauthorized' });
 
-    const { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY } = req.body;
+    const GEMINI_API_KEY = req.body.GEMINI_API_KEY;
+    const GROK_API_KEY = req.body.GROK_API_KEY;
+    const CHATGPT_API_KEY = req.body.CHATGPT_API_KEY;
+
+    console.log(`[UsersRoute] Admin updating keyset for ${requestedUserId}. Keys: Gemini=${!!GEMINI_API_KEY}, ChatGPT=${!!CHATGPT_API_KEY}, Grok=${!!GROK_API_KEY}`);
+
     const svc = await import('../services/apiKeyService');
     // Use the requested userId (which is either the authenticated user's own ID, or an admin managing another user's keys)
     const updated = await svc.upsertUserKeyset(requestedUserId, { GEMINI_API_KEY, GROK_API_KEY, CHATGPT_API_KEY });

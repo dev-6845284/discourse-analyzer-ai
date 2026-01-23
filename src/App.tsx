@@ -286,7 +286,7 @@ const App: React.FC = () => {
                             onClick={() => searchParams.handleAISelectionChange('gemini')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-l-md ${searchParams.selectedAI === 'gemini'
                               ? 'bg-cyan-700 text-white'
-                              : 'text-gray-300 hover:bg-gray-600'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                               }`}
                           >
                             Gemini
@@ -295,7 +295,7 @@ const App: React.FC = () => {
                             onClick={() => searchParams.handleAISelectionChange('grok')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${searchParams.selectedAI === 'grok'
                               ? 'bg-cyan-700 text-white'
-                              : 'text-gray-300 hover:bg-gray-600'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                               }`}
                           >
                             Grok
@@ -304,7 +304,7 @@ const App: React.FC = () => {
                             onClick={() => searchParams.handleAISelectionChange('openai')}
                             className={`flex-1 px-3 py-2 text-sm font-medium transition-colors rounded-r-md ${searchParams.selectedAI === 'openai'
                               ? 'bg-cyan-700 text-white'
-                              : 'text-gray-300 hover:bg-gray-600'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                               }`}
                           >
                             OpenAI
@@ -314,7 +314,7 @@ const App: React.FC = () => {
 
                       {/* Search for Quotes (collapsible) */}
                       <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.search && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.search ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-gray-100 dark:bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('searchForQuotes')} {!ctrl.systemSettings.search && t('disabled')}
                         </summary>
                         <SearchControls
@@ -347,8 +347,8 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Extract from Text (collapsible) */}
-                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.text_extract && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.text_extract ? 'border-gray-600 opacity-90' : ''}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                      <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.text_extract && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.text_extract ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('extractFromText')} {!ctrl.systemSettings.text_extract && t('disabled')}
                         </summary>
                         <ExtractionControls
@@ -368,8 +368,8 @@ const App: React.FC = () => {
                       </details>
 
                       {/* YouTube Transcript (collapsible) */}
-                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.youtube_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.youtube_transcript ? 'border-gray-600 opacity-90' : ''}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                      <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.youtube_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.youtube_transcript ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('youtubeTranscript')} {!ctrl.systemSettings.youtube_transcript && t('disabled')}
                         </summary>
                         <YoutubeTranscriptButton
@@ -379,8 +379,8 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import Transcript Data (collapsible) */}
-                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-600 opacity-90' : ''}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                      <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('importTranscriptDataTitle') || t('importTranscriptData')} {!ctrl.systemSettings.import_transcript && t('disabled')}
                         </summary>
                         <TranscriptImporter
@@ -390,8 +390,8 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import SRT Transcript (collapsible) */}
-                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-600 opacity-90' : ''}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                      <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.import_transcript && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_transcript ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('importSrtTranscriptTitle')} {!ctrl.systemSettings.import_transcript && t('disabled')}
                         </summary>
                         <SrtTranscriptImporter
@@ -401,8 +401,8 @@ const App: React.FC = () => {
                       </details>
 
                       {/* Import Analysis Data (collapsible) */}
-                      <details className={`border rounded-lg bg-gray-800 ${!ctrl.systemSettings.import_analysis && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_analysis ? 'border-gray-600 opacity-90' : ''}`}>
-                        <summary className="px-4 py-2 font-semibold text-cyan-400 bg-gray-900 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
+                      <details className={`border rounded-lg bg-gray-50 dark:bg-gray-800 ${!ctrl.systemSettings.import_analysis && user?.role !== 'admin' ? 'hidden' : ''} ${!ctrl.systemSettings.import_analysis ? 'border-gray-200 dark:border-gray-600 opacity-90' : 'border-gray-200 dark:border-gray-700'}`}>
+                        <summary className="px-4 py-2 font-semibold text-cyan-600 dark:text-cyan-400 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity">
                           {t('importAnalysisTitle')} {!ctrl.systemSettings.import_analysis && t('disabled')}
                         </summary>
                         <AnalysisImporter
@@ -592,7 +592,7 @@ const App: React.FC = () => {
                       </div>
                     }
                     peopleContent={
-                      <div className="bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-100">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg flex flex-col h-full overflow-hidden text-gray-900 dark:text-gray-100">
                         <div className="flex-1 overflow-auto">
                           <PersonManager
                             onSelectPerson={(person: Person) => {

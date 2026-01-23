@@ -135,44 +135,65 @@ const AdminCategories: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-700">
-        <h2 className="text-xl font-bold text-gray-100">{t('analysisCategories_title')}</h2>
+      <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('analysisCategories_title')}</h2>
         <div className="flex gap-2">
-          <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded transition-colors text-sm" onClick={load} disabled={loading}>{t('analysisCategories_refresh')}</button>
-          <button className="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded transition-colors text-sm" onClick={handleReload} disabled={loading}>{t('analysisCategories_reloadCache')}</button>
+          <button
+            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-all text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm active:scale-95"
+            onClick={load}
+            disabled={loading}
+          >
+            {t('analysisCategories_refresh')}
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all text-sm font-semibold text-white shadow-lg shadow-blue-500/20 active:scale-95"
+            onClick={handleReload}
+            disabled={loading}
+          >
+            {t('analysisCategories_reloadCache')}
+          </button>
         </div>
       </div>
 
-      {error && <div className="p-3 bg-red-900/30 border border-red-700 rounded text-red-300">{error}</div>}
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/30 rounded-xl text-red-600 dark:text-red-400 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       {/* Form Section */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">{editing ? t('edit') : t('analysisCategories_create')}</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50 p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-cyan-500 rounded-full"></div>
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 uppercase tracking-tight">{editing ? t('edit') : t('analysisCategories_create')}</h3>
+          </div>
 
           {/* Language Switcher for Editing */}
-          <div className="flex bg-gray-900 rounded p-1">
+          <div className="flex bg-gray-100 dark:bg-gray-900 rounded-xl p-1 shadow-inner border border-gray-200 dark:border-gray-800">
             <button
               type="button"
-              className={`px-3 py-1 text-xs rounded ${activeLang === 'default' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+              className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${activeLang === 'default' ? 'bg-white dark:bg-gray-800 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
               onClick={() => setActiveLang('default')}
             >
-              English (Default)
+              English
             </button>
             <button
               type="button"
-              className={`px-3 py-1 text-xs rounded ${activeLang === 'lt' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+              className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${activeLang === 'lt' ? 'bg-white dark:bg-gray-800 text-cyan-600 dark:text-cyan-400 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
               onClick={() => setActiveLang('lt')}
             >
-              Lietuvių (LT)
+              Lietuvių
             </button>
-            <div className="w-px bg-gray-700 mx-1"></div>
+            <div className="w-px bg-gray-200 dark:bg-gray-800 mx-1 self-stretch"></div>
             <button
               type="button"
-              className="px-3 py-1 text-xs rounded text-cyan-400 hover:text-cyan-300 hover:bg-gray-800 flex items-center gap-1"
-              title="Copy current fields as JSON for translation"
+              className="px-3 py-1.5 text-[11px] font-bold rounded-lg text-cyan-600 dark:text-cyan-400 hover:bg-white dark:hover:bg-gray-800 transition-all flex items-center gap-1.5"
               onClick={() => {
                 const data = {
                   title: getFieldValue('title'),
@@ -180,117 +201,194 @@ const AdminCategories: React.FC = () => {
                   promptGuidance: getFieldValue('promptGuidance')
                 };
                 navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-                // Optional: show a small toast or temporary text change
                 const btn = document.activeElement as HTMLButtonElement;
                 if (btn) {
-                  const original = btn.innerHTML;
-                  btn.innerHTML = 'Copied!';
-                  setTimeout(() => btn.innerHTML = original, 1000);
+                  const original = btn.innerText;
+                  btn.innerText = 'Copied!';
+                  setTimeout(() => btn.innerText = original, 1000);
                 }
               }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
               </svg>
-              Copy JSON
+              <span>Copy</span>
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* ID and Title Row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 uppercase">ID (Internal)</label>
-              <input placeholder={t('analysisCategories_placeholder_id')} value={form.id} onChange={e => setForm({ ...form, id: e.target.value })} className="p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors" required readOnly={!!editing} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">ID (Internal)</label>
+              <input
+                placeholder={t('analysisCategories_placeholder_id')}
+                value={form.id}
+                onChange={e => setForm({ ...form, id: e.target.value })}
+                className={`w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 focus:outline-none transition-all ${editing ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : ''}`}
+                required
+                readOnly={!!editing}
+              />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 uppercase">Title ({activeLang})</label>
-              <input placeholder={t('analysisCategories_placeholder_title')} value={getFieldValue('title')} onChange={e => updateTranslation('title', e.target.value)} className="p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors" required={activeLang === 'default'} />
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Title ({activeLang})</label>
+              <input
+                placeholder={t('analysisCategories_placeholder_title')}
+                value={getFieldValue('title')}
+                onChange={e => updateTranslation('title', e.target.value)}
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 focus:outline-none transition-all"
+                required={activeLang === 'default'}
+              />
             </div>
           </div>
 
           {/* UI Order */}
-          <input placeholder={t('analysisCategories_placeholder_uiOrder')} value={String(form.uiOrder ?? 0)} onChange={e => setForm({ ...form, uiOrder: Number(e.target.value || 0) })} className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors" />
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">UI Order</label>
+            <input
+              placeholder={t('analysisCategories_placeholder_uiOrder')}
+              value={String(form.uiOrder ?? 0)}
+              onChange={e => setForm({ ...form, uiOrder: Number(e.target.value || 0) })}
+              className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 focus:outline-none transition-all"
+            />
+          </div>
 
           {/* Description and Prompt Guidance */}
-          <div className="space-y-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 uppercase">Description ({activeLang})</label>
-              <textarea placeholder={t('analysisCategories_placeholder_description')} value={getFieldValue('description')} onChange={e => updateTranslation('description', e.target.value)} className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors min-h-20 resize-none" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Description ({activeLang})</label>
+              <textarea
+                placeholder={t('analysisCategories_placeholder_description')}
+                value={getFieldValue('description')}
+                onChange={e => updateTranslation('description', e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 focus:outline-none transition-all min-h-[100px] resize-none"
+              />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 uppercase">Prompt Guidance ({activeLang})</label>
-              <textarea placeholder={t('analysisCategories_placeholder_promptGuidance')} value={getFieldValue('promptGuidance')} onChange={e => updateTranslation('promptGuidance', e.target.value)} className="w-full p-2 bg-gray-900 border border-gray-600 rounded text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none transition-colors min-h-20 resize-none" />
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Prompt Guidance ({activeLang})</label>
+              <textarea
+                placeholder={t('analysisCategories_placeholder_promptGuidance')}
+                value={getFieldValue('promptGuidance')}
+                onChange={e => updateTranslation('promptGuidance', e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 focus:outline-none transition-all min-h-[100px] resize-none"
+              />
             </div>
           </div>
 
           {/* Modes and Action Buttons */}
-          <div className="pt-2 border-t border-gray-700 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.modes?.includes('audit')} onChange={e => setForm({ ...form, modes: e.target.checked ? ['audit'] : [] })} className="cursor-pointer" /> <span className="text-sm text-gray-300">{t('analysisCategories_mode_audit') || 'audit'}</span></label>
-              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.modes?.includes('flaws')} onChange={e => setForm({ ...form, modes: e.target.checked ? Array.from(new Set([...(form.modes || []), 'flaws'])) : (form.modes || []).filter(m => m !== 'flaws') })} className="cursor-pointer" /> <span className="text-sm text-gray-300">{t('analysisCategories_mode_flaws') || 'flaws'}</span></label>
+          <div className="pt-6 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={form.modes?.includes('audit')}
+                  onChange={e => setForm({ ...form, modes: e.target.checked ? Array.from(new Set([...(form.modes || []), 'audit'])) : (form.modes || []).filter(m => m !== 'audit') })}
+                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                />
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 transition-colors uppercase tracking-tight">{t('analysisCategories_mode_audit') || 'Audit'}</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={form.modes?.includes('flaws')}
+                  onChange={e => setForm({ ...form, modes: e.target.checked ? Array.from(new Set([...(form.modes || []), 'flaws'])) : (form.modes || []).filter(m => m !== 'flaws') })}
+                  className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                />
+                <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-purple-600 transition-colors uppercase tracking-tight">{t('analysisCategories_mode_flaws') || 'Flaws'}</span>
+              </label>
             </div>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded transition-colors text-sm font-medium" type="submit">{editing ? t('analysisCategories_update') : t('analysisCategories_create')}</button>
-              {editing && <button type="button" className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded transition-colors text-sm" onClick={() => { setEditing(null); setForm(emptyForm); }}>{t('cancel')}</button>}
+            <div className="flex gap-3">
+              {editing && (
+                <button
+                  type="button"
+                  className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                  onClick={() => { setEditing(null); setForm(emptyForm); }}
+                >
+                  {t('cancel')}
+                </button>
+              )}
+              <button
+                className="px-8 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl transition-all text-sm font-bold shadow-lg shadow-cyan-500/20 active:scale-95"
+                type="submit"
+              >
+                {editing ? t('analysisCategories_update') : t('analysisCategories_create')}
+              </button>
             </div>
           </div>
         </form>
       </div>
 
       {/* List Section */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">{t('analysisCategories_title')}</h3>
-        {loading ? (
-          <div className="py-8 text-center text-gray-400">{t('loading')}</div>
+      <div className="bg-white dark:bg-gray-800/40 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700/50 overflow-hidden">
+        <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-200 dark:border-gray-700/50">
+          <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{t('analysisCategories_title')}</h3>
+        </div>
+
+        {loading && categories.length === 0 ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-4">
+            <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('loading')}</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full table-auto text-sm">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="text-left border-b border-gray-700/40">
-                  <th className="py-2">{t('analysisCategories_col_id')}</th>
-                  <th>{t('analysisCategories_col_title')}</th>
-                  <th>{t('analysisCategories_col_modes')}</th>
-                  <th>{t('analysisCategories_col_order')}</th>
-                  <th></th>
+                <tr className="text-left bg-gray-50/20 dark:bg-gray-950/20 text-gray-500 dark:text-gray-500 border-b border-gray-200 dark:border-gray-700/50">
+                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-[10px]">{t('analysisCategories_col_id')}</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-[10px]">{t('analysisCategories_col_title')}</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-[10px]">{t('analysisCategories_col_modes')}</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-wider text-[10px]">{t('analysisCategories_col_order')}</th>
+                  <th className="px-6 py-4"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700/30">
                 {categories.map(c => (
-                  <tr key={c.id} className="border-b border-gray-700/20">
-                    <td className="py-2 font-mono text-xs">{c.id}</td>
-                    <td>
-                      {c.title}
-                      {c.translations && Object.keys(c.translations).length > 0 && (
-                        <span className="ml-2 text-xs text-gray-500 bg-gray-900 px-1 rounded">
-                          +{Object.keys(c.translations).join(', ')}
-                        </span>
-                      )}
+                  <tr key={c.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="font-mono text-[10px] text-gray-400 dark:text-gray-500 font-bold bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-1.5 py-0.5 rounded">{c.id}</span>
                     </td>
-                    <td>{(c.modes || []).join(', ')}</td>
-                    <td>{c.uiOrder}</td>
-                    <td className="text-right">
-                      <button
-                        onClick={() => handleEdit(c)}
-                        title={t('edit')}
-                        aria-label={`edit-${c.id}`}
-                        className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/30 rounded-lg transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        title={t('delete')}
-                        aria-label={`delete-${c.id}`}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 dark:text-gray-100">{c.title}</span>
+                        {c.translations && Object.keys(c.translations).length > 0 && (
+                          <div className="flex gap-1">
+                            {Object.keys(c.translations).map(lang => (
+                              <span key={lang} className="text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700 uppercase" title={`Translated to ${lang}`}>{lang}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-1.5">
+                        {c.modes?.map(mode => (
+                          <span key={mode} className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${mode === 'audit' ? 'bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800 text-cyan-600 dark:text-cyan-400' : 'bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 text-purple-600 dark:text-purple-400'}`}>
+                            {mode}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-bold text-gray-500 dark:text-gray-500 tabular-nums">{c.uiOrder}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEdit(c)}
+                          className="p-2 text-gray-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-lg transition-all"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

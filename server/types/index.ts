@@ -53,11 +53,14 @@ export type AnalysisResult = {
 };
 
 // New audit result with verdict and rationale
+// New audit result with verdict and rationale
 export interface AuditResult {
-  verdict: Verdict;
-  rationale: string;
+  verdict: Verdict | string; // ToDo investigate, can string be removed?
+  rationale?: string;
+  finalAssessment?: string;
+  classification?: string; // Legacy
   categories: {
-    [key in AuditCategory]: AuditDetail;
+    [key in AuditCategory]?: AuditDetail; // Allow optional keys for flexibility
   };
 }
 
@@ -133,7 +136,7 @@ export interface ArticleRecommendation {
   publishedDate?: string;
 }
 
-export type AgenticSearchResult = 
+export type AgenticSearchResult =
   | { type: 'quotes'; data: Quote[] }
   | { type: 'articles'; data: ArticleRecommendation[] };
 

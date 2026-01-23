@@ -53,9 +53,9 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
   };
 
   return (
-    <ModalWrapper title={user ? t('editUser') : t('addUser')}>
+    <ModalWrapper title={user ? t('editUser') : t('addUser')} onClose={onClose}>
       {error && (
-        <div className="mb-4 bg-red-900/30 border border-red-700 rounded text-red-300 px-4 py-3">
+        <div className="mb-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded text-red-600 dark:text-red-300 px-4 py-3">
           {error}
         </div>
       )}
@@ -66,25 +66,25 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
         <FormInput label={t('emailLabel')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
         <div className="mb-4">
-          <label className="block text-gray-200 text-sm font-semibold mb-2">{t('roleLabel')}</label>
+          <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">{t('roleLabel')}</label>
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input type="radio" name="role" value="viewer" checked={role === 'viewer'} onChange={() => setRole('viewer')} className="form-radio text-cyan-400 bg-gray-900" />
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <input type="radio" name="role" value="viewer" checked={role === 'viewer'} onChange={() => setRole('viewer')} className="form-radio text-cyan-500 dark:text-cyan-400 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700" />
               <span>Viewer</span>
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input type="radio" name="role" value="moderator" checked={role === 'moderator'} onChange={() => setRole('moderator')} className="form-radio text-cyan-400 bg-gray-900" />
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <input type="radio" name="role" value="moderator" checked={role === 'moderator'} onChange={() => setRole('moderator')} className="form-radio text-cyan-500 dark:text-cyan-400 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700" />
               <span>Moderator</span>
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input type="radio" name="role" value="editor" checked={role === 'editor'} onChange={() => setRole('editor')} className="form-radio text-cyan-400 bg-gray-900" />
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <input type="radio" name="role" value="editor" checked={role === 'editor'} onChange={() => setRole('editor')} className="form-radio text-cyan-500 dark:text-cyan-400 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700" />
               <span>Editor</span>
             </label>
 
-            <label className="flex items-center gap-2 text-sm text-gray-200">
-              <input type="radio" name="role" value="admin" checked={role === 'admin'} onChange={() => setRole('admin')} className="form-radio text-cyan-400 bg-gray-900" />
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <input type="radio" name="role" value="admin" checked={role === 'admin'} onChange={() => setRole('admin')} className="form-radio text-cyan-500 dark:text-cyan-400 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700" />
               <span>Admin</span>
             </label>
           </div>
@@ -95,8 +95,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSubmit }) =
         )}
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none">{t('cancel')}</button>
-          <button type="submit" disabled={isSubmitting} className="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold py-2 px-4 rounded focus:outline-none disabled:opacity-50">{isSubmitting ? t('saving') : t('save')}</button>
+          <button type="button" onClick={onClose} className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-semibold py-2 px-4 rounded focus:outline-none transition-colors">{t('cancel')}</button>
+          <button type="submit" disabled={isSubmitting} className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-800 text-white font-semibold py-2 px-4 rounded focus:outline-none transition-colors disabled:opacity-50">{isSubmitting ? t('saving') : t('save')}</button>
         </div>
       </form>
     </ModalWrapper>

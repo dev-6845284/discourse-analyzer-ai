@@ -70,12 +70,12 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
   }, [textToExtract, isUrl, onAutoExtract, extractionLanguage]); // Re-run if language changes
 
   return (
-    <div className="bg-gray-800/50 rounded-lg">
+    <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-transparent">
       <textarea
         value={textToExtract}
         onChange={(e) => setTextToExtract(e.target.value)}
         rows={6}
-        className="w-full bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+        className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
         placeholder={
           personName ? t('pasteArticleOrUrlBy', { person: personName }) : t('pasteArticleOrUrlGeneric')
         }
@@ -84,11 +84,11 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
       {/* Language Selector for URLs */}
       {isUrl && setExtractionLanguage && (
         <div className="mt-2 flex items-center gap-2">
-          <label className="text-xs text-gray-400">{t('extractionLanguageLabel')}</label>
+          <label className="text-xs text-gray-500 dark:text-gray-400">{t('extractionLanguageLabel')}</label>
           <select
             value={extractionLanguage}
             onChange={(e) => setExtractionLanguage(e.target.value)}
-            className="bg-gray-700 text-white border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs py-1 px-2"
+            className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-xs py-1 px-2"
           >
             <option value="lt">Lithuanian</option>
             <option value="en">English</option>
@@ -98,7 +98,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
 
       {/* Status indicator */}
       {isExtracting && extractionStatus && (
-        <div className="mt-2 text-sm text-cyan-400 flex items-center gap-2">
+        <div className="mt-2 text-sm text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
           <Spinner />
           <span>{extractionStatus}</span>
         </div>
@@ -106,7 +106,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
 
       {/* Error indicator */}
       {extractionError && (
-        <div className="mt-2 text-sm text-red-400">
+        <div className="mt-2 text-sm text-red-500 dark:text-red-400">
           {extractionError}
         </div>
       )}
@@ -122,7 +122,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
                 ? t('pleaseEnterPersonName')
                 : t('extractQuotesFromArticle')
             }
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
           >
             {isExtracting ? (
               <Spinner />
@@ -143,7 +143,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
                 onClick={() => onExtract()}
                 disabled={isExtracting || !textToExtract || !personName}
                 title={!personName ? t('pleaseEnterPersonName') : (!textToExtract ? t('pleaseEnterTextToExtract') : '')}
-                className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 flex items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 {isExtracting ? <Spinner /> : t('extractAndAnalyze')}
               </button>
@@ -154,7 +154,7 @@ export const ExtractionControls: React.FC<ExtractionControlsProps> = ({
                 onClick={() => onAdd()}
                 disabled={isExtracting || !textToExtract || !personName}
                 title={!personName ? t('pleaseEnterPersonName') : (!textToExtract ? t('pleaseEnterTextToAdd') : '')}
-                className="w-full sm:flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:flex-1 flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 {t('addTextAsQuote')}
               </button>
