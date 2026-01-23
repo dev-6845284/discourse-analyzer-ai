@@ -47,10 +47,10 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
 
   if (isAnalyzing) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-        <div className="text-center">
-          <Spinner />
-          <p className="mt-4 text-gray-300">
+      <div className="flex-1 flex items-center justify-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm min-h-[200px]">
+        <div className="text-center text-cyan-600 dark:text-cyan-400">
+          <Spinner className="w-8 h-8 mx-auto mb-4" />
+          <p className="font-semibold text-lg animate-pulse">
             {t('analyzingTopics')} {Math.round(analysisProgress)}%
           </p>
         </div>
@@ -60,10 +60,12 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-        <div className="text-center text-red-400">
-          <p>{t('errorAnalyzingTopics')}</p>
-          <p className="text-sm text-red-300 mt-2">{error}</p>
+      <div className="flex-1 flex items-center justify-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm min-h-[200px]">
+        <div className="text-center text-red-600 dark:text-red-400 p-6">
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+            <p className="font-bold mb-1">{t('errorAnalyzingTopics')}</p>
+            <p className="text-sm opacity-90">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -119,8 +121,8 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
                     onToggleBlockSelection(block.blockId);
                   }}
                   className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${block.isSelected
-                      ? 'bg-green-600 border-green-500'
-                      : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400 bg-white dark:bg-transparent'
+                    ? 'bg-green-600 border-green-500'
+                    : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400 bg-white dark:bg-transparent'
                     }`}
                 >
                   {block.isSelected && <Check size={16} className="text-white" />}

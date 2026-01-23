@@ -78,7 +78,7 @@ export const UserManager: React.FC = () => {
     alert(t('passwordUpdated'));
   };
 
-  if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
+  if (isLoading) return <div className="flex justify-center p-8 text-cyan-600 dark:text-cyan-400"><Spinner /></div>;
 
   return (
     <div className="space-y-6">

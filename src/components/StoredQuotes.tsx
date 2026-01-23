@@ -432,7 +432,7 @@ const StoredQuotes: React.FC<StoredQuotesProps> = ({ selectedPerson, selectedAI,
         hasActiveFilters={hasActiveFilters || !!selectedFilterPerson}
       />
 
-      {isLoading && <div className="flex justify-center p-8"><Spinner /></div>}
+      {isLoading && <div className="flex justify-center p-8 text-cyan-600 dark:text-cyan-400"><Spinner /></div>}
       {error && <div className="text-red-500 p-4">{error}</div>}
 
       {!isLoading && !error && quotes.length === 0 ? (

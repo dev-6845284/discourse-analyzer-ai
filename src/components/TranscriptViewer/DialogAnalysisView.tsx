@@ -82,13 +82,13 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
 
   if (isDialogAnalyzing) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-        <div className="text-center">
-          <Spinner />
-          <p className="mt-4 text-gray-300">
+      <div className="flex-1 flex items-center justify-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm min-h-[300px]">
+        <div className="text-center text-cyan-600 dark:text-cyan-400">
+          <Spinner className="w-10 h-10 mx-auto mb-4" />
+          <p className="text-lg font-semibold animate-pulse">
             Analyzing dialog topics...
           </p>
-          <p className="text-sm text-gray-400 mt-2">This may take a while.</p>
+          <p className="text-sm opacity-70 mt-2">This may take a while.</p>
         </div>
       </div>
     );
@@ -96,10 +96,12 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-        <div className="text-center text-red-400">
-          <p>Error analyzing dialog:</p>
-          <p className="text-sm text-red-300 mt-2">{error}</p>
+      <div className="flex-1 flex items-center justify-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm min-h-[300px]">
+        <div className="text-center text-red-600 dark:text-red-400 p-6">
+          <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm max-w-md mx-auto">
+            <p className="font-bold text-lg mb-2">Error analyzing dialog:</p>
+            <p className="text-sm opacity-90">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -107,17 +109,19 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
 
   if (dialogResults.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-800/30">
-        <div className="text-center text-gray-400">
-          <p className="mb-4">No dialog analysis data available.</p>
+      <div className="flex-1 flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/30 p-8">
+        <div className="text-center max-w-sm">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">No dialog analysis data available.</p>
 
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <label htmlFor="analysis-language-select" className="text-sm text-gray-400">Analysis Language:</label>
+          <div className="mb-6 flex items-center justify-center gap-3">
+            <label htmlFor="analysis-language-select" className="text-xs font-bold uppercase tracking-wider text-gray-500 shrink-0">
+              Analysis Language:
+            </label>
             <select
               id="analysis-language-select"
               value={analysisLanguage}
               onChange={(e) => setAnalysisLanguage(e.target.value)}
-              className="bg-gray-800 text-gray-300 text-sm rounded border border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+              className="bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 focus:ring-purple-500 focus:border-purple-500 shadow-sm"
             >
               <option value="en">English</option>
               <option value="lt">Lithuanian</option>
@@ -134,7 +138,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
           <button
             onClick={() => onAnalyzeDialog(analysisLanguage)}
             disabled={speakerResults.length === 0}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors disabled:opacity-50"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20 disabled:opacity-50"
           >
             Start Dialog Analysis
           </button>
