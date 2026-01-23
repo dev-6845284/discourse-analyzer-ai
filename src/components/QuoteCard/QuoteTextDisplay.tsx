@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 
 import { Quote } from '../../types';
 import { SUPPORTED_LANGUAGES } from '../../constants';
@@ -38,8 +38,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
     authorName = displayQuote.personName;
   }
 
-  const increaseHeight = () => setIframeHeight((h) => Math.min(800, h + 120));
-  const decreaseHeight = () => setIframeHeight((h) => Math.max(120, h - 120));
+
   const toggleExpanded = () => {
     setExpanded((v) => {
       if (!v) {
@@ -57,6 +56,66 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
       }
     });
   };
+
+  // Helper to get embeddable URL from either an iframe string or a regular URL
+  const getEmbedUrl = (str?: string) => {
+    if (!str || typeof str !== 'string') return null;
+
+    const normalizedStr = str.trim();
+
+    // 1. If it's an iframe code, extract the src (always allow raw iframes if user provided them)
+    if (normalizedStr.includes('<iframe')) {
+      const match = normalizedStr.match(/src="([^"]+)"/i);
+      return match ? match[1] : null; // Return immediately if it's an explicit iframe
+    }
+
+    // 2. Facebook logic (requires special endpoint)
+    if (normalizedStr.includes('facebook.com')) {
+      let src = normalizedStr;
+      // If it's already an embed URL, pass it
+      if (src.includes('plugins/post.php')) return src;
+
+      // Otherwise transform standard post URL
+      const cleanUrl = src.replace('m.facebook.com', 'www.facebook.com').split('?')[0];
+      return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(cleanUrl)}&show_text=true&width=auto`;
+    }
+
+    // 3. YouTube Logic
+    // Captures ID from: youtube.com (watch, embed, shorts, live) and youtu.be
+    const ytMatch = normalizedStr.match(/(?:youtube(?:-nocookie)?\.com\/(?:(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+
+    // 4. Fallback: If no known embed pattern is found, return null (whitelist behavior)
+    return null;
+  };
+
+  // Helper to get a clean, clickable URL even if the input is an iframe snippet
+  const getDirectUrl = (str?: string) => {
+    if (!str || typeof str !== 'string') return null;
+    let url = str.trim();
+
+    // 1. If it's an iframe code, extract the src
+    if (url.includes('<iframe')) {
+      const match = url.match(/src="([^"]+)"/i);
+      url = match ? match[1] : url;
+    }
+
+    // 2. Decode HTML entities
+    url = url.replace(/&amp;/g, '&');
+
+    // 3. If it's a Facebook plugin URL, extract the original post URL
+    if (url.includes('facebook.com/plugins/post.php')) {
+      const match = url.match(/[?&]href=([^&]+)/);
+      if (match) return decodeURIComponent(match[1]);
+    }
+
+    return url;
+  };
+
+  const embeddedIframeSrc = getEmbedUrl(displayQuote.source);
+  const directSourceUrl = getDirectUrl(displayQuote.source);
 
 
 
@@ -112,115 +171,91 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
 
       {!isCollapsed && (
         <>
-          {/* If the source contains a Facebook plugin iframe, render the embed instead of a plain link */}
-          {typeof displayQuote.source === 'string' && displayQuote.source.includes('<iframe') && displayQuote.source.includes('facebook.com/plugins/post.php') ? (
-            (() => {
-              const match = displayQuote.source.match(/<iframe[^>]*src="([^"]*facebook\.com\/plugins\/post\.php[^"]*)"[^>]*><\/iframe>/i);
-              const iframeSrc = match ? match[1] : null;
-              return iframeSrc ? (
-                <div className="mt-3 w-full">
-                  {!showIframe ? (
-                    <button
-                      onClick={() => setShowIframe(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-cyan-600 dark:text-cyan-400 text-xs rounded transition-colors w-full justify-center border border-gray-200 dark:border-gray-600 border-dashed"
-                    >
-                      <Eye className="h-4 w-4" />
-                      {t('loadEmbeddedContent') || 'Load Embedded Content'}
-                    </button>
-                  ) : (
-                    <>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={toggleExpanded}
-                            title={expanded ? t('collapse') : t('expand')}
-                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-xs border border-gray-200 dark:border-transparent"
-                          >
-                            {expanded ? '-' : '+'}
-                          </button>
-                          <button
-                            onClick={increaseHeight}
-                            title={t('increase')}
-                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-xs border border-gray-200 dark:border-transparent"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <path d="M12 6v4" />
-                              <path d="M8 8l4-4 4 4" />
-                              <path d="M12 18v-4" />
-                              <path d="M8 16l4 4 4-4" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={decreaseHeight}
-                            title={t('decrease')}
-                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-xs border border-gray-200 dark:border-transparent"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: 'rotate(90deg)' }}>
-                              <path d="M6 8l4 4-4 4" />
-                              <path d="M18 8l-4 4 4 4" />
-                            </svg>
-                          </button>
-                        </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">{expanded ? `${iframeHeight}px (expanded)` : `${iframeHeight}px`}</div>
-                      </div>
-                      <div className={`rounded-md overflow-hidden border-0 ${expanded ? 'w-full' : 'w-full'}`} style={{ backgroundColor: '#ffffff' }}>
-                        <iframe
-                          src={iframeSrc}
-                          title={displayQuote.title || 'Embedded Post'}
-                          className="w-full rounded-md border-0 overflow-hidden"
-                          style={{ height: expanded ? Math.max(iframeHeight, 420) : iframeHeight, backgroundColor: '#ffffff' }}
-                          loading="lazy"
-                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
+          {/* Embedded Content */}
+          {embeddedIframeSrc && (
+            <div className="mt-3 w-full">
+              {!showIframe ? (
+                <button
+                  onClick={() => setShowIframe(true)}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-cyan-600 dark:text-cyan-400 text-xs rounded transition-colors w-full justify-center border border-gray-200 dark:border-gray-600 border-dashed"
+                >
+                  <Eye className="h-4 w-4" />
+                  {t('loadEmbeddedContent') || 'Load Embedded Content'}
+                </button>
               ) : (
-                <div className="mt-3">
-                  <a
-                    href={displayQuote.source}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-600 dark:text-cyan-400 truncate hover:underline flex-1 min-w-0"
-                    title={displayQuote.title}
-                  >
-                    {displayQuote.title}
-                  </a>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <button
+                      onClick={toggleExpanded}
+                      className="bg-gray-700 text-[10px] px-2 py-0.5 rounded text-gray-300 hover:text-white"
+                    >
+                      {expanded ? '-' : '+'} {t(expanded ? 'collapse' : 'expand')}
+                    </button>
+                    <span className="text-[10px] text-gray-400">{iframeHeight}px</span>
+                  </div>
+                  <div className="rounded-lg overflow-hidden bg-white border border-gray-300 dark:border-gray-700 shadow-inner relative">
+                    <iframe
+                      src={embeddedIframeSrc}
+                      title="Embed"
+                      className="w-full border-0"
+                      style={{ height: expanded ? Math.max(iframeHeight, 420) : iframeHeight }}
+                      loading="lazy"
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                    />
+                    {/* Prominent fallback link and hint */}
+                    <div className="bg-gray-100 dark:bg-gray-800 p-2 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-2">
+                      <span className="text-[10px] text-gray-500 italic text-center sm:text-left">
+                        {t('fb_embed_hint')}
+                      </span>
+                      {directSourceUrl && (
+                        <a
+                          href={directSourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-blue-600 dark:text-cyan-400 font-bold hover:underline shrink-0 flex items-center gap-1"
+                        >
+                          {t('open_directly')} <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              );
-            })()
-          ) : (
-            <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
-              <div className="flex flex-col min-w-0 flex-1 mr-4">
-                <a
-                  href={displayQuote.source}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-cyan-600 dark:text-cyan-400 truncate hover:underline text-[11px]"
-                  title={displayQuote.title}
-                >
-                  {displayQuote.title}
-                </a>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <select
-                  value={displayQuote.languageCode}
-                  onChange={(e) => onLanguageChange(quote.id, e.target.value)}
-                  disabled={isBusy || hasDraft}
-                  className="bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={t('quoteLanguageLabel')}
-                >
-                  {SUPPORTED_LANGUAGES.map((lang: any) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-gray-500 dark:text-gray-400">{displayQuote.date}</span>
-              </div>
+              )}
             </div>
           )}
+
+          <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
+            <div className="flex flex-col min-w-0 flex-1 mr-4">
+              {directSourceUrl && (
+                <a
+                  href={directSourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-600 dark:text-cyan-400 truncate hover:underline text-[11px] flex items-center gap-1"
+                  title={displayQuote.title || directSourceUrl}
+                >
+                  <span className="truncate">{displayQuote.title || directSourceUrl}</span>
+                  {!embeddedIframeSrc && <ExternalLink className="h-2.5 w-2.5 shrink-0" />}
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <select
+                value={displayQuote.languageCode}
+                onChange={(e) => onLanguageChange(quote.id, e.target.value)}
+                disabled={isBusy || hasDraft}
+                className="bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 focus:ring-cyan-500 focus:border-cyan-500 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={t('quoteLanguageLabel')}
+              >
+                {SUPPORTED_LANGUAGES.map((lang: any) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+              <span className="text-gray-500 dark:text-gray-400">{displayQuote.date}</span>
+            </div>
+          </div>
         </>
       )}
     </>
