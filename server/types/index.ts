@@ -55,7 +55,7 @@ export type AnalysisResult = {
 // New audit result with verdict and rationale
 // New audit result with verdict and rationale
 export interface AuditResult {
-  verdict: Verdict | string;
+  verdict: Verdict | string; // ToDo investigate, can string be removed?
   rationale?: string;
   finalAssessment?: string;
   classification?: string; // Legacy

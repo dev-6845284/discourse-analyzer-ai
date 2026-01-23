@@ -4,7 +4,6 @@ import { flattenDialog } from './preprocessing';
 import { segmentTopics } from './segmentation';
 import { mergeTopics } from './merging';
 import { analyzeTopics } from './analysis';
-import { getProviderFromModel } from './utils';
 
 export interface DialogAnalysisRequest {
   dialog: SpeakerAnalysisResult[]; // Input from previous step

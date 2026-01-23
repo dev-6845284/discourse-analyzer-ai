@@ -526,9 +526,10 @@ export async function identifySpeakers(
   const apiKeys: Record<string, string> = { [providerKey]: key };
   // For safety with getLlmConfig which checks specific keys, populate all potential keys with the resolved key
   // since we are processing a specific model
-  apiKeys['openai'] = key;
-  apiKeys['grok'] = key;
-  apiKeys['gemini'] = key;
+  apiKeys['openai'] = '';
+  apiKeys['grok'] = '';
+  apiKeys['gemini'] = '';
+  apiKeys[providerKey] = key;
 
   // Get LLM configuration once before the loop
   const llmConfig = getLlmConfig(model, apiKeys);
