@@ -19,12 +19,16 @@ describe('StrengthBar', () => {
     // number of segments
     expect(root.children.length).toBe(max);
 
-    // count filled segments by checking computed background color and opacity
+    // count filled segments by checking inline background color and opacity class
     let filledCount = 0;
     for (const child of Array.from(root.children)) {
       const el = child as HTMLElement;
-      const computed = getComputedStyle(el);
-      if (computed.opacity === '1' && (computed.backgroundColor === 'rgb(255, 0, 0)' || computed.backgroundColor === 'rgb(255,0,0)')) {
+      // Inline style should be preserved
+      const hasBg = el.style.backgroundColor === 'rgb(255, 0, 0)' || el.style.backgroundColor === '#ff0000';
+      // Tailwind class for opacity
+      const isOpaque = el.classList.contains('opacity-100');
+
+      if (isOpaque && hasBg) {
         filledCount++;
       }
     }
@@ -43,10 +47,10 @@ describe('StrengthBar', () => {
     const unfilled = elements.slice(2);
 
     filled.forEach(el => {
-      expect(getComputedStyle(el).opacity).toBe('1');
+      expect(el.classList.contains('opacity-100')).toBe(true);
     });
     unfilled.forEach(el => {
-      expect(getComputedStyle(el).opacity).toBe('0.5');
+      expect(el.classList.contains('opacity-50')).toBe(true);
     });
   });
 });
