@@ -419,6 +419,11 @@ const en = {
   otherSpeakersWillBeRemoved: 'Other speakers will be removed and their lines reassigned to this speaker.',
   merging: 'Merging...',
   confirmMerge: 'Confirm Merge',
+  segmentationModel: 'Segmentation',
+  analysisModel: 'Analysis',
+  speakerModel: 'AI Model',
+  segmentationModelHelp: 'Splits text into individual dialog lines. Use a fast model (e.g. Flash).',
+  analysisModelHelp: 'Identifies who is speaking each line. Use a smart model (e.g. Pro).',
 
   // Modals and generic
   confirm: 'Confirm',

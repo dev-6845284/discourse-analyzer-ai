@@ -425,6 +425,11 @@ const lt = {
   otherSpeakersWillBeRemoved: 'Kiti pranešėjai bus pašalinti ir jų eilutės bus priskirtos šiam pranešėjui.',
   merging: 'Sujungiama...',
   confirmMerge: 'Patvirtinti sujungimą',
+  segmentationModel: 'Segmentacija',
+  analysisModel: 'Analizė',
+  speakerModel: 'AI Modelis',
+  segmentationModelHelp: 'Suskirsto tekstą į atskiras dialogo eilutes. Naudokite greitą modelį (pvz., Flash).',
+  analysisModelHelp: 'Nustato, kas kalba kiekvienoje eilutėje. Naudokite protingą modelį (pvz., Pro).',
 
   // Modals and generic
   confirm: 'Patvirtinti',

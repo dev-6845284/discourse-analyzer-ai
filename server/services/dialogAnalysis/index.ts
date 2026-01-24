@@ -23,8 +23,9 @@ export const analyzeDialogTopics = async (
 ): Promise<TopicGroup[]> => {
   const { dialog, language, userId, sessionId, logId } = request;
 
+  // Use provided models or fall back to defaults
   const fastModel = request.fastModel || 'gemini-2.0-flash-exp';
-  const betterModel = request.betterModel || 'gemini-2.5-flash';
+  const betterModel = request.betterModel || 'gemini-1.5-flash';
 
   // Resolve API keys logic removed - delegated to sub-services
 

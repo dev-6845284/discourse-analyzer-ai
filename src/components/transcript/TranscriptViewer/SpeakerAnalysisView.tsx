@@ -5,6 +5,7 @@ import { formatTimestamp } from '../../../utils/transcriptHelpers';
 import Spinner from '../../ui/Spinner';
 import { PersonSimilarityMatch } from '../../../utils/api';
 import { SpeakerPersonLinkModal } from './SpeakerPersonLinkModal';
+import ModelSelector from '../../ui/ModelSelector';
 
 interface Speaker {
   id: string;
@@ -51,6 +52,11 @@ interface SpeakerAnalysisViewProps {
   onMergeSpeakers?: (speakerIdsToMerge: string[], targetSpeakerId: string) => Promise<boolean>;
   onLinkSpeakerToPerson?: (speakerId: string, personId: string, personName: string) => Promise<void>;
   onUnlinkSpeakerFromPerson?: (speakerId: string) => Promise<void>;
+  // Model selection for next step
+  segmentationModel?: string;
+  onSegmentationModelChange?: (model: string) => void;
+  analysisModel?: string;
+  onAnalysisModelChange?: (model: string) => void;
 }
 
 export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
@@ -71,6 +77,10 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
   onMergeSpeakers,
   onLinkSpeakerToPerson,
   onUnlinkSpeakerFromPerson,
+  segmentationModel,
+  onSegmentationModelChange,
+  analysisModel,
+  onAnalysisModelChange,
 }) => {
   const [editingSpeaker, setEditingSpeaker] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -282,16 +292,46 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-800/30 space-y-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-end mb-4 flex-wrap gap-2">
         <p className="text-gray-600 dark:text-gray-300">{t('analyzedBlocks', { count: speakerResults.length })}</p>
-        <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-2 mr-2">
+        <div className="flex gap-2 items-end flex-wrap">
+          {/* Segmentation Model */}
+          {/* Segmentation Model */}
+          {onSegmentationModelChange && (
+            <div
+              className="w-40"
+              title={t('segmentationModelHelp') || "Splits text into individual dialog lines. Use a fast model (e.g. Flash)."}
+            >
+              <ModelSelector
+                label={t('segmentationModel') || "Segmentation"}
+                value={segmentationModel || ''}
+                onChange={onSegmentationModelChange}
+                className="mb-0"
+              />
+            </div>
+          )}
+          {/* Analysis Model */}
+          {onAnalysisModelChange && (
+            <div
+              className="w-40"
+              title={t('analysisModelHelp') || "Identifies who is speaking each line. Use a smart model (e.g. Pro)."}
+            >
+              <ModelSelector
+                label={t('analysisModel') || "Analysis"}
+                value={analysisModel || ''}
+                onChange={onAnalysisModelChange}
+                className="mb-0"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 mr-2 mb-1">
             <label htmlFor="speaker-language-select" className="text-xs text-gray-500 dark:text-gray-400">{t('language')}</label>
             <select
               id="speaker-language-select"
               value={selectedLanguage}
               onChange={(e) => onLanguageChange?.(e.target.value)}
-              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500"
+              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 text-xs rounded border border-gray-300 dark:border-gray-600 px-2 py-1 focus:ring-cyan-500 focus:border-cyan-500 h-7"
             >
               <option value="en">English</option>
               <option value="lt">Lithuanian</option>
@@ -306,28 +346,28 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
           </div>
           <button
             onClick={() => onAnalyzeDialog(selectedLanguage)}
-            className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1 shadow-sm"
+            className="text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1 shadow-sm h-7 mb-1"
           >
             <Zap size={12} />
             {t('analyzeDialogTopics')}
           </button>
           <button
             onClick={onImportSpeakers}
-            className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-600/50 flex items-center gap-1"
+            className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-600/50 flex items-center gap-1 h-7 mb-1"
           >
             <Upload size={12} />
             {t('import')}
           </button>
           <button
             onClick={onExportSpeakers}
-            className="text-xs px-3 py-1 bg-emerald-100 dark:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-600/50 flex items-center gap-1"
+            className="text-xs px-3 py-1 bg-emerald-100 dark:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-600/50 flex items-center gap-1 h-7 mb-1"
           >
             <Download size={12} />
             {t('exportJson')}
           </button>
           <button
             onClick={onClearAnalysis}
-            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 h-7 mb-1"
           >
             {t('clearAnalysis')}
           </button>

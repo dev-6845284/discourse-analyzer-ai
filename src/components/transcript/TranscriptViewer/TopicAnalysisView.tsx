@@ -6,6 +6,8 @@ import TopicTagCloud from '../../ui/TopicTagCloud';
 import Spinner from '../../ui/Spinner';
 import { TopicAnalysisResult } from '../../../hooks/useTranscriptAnalysis';
 
+import ModelSelector from '../../ui/ModelSelector';
+
 interface TopicAnalysisViewProps {
   isAnalyzing: boolean;
   analysisProgress: number;
@@ -23,6 +25,9 @@ interface TopicAnalysisViewProps {
   speakerHint?: string;
   onSpeakerHintChange?: (hint: string) => void;
   expandedBlocks: Set<string>;
+  // Model selection
+  selectedModel?: string;
+  onModelChange?: (model: string) => void;
 }
 
 export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
@@ -42,6 +47,8 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
   speakerHint = '',
   onSpeakerHintChange,
   expandedBlocks,
+  selectedModel,
+  onModelChange,
 }) => {
   const { t } = useI18n();
 
@@ -81,22 +88,32 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
         <p className="text-gray-600 dark:text-gray-300">
           {t('foundTranscriptBlocksWithTopics', { count: results.length })}
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {onModelChange && (
+            <div className="w-40 mr-2">
+              <ModelSelector
+                value={selectedModel || ''}
+                onChange={onModelChange}
+                label={t('speakerModel') || "AI Model"}
+                className="mb-0"
+              />
+            </div>
+          )}
           <button
             onClick={onSelectAllBlocks}
-            className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-600/50"
+            className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-600/50 h-9"
           >
             {t('selectAll')}
           </button>
           <button
             onClick={onClearSelections}
-            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 h-9"
           >
             {t('clearSelections')}
           </button>
           <button
             onClick={onClearAnalysis}
-            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 h-9"
           >
             {t('clearAnalysis')}
           </button>
@@ -200,6 +217,8 @@ export const TopicAnalysisView: React.FC<TopicAnalysisViewProps> = ({
               className="w-full bg-gray-50 text-gray-900 border-gray-300 dark:bg-gray-800 dark:text-gray-300 text-sm rounded border dark:border-gray-600 px-3 py-2 focus:border-purple-500 focus:outline-none resize-none"
             />
           </div>
+
+
 
           <button
             onClick={onAnalyzeSpeakers}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Copy, Download, Search as SearchIcon, FileJson, Upload } from 'lucide-react';
 import { useI18n } from '../../../i18n';
+import ModelSelector from '../../ui/ModelSelector';
 
 interface TranscriptSearchBarProps {
   searchTerm: string;
@@ -12,6 +13,9 @@ interface TranscriptSearchBarProps {
   onExportAnalysis: () => void;
   onImportAnalysis: () => void;
   hasAnalysisData: boolean; // True if any analysis step has data
+  // Model selection
+  selectedModel?: string;
+  onModelChange?: (model: string) => void;
 }
 
 export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
@@ -24,6 +28,8 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
   onExportAnalysis,
   onImportAnalysis,
   hasAnalysisData,
+  selectedModel,
+  onModelChange,
 }) => {
   const { t } = useI18n();
 
@@ -89,6 +95,15 @@ export const TranscriptSearchBar: React.FC<TranscriptSearchBarProps> = ({
         <Upload size={18} />
         <span className="hidden sm:inline">{t('importAnalysis')}</span>
       </button>
+
+      {onModelChange && (
+        <div className="w-48 ml-auto">
+          <ModelSelector
+            value={selectedModel || ''}
+            onChange={onModelChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

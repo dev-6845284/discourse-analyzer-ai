@@ -99,6 +99,15 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
     handleMergeSpeakers,
     handleLinkSpeakerToPerson,
     handleUnlinkSpeakerFromPerson,
+    // Model selection
+    topicModel,
+    setTopicModel,
+    speakerModel,
+    setSpeakerModel,
+    segmentationModel,
+    setSegmentationModel,
+    analysisModel,
+    setAnalysisModel,
   } = useTranscriptViewer(props);
 
   const { t } = useI18n();
@@ -177,7 +186,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
 
       // console.log('[handlePromote] Promote mode - creating new quotes');
 
-      await promoteSession(currentSessionId, quoteGroups, selectedLanguage);
+      await promoteSession(currentSessionId, quoteGroups, selectedLanguage, analysisModel);
       alert(t('promotedToQuotesSuccess'));
 
       if (props.onPromoteSuccess) {
@@ -254,6 +263,9 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
                 topicAnalysis.speakerResults.length > 0 ||
                 topicAnalysis.dialogResults.length > 0
               }
+              // Model selection
+              selectedModel={topicModel}
+              onModelChange={setTopicModel}
             />
 
             <TranscriptSegmentList
@@ -290,6 +302,9 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             speakerHint={speakerHint}
             onSpeakerHintChange={setSpeakerHint}
             expandedBlocks={expandedBlocks}
+            // Model selection
+            selectedModel={speakerModel}
+            onModelChange={setSpeakerModel}
           />
         )}
 
@@ -313,6 +328,11 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             onMergeSpeakers={handleMergeSpeakers}
             onLinkSpeakerToPerson={handleLinkSpeakerToPerson}
             onUnlinkSpeakerFromPerson={handleUnlinkSpeakerFromPerson}
+            // Model selection
+            segmentationModel={segmentationModel}
+            onSegmentationModelChange={setSegmentationModel}
+            analysisModel={analysisModel}
+            onAnalysisModelChange={setAnalysisModel}
           />
         )}
 
@@ -339,7 +359,6 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = (props) => {
             }}
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
-
           />
         )}
       </div>

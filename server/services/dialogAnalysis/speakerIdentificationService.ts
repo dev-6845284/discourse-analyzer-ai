@@ -25,9 +25,9 @@ const DEFAULT_SPEAKER_SIMILARITY_THRESHOLD = 0.85;
 
 /** Model configurations */
 const MODEL_CONFIG = {
-  chatgpt: { provider: 'chatgpt', model: 'gpt-4o-mini' },
-  grok: { provider: 'grok', model: 'grok-2-latest' },
-  gemini: { provider: 'gemini', model: 'gemini-1.5-flash' },
+  chatgpt: { provider: 'chatgpt', model: 'gpt-4.1-mini' },
+  grok: { provider: 'grok', model: 'grok-4-1-fast-reasoning' },
+  gemini: { provider: 'gemini', model: 'gemini-2.5-flash' },
 } as const;
 
 // ============================================================================
@@ -352,10 +352,24 @@ function getLlmConfig(
 ): { provider: string; modelName: string; apiKey: string } {
   const provider = getProviderFromModel(model);
 
+  // If a specific model is requested (e.g., 'gemini-1.5-pro'), use it.
+  // Otherwise, use the default models defined in MODEL_CONFIG.
+  // Note: 'model' arg here is often just the provider name or a full model name.
+
+  // Helper to determine if the input is just a provider name
+  const isProviderName = (m: string) => ['openai', 'chatgpt', 'grok', 'gemini'].includes(m.toLowerCase());
+
+  let modelName = model;
+  if (isProviderName(model)) {
+    if (provider === 'openai') modelName = MODEL_CONFIG.chatgpt.model;
+    else if (provider === 'grok') modelName = MODEL_CONFIG.grok.model;
+    else modelName = MODEL_CONFIG.gemini.model;
+  }
+
   if (provider === 'openai' && apiKeys.openai) {
     return {
       provider: 'openai',
-      modelName: MODEL_CONFIG.chatgpt.model,
+      modelName: isProviderName(model) ? MODEL_CONFIG.chatgpt.model : model,
       apiKey: apiKeys.openai,
     };
   }
@@ -363,7 +377,7 @@ function getLlmConfig(
   if (provider === 'grok' && apiKeys.grok) {
     return {
       provider: MODEL_CONFIG.grok.provider,
-      modelName: MODEL_CONFIG.grok.model,
+      modelName: isProviderName(model) ? MODEL_CONFIG.grok.model : model,
       apiKey: apiKeys.grok,
     };
   }
@@ -375,7 +389,7 @@ function getLlmConfig(
 
   return {
     provider: MODEL_CONFIG.gemini.provider,
-    modelName: MODEL_CONFIG.gemini.model,
+    modelName: isProviderName(model) ? MODEL_CONFIG.gemini.model : model,
     apiKey: geminiKey,
   };
 }

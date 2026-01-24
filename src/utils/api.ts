@@ -201,8 +201,8 @@ export const deleteSession = async (sessionId: string) => {
   return api.delete(`/analysis/sessions/${sessionId}`);
 };
 
-export const promoteSession = async (sessionId: string, quoteGroups: any[], languageCode?: string) => {
-  return api.post('/analysis/promote', { sessionId, quoteGroups, languageCode });
+export const promoteSession = async (sessionId: string, quoteGroups: any[], languageCode?: string, model?: string) => {
+  return api.post('/analysis/promote', { sessionId, quoteGroups, languageCode, model });
 };
 
 export const getContentAnalysis = async (id: string) => {
