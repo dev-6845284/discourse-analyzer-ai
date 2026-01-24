@@ -3,7 +3,7 @@ import { Eye, Clock, MessageSquare, ExternalLink, Share2, Facebook, Instagram, H
 import { Toast } from '../ui/Toast';
 import { ShareModal } from '../ui/ShareModal';
 import { useI18n } from '../../i18n';
-import StrengthBar from '../StrengthBar';
+import StrengthBar from '../ui/StrengthBar';
 import {
     SEVERITY_HEX,
     AUDIT_CATEGORY_COLORS,

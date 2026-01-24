@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '../../assets/images/image64.png';
 import { UserInfo } from '../../types';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
-import { ThemeToggle } from '../ThemeToggle'; // Import the new component
+import { ThemeToggle } from '../ui/ThemeToggle'; // Import the new component
 
 
 interface HeaderProps {

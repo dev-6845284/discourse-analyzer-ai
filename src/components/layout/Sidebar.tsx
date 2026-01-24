@@ -1,7 +1,7 @@
 import SidebarSection from './SidebarSection';
 import React from 'react';
 import { useI18n } from '../../i18n';
-import DevRoleSelector from '../DevRoleSelector';
+import DevRoleSelector from '../admin/DevRoleSelector';
 
 interface SidebarProps {
   isCollapsed: boolean;

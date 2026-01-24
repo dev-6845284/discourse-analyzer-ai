@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import StrengthBar from '../StrengthBar';
+import StrengthBar from '../ui/StrengthBar';
 
 describe('StrengthBar', () => {
   test.each([

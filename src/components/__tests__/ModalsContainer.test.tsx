@@ -73,7 +73,7 @@ jest.mock('../admin/UsageStatsDashboard', () => ({
   ),
 }));
 
-import ModalsContainer from '../ModalsContainer';
+import ModalsContainer from '../modals/ModalsContainer';
 
 describe('ModalsContainer', () => {
   it('renders AddQuoteModal and calls onSave/onClose', () => {

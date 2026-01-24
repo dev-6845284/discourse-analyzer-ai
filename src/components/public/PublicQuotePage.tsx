@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PublicQuoteCard } from './PublicQuoteCard';
-import { ThemeToggle } from '../ThemeToggle';
+import { ThemeToggle } from "../ui/ThemeToggle";
 import { useI18n } from '../../i18n';
 import axios from 'axios';
 

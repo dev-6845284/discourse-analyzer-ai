@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';
-import { UserList } from './UserList.tsx';
-import { UserForm } from './UserForm.tsx';
-import { PasswordModal } from './PasswordModal.tsx';
-import { KeysetAssignmentModal } from './KeysetAssignmentModal.tsx';
-import Spinner from '../Spinner';
+import { UserList } from './UserList';
+import { UserForm } from './UserForm';
+import { PasswordModal } from './PasswordModal';
+import { KeysetAssignmentModal } from './KeysetAssignmentModal';
+import Spinner from '../ui/Spinner';
 import { useI18n } from '../../i18n';
 
 export const UserManager: React.FC = () => {

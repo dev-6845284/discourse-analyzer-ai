@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Turnstile from 'react-turnstile';
 import api from '../../utils/api';
 import { ShieldCheck, MessageSquareQuote } from 'lucide-react';
-import { ThemeToggle } from '../ThemeToggle';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { useI18n } from '../../i18n';
 
 interface PublicLandingProps {

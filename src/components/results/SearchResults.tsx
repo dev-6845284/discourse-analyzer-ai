@@ -1,6 +1,6 @@
 import React from 'react';
 import ErrorDisplay from './ErrorDisplay';
-import QuoteCard from '../QuoteCard';
+import QuoteCard from '../quotes/QuoteCard';
 import { Quote } from '../../types';
 import { useI18n } from '../../i18n';
 

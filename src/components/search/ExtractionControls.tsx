@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Spinner from '../Spinner';
+import Spinner from '../ui/Spinner';
 import { useI18n } from '../../i18n';
 
 /**

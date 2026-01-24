@@ -17,7 +17,8 @@ import { generateContent } from './chatGpt/api';
 
 // Re-export constants and types for backward compatibility
 export { CHATGPT_MODEL, CHATGPT_FORMATTER_MODEL, CHAT_GPT_MINI } from './chatGpt/constants';
-export { ChatGptCallOptions, callChatGptAPI } from './chatGpt/api';
+export { callChatGptAPI } from './chatGpt/api';
+export type { ChatGptCallOptions } from './chatGpt/api';
 
 class ChatGptService implements LlmService {
   public async fetchQuotesForPerson(
