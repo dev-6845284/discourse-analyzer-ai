@@ -1,4 +1,18 @@
-import React, { useState } from 'react';
+/**
+ * QuoteCard Component
+ *
+ * Purpose:
+ * - A complex card component that displays a single Quote entity.
+ * - Supports various interactive modes: viewing, editing, analyzing (audit/flaws), language toggling, and saving.
+ *
+ * Behavior:
+ * - Manages local state for expansion (collapsing), improvements (drafts), and improvement selection.
+ * - Delegates major actions (analyze, improve, save) to parent handlers.
+ * - Renders sub-components like `QuoteTextDisplay`, `AuditMetadata`, and `AnalysisReport`.
+ *
+ * Location: src/components/quotes/QuoteCard.tsx
+ */
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Quote, AnalysisCategory, AnalysisResult, AuditCategory } from '../../types';
 import { useI18n } from '../../i18n';

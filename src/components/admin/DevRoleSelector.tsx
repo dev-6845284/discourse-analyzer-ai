@@ -1,3 +1,18 @@
+/**
+ * DevRoleSelector Component
+ *
+ * Purpose:
+ * - A development-only tool to switch the current user's role for testing purposes.
+ * - Allows developers to impersonate different roles (admin, editor, moderator, viewer) to verify permissions and UI behavior.
+ *
+ * Behavior:
+ * - Strictly limited to local development environments (localhost, 127.0.0.1, or specific dev flags).
+ * - Fetches available roles from the server if possible.
+ * - Updates the user state globally upon role change.
+ * - Returns `null` (renders nothing) if the environment is not a valid development environment.
+ *
+ * Location: src/components/admin/DevRoleSelector.tsx
+ */
 import React from 'react';
 import { useAuth as useAuthHook } from '../../hooks/useAuth';
 import { setDevRole, getDevRoles } from '../../utils/api';

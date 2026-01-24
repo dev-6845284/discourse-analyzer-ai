@@ -1,3 +1,16 @@
+/**
+ * UserManager Component
+ *
+ * Purpose:
+ * - Main container for Admin User Management.
+ * - Handles fetching users, opening modals (Add/Edit/Password/Keyset), and deleting users.
+ *
+ * Behavior:
+ * - Fetches user list on mount.
+ * - Manages visibility state for multiple sub-modals.
+ *
+ * Location: src/components/users/UserManager.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';

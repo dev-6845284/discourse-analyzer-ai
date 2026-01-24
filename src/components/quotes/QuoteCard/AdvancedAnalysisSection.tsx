@@ -1,3 +1,16 @@
+/**
+ * AdvancedAnalysisSection Component
+ *
+ * Purpose:
+ * - A collapsible section within the QuoteCard for managing "Analysis Context" and "Fact Checking Links".
+ * - Allows users to provide additional context for the AI or manual analysis.
+ *
+ * Behavior:
+ * - Toggles visibility via "Advanced Analysis" button.
+ * - Supports adding/removing/selecting URLs for context or quote sources.
+ *
+ * Location: src/components/quotes/QuoteCard/AdvancedAnalysisSection.tsx
+ */
 import React from 'react';
 import { useI18n } from '../../../i18n';
 

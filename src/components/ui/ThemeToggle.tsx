@@ -1,3 +1,15 @@
+/**
+ * ThemeToggle Component
+ *
+ * Purpose:
+ * - A button to toggle between Light and Dark mode.
+ *
+ * Behavior:
+ * - Uses `ThemeContext` to read and update the current theme.
+ * - Renders Sun/Moon icons accordingly.
+ *
+ * Location: src/components/ui/ThemeToggle.tsx
+ */
 import React from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';

@@ -1,3 +1,17 @@
+/**
+ * AdminSettings Component
+ *
+ * Purpose:
+ * - A modal-style configuration panel for global system feature toggles.
+ * - Allows admins to enable/disable features like Search, Text Extraction, YouTube Transcript, etc.
+ *
+ * Behavior:
+ * - Accepts current settings and an onUpdate callback prop.
+ * - Toggles local state immediately for UI responsiveness.
+ * - calls `onUpdate` to persist changes to the server when saved.
+ *
+ * Location: src/components/admin/AdminSettings.tsx
+ */
 import React, { useState } from 'react';
 
 interface AdminSettingsProps {

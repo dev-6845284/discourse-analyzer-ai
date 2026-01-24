@@ -1,3 +1,18 @@
+/**
+ * PersonForm Component
+ *
+ * Purpose:
+ * - Form interface for creating or editing a `Person` entity.
+ * - Collects name, aliases, description, and social links.
+ *
+ * Behavior:
+ * - Pre-fills fields if `initialData` is provided (Edit mode).
+ * - Validates inputs (e.g. name is required).
+ * - Supports dynamic management of a list of social links.
+ * - Auto-generates alias suggestions based on the name input.
+ *
+ * Location: src/components/people/PersonForm.tsx
+ */
 import React, { useState } from 'react';
 import { Person } from '../../types';
 import { useI18n } from '../../i18n';

@@ -1,3 +1,15 @@
+/**
+ * AddQuoteModal Component
+ *
+ * Purpose:
+ * - A modal form for creating a new Quote or starting a URL extraction.
+ *
+ * Behavior:
+ * - Collects source URL, title, date, language, and initial analysis preferences.
+ * - Supports two modes: 'add' (manual) and 'extract' (auto-scrape).
+ *
+ * Location: src/components/modals/AddQuoteModal.tsx
+ */
 import React, { useState } from 'react';
 import { SUPPORTED_LANGUAGES } from '../../constants';
 import { useI18n } from '../../i18n';

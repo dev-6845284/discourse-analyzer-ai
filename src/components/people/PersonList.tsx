@@ -1,3 +1,17 @@
+/**
+ * PersonList Component
+ *
+ * Purpose:
+ * - Displays a grid/list of people entities.
+ * - Used in the People tab and potentially other selection UIs.
+ *
+ * Behavior:
+ * - Supports local filtering via a search bar.
+ * - Provides action buttons for Edit and Delete (if handlers are provided).
+ * - Shows name, aliases, and description for each person.
+ *
+ * Location: src/components/people/PersonList.tsx
+ */
 import React, { useState } from 'react';
 import { Person } from '../../types';
 import { useI18n } from '../../i18n';

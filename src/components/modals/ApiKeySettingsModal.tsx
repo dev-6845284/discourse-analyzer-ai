@@ -1,3 +1,15 @@
+/**
+ * ApiKeySettingsModal Component
+ *
+ * Purpose:
+ * - Allows users to securely manage their API keys for different AI providers.
+ *
+ * Behavior:
+ * - Keys are write-only (never displayed back).
+ * - Users must explicitly check "Overwrite" to update a key.
+ *
+ * Location: src/components/modals/ApiKeySettingsModal.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import ModalWrapper from '../ui/ModalWrapper';
 import api from '../../utils/api';

@@ -1,3 +1,18 @@
+/**
+ * StoredQuotes Component
+ *
+ * Purpose:
+ * - The main view for browsing and managing saved/stored quotes.
+ * - Orchestrates fetching, filtering, and displaying a list of `Quote` entities from the backend.
+ *
+ * Behavior:
+ * - Fetches data from `/api/quotes` based on current filters.
+ * - Renders a list of `QuoteCard` components.
+ * - Handles bulk or individual actions like Analyze, Improve, Language Change, and Visibility Toggles.
+ * - Integrates with `StoredQuoteFilterBar` for filter controls.
+ *
+ * Location: src/components/quotes/StoredQuotes.tsx
+ */
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Quote, Person, QuoteUpdatePayload } from '../../types';
 import QuoteCard from './QuoteCard';

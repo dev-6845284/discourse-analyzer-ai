@@ -1,4 +1,18 @@
 
+/**
+ * AnalysisReport Component
+ *
+ * Purpose:
+ * - Visualizes the results of an AI analysis (Audit or Flaws).
+ * - Displays the verdict, rationale/assessment, and breakdown of categories.
+ *
+ * Behavior:
+ * - Handles both "Legacy" analysis types and newer "Audit" types.
+ * - Renders `StrengthBar` for severity/rating visualization.
+ * - Supports selection mode for cherry-picking categories (e.g., for promotion).
+ *
+ * Location: src/components/analysis/AnalysisReport.tsx
+ */
 import React from 'react';
 import { useI18n } from '../../i18n';
 import { useCategories } from '../../hooks/useCategories';

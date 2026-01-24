@@ -1,3 +1,16 @@
+/**
+ * AnalysisSessionsList Component
+ *
+ * Purpose:
+ * - Displays a list of active or past analysis sessions (e.g. from YouTube transcripts).
+ * - Allows users to resume or delete sessions.
+ *
+ * Behavior:
+ * - Fetches sessions from the backend API.
+ * - Visualizes progress through different stages (Transcript -> Topics -> ... -> Analysis).
+ *
+ * Location: src/components/analysis/AnalysisSessionsList.tsx
+ */
 import React, { useEffect, useState } from 'react';
 import { Play, FileText, AlertCircle, Clock, CheckCircle, Trash2, ArrowRightCircle } from 'lucide-react';
 import { AnalysisSession } from '../../types';

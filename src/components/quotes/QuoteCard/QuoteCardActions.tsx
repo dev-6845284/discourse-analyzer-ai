@@ -1,3 +1,17 @@
+/**
+ * QuoteCardActions Component
+ *
+ * Purpose:
+ * - The primary action toolbar for a QuoteCard.
+ * - Contains buttons for Analyze, Improve, Save, Edit, Delete, Export, etc.
+ *
+ * Behavior:
+ * - Adapts based on `userRole` (showing/hiding specific admin actions).
+ * - Handles "Busy" states (during API calls).
+ * - Toggles between "Draft" actions (Accept/Discard) and standard actions.
+ *
+ * Location: src/components/quotes/QuoteCard/QuoteCardActions.tsx
+ */
 import React from 'react';
 import { Quote } from '../../../types';
 import Spinner from '../../ui/Spinner';

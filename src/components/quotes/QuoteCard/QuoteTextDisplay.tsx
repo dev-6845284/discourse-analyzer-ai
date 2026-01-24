@@ -1,3 +1,17 @@
+/**
+ * QuoteTextDisplay Component
+ *
+ * Purpose:
+ * - Displays the core content of the quote: Author, Text, and optional Embedded Media (iframe).
+ * - Handles "Read More" expansion for long text.
+ *
+ * Behavior:
+ * - Supports automatic language translation toggling via `onLanguageChange`.
+ * - Handles special "Draft" states (showing diffs/comparisons if needed).
+ * - Embeds YouTube/Facebook/Generic iframes if a source URL is detected.
+ *
+ * Location: src/components/quotes/QuoteCard/QuoteTextDisplay.tsx
+ */
 import React from 'react';
 import { Eye, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 

@@ -1,3 +1,17 @@
+/**
+ * YoutubeTranscriptFetcher Component
+ *
+ * Purpose:
+ * - A standalone component to input a YouTube URL and fetch its transcript.
+ * - Consumed by `TranscriptMethodSelector` or used independently.
+ *
+ * Behavior:
+ * - Validates YouTube URLs locally before attempting fetch.
+ * - Displays loading states/spinners during fetch.
+ * - Handles errors gracefully.
+ *
+ * Location: src/components/transcript/YoutubeTranscriptFetcher.tsx
+ */
 import React, { useState } from 'react';
 import { Play } from 'lucide-react';
 import { useI18n } from '../../i18n';

@@ -1,3 +1,16 @@
+/**
+ * TranscriptImporter Component
+ *
+ * Purpose:
+ * - A generic importer for transcripts in JSON or Plain Text format.
+ * - Supports both file upload and direct text pasting.
+ *
+ * Behavior:
+ * - JSON mode: Expects a specific schema compatible with `TranscriptData`.
+ * - Text mode: Parses lines with timestamps (e.g., "(00:00) text") using `parseTranscriptFromText`.
+ *
+ * Location: src/components/transcript/TranscriptImporter.tsx
+ */
 import React, { useState, useRef } from 'react';
 import { Upload, AlertCircle } from 'lucide-react';
 import { parseTranscriptFromJson, parseTranscriptFromText, TranscriptData } from '../../utils/transcriptStorage';

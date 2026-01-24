@@ -1,3 +1,17 @@
+/**
+ * TranscriptMethodSelector Component
+ *
+ * Purpose:
+ * - A modal dialog that serves as the entry point for adding a new transcript.
+ * - Presents multiple methods: Auto-fetch, Copy-Paste, SRT Upload, JSON/Text Import.
+ *
+ * Behavior:
+ * - Manages the user's preferred default method using local storage.
+ * - Renders the appropriate sub-component (e.g., `SrtTranscriptImporter`) based on selection.
+ * - Displays pros/cons for each method to guide the user.
+ *
+ * Location: src/components/transcript/TranscriptMethodSelector.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import {
   X,

@@ -1,3 +1,16 @@
+/**
+ * AuditMetadata Component
+ *
+ * Purpose:
+ * - Displays the "provenance" of the quote analysis.
+ * - Shows who analyzed it (User/AI), when, and who saved/improved it.
+ *
+ * Behavior:
+ * - Renders a small footer line with icons and timestamps.
+ * - Conditionally renders based on available metadata fields.
+ *
+ * Location: src/components/quotes/QuoteCard/AuditMetadata.tsx
+ */
 import React from 'react';
 import { Quote } from '../../../types';
 import { useI18n } from '../../../i18n';

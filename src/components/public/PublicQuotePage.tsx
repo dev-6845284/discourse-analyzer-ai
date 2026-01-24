@@ -1,3 +1,16 @@
+/**
+ * PublicQuotePage Component
+ *
+ * Purpose:
+ * - A standalone page for viewing a specific quote by ID (permalink).
+ * - Handles security checks (Turnstile) independently of the main gallery.
+ *
+ * Behavior:
+ * - Fetches a single quote.
+ * - Handles various error states (401 Unauthorized, 403 Restricted, 404 Not Found).
+ *
+ * Location: src/components/public/PublicQuotePage.tsx
+ */
 import React, { useEffect, useState } from 'react';
 import { PublicQuoteCard } from './PublicQuoteCard';
 import { ThemeToggle } from "../ui/ThemeToggle";

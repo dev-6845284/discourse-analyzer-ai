@@ -1,3 +1,16 @@
+/**
+ * SidebarSection Component
+ *
+ * Purpose:
+ * - A collapsible container component used within the Sidebar.
+ * - Groups related controls under a common header/title.
+ *
+ * Behavior:
+ * - Controlled component: expansion state is managed by parent via `openSection` and `setOpenSection`.
+ * - Supports an optional indicator tag (e.g., "Admin", "Analysis").
+ *
+ * Location: src/components/layout/SidebarSection.tsx
+ */
 import React from 'react';
 
 interface SidebarSectionProps {

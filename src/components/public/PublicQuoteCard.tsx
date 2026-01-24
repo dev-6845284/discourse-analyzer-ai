@@ -1,3 +1,17 @@
+/**
+ * PublicQuoteCard Component
+ *
+ * Purpose:
+ * - Displays a single Quote in the public gallery.
+ * - Features rich embedding (iframes), expansion toggles, and detailed analysis view.
+ *
+ * Behavior:
+ * - Handles Social Media embeds (Facebook, YouTube) or generic iframes.
+ * - Shows "Audit" breakdown with StrengthBars.
+ * - Supports sharing via link copy.
+ *
+ * Location: src/components/public/PublicQuoteCard.tsx
+ */
 import React, { useState, useRef } from 'react';
 import { Eye, Clock, MessageSquare, ExternalLink, Share2, Facebook, Instagram, Hash, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import { Toast } from '../ui/Toast';

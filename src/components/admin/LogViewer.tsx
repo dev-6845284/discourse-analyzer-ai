@@ -1,3 +1,17 @@
+/**
+ * LogViewer Component
+ *
+ * Purpose:
+ * - Displays a paginated list of system logs, specifically tracking backend interactions and errors.
+ * - Provides details on command executions, request/response payloads, and AI model interactions.
+ *
+ * Behavior:
+ * - Fetches log data via `useLogs` hook.
+ * - Renders individual `LogEntryCard` components for each log entry.
+ * - `LogEntryCard` is collapsible and shows detailed JSON payloads for debugging.
+ *
+ * Location: src/components/admin/LogViewer.tsx
+ */
 import React, { useState } from 'react';
 import { LogEntry } from '../../types';
 import { useLogs } from '../../hooks/useLogs';

@@ -1,3 +1,17 @@
+/**
+ * StoredQuoteFilterBar Component
+ *
+ * Purpose:
+ * - Provides the filtering and sorting UI for the Stored Quotes view.
+ * - Allows users to filter by text, person, date range, rating, language, provider, and status.
+ *
+ * Behavior:
+ * - Controlled component: receives filter state and update handlers from `useStoredQuoteFilters`.
+ * - Includes an inline `PersonFilterSelector` for filtering by person.
+ * - Supports an "Advanced Filters" toggle for granular date ranges.
+ *
+ * Location: src/components/quotes/StoredQuoteFilterBar.tsx
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { StoredQuoteFilters, SortField, SortOrder } from '../../hooks/useStoredQuoteFilters';
 import { AnalysisRating, SeverityLevel, Person } from '../../types';

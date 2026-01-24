@@ -1,3 +1,16 @@
+/**
+ * AnalysisImporter Component
+ *
+ * Purpose:
+ * - Allows users to import a full analysis JSON file.
+ * - Used for restoring or migrating analysis data.
+ *
+ * Behavior:
+ * - Supports file selection and paste inputs.
+ * - valid parsed JSON is passed to `onImport`.
+ *
+ * Location: src/components/analysis/AnalysisImporter.tsx
+ */
 import React, { useState, useRef } from 'react';
 import { Upload, AlertCircle } from 'lucide-react';
 import { parseAnalysisFromJson, FullAnalysisData } from '../../utils/analysisStorage';

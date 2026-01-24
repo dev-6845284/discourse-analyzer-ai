@@ -1,4 +1,16 @@
 
+/**
+ * Spinner Component
+ *
+ * Purpose:
+ * - A simple SVG loading spinner.
+ *
+ * Behavior:
+ * - Rotates indefinitely.
+ * - Accepts `className` for sizing and coloring (defaults to w-5 h-5).
+ *
+ * Location: src/components/ui/Spinner.tsx
+ */
 import React from 'react';
 
 const Spinner: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (

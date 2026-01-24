@@ -1,3 +1,17 @@
+/**
+ * TurnstileWidget Component
+ *
+ * Purpose:
+ * - A wrapper around the Cloudflare Turnstile CAPTCHA service.
+ * - Ensures requests are coming from human users, protecting against bots.
+ *
+ * Behavior:
+ * - Renders the Turnstile iframe/widget using the site key from environment variables.
+ * - Returns a verification token via `onVerify` callback upon success.
+ * - Fails gracefully (shows message) if no site key is configured.
+ *
+ * Location: src/components/auth/TurnstileWidget.tsx
+ */
 import React from 'react';
 import Turnstile from 'react-turnstile';
 

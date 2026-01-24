@@ -1,3 +1,17 @@
+/**
+ * SearchControls Component
+ *
+ * Purpose:
+ * - The primary control panel for the Search/Scrape tab.
+ * - Manages search parameters: person, AI model, result count, temperature, time period, and languages.
+ *
+ * Behavior:
+ * - Controlled component: receives all state and setters as props.
+ * - Supports "Agentic Search" toggles (switching between simple scraping and agentic workflows).
+ * - Provides a "Time Period" selector with custom date range support.
+ *
+ * Location: src/components/search/SearchControls.tsx
+ */
 import React from 'react';
 import Spinner from '../ui/Spinner';
 import { SUPPORTED_LANGUAGES } from '../../constants';

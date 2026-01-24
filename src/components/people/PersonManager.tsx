@@ -1,3 +1,17 @@
+/**
+ * PersonManager Component
+ *
+ * Purpose:
+ * - The primary container for managing the People registry.
+ * - Orchestrates the `PersonList` and `PersonForm` components.
+ *
+ * Behavior:
+ * - Integrates with `usePeople` hook to CRUD people data.
+ * - Toggles between "List View" and "Create/Edit View".
+ * - Handles delete confirmations.
+ *
+ * Location: src/components/people/PersonManager.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import { PersonList } from './PersonList';
 import { PersonForm } from './PersonForm';

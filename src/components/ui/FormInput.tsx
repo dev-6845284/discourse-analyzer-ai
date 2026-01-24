@@ -1,3 +1,15 @@
+/**
+ * FormInput Component
+ *
+ * Purpose:
+ * - A standardized text input wrapper with a label.
+ *
+ * Behavior:
+ * - Supports all standard HTML input props.
+ * - Applies consistent styling for the application theme.
+ *
+ * Location: src/components/ui/FormInput.tsx
+ */
 import React from 'react';
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {

@@ -1,3 +1,18 @@
+/**
+ * MainContent Component
+ *
+ * Purpose:
+ * - The primary layout container for the application's central content area.
+ * - Orchestrates the display of different views based on the active tab (Search, People, Admin, etc.).
+ *
+ * Behavior:
+ * - Renders specific sub-components based on `activeTab` and `resultsTab` props.
+ * - Manages the tab navigation UI for switching between Search Results, Stored Quotes, and Transcripts.
+ * - Conditionally renders Admin views when the admin tab is active.
+ * - Passes down props and handlers to child components like `SearchResults`, `StoredQuotes`, and `UserManager`.
+ *
+ * Location: src/components/layout/MainContent.tsx
+ */
 import React from 'react';
 import StoredQuotes from '../quotes/StoredQuotes';
 import TranscriptViewer from '../transcript/TranscriptViewer';

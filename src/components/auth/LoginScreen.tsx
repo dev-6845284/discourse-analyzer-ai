@@ -1,3 +1,17 @@
+/**
+ * LoginScreen Component
+ *
+ * Purpose:
+ * - Provides the primary user authentication interface.
+ * - Supports email/password login and "Developer Login" (in dev environments).
+ *
+ * Behavior:
+ * - Manages local state for email, password, and submission status.
+ * - Integrates with `TurnstileWidget` for CAPTCHA verification.
+ * - Delegates actual login logic to the `onLogin` prop.
+ *
+ * Location: src/components/auth/LoginScreen.tsx
+ */
 import React, { useState } from 'react';
 import { useI18n } from '../../i18n';
 import { TurnstileWidget } from './TurnstileWidget';

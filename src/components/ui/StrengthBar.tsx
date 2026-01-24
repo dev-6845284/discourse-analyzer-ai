@@ -1,3 +1,15 @@
+/**
+ * StrengthBar Component
+ *
+ * Purpose:
+ * - Visualizes a scalar value (like strength, severity, or rating) as segmented bars.
+ *
+ * Behavior:
+ * - Renders a row of small boxes.
+ * - Fills boxes up to the current `level`.
+ *
+ * Location: src/components/ui/StrengthBar.tsx
+ */
 import React from 'react';
 
 export interface StrengthBarProps {
@@ -51,8 +63,8 @@ export const StrengthBar: React.FC<StrengthBarProps> = ({
           <div
             key={i}
             className={`box-border transition-colors duration-200 border border-[#ddd] dark:border-[#222] ${isFilled
-                ? 'opacity-100'
-                : 'bg-gray-200 dark:bg-gray-600 opacity-50 dark:opacity-[0.35]'
+              ? 'opacity-100'
+              : 'bg-gray-200 dark:bg-gray-600 opacity-50 dark:opacity-[0.35]'
               }`}
             style={{
               width: Math.max(6, Math.floor((width - (max - 1) * 2) / max)),

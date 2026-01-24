@@ -1,3 +1,15 @@
+/**
+ * ImportQuoteModal Component
+ *
+ * Purpose:
+ * - Confirmation dialog for importing a batch of quotes (e.g. from JSON).
+ *
+ * Behavior:
+ * - summarises the import data.
+ * - Allows assigning the imported quotes to a specific Person (new or existing).
+ *
+ * Location: src/components/modals/ImportQuoteModal.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import ModalWrapper from '../ui/ModalWrapper';
 import { ExportData, Person } from '../../types';

@@ -1,3 +1,17 @@
+/**
+ * TranscriptViewer Component
+ *
+ * Purpose:
+ * - The main container for the Transcript Analysis feature.
+ * - Orchestrates different views: Transcript Text, Topic Analysis, Speaker Analysis, and Dialog Analysis.
+ *
+ * Behavior:
+ * - Uses `useTranscriptViewer` hook to manage complex state (current view, search, selections).
+ * - Implements a stepper-like navigation (`StepProgressBar`) for the analysis workflow.
+ * - Handles session management (saving to DB) and promotion of findings to Quotes.
+ *
+ * Location: src/components/transcript/TranscriptViewer.tsx
+ */
 import React from 'react';
 import { useTranscriptViewer } from '../../hooks/useTranscriptViewer';
 import TranscriptViewHeader from './TranscriptViewer/TranscriptViewHeader';

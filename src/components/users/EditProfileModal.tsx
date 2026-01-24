@@ -1,3 +1,15 @@
+/**
+ * EditProfileModal Component
+ *
+ * Purpose:
+ * - Allows a logged-in user to edit their own profile details (e.g. Alias).
+ *
+ * Behavior:
+ * - Simple form with validation.
+ * - Updates the user in the backend and calls `onSubmit` with new data on success.
+ *
+ * Location: src/components/users/EditProfileModal.tsx
+ */
 import React, { useState } from 'react';
 import api from '../../utils/api';
 import { useI18n } from '../../i18n';

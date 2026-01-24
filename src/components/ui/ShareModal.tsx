@@ -1,3 +1,16 @@
+/**
+ * ShareModal Component
+ *
+ * Purpose:
+ * - A modal dialog for sharing content (e.g. quote URLs).
+ * - Provides options to copy the link to clipboard or navigate to it.
+ *
+ * Behavior:
+ * - Displays the full URL in a readonly text box.
+ * - Handles navigation interception if `onNavigate` is provided (for SPA routing).
+ *
+ * Location: src/components/ui/ShareModal.tsx
+ */
 import React from 'react';
 import { ExternalLink, Copy } from 'lucide-react';
 import { useI18n } from '../../i18n';

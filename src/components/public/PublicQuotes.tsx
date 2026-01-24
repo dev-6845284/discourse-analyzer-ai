@@ -1,3 +1,17 @@
+/**
+ * PublicQuotes Component
+ *
+ * Purpose:
+ * - A public gallery displaying shared quotes.
+ * - Provides filtering by Person, Date, Time Period, and Sorting.
+ *
+ * Behavior:
+ * - Fetches public quotes via API.
+ * - Implements complex client-side filter logic (month/year ranges).
+ * - Responsive layout with specific mobile/desktop headers.
+ *
+ * Location: src/components/public/PublicQuotes.tsx
+ */
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';

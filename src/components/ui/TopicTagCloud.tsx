@@ -1,3 +1,17 @@
+/**
+ * TopicTagCloud Component
+ *
+ * Purpose:
+ * - Visualizes topic analysis results as a tag cloud or ranked list.
+ * - Highlights "Main Topics" separately from general keywords.
+ *
+ * Behavior:
+ * - Sorts tags by a combined weight of relevance and importance.
+ * - Colors tags based on their ranking tier (1-5).
+ * - Displays a visual bar indicator for relevance/importance scores.
+ *
+ * Location: src/components/ui/TopicTagCloud.tsx
+ */
 import React from 'react';
 
 export interface WeightedTag {
@@ -97,9 +111,8 @@ export const TopicTagCloud: React.FC<TopicTagCloudProps> = ({ tags, mainTopics =
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
-                      className={`h-2 flex-1 rounded-sm transition-all ${
-                        level <= ranking ? colorClass : 'bg-gray-700'
-                      }`}
+                      className={`h-2 flex-1 rounded-sm transition-all ${level <= ranking ? colorClass : 'bg-gray-700'
+                        }`}
                       title={`Relevance: ${(tag.relevance * 100).toFixed(0)}% | Importance: ${(tag.importance * 100).toFixed(0)}%`}
                     />
                   ))}

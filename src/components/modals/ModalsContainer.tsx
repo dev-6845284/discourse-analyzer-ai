@@ -1,3 +1,17 @@
+/**
+ * ModalsContainer Component
+ *
+ * Purpose:
+ * - A centralized orchestrator for rendering application modals.
+ * - Keeps the main layout clean by hoisting modal logic.
+ *
+ * Behavior:
+ * - Receives `isOpen` flags and handlers for all supported modals as props.
+ * - Conditionally renders the active modal(s).
+ * - Lazy loads heavier modals (like Admin components).
+ *
+ * Location: src/components/modals/ModalsContainer.tsx
+ */
 import React, { Suspense } from 'react';
 import AddQuoteModal from './AddQuoteModal';
 import ApiKeySettingsModal from './ApiKeySettingsModal';

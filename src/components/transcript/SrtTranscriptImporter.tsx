@@ -1,3 +1,17 @@
+/**
+ * SrtTranscriptImporter Component
+ *
+ * Purpose:
+ * - Allows users to upload an SRT subtitle file to use as a transcript.
+ * - Requires a YouTube URL to associate the subtitles with a video ID.
+ *
+ * Behavior:
+ * - Parses uploaded .srt files client-side using `srtParser` utility.
+ * - Extracts video ID from the provided YouTube URL.
+ * - Passes the parsed transcript data to the `onImport` callback.
+ *
+ * Location: src/components/transcript/SrtTranscriptImporter.tsx
+ */
 import React, { useState, useRef } from 'react';
 import { Upload, Play, AlertCircle, FileText } from 'lucide-react';
 import { parseSrtContent, extractYouTubeVideoId, isValidYouTubeUrl } from '../../utils/srtParser';

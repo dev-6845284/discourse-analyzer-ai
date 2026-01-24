@@ -1,3 +1,16 @@
+/**
+ * EditQuoteModal Component
+ *
+ * Purpose:
+ * - A comprehensive form for editing an existing quote and its analysis data.
+ *
+ * Behavior:
+ * - Pre-fills all fields from the provided `quote` prop.
+ * - Allows editing of core metadata (text, source, person) and deep analysis data (rationale, evidence per category).
+ * - Handles person reassignment via a dropdown search.
+ *
+ * Location: src/components/modals/EditQuoteModal.tsx
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { Quote, Person, AuditCategory } from '../../types';
 import { useI18n } from '../../i18n';
