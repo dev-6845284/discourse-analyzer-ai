@@ -9,7 +9,7 @@
  * - Renders a small footer line with icons and timestamps.
  * - Conditionally renders based on available metadata fields.
  *
- * Location: src/components/quotes/QuoteCard/AuditMetadata.tsx
+ * Location: src/components/quotes/QuoteCardParts/AuditMetadata.tsx
  */
 import React from 'react';
 import { Quote } from '../../../types';

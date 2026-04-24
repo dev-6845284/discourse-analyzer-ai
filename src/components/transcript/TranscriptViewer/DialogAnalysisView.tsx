@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatTimestamp, parseTimestamp } from '../../../utils/transcriptHelpers';
 import Spinner from '../../ui/Spinner';
+import { useI18n } from '../../../i18n';
 
 interface DialogLine {
   speaker: string;
@@ -44,7 +45,6 @@ interface DialogAnalysisViewProps {
   onStartSelection?: () => void;
   selectedLanguage?: string;
   onLanguageChange?: (lang: string) => void;
-
 }
 
 export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
@@ -68,6 +68,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
   onLanguageChange,
 
 }) => {
+  const { t } = useI18n();
   const [analysisLanguage, setAnalysisLanguage] = React.useState(selectedLanguage);
 
   // Debug log
@@ -86,9 +87,9 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
         <div className="text-center text-cyan-600 dark:text-cyan-400">
           <Spinner className="w-10 h-10 mx-auto mb-4" />
           <p className="text-lg font-semibold animate-pulse">
-            Analyzing dialog topics...
+            {t('analyzingDialogTopics')}
           </p>
-          <p className="text-sm opacity-70 mt-2">This may take a while.</p>
+          <p className="text-sm opacity-70 mt-2">{t('thisMayTakeAWhile')}</p>
         </div>
       </div>
     );
@@ -99,7 +100,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
       <div className="flex-1 flex items-center justify-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm min-h-[300px]">
         <div className="text-center text-red-600 dark:text-red-400 p-6">
           <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm max-w-md mx-auto">
-            <p className="font-bold text-lg mb-2">Error analyzing dialog:</p>
+            <p className="font-bold text-lg mb-2">{t('errorAnalyzingDialog')}</p>
             <p className="text-sm opacity-90">{error}</p>
           </div>
         </div>
@@ -111,11 +112,11 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/30 p-8">
         <div className="text-center max-w-sm">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">No dialog analysis data available.</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{t('noDialogAnalysisData')}</p>
 
           <div className="mb-6 flex items-center justify-center gap-3">
             <label htmlFor="analysis-language-select" className="text-xs font-bold uppercase tracking-wider text-gray-500 shrink-0">
-              Analysis Language:
+              {t('analysisLanguage')}
             </label>
             <select
               id="analysis-language-select"
@@ -140,7 +141,7 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
             disabled={speakerResults.length === 0}
             className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20 disabled:opacity-50"
           >
-            Start Dialog Analysis
+            {t('startDialogAnalysis')}
           </button>
         </div>
       </div>
@@ -153,15 +154,15 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
         <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur p-4 -mx-6 -mt-6 mb-6 border-b border-cyan-200 dark:border-cyan-700/50 flex justify-between items-center shadow-lg">
           <div className="flex items-center gap-4">
             <span className="text-cyan-700 dark:text-cyan-300 font-bold">
-              Selected: {selectedStatements?.size || 0} statements
+              {t('selectedStatementsCount', { count: selectedStatements?.size || 0 })}
             </span>
             <span className="text-gray-500 dark:text-gray-400 text-sm">
-              Group items with the same number to merge them into one quote.
+              {t('groupItemsToMergeHint')}
             </span>
           </div>
           <div className="flex gap-4 items-center">
             <div className="flex items-center gap-2">
-              <label htmlFor="language-select" className="text-sm text-gray-500 dark:text-gray-400">Language:</label>
+              <label htmlFor="language-select" className="text-sm text-gray-500 dark:text-gray-400">{t('quoteLanguageLabel')}</label>
               <select
                 id="language-select"
                 value={selectedLanguage}
@@ -184,14 +185,14 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
                 onClick={onCancelSelection}
                 className="px-3 py-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={onPromote}
                 disabled={!selectedStatements || selectedStatements.size === 0}
                 className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-600/20 dark:shadow-cyan-900/20"
               >
-                Promote to Quotes
+                {t('promoteToQuotes')}
               </button>
             </div>
           </div>
@@ -200,12 +201,12 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
 
       <div className="flex justify-between items-center mb-4">
         <p className="text-gray-600 dark:text-gray-300">
-          Identified <strong>{dialogResults.length}</strong> topic groups
+          {t('identifiedTopicGroupsCount', { count: dialogResults.length })}
         </p>
         <div className="flex gap-2 items-center">
           {!isSelectionMode && (
             <div className="flex items-center gap-2 mr-2">
-              <label htmlFor="view-language-select" className="text-xs text-gray-500 dark:text-gray-400">Language:</label>
+              <label htmlFor="view-language-select" className="text-xs text-gray-500 dark:text-gray-400">{t('quoteLanguageLabel')}</label>
               <select
                 id="view-language-select"
                 value={selectedLanguage}
@@ -229,14 +230,14 @@ export const DialogAnalysisView: React.FC<DialogAnalysisViewProps> = ({
               onClick={onStartSelection}
               className="text-xs px-3 py-1 bg-cyan-100 dark:bg-cyan-600/20 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-600/50 rounded hover:bg-cyan-200 dark:hover:bg-cyan-600/30 transition-colors shadow-sm"
             >
-              Select Quotes
+              {t('selectQuotes')}
             </button>
           )}
           <button
             onClick={onClearAnalysis}
             className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
           >
-            Clear Analysis
+            {t('clearAnalysis')}
           </button>
         </div>
       </div>

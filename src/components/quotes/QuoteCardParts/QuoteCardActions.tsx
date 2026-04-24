@@ -10,7 +10,7 @@
  * - Handles "Busy" states (during API calls).
  * - Toggles between "Draft" actions (Accept/Discard) and standard actions.
  *
- * Location: src/components/quotes/QuoteCard/QuoteCardActions.tsx
+ * Location: src/components/quotes/QuoteCardParts/QuoteCardActions.tsx
  */
 import React from 'react';
 import { Quote } from '../../../types';

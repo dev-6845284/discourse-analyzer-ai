@@ -9,7 +9,7 @@
  * - Toggles visibility via "Advanced Analysis" button.
  * - Supports adding/removing/selecting URLs for context or quote sources.
  *
- * Location: src/components/quotes/QuoteCard/AdvancedAnalysisSection.tsx
+ * Location: src/components/quotes/QuoteCardParts/AdvancedAnalysisSection.tsx
  */
 import React from 'react';
 import { useI18n } from '../../../i18n';

@@ -53,6 +53,7 @@
                 "-r",
                 "ts-node/register"
             ],
+            "envFile": "${workspaceFolder}/.env",
             "sourceMaps": true
         },
         {
@@ -60,7 +61,8 @@
             "request": "launch",
             "type": "chrome",
             "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}/src"
+            "webRoot": "${workspaceFolder}/src",
+            "preLaunchTask": "Start Frontend Dev Server"
         }
     ]
 }

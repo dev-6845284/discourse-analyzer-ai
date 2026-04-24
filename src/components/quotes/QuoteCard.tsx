@@ -12,19 +12,18 @@
  *
  * Location: src/components/quotes/QuoteCard.tsx
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
-import { Quote, AnalysisCategory, AnalysisResult, AuditCategory } from '../../types';
+import { Quote, AnalysisCategory, AuditCategory } from '../../types';
 import { useI18n } from '../../i18n';
 import AnalysisReport from '../analysis/AnalysisReport';
 import { initializeLinksWithSelection, LinkData } from '../../utils/linkUtils';
-import { RATING_ORDER, SEVERITY_ORDER } from '../../constants';
-import QuoteTextDisplay from './QuoteCard/QuoteTextDisplay';
-import AuditMetadata from './QuoteCard/AuditMetadata';
-import QuoteLinksDisplay from './QuoteCard/QuoteLinksDisplay';
-import AdvancedAnalysisSection from './QuoteCard/AdvancedAnalysisSection';
-import QuoteCardActions from './QuoteCard/QuoteCardActions';
-import { isYouTubeUrl } from '../../utils/urlHelpers';
+import { SEVERITY_ORDER } from '../../constants';
+import QuoteTextDisplay from './QuoteCardParts/QuoteTextDisplay';
+import AuditMetadata from './QuoteCardParts/AuditMetadata';
+import QuoteLinksDisplay from './QuoteCardParts/QuoteLinksDisplay';
+import AdvancedAnalysisSection from './QuoteCardParts/AdvancedAnalysisSection';
+import QuoteCardActions from './QuoteCardParts/QuoteCardActions';
 
 interface QuoteCardProps {
   quote: Quote;

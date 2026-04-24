@@ -251,7 +251,7 @@ export const SpeakerAnalysisView: React.FC<SpeakerAnalysisViewProps> = ({
           <p className="text-lg font-semibold animate-pulse">
             {t('identifyingSpeakers')}
           </p>
-          <p className="text-sm opacity-70 mt-2">{t('thisMayTakeAMoment') || 'Mapping voices to personalities...'}</p>
+          <p className="text-sm opacity-70 mt-2">{t('thisMayTakeAMoment')}</p>
         </div>
       </div>
     );

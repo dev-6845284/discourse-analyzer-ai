@@ -10,7 +10,7 @@
  * - Handles special "Draft" states (showing diffs/comparisons if needed).
  * - Embeds YouTube/Facebook/Generic iframes if a source URL is detected.
  *
- * Location: src/components/quotes/QuoteCard/QuoteTextDisplay.tsx
+ * Location: src/components/quotes/QuoteCardParts/QuoteTextDisplay.tsx
  */
 import React from 'react';
 import { Eye, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
@@ -96,7 +96,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
 
     // 3. YouTube Logic
     // Captures ID from: youtube.com (watch, embed, shorts, live) and youtu.be
-    const ytMatch = normalizedStr.match(/(?:youtube(?:-nocookie)?\.com\/(?:(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+    const ytMatch = normalizedStr.match(/(?:youtube(?:-nocookie)?\.com\/(?:(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
     if (ytMatch && ytMatch[1]) {
       return `https://www.youtube.com/embed/${ytMatch[1]}`;
     }
@@ -219,7 +219,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
                     {/* Prominent fallback link and hint */}
                     <div className="bg-gray-100 dark:bg-gray-800 p-2 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-2">
                       <span className="text-[10px] text-gray-500 italic text-center sm:text-left">
-                        {t('fb_embed_hint')}
+                        {t('embed_hint')}
                       </span>
                       {directSourceUrl && (
                         <a
@@ -240,7 +240,7 @@ const QuoteTextDisplay: React.FC<QuoteTextDisplayProps> = ({
 
           <div className="flex justify-between items-center mt-3 text-xs gap-4 flex-wrap">
             <div className="flex flex-col min-w-0 flex-1 mr-4">
-              {directSourceUrl && (
+              {directSourceUrl && !displayQuote.source?.includes('<iframe') && (
                 <a
                   href={directSourceUrl}
                   target="_blank"

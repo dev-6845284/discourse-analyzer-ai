@@ -8,7 +8,7 @@
  * - Distinguishes between 'Source' links (Blue) and 'Context' links (Purple).
  * - Truncates long URLs/Titles for display.
  *
- * Location: src/components/quotes/QuoteCard/QuoteLinksDisplay.tsx
+ * Location: src/components/quotes/QuoteCardParts/QuoteLinksDisplay.tsx
  */
 import React from 'react';
 

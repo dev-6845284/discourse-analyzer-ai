@@ -261,7 +261,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
                                     {/* Prominent fallback link and hint */}
                                     <div className="bg-gray-100 p-2 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-2">
                                         <span className="text-[10px] text-gray-500 italic text-center sm:text-left">
-                                            {t('fb_embed_hint')}
+                                            {t('embed_hint')}
                                         </span>
                                         <a
                                             href={directSourceUrl || '#'}
