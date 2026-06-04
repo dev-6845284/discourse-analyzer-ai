@@ -101,7 +101,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt });
 
       const requestDetails = {
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -229,7 +229,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt: analysisPrompt, step: 'analysis' });
 
       const analysisRequestDetails = {
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: analysisPrompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -271,7 +271,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt: formattingPrompt, step: 'formatting' });
 
       const formattingRequestDetails = {
-        model: 'gemini-2.5-flash', // Faster model for formatting
+        model: 'gemini-3.5-flash', // Faster model for formatting
         contents: formattingPrompt,
         config: {
           temperature: 0.2, // Lower temperature for strict formatting
@@ -353,7 +353,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt });
 
       const requestDetails = {
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: prompt,
         config: {
           temperature: temperature,
@@ -465,7 +465,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt });
 
       const requestDetails = {
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: prompt,
         config: {
           temperature: temperature,
@@ -581,7 +581,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt });
 
       const requestDetails = {
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.5-flash',
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -672,7 +672,7 @@ class GeminiService implements LlmService {
     const prompt = createTopicExtractionPrompt(text, language);
 
     const responseText = await this.generateContent(apiKey, {
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.5-flash',
       prompt,
       temperature,
       logId,

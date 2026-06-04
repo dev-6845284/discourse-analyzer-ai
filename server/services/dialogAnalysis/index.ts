@@ -8,8 +8,8 @@ import { analyzeTopics } from './analysis';
 export interface DialogAnalysisRequest {
   dialog: SpeakerAnalysisResult[]; // Input from previous step
   language: string;
-  fastModel?: string; // Defaults to gemini-2.0-flash-exp or similar
-  betterModel?: string; // Defaults to gemini-1.5-flash
+  fastModel?: string; // Defaults to gemini-3.5-flash-lite or similar
+  betterModel?: string; // Defaults to gemini-3.5-flash
   userId: string;
   sessionId?: string;
   logId?: string;
@@ -24,8 +24,8 @@ export const analyzeDialogTopics = async (
   const { dialog, language, userId, sessionId, logId } = request;
 
   // Use provided models or fall back to defaults
-  const fastModel = request.fastModel || 'gemini-2.5-flash';
-  const betterModel = request.betterModel || 'gemini-2.5-flash';
+  const fastModel = request.fastModel || 'gemini-3.5-flash';
+  const betterModel = request.betterModel || 'gemini-3.5-flash';
 
   // Resolve API keys logic removed - delegated to sub-services
 

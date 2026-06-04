@@ -27,7 +27,7 @@ const DEFAULT_SPEAKER_SIMILARITY_THRESHOLD = 0.85;
 const MODEL_CONFIG = {
   chatgpt: { provider: 'chatgpt', model: 'gpt-5.4-mini' },
   grok: { provider: 'grok', model: 'grok-4.1-fast-reasoning' },
-  gemini: { provider: 'gemini', model: 'gemini-2.5-flash' },
+  gemini: { provider: 'gemini', model: 'gemini-3.5-flash' },
 } as const;
 
 // ============================================================================
@@ -352,7 +352,7 @@ function getLlmConfig(
 ): { provider: string; modelName: string; apiKey: string } {
   const provider = getProviderFromModel(model);
 
-  // If a specific model is requested (e.g., 'gemini-1.5-pro'), use it.
+  // If a specific model is requested (e.g., 'gemini-3.5-pro'), use it.
   // Otherwise, use the default models defined in MODEL_CONFIG.
   // Note: 'model' arg here is often just the provider name or a full model name.
 
