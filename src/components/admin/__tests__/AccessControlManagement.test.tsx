@@ -37,7 +37,7 @@ describe('AccessControlManagement', () => {
     await waitFor(() => expect(screen.getAllByText('/api/quotes').length).toBeGreaterThan(0));
 
     // change first item's role to 'admin' by selecting the radio inside the first group's name
-    const adminRadio = container.querySelector('input[name="role-0"][value="admin"]') as HTMLInputElement | null;
+    const adminRadio = container.querySelector('input[name="role-1-0"][value="admin"]') as HTMLInputElement | null;
     expect(adminRadio).not.toBeNull();
     if (adminRadio) fireEvent.click(adminRadio);
 

@@ -1,9 +1,23 @@
+/**
+ * PublicQuoteCard Component
+ *
+ * Purpose:
+ * - Displays a single Quote in the public gallery.
+ * - Features rich embedding (iframes), expansion toggles, and detailed analysis view.
+ *
+ * Behavior:
+ * - Handles Social Media embeds (Facebook, YouTube) or generic iframes.
+ * - Shows "Audit" breakdown with StrengthBars.
+ * - Supports sharing via link copy.
+ *
+ * Location: src/components/public/PublicQuoteCard.tsx
+ */
 import React, { useState, useRef } from 'react';
 import { Eye, Clock, MessageSquare, ExternalLink, Share2, Facebook, Instagram, Hash, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import { Toast } from '../ui/Toast';
 import { ShareModal } from '../ui/ShareModal';
 import { useI18n } from '../../i18n';
-import StrengthBar from '../StrengthBar';
+import StrengthBar from '../ui/StrengthBar';
 import {
     SEVERITY_HEX,
     AUDIT_CATEGORY_COLORS,
@@ -247,7 +261,7 @@ export const PublicQuoteCard: React.FC<PublicQuoteProps> = ({ quote, onNavigate 
                                     {/* Prominent fallback link and hint */}
                                     <div className="bg-gray-100 p-2 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-2">
                                         <span className="text-[10px] text-gray-500 italic text-center sm:text-left">
-                                            {t('fb_embed_hint')}
+                                            {t('embed_hint')}
                                         </span>
                                         <a
                                             href={directSourceUrl || '#'}

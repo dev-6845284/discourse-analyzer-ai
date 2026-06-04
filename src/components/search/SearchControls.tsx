@@ -1,5 +1,19 @@
+/**
+ * SearchControls Component
+ *
+ * Purpose:
+ * - The primary control panel for the Search/Scrape tab.
+ * - Manages search parameters: person, AI model, result count, temperature, time period, and languages.
+ *
+ * Behavior:
+ * - Controlled component: receives all state and setters as props.
+ * - Supports "Agentic Search" toggles (switching between simple scraping and agentic workflows).
+ * - Provides a "Time Period" selector with custom date range support.
+ *
+ * Location: src/components/search/SearchControls.tsx
+ */
 import React from 'react';
-import Spinner from '../Spinner';
+import Spinner from '../ui/Spinner';
 import { SUPPORTED_LANGUAGES } from '../../constants';
 import { useI18n } from '../../i18n';
 
@@ -272,8 +286,8 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
               <button
                 onClick={() => searchParams.setAgenticMode('quotes')}
                 className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-l-md ${searchParams.agenticMode === 'quotes'
-                    ? 'bg-cyan-600 text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
               >
                 {t('quotes')}
@@ -281,8 +295,8 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
               <button
                 onClick={() => searchParams.setAgenticMode('articles')}
                 className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors rounded-r-md ${searchParams.agenticMode === 'articles'
-                    ? 'bg-cyan-600 text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
               >
                 {t('articles')}

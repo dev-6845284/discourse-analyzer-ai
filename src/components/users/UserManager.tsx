@@ -1,11 +1,24 @@
+/**
+ * UserManager Component
+ *
+ * Purpose:
+ * - Main container for Admin User Management.
+ * - Handles fetching users, opening modals (Add/Edit/Password/Keyset), and deleting users.
+ *
+ * Behavior:
+ * - Fetches user list on mount.
+ * - Manages visibility state for multiple sub-modals.
+ *
+ * Location: src/components/users/UserManager.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';
-import { UserList } from './UserList.tsx';
-import { UserForm } from './UserForm.tsx';
-import { PasswordModal } from './PasswordModal.tsx';
-import { KeysetAssignmentModal } from './KeysetAssignmentModal.tsx';
-import Spinner from '../Spinner';
+import { UserList } from './UserList';
+import { UserForm } from './UserForm';
+import { PasswordModal } from './PasswordModal';
+import { KeysetAssignmentModal } from './KeysetAssignmentModal';
+import Spinner from '../ui/Spinner';
 import { useI18n } from '../../i18n';
 
 export const UserManager: React.FC = () => {
@@ -78,7 +91,7 @@ export const UserManager: React.FC = () => {
     alert(t('passwordUpdated'));
   };
 
-  if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
+  if (isLoading) return <div className="flex justify-center p-8 text-cyan-600 dark:text-cyan-400"><Spinner /></div>;
 
   return (
     <div className="space-y-6">

@@ -1,3 +1,17 @@
+/**
+ * KeysetManagement Component
+ *
+ * Purpose:
+ * - Admin interface for managing API Keysets (groups of API keys for different providers like Gemini, Grok, OpenAI).
+ * - Allows creating, updating, and deleting keysets.
+ *
+ * Behavior:
+ * - Fetches keysets using `getAdminKeysets`.
+ * - Handles keyset alias uniqueness checks locally.
+ * - Manages API key inputs securely (masked text) and allows selective overwriting of keys during updates.
+ *
+ * Location: src/components/admin/KeysetManagement.tsx
+ */
 import React, { useEffect, useState } from 'react';
 import {
   getAdminKeysets,

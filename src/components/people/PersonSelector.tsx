@@ -1,3 +1,17 @@
+/**
+ * PersonSelector Component
+ *
+ * Purpose:
+ * - An autocomplete input component for selecting a person from the database.
+ * - Used in Search filters and transcript attribution.
+ *
+ * Behavior:
+ * - Fetches people suggestions as the user types.
+ * - Shows a dropdown of matching results with support for keyboard/mouse selection.
+ * - Returns the selected person's name (and full object via callback).
+ *
+ * Location: src/components/people/PersonSelector.tsx
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { usePeople } from '../../hooks/usePeople';
 import { Person } from '../../types';

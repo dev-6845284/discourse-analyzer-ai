@@ -20,8 +20,6 @@ export interface UseTranscriptViewerProps {
     dialogAnalysis?: any[];
   };
   onSessionCreated?: (sessionId: string) => void;
-
-
 }
 
 export const useTranscriptViewer = ({
@@ -34,7 +32,6 @@ export const useTranscriptViewer = ({
   onSessionCreated,
 }: UseTranscriptViewerProps) => {
   const [viewMode, setViewMode] = useState<'transcript' | 'topics' | 'speakers' | 'dialog'>(() => {
-
     if (initialSessionData?.dialogAnalysis && initialSessionData.dialogAnalysis.length > 0) return 'dialog';
     if (initialSessionData?.speakerAnalysis && initialSessionData.speakerAnalysis.length > 0) return 'speakers';
     if (initialSessionData?.topicAnalysis && initialSessionData.topicAnalysis.length > 0) return 'topics';
@@ -64,13 +61,17 @@ export const useTranscriptViewer = ({
   // Get API key info from search params
   const { selectedAI } = useSearchParams();
 
+  // Model selection state
+  const [topicModel, setTopicModel] = useState<string>(selectedAI || 'gemini-1.5-flash');
+  const [speakerModel, setSpeakerModel] = useState<string>('gemini-1.5-flash');
+  const [segmentationModel, setSegmentationModel] = useState<string>('gemini-2.0-flash-exp');
+  const [analysisModel, setAnalysisModel] = useState<string>('gemini-1.5-pro');
+
   // Topic analysis hook
   const topicAnalysis = useTranscriptAnalysis(initialSessionData);
   const { t } = useI18n();
 
   const formattedText = constructFormattedTranscript(segments);
-
-
 
   const handleToggleSelection = (statementId: string, _groupId: number) => {
     const newMap = new Map(selectedStatements);
@@ -186,7 +187,7 @@ export const useTranscriptViewer = ({
     await topicAnalysis.analyzeTranscript(
       segments,
       languageCode,
-      selectedAI || 'gemini',
+      topicModel,
       sId
     );
     setViewMode('topics');
@@ -198,7 +199,7 @@ export const useTranscriptViewer = ({
 
     await topicAnalysis.analyzeSpeakers(
       languageCode,
-      selectedAI || 'gemini',
+      speakerModel,
       sId,
       speakerHint || undefined
     );
@@ -215,8 +216,8 @@ export const useTranscriptViewer = ({
 
     await topicAnalysis.analyzeDialog(
       overrideLanguage || languageCode,
-      'gemini-2.0-flash-exp', // Fast model
-      'gemini-2.5-flash',       // Better model
+      segmentationModel, // Fast model
+      analysisModel,       // Better model
       sId
     );
     setViewMode('dialog');
@@ -585,5 +586,14 @@ export const useTranscriptViewer = ({
           break;
       }
     },
+    // Model selection
+    topicModel,
+    setTopicModel,
+    speakerModel,
+    setSpeakerModel,
+    segmentationModel,
+    setSegmentationModel,
+    analysisModel,
+    setAnalysisModel,
   };
 };

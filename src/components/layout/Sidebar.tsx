@@ -1,7 +1,21 @@
+/**
+ * Sidebar Component
+ *
+ * Purpose:
+ * - The main navigational and control panel for the application.
+ * - Houses filters, settings, and context-specific controls (Search, People, Admin).
+ *
+ * Behavior:
+ * - Responsive: Functions as a collapsible sidebar on desktop and a drawer/modal on mobile.
+ * - Uses `SidebarSection` to organize controls into collapsible groups.
+ * - Conditionally renders content based on the user's role and the active main tab.
+ *
+ * Location: src/components/layout/Sidebar.tsx
+ */
 import SidebarSection from './SidebarSection';
 import React from 'react';
 import { useI18n } from '../../i18n';
-import DevRoleSelector from '../DevRoleSelector';
+import DevRoleSelector from '../admin/DevRoleSelector';
 
 interface SidebarProps {
   isCollapsed: boolean;

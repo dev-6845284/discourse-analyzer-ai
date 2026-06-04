@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock child modal components
-jest.mock('../AddQuoteModal', () => ({
+jest.mock('../modals/AddQuoteModal', () => ({
   __esModule: true,
   default: ({ isOpen, onClose, onSave, mode, initialSource }: any) =>
     isOpen ? (
@@ -13,12 +13,12 @@ jest.mock('../AddQuoteModal', () => ({
     ) : null,
 }));
 
-jest.mock('../ApiKeySettingsModal', () => ({
+jest.mock('../modals/ApiKeySettingsModal', () => ({
   __esModule: true,
   default: ({ isOpen, onClose }: any) => isOpen ? <div data-testid="api-key-modal"><button data-testid="api-close" onClick={onClose}>close</button></div> : null,
 }));
 
-jest.mock('../TranscriptMethodSelector', () => ({
+jest.mock('../transcript/TranscriptMethodSelector', () => ({
   __esModule: true,
   TranscriptMethodSelector: ({ isOpen, onClose, onImport, onAutoFetch, isLoading, autoFetchError }: any) =>
     isOpen ? (
@@ -73,7 +73,7 @@ jest.mock('../admin/UsageStatsDashboard', () => ({
   ),
 }));
 
-import ModalsContainer from '../ModalsContainer';
+import ModalsContainer from '../modals/ModalsContainer';
 
 describe('ModalsContainer', () => {
   it('renders AddQuoteModal and calls onSave/onClose', () => {

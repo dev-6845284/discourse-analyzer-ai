@@ -1,3 +1,17 @@
+/**
+ * ImportPermissionsModal Component
+ *
+ * Purpose:
+ * - A modal dialog for importing Access Control permissions from a JSON file.
+ * - Previews the permissions found in the selected file before importing.
+ *
+ * Behavior:
+ * - Uses `importPermissionsFromFile` to parse and validate the uploaded JSON file.
+ * - Displays a summary preview of the permissions to be added.
+ * - Calls the `onImport` prop to execute the actual import process.
+ *
+ * Location: src/components/admin/ImportPermissionsModal.tsx
+ */
 import React, { useState } from 'react';
 import { AccessItem, PermissionsExportData, importPermissionsFromFile } from '../../utils/permissionsExport';
 

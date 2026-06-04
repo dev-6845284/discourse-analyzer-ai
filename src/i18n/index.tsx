@@ -8,7 +8,7 @@ const LANG_KEY = 'discourse_analyzer_lang';
 
 const LANGS: Record<string, Translations> = {
   en,
-  lt,
+  lt: lt as any,
 };
 
 export const AVAILABLE_LANGUAGES = [

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { I18nProvider, useI18n } from '../../../i18n';
-import AddQuoteModal from '../../AddQuoteModal';
+import AddQuoteModal from '../../modals/AddQuoteModal';
 import { SearchResults } from '../SearchResults';
 import { Quote } from '../../../types';
 

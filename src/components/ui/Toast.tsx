@@ -1,3 +1,15 @@
+/**
+ * Toast Component
+ *
+ * Purpose:
+ * - A transient notification message.
+ *
+ * Behavior:
+ * - Automatically calls `onClose` after `duration` (default 3s).
+ * - Fixed positioning at bottom-right.
+ *
+ * Location: src/components/ui/Toast.tsx
+ */
 import React, { useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 

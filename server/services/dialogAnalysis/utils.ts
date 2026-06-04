@@ -21,6 +21,6 @@ export function extractJsonFromResponse(text: string): any {
 export function getProviderFromModel(model: string = ''): 'gemini' | 'openai' | 'grok' {
   const m = model.toLowerCase();
   if (m.includes('grok')) return 'grok';
-  if (m.includes('openai') || m.includes('gpt') || m.includes('o1-') || m.includes('o3-')) return 'openai';
+  if (m.includes('openai') || m.includes('gpt') || m.includes('o1-') || m.includes('o3-') || m.includes('o4-')) return 'openai';
   return 'gemini'; // Default to Gemini
 }

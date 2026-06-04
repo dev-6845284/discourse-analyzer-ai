@@ -1,9 +1,23 @@
+/**
+ * PublicLanding Component
+ *
+ * Purpose:
+ * - The entry point for the public/shared view of the application.
+ * - Enforces Cloudflare Turnstile verification before allowing access.
+ *
+ * Behavior:
+ * - Renders a public landing page.
+ * - Verifies human presence via Turnstile.
+ * - Redirects to login if needed.
+ *
+ * Location: src/components/public/PublicLanding.tsx
+ */
 import React, { useState } from 'react';
 // @ts-ignore
 import Turnstile from 'react-turnstile';
 import api from '../../utils/api';
 import { ShieldCheck, MessageSquareQuote } from 'lucide-react';
-import { ThemeToggle } from '../ThemeToggle';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { useI18n } from '../../i18n';
 
 interface PublicLandingProps {

@@ -1,8 +1,23 @@
+/**
+ * Header Component
+ *
+ * Purpose:
+ * - Displays the application header, including the logo, title, user greeting, and utility controls.
+ * - Manages the mobile sidebar toggle, language selection, and theme toggling.
+ * - Provides access to user-specific actions like profile editing, password change, and logout.
+ *
+ * Behavior:
+ * - Responsive design: adapts layout for mobile and desktop views.
+ * - Interacts with `useI18n` for language localization.
+ * - Uses `ThemeToggle` to switch between light and dark modes.
+ *
+ * Location: src/components/layout/Header.tsx
+ */
 import React from 'react';
 import logo from '../../assets/images/image64.png';
 import { UserInfo } from '../../types';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
-import { ThemeToggle } from '../ThemeToggle'; // Import the new component
+import { ThemeToggle } from '../ui/ThemeToggle'; // Import the new component
 
 
 interface HeaderProps {

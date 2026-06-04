@@ -1,3 +1,16 @@
+/**
+ * ErrorDisplay Component
+ *
+ * Purpose:
+ * - A unified component for displaying error messages and raw API responses.
+ * - Used to show user-friendly error toasts and technical debug info.
+ *
+ * Behavior:
+ * - Conditionally renders a floating error toast if `error` prop is present.
+ * - Optionally renders a raw API response block for deep debugging if `rawApiResponseError` is present.
+ *
+ * Location: src/components/results/ErrorDisplay.tsx
+ */
 import React from 'react';
 
 interface ErrorDisplayProps {

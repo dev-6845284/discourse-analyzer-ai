@@ -1,3 +1,16 @@
+/**
+ * ModalWrapper Component
+ *
+ * Purpose:
+ * - A generic shell for modal dialogs.
+ * - Provides the overlay, centering, and standard close button behavior.
+ *
+ * Behavior:
+ * - Renders children within a styled container.
+ * - Handles outside clicks can be implemented by parent or added here (currently simple overlay).
+ *
+ * Location: src/components/ui/ModalWrapper.tsx
+ */
 import React from 'react';
 
 interface ModalWrapperProps {

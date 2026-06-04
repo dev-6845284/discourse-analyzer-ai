@@ -46,7 +46,7 @@ export const callChatGptAPI = async (
     }
 
     if (useSearch) {
-        requestBody.web_search_options = {};
+        // requestBody.web_search_options = {}; // Not supported by standard API
     }
 
     const requestDetails = {

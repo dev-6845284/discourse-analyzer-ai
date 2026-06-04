@@ -1,3 +1,17 @@
+/**
+ * ExportPermissionsModal Component
+ *
+ * Purpose:
+ * - A modal dialog for exporting Access Control permissions to a JSON file.
+ * - Allows users to select specific permissions or groups of permissions to export.
+ *
+ * Behavior:
+ * - Receives a list of `permissions` prop.
+ * - Groups permissions by path for easier selection.
+ * - Uses `exportPermissionsToFile` utility to trigger the file download.
+ *
+ * Location: src/components/admin/ExportPermissionsModal.tsx
+ */
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { AccessItem, exportPermissionsToFile, groupPermissionsByPath } from '../../utils/permissionsExport';
 

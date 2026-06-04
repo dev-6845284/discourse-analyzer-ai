@@ -64,7 +64,7 @@ class GeminiAgenticProvider implements AgenticProvider {
 
     try {
       const planResponse = await this.executePrompt(
-        'gemini-2.5-flash',
+        'gemini-3.5-flash',
         planningPrompt,
         sessionId,
         logId,
@@ -97,7 +97,7 @@ class GeminiAgenticProvider implements AgenticProvider {
       const searchPrompt = `Search for "${query}". Provide a detailed summary of the findings, focusing on quotes, dates, and sources.`;
       try {
         const result = await this.executePrompt(
-          'gemini-2.5-flash-lite',
+          'gemini-3.5-flash-lite',
           searchPrompt,
           sessionId,
           logId,
@@ -136,7 +136,7 @@ class GeminiAgenticProvider implements AgenticProvider {
     appendLogRequestPayload(sessionId, logId, { step: 'synthesis', provider: 'gemini', prompt: synthesisPrompt });
 
     const finalResponse = await this.executePrompt(
-      'gemini-2.5-flash',
+      'gemini-3.5-flash',
       synthesisPrompt,
       sessionId,
       logId,

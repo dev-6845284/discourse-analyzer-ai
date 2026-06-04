@@ -1,3 +1,15 @@
+/**
+ * UserList Component
+ *
+ * Purpose:
+ * - Displays a table of users for the UserManager.
+ * - Renders user details (alias, email, role) and action buttons.
+ *
+ * Behavior:
+ * - Pure presentational component; delegates actions (edit, delete, etc.) to parent.
+ *
+ * Location: src/components/users/UserList.tsx
+ */
 import React from 'react';
 import { User } from '../../types';
 import { Edit, Trash2, RectangleEllipsis, Link as LinkIcon } from 'lucide-react';

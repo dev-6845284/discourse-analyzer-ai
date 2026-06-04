@@ -1,6 +1,20 @@
+/**
+ * SearchResults Component
+ *
+ * Purpose:
+ * - Displays a list of transient `Quote` objects resulting from a search or scrap operation.
+ * - Similar to `StoredQuotes` but handles non-persisted data or temporary search results.
+ *
+ * Behavior:
+ * - Renders a list of `QuoteCard` components.
+ * - Provides controls for sorting, clearing results, and exporting/importing.
+ * - Delegates analysis and save actions to parent handlers.
+ *
+ * Location: src/components/results/SearchResults.tsx
+ */
 import React from 'react';
 import ErrorDisplay from './ErrorDisplay';
-import QuoteCard from '../QuoteCard';
+import QuoteCard from '../quotes/QuoteCard';
 import { Quote } from '../../types';
 import { useI18n } from '../../i18n';
 

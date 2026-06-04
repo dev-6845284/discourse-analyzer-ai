@@ -1,3 +1,15 @@
+/**
+ * PasswordModal Component
+ *
+ * Purpose:
+ * - Admin tool to force-reset another user's password.
+ *
+ * Behavior:
+ * - Requires password confirmation.
+ * - Validates minimum length.
+ *
+ * Location: src/components/users/PasswordModal.tsx
+ */
 import React, { useState } from 'react';
 import api from '../../utils/api';
 import { useI18n } from '../../i18n';

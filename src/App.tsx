@@ -1,15 +1,15 @@
 import React from 'react';
 import { useAppController } from './hooks/useAppController';
 import LoginScreen from './components/auth/LoginScreen';
-import TranscriptImporter from './components/TranscriptImporter';
-import { SrtTranscriptImporter } from './components/SrtTranscriptImporter';
-import { YoutubeTranscriptButton } from './components/YoutubeTranscriptButton';
+import TranscriptImporter from './components/transcript/TranscriptImporter';
+import { SrtTranscriptImporter } from './components/transcript/SrtTranscriptImporter';
+import { YoutubeTranscriptButton } from './components/transcript/YoutubeTranscriptButton';
 import { PersonSelector } from './components/people/PersonSelector';
 
 import { PersonManager } from './components/people/PersonManager';
 import { UserManager } from './components/users/UserManager';
-import { AnalysisSessionsList } from './components/AnalysisSessionsList';
-import { AnalysisImporter } from './components/AnalysisImporter';
+import { AnalysisSessionsList } from './components/analysis/AnalysisSessionsList';
+import { AnalysisImporter } from './components/analysis/AnalysisImporter';
 
 // New Components
 import { Header } from './components/layout/Header';
@@ -17,8 +17,8 @@ import { Sidebar } from './components/layout/Sidebar';
 import { SearchControls } from './components/search/SearchControls';
 import { ExtractionControls } from './components/search/ExtractionControls';
 import { AdminAlertBanner } from './components/admin/AdminAlertBanner';
-import ModalsContainer from './components/ModalsContainer';
-import MainContent from './components/MainContent';
+import ModalsContainer from './components/modals/ModalsContainer';
+import { MainContent } from './components/layout/MainContent';
 import { useI18n } from './i18n';
 import type { Person } from './types';
 import { PublicLanding } from './components/public/PublicLanding';

@@ -1,3 +1,15 @@
+/**
+ * UserForm Component
+ *
+ * Purpose:
+ * - A modal form for creating a new user or editing an existing user.
+ *
+ * Behavior:
+ * - Handles form validation (required fields, password length).
+ * - Distinguishes between "Add" (requires password) and "Edit" (no password) modes.
+ *
+ * Location: src/components/users/UserForm.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import api from '../../utils/api';

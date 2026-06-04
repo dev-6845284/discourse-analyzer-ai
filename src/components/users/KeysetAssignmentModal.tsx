@@ -1,3 +1,15 @@
+/**
+ * KeysetAssignmentModal Component
+ *
+ * Purpose:
+ * - Admin modal to assign a shared API Keyset to a specific user.
+ *
+ * Behavior:
+ * - Fetches available keysets (filtering out private user keysets).
+ * - Allows assigning or unassigning a keyset.
+ *
+ * Location: src/components/users/KeysetAssignmentModal.tsx
+ */
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { assignKeysetToUser, unassignKeysetFromUser, getAdminKeysets } from '../../utils/api';

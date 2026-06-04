@@ -1,5 +1,19 @@
+/**
+ * ExtractionControls Component
+ *
+ * Purpose:
+ * - Provides inputs for manual text entry or URL input for article extraction.
+ * - Handles the "Edit Source" mode and "Add New Scrape" mode.
+ *
+ * Behavior:
+ * - Detects if input is a URL and switches UI to show "Extract from Link".
+ * - Supports auto-extraction triggers (e.g. on paste).
+ * - Displays extraction status and errors.
+ *
+ * Location: src/components/search/ExtractionControls.tsx
+ */
 import React, { useState, useEffect, useRef } from 'react';
-import Spinner from '../Spinner';
+import Spinner from '../ui/Spinner';
 import { useI18n } from '../../i18n';
 
 /**

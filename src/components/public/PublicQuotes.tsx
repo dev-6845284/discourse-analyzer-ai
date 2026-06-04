@@ -1,9 +1,23 @@
+/**
+ * PublicQuotes Component
+ *
+ * Purpose:
+ * - A public gallery displaying shared quotes.
+ * - Provides filtering by Person, Date, Time Period, and Sorting.
+ *
+ * Behavior:
+ * - Fetches public quotes via API.
+ * - Implements complex client-side filter logic (month/year ranges).
+ * - Responsive layout with specific mobile/desktop headers.
+ *
+ * Location: src/components/public/PublicQuotes.tsx
+ */
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../../utils/api';
 import { PublicQuoteCard } from './PublicQuoteCard';
 import { Filter, Calendar, User, LogIn, ArrowUpDown, X, ChevronDown } from 'lucide-react';
 import { useI18n, AVAILABLE_LANGUAGES } from '../../i18n';
-import { ThemeToggle } from '../ThemeToggle';
+import { ThemeToggle } from "../ui/ThemeToggle";
 import logo from '../../assets/images/image32.png';
 
 interface PublicQuotesProps {

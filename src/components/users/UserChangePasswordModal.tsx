@@ -1,3 +1,15 @@
+/**
+ * UserChangePasswordModal Component
+ *
+ * Purpose:
+ * - Allows a logged-in user to change their OWN password.
+ *
+ * Behavior:
+ * - Requires the OLD password for verification.
+ * - Validates new password and confirmation.
+ *
+ * Location: src/components/users/UserChangePasswordModal.tsx
+ */
 import React, { useState } from 'react';
 import api from '../../utils/api';
 import { useI18n } from '../../i18n';
