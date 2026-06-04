@@ -25,8 +25,8 @@ const DEFAULT_SPEAKER_SIMILARITY_THRESHOLD = 0.85;
 
 /** Model configurations */
 const MODEL_CONFIG = {
-  chatgpt: { provider: 'chatgpt', model: 'gpt-4.1-mini' },
-  grok: { provider: 'grok', model: 'grok-4-1-fast-reasoning' },
+  chatgpt: { provider: 'chatgpt', model: 'gpt-5.4-mini' },
+  grok: { provider: 'grok', model: 'grok-4.1-fast-reasoning' },
   gemini: { provider: 'gemini', model: 'gemini-2.5-flash' },
 } as const;
 

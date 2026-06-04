@@ -229,7 +229,7 @@ class GeminiService implements LlmService {
       appendLogRequestPayload(sessionId, logId, { prompt: analysisPrompt, step: 'analysis' });
 
       const analysisRequestDetails = {
-        model: 'gemini-2.0-flash-exp', // Use a stronger model for reasoning if available, or fall back to 1.5-flash
+        model: 'gemini-2.5-flash',
         contents: analysisPrompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -672,7 +672,7 @@ class GeminiService implements LlmService {
     const prompt = createTopicExtractionPrompt(text, language);
 
     const responseText = await this.generateContent(apiKey, {
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-2.5-flash',
       prompt,
       temperature,
       logId,

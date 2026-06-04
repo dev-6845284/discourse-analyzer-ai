@@ -17,7 +17,7 @@ export const extractTopics = async (
     const prompt = createTopicExtractionPrompt(text, language);
 
     const responseText = await generateContent(apiKey, {
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini',
         prompt,
         temperature,
         logId,

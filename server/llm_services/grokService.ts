@@ -23,7 +23,7 @@ import { LlmService } from './LlmService';
 
 // Grok API uses OpenAI-compatible endpoints
 const GROK_API_BASE_URL = "https://api.x.ai/v1";
-const GROK_MODEL = "grok-4-fast"; // or "grok-2-latest"
+const GROK_MODEL = "grok-4.1-fast-non-reasoning";
 
 
 
